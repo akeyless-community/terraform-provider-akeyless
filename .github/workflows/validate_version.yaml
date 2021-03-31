@@ -1,0 +1,32 @@
+name: Validate Release
+
+on:
+  deployment:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Fetch history
+        run: git fetch --prune --unshallow
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Validate Release Version
+        run: .github/scripts/validate_release_version.sh
+
+      - name: Run Acceptance Tests
+        env:
+          AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
+          AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
+          TF_ACC_GCP_SERVICE_ACCOUNT: ${{ secrets.TF_ACC_GCP_SERVICE_ACCOUNT }}
+          TF_ACC_GCP_BOUND_SERVICE_ACC: ${{ secrets.TF_ACC_GCP_BOUND_SERVICE_ACC }}
+        run: |
+          TF_ACC=1 go test ./... -v -count 1 -timeout 120m
