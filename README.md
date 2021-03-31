@@ -18,8 +18,8 @@
 terraform {
   required_providers {
     akeyless = {
-      version = "0.9.0"
-      source  = "akeyless.io/platform/akeyless"
+      version = ">= 1.0.0"
+      source  = "akeyless-community/akeyless"
     }
   }
 }
