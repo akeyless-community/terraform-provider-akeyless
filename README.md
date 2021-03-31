@@ -74,7 +74,7 @@ To run the [acceptance tests](https://www.terraform.io/docs/extend/testing/accep
 
 Only for the GCP acceptance tests:
 * `TF_ACC_GCP_SERVICE_ACCOUNT` - Service Account creds data, base64 encoded.
-* `GCP_BOUND_SERVICE_ACCOUNTS` - A list of Service Accounts.
+* `TF_ACC_GCP_BOUND_SERVICE_ACC` - A list of Service Accounts.
 
 Run `make testacc`
 
