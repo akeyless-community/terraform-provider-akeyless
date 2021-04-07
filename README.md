@@ -58,14 +58,28 @@ Clone the repository :
 ```
 git clone https://github.com/akeylesslabs/terraform-provider-akeyless.git
 ```
-Build for Linux:
+Build:
 ```
 make build-linux
 ```
-Build for Darwin:
+
+Execute Terraform from local provider source:
 ```
-make build-linux
+make install-linux
 ```
+
+```hcl
+terraform {
+  required_providers {
+    akeyless = {
+      version = "1.0.0-dev"
+      source  = "akeyless-community/akeyless"
+    }
+  }
+}  
+```
+
+
 ## Testing
 To run the [acceptance tests](https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html), the following environment variables need to be set up.
 
