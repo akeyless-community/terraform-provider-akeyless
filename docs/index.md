@@ -21,7 +21,6 @@ terraform {
   }
 }
 
-
 provider "akeyless" {
   api_gateway_address = "https://api.akeyless.io"
 

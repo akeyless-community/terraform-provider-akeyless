@@ -74,12 +74,25 @@ func resourceRole() *schema.Resource {
 						"rule_type": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "item-rule, role-rule or auth-method-rule",
+							Description: "item-rule, target-rule, role-rule, auth-method-rule, search-rule, reports-rule",
 							Default:     "item-rule",
 						},
 					},
 				},
 			},
+			"audit_access": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Allow this role to view audit logs. 'none', 'self', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods",
+				Default:     "",
+			},
+			"analytics_access": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Allow this role to view audit logs. 'none', 'self', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods",
+				Default:     "",
+			},
+
 			"assoc_auth_method_with_rules": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -165,6 +178,11 @@ func resourceRoleCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	err = updateRole(d, m, ctx)
+	if err != nil {
+		return fmt.Errorf("can't create role: %v", err)
+	}
+
 	d.SetId(name)
 
 	return nil
@@ -233,6 +251,11 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 				return fmt.Errorf("can't delete Role association: %v", err)
 			}
 		}
+	}
+
+	err = updateRole(d, m, ctx)
+	if err != nil {
+		return fmt.Errorf("can't update role: %v", err)
 	}
 
 	for _, v := range *role.Rules.PathRules {
@@ -432,4 +455,38 @@ func getRole(d *schema.ResourceData, client akeyless.V2ApiService, body akeyless
 		return akeyless.Role{}, fmt.Errorf("can't get Role value: %v", err)
 	}
 	return role, nil
+}
+
+func updateRole(d *schema.ResourceData, m interface{}, ctx context.Context) error {
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	name := d.Get("name").(string)
+	auditAccess := d.Get("audit_access").(string)
+	analyticsAccess := d.Get("analytics_access").(string)
+
+	updateBody := akeyless.UpdateRole{
+		Name:  name,
+		Token: &token,
+	}
+
+	if auditAccess != "" {
+		updateBody.AuditAccess = akeyless.PtrString(auditAccess)
+	}
+	if analyticsAccess != "" {
+		updateBody.AnalyticsAccess = akeyless.PtrString(analyticsAccess)
+	}
+
+	var err error
+	var apiErr akeyless.GenericOpenAPIError
+	_, _, err = client.UpdateRole(ctx).Body(updateBody).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			return fmt.Errorf("%v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("%v", err)
+	}
+
+	return nil
 }
