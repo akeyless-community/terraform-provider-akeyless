@@ -89,7 +89,7 @@ func resourceRole() *schema.Resource {
 			"analytics_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view audit logs. 'none', 'self', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods",
+				Description: "Allow this role to view analytics. Currently only 'none' and 'self' values are supported, allowing associated auth methods to view reports produced by the same auth methods",
 				Default:     "",
 			},
 
