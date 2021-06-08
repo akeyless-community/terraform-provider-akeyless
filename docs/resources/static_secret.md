@@ -47,6 +47,8 @@ resource "akeyless_static_secret" "secret" {
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **multiline_value** (Boolean) The provided value is a multiline value (separated by '
+')
 - **protection_key** (String) The version of the secret.
 
 ### Read-Only

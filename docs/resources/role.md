@@ -75,7 +75,7 @@ output "demo-role" {
 
 ### Optional
 
-- **analytics_access** (String) Allow this role to view audit logs. 'none', 'self', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods
+- **analytics_access** (String) Allow this role to view analytics. Currently only 'none' and 'self' values are supported, allowing associated auth methods to view reports produced by the same auth methods
 - **assoc_auth_method** (Block List) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
 - **audit_access** (String) Allow this role to view audit logs. 'none', 'self', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods
 - **comment** (String) Comment about the role
