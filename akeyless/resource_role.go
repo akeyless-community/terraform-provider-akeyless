@@ -84,13 +84,13 @@ func resourceRole() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Allow this role to view audit logs. 'none', 'self', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods",
-				Default:     "",
+				Default:     "none",
 			},
 			"analytics_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Allow this role to view analytics. Currently only 'none' and 'self' values are supported, allowing associated auth methods to view reports produced by the same auth methods",
-				Default:     "",
+				Default:     "none",
 			},
 
 			"assoc_auth_method_with_rules": {
@@ -467,15 +467,10 @@ func updateRole(d *schema.ResourceData, m interface{}, ctx context.Context) erro
 	analyticsAccess := d.Get("analytics_access").(string)
 
 	updateBody := akeyless.UpdateRole{
-		Name:  name,
-		Token: &token,
-	}
-
-	if auditAccess != "" {
-		updateBody.AuditAccess = akeyless.PtrString(auditAccess)
-	}
-	if analyticsAccess != "" {
-		updateBody.AnalyticsAccess = akeyless.PtrString(analyticsAccess)
+		Name:            name,
+		Token:           &token,
+		AuditAccess:     akeyless.PtrString(auditAccess),
+		AnalyticsAccess: akeyless.PtrString(analyticsAccess),
 	}
 
 	var err error

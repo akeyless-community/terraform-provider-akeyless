@@ -33,6 +33,12 @@ func resourceStaticSecret() *schema.Resource {
 				Sensitive:   true,
 				Description: "The secret content.",
 			},
+			"multiline_value": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "The provided value is a multiline value (separated by '\n')",
+			},
 			"version": {
 				Type:        schema.TypeInt,
 				Computed:    true,
@@ -56,13 +62,15 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	path := d.Get("path").(string)
 	value := d.Get("value").(string)
 	ProtectionKey := d.Get("protection_key").(string)
+	multilineValue := d.Get("multiline_value").(bool)
 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	body := akeyless.CreateSecret{
-		Name:  path,
-		Value: value,
-		Token: &token,
+		Name:           path,
+		Value:          value,
+		MultilineValue: akeyless.PtrBool(multilineValue),
+		Token:          &token,
 	}
 	if ProtectionKey != "" {
 		body.ProtectionKey = akeyless.PtrString(ProtectionKey)
@@ -169,7 +177,61 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceStaticSecretCreate(d, m)
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	path := d.Get("path").(string)
+	value := d.Get("value").(string)
+	ProtectionKey := d.Get("protection_key").(string)
+	multilineValue := d.Get("multiline_value").(bool)
+
+	var apiErr akeyless.GenericOpenAPIError
+	ctx := context.Background()
+
+	body := akeyless.UpdateSecretVal{
+		Name:      path,
+		Key:       akeyless.PtrString(ProtectionKey),
+		Value:     value,
+		Multiline: akeyless.PtrBool(multilineValue),
+		Token:     &token,
+	}
+
+	_, _, err := client.UpdateSecretVal(ctx).Body(body).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			return fmt.Errorf("can't update Secret: %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("can't update Secret: %v", err)
+	}
+
+	item := akeyless.DescribeItem{
+		Name:         path,
+		ShowVersions: akeyless.PtrBool(true),
+		Token:        &token,
+	}
+
+	itemOut, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	if err != nil {
+		return err
+	}
+
+	version := itemOut.LastVersion
+
+	err = d.Set("version", *version)
+	if err != nil {
+		return err
+	}
+
+	pk := itemOut.ProtectionKeyName
+	err = d.Set("protection_key", *pk)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(path)
+
+	return nil
 }
 
 func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
