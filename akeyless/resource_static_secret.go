@@ -183,7 +183,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 	value := d.Get("value").(string)
-	ProtectionKey := d.Get("protection_key").(string)
+	protectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
 
 	var apiErr akeyless.GenericOpenAPIError
@@ -191,7 +191,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 
 	body := akeyless.UpdateSecretVal{
 		Name:      path,
-		Key:       akeyless.PtrString(ProtectionKey),
+		Key:       akeyless.PtrString(protectionKey),
 		Value:     value,
 		Multiline: akeyless.PtrBool(multilineValue),
 		Token:     &token,

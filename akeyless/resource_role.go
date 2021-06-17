@@ -74,7 +74,7 @@ func resourceRole() *schema.Resource {
 						"rule_type": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "item-rule, target-rule, role-rule, auth-method-rule, search-rule, reports-rule",
+							Description: "item-rule, target-rule, role-rule, auth-method-rule, search-rule or reports-rule",
 							Default:     "item-rule",
 						},
 					},
@@ -83,13 +83,13 @@ func resourceRole() *schema.Resource {
 			"audit_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view audit logs. 'none', 'self', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods",
+				Description: "Allow this role to view audit logs. 'none', 'own', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods",
 				Default:     "none",
 			},
 			"analytics_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view analytics. Currently only 'none' and 'self' values are supported, allowing associated auth methods to view reports produced by the same auth methods",
+				Description: "Allow this role to view analytics. Currently only 'none' and 'own' values are supported, allowing associated auth methods to view reports produced by the same auth methods",
 				Default:     "none",
 			},
 

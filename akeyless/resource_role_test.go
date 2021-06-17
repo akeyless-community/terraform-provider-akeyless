@@ -121,7 +121,7 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			}
 
 			audit_access = "all"
-  			analytics_access = "all"
+  			analytics_access = "own"
 		}
 	`, authMethodPath, rolePath, authMethodPath)
 
@@ -265,7 +265,7 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string) resource.TestCheckFu
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		assert.Equal(t, 3, len(rules.GetPathRules()))
+		assert.Equal(t, 2, len(rules.GetPathRules()))
 
 		return nil
 	}
