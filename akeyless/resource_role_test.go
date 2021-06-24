@@ -80,7 +80,7 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			assoc_auth_method {
 				am_name = "%v"
 				sub_claims = {
-					"groups" = "admins,developers"  
+					"groups" = "admins,developers"
 				}
 			}
 			rules {
@@ -111,7 +111,7 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			assoc_auth_method {
 				am_name = "%v"
 				sub_claims = {
-					"groups" = "admins,developers"  
+					"groups" = "admins,developers"
 				}
 			}
 			rules {
@@ -137,7 +137,7 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			assoc_auth_method {
 				am_name = "%v"
 				sub_claims = {
-					"groups" = "admins,developers"  
+					"groups" = "admins,developers"
 				}
 			}
 			rules {
@@ -202,10 +202,18 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string) reso
 		}
 
 		rules := res.GetRules()
-		assert.Equal(t, 3, len(rules.GetPathRules()))
-		assert.Contains(t, rules.GetPathRules()[0].GetPath(), "/terraform-tests/")
-		assert.Equal(t, []string{"read"}, rules.GetPathRules()[0].GetCapabilities())
-		assert.Equal(t, "auth-method-rule", rules.GetPathRules()[0].GetType())
+		assert.Equal(t, 4, len(rules.GetPathRules()))
+
+		exists := false
+		for _, r := range rules.GetPathRules() {
+			if strings.Contains(r.GetPath(), "/terraform-tests/*") {
+				exists = true
+				assert.Equal(t, []string{"read"}, r.GetCapabilities())
+				assert.Equal(t, "auth-method-rule", r.GetType())
+			}
+		}
+
+		assert.True(t, exists)
 
 		return nil
 	}
@@ -225,7 +233,7 @@ func checkAddRoleRemotely(t *testing.T, roleName string) resource.TestCheckFunc 
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		assert.Equal(t, 2, len(rules.GetPathRules()))
+		assert.Equal(t, 3, len(rules.GetPathRules()))
 
 		return nil
 	}
@@ -245,7 +253,7 @@ func checkUpdateRoleRemotely(t *testing.T, roleName string) resource.TestCheckFu
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		assert.Equal(t, 3, len(rules.GetPathRules()))
+		assert.Equal(t, 4, len(rules.GetPathRules()))
 
 		return nil
 	}
@@ -265,7 +273,7 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string) resource.TestCheckFu
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		assert.Equal(t, 2, len(rules.GetPathRules()))
+		assert.Equal(t, 3, len(rules.GetPathRules()))
 
 		return nil
 	}

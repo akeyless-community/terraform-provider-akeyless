@@ -7,17 +7,18 @@ import (
 	"fmt"
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"net/http"
 )
 
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
-		Description: "Role Resource",
-		Create:      resourceRoleCreate,
-		Read:        resourceRoleRead,
-		Update:      resourceRoleUpdate,
-		Delete:      resourceRoleDelete,
+		Description:   "Role Resource",
+		CreateContext: resourceRoleCreate,
+		Read:          resourceRoleRead,
+		Update:        resourceRoleUpdate,
+		Delete:        resourceRoleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRoleImport,
 		},
@@ -74,7 +75,7 @@ func resourceRole() *schema.Resource {
 						"rule_type": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "item-rule, target-rule, role-rule, auth-method-rule, search-rule or reports-rule",
+							Description: "item-rule, target-rule, role-rule, auth-method-rule",
 							Default:     "item-rule",
 						},
 					},
@@ -101,16 +102,16 @@ func resourceRole() *schema.Resource {
 	}
 }
 
-func resourceRoleCreate(d *schema.ResourceData, m interface{}) error {
+func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
+	warn := diag.Diagnostics{}
 
 	name := d.Get("name").(string)
 	comment := d.Get("comment").(string)
 
 	var apiErr akeyless.GenericOpenAPIError
-	ctx := context.Background()
 	body := akeyless.CreateRole{
 		Name:    name,
 		Comment: akeyless.PtrString(comment),
@@ -120,9 +121,9 @@ func resourceRoleCreate(d *schema.ResourceData, m interface{}) error {
 	_, _, err := client.CreateRole(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Role: %v", string(apiErr.Body()))
+			return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create Role: %v", string(apiErr.Body())))}
 		}
-		return fmt.Errorf("can't create Role: %v", err)
+		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create Role: %v", err))}
 	}
 
 	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
@@ -146,9 +147,9 @@ func resourceRoleCreate(d *schema.ResourceData, m interface{}) error {
 			_, _, err = client.AssocRoleAuthMethod(ctx).Body(asBody).Execute()
 			if err != nil {
 				if errors.As(err, &apiErr) {
-					return fmt.Errorf("can't create association: %v", string(apiErr.Body()))
+					return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create association: %v", string(apiErr.Body())))}
 				}
-				return fmt.Errorf("can't create association: %v", err)
+				return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create association: %v", err))}
 			}
 		}
 	}
@@ -161,6 +162,11 @@ func resourceRoleCreate(d *schema.ResourceData, m interface{}) error {
 			path := roles["path"].(string)
 			ruleType := roles["rule_type"].(string)
 
+			if ruleType == "search-rule" || ruleType == "reports-rule" {
+				warn = append(warn, common.WarningDiagnostics(
+					fmt.Sprint("Deprecated: rule types 'search-rule and reports-rule' are deprecated and will be removed, please use 'audit_access' or 'analytics_access' instead")))
+			}
+
 			setRoleRule := akeyless.SetRoleRule{
 				RoleName:   name,
 				Capability: common.ExpandStringList(capability.List()),
@@ -171,21 +177,21 @@ func resourceRoleCreate(d *schema.ResourceData, m interface{}) error {
 			_, _, err := client.SetRoleRule(ctx).Body(setRoleRule).Execute()
 			if err != nil {
 				if errors.As(err, &apiErr) {
-					return fmt.Errorf("can't set rules: %v", string(apiErr.Body()))
+					return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't set rules: %v", string(apiErr.Body())))}
 				}
-				return fmt.Errorf("can't set rules: %v", err)
+				return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't set rules: %v", err))}
 			}
 		}
 	}
 
 	err = updateRole(d, m, ctx)
 	if err != nil {
-		return fmt.Errorf("can't create role: %v", err)
+		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create role: %v", err))}
 	}
 
 	d.SetId(name)
 
-	return nil
+	return warn
 }
 
 func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
