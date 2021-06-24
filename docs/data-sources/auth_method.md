@@ -32,7 +32,6 @@ data "akeyless_auth_method" "api_key" {
 ### Read-Only
 
 - **access_id** (String) The version of the secret.
-- **access_key** (String) Auth Method access key
 - **account_id** (String) The version of the secret.
 
 

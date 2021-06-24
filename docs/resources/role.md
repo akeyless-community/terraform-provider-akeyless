@@ -108,6 +108,6 @@ Required:
 
 Optional:
 
-- **rule_type** (String) item-rule, target-rule, role-rule, auth-method-rule, search-rule, reports-rule
+- **rule_type** (String) item-rule, target-rule, role-rule, auth-method-rule
 
 
