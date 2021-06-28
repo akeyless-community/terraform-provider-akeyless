@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestStaticResourceCreate(t *testing.T) {
+func TestStaticResource(t *testing.T) {
 	secretName := "test_secret"
 	secretPath := testPath("path_secret")
 	config := fmt.Sprintf(`
@@ -19,11 +19,24 @@ func TestStaticResourceCreate(t *testing.T) {
 		}
 	`, secretName, secretPath)
 
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path = "%v"
+			value = "update-secret"
+		}
+	`, secretName, secretPath)
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+				),
+			},
+			{
+				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					checkSecretExistsRemotely(secretPath),
 				),

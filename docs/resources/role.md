@@ -75,7 +75,9 @@ output "demo-role" {
 
 ### Optional
 
+- **analytics_access** (String) Allow this role to view analytics. Currently only 'none' and 'own' values are supported, allowing associated auth methods to view reports produced by the same auth methods
 - **assoc_auth_method** (Block List) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
+- **audit_access** (String) Allow this role to view audit logs. 'none', 'own', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods
 - **comment** (String) Comment about the role
 - **id** (String) The ID of this resource.
 - **rules** (Block List) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
@@ -106,6 +108,6 @@ Required:
 
 Optional:
 
-- **rule_type** (String) item-rule, role-rule or auth-method-rule
+- **rule_type** (String) item-rule, target-rule, role-rule, auth-method-rule
 
 

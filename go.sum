@@ -46,8 +46,8 @@ github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki
 github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412/go.mod h1:WPjqKcmVOxf0XSf3YxCJs6N6AOSrOx3obionmG7T0y0=
 github.com/akeylesslabs/akeyless-go-cloud-id v0.2.0 h1:L4iH8gRE+QIAmv/8SiUUzTY8u7KP9rA5QmeXfv9ZlIU=
 github.com/akeylesslabs/akeyless-go-cloud-id v0.2.0/go.mod h1:5LCtwSIO0gC8r41XkBLtLkWc05JqRQ6/QxECVgcP4T8=
-github.com/akeylesslabs/akeyless-go/v2 v2.3.1 h1:h/JRi0owt/ggsvYsovfGqZWVBrV6TlnSKyt6tT1NeL0=
-github.com/akeylesslabs/akeyless-go/v2 v2.3.1/go.mod h1:uOdXD49NCCe4rexeSc2aBU5Qv4KZgJE6YlbtYalvb+I=
+github.com/akeylesslabs/akeyless-go/v2 v2.4.4 h1:IwAaEDKcLMMsF2PQsA6znkHhVEnzOHSB+Wx+v3ZLok8=
+github.com/akeylesslabs/akeyless-go/v2 v2.4.4/go.mod h1:uOdXD49NCCe4rexeSc2aBU5Qv4KZgJE6YlbtYalvb+I=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 h1:uSoVVbwJiQipAclBbw+8quDsfcvFjOpI5iCf4p/cqCs=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7/go.mod h1:6zEj6s6u/ghQa61ZWa/C2Aw3RkjiTBOix7dkqa1VLIs=
 github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f/go.mod h1:k8feO4+kXDxro6ErPXBRTJ/ro2mf0SsFG8s7doP9kJE=

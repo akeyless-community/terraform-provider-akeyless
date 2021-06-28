@@ -29,11 +29,6 @@ func dataSourceAuthMethod() *schema.Resource {
 				Computed:    true,
 				Description: "The version of the secret.",
 			},
-			"access_key": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Auth Method access key",
-			},
 		},
 	}
 }
