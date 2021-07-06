@@ -21,7 +21,12 @@ jobs:
 
       - name: Validate Release Version
         run: .github/scripts/validate_release_version.sh
-
+    
+      - name: terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.13.6
+    
       - name: Run Acceptance Tests
         env:
           AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
