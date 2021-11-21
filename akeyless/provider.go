@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"os"
 )
 
 // default: public API Gateway
@@ -27,7 +28,7 @@ func Provider() *schema.Provider {
 			"api_gateway_address": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     publicApi,
+				DefaultFunc:     schema.EnvDefaultFunc("AKEYLESS_GATEWAY", publicApi) ,
 				Description: "Origin URL of the API Gateway server. This is a URL with a scheme, a hostname and a port.",
 			},
 			"api_key_login": {
@@ -99,6 +100,7 @@ func Provider() *schema.Provider {
 			"akeyless_static_secret": resourceStaticSecret(),
 			"akeyless_auth_method":   resourceAuthMethod(),
 			"akeyless_role":          resourceRole(),
+			"akeyless_producer_aws":  resourceProducerAws(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_static_secret":  dataSourceStaticSecret(),

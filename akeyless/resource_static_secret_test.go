@@ -23,6 +23,8 @@ func TestStaticResource(t *testing.T) {
 		resource "akeyless_static_secret" "%v" {
 			path = "%v"
 			value = "update-secret"
+			secure_access_enable = "false"
+			secure_access_url    = "http://google.com"
 		}
 	`, secretName, secretPath)
 
