@@ -263,18 +263,10 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	// if rOut.UserTtl != nil {
-	// 	err = d.Set("user_ttl", *rOut.UserTtl)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	if common.GetFieldjsonTagName("user_ttl", rOut) != "" {
-		if rOut.UserTtl != nil {
-			err = d.Set("user_ttl", *rOut.UserTtl)
-			if err != nil {
-				return err
-			}
+	if rOut.UserTtl != nil {
+		err = d.Set("user_ttl", *rOut.UserTtl)
+		if err != nil {
+			return err
 		}
 	}
 	if rOut.AwsAccessKeyId != nil {
@@ -303,6 +295,30 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 	}
 	if rOut.AwsAccessMode != nil {
 		err = d.Set("access_mode", *rOut.AwsAccessMode)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.DynamicSecretKey != nil {
+		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.EnableAdminRotation != nil {
+		err = d.Set("enable_admin_rotation", *rOut.EnableAdminRotation)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AdminRotationIntervalDays != nil {
+		err = d.Set("admin_rotation_interval_days", *rOut.AdminRotationIntervalDays)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AwsUserConsoleAccess != nil {
+		err = d.Set("aws_user_console_access", *rOut.AwsUserConsoleAccess)
 		if err != nil {
 			return err
 		}
@@ -338,6 +354,13 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.ItemTargetsAssoc != nil {
+		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
+		err = d.Set("target_name", targetName)
+		if err != nil {
+			return err
+		}
+	}
 	common.GetSra(d, path, token, client)
 
 	d.SetId(name)

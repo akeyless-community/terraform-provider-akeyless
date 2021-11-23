@@ -105,6 +105,29 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 	}
 }
 
+func GetTargetName(itemTargetsAssoc *[]akeyless.ItemTargetAssociation) string {
+	if itemTargetsAssoc == nil {
+		return ""
+	}
+	if len(*itemTargetsAssoc) == 0 {
+		return ""
+	}
+	targets := *itemTargetsAssoc
+	if len(targets) == 1 {
+		if targets[0].TargetName == nil {
+			return ""
+		}
+		return *targets[0].TargetName
+	}
+	names := make([]string, 0)
+	for _, t := range targets {
+		if t.TargetName != nil {
+			names = append(names)
+		}
+	}
+	return strings.Join(names, ",")
+}
+
 func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiService) error {
 
 	ctx := context.Background()
@@ -123,6 +146,8 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 	if itemOut.GetItemGeneralInfo().SecureRemoteAccessDetails == nil {
 		return nil
 	}
+
+	itemType := itemOut.ItemType
 	sra := itemOut.GetItemGeneralInfo().SecureRemoteAccessDetails
 
 	if _, ok := sra.GetEnableOk(); ok {
@@ -147,128 +172,137 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 	}
 
 	if s, ok := sra.GetBastionApiOk(); ok {
-		err = d.Set("secure-access-bastion-api", s)
+		err = d.Set("secure_access_bastion_api", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetBastionSshOk(); ok {
-		err = d.Set("secure-access-bastion-ssh", s)
+		err = d.Set("secure_access_bastion_ssh", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetSshUserOk(); ok {
-		err = d.Set("secure-access-ssh-creds-user", s)
-		if err != nil {
-			return err
+		if *itemType == "STATIC_SECRET" {
+			err = d.Set("secure_access_ssh_user", s)
+			if err != nil {
+				return err
+			}
+		} else { //cert-issuer
+			err = d.Set("secure_access_ssh_creds_user", s)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	if s, ok := sra.GetIsCliOk(); ok && *s {
-		err = d.Set("secure-access-ssh-creds", s)
+		err = d.Set("secure_access_ssh_creds", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetUseInternalBastionOk(); ok && *s {
-		err = d.Set("secure-access-use-internal-bastion", s)
+		err = d.Set("secure_access_use_internal_bastion", s)
+		if err != nil {
+			return err
+		}
+	}
+
+	if s, ok := sra.GetNativeOk(); ok && *s {
+		err = d.Set("secure_access_aws_native_cli", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetHostOk(); ok {
-		err = d.Set("secure-access-host", s)
+		err = d.Set("secure_access_host", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetIsWebOk(); ok && *s {
-		err = d.Set("secure-access-web-browsing", s)
+		err = d.Set("secure_access_web_browsing", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetDomainOk(); ok {
-		err = d.Set("secure-access-rdp-domain", s)
+		err = d.Set("secure_access_rdp_domain", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetRdpUserOk(); ok {
-		err = d.Set("secure-access-rdp-user", s)
+		err = d.Set("secure_access_rdp_user", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetAllowProvidingExternalUsernameOk(); ok && *s {
-		err = d.Set("secure-access-allow-external-user", s)
+		err = d.Set("secure_access_allow_external_user", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetSchemaOk(); ok {
-		err = d.Set("secure-access-db-schema", s)
+		err = d.Set("secure_access_db_schema", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetDbNameOk(); ok {
-		err = d.Set("secure-access-db-name", s)
+		err = d.Set("secure_access_db_name", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetAccountIdOk(); ok {
-		err = d.Set("secure-access-aws-account-id", s)
+		err = d.Set("secure_access_aws_account_id", s)
 		if err != nil {
 			return err
 		}
 	}
 
 	if s, ok := sra.GetRegionOk(); ok {
-		err = d.Set("secure-access-aws-region", s)
+		err = d.Set("secure_access_aws_region", s)
 		if err != nil {
 			return err
 		}
 	}
 	if s, ok := sra.GetRegionOk(); ok {
-		err = d.Set("secure-access-aws-region", s)
+		err = d.Set("secure_access_aws_region", s)
 		if err != nil {
 			return err
 		}
 	}
-	if s, ok := sra.GetNativeOk(); ok && *s {
-		err = d.Set("secure-access-aws-native-cli", s)
-		if err != nil {
-			return err
-		}
-	}
+
 	if s, ok := sra.GetEndpointOk(); ok {
-		err = d.Set("secure-access-cluster-endpoint", s)
+		err = d.Set("secure_access_cluster_endpoint", s)
 		if err != nil {
 			return err
 		}
 	}
 	if s, ok := sra.GetDashboardUrlOk(); ok {
-		err = d.Set("secure-access-dashboard-url", s)
+		err = d.Set("secure_access_dashboard_url", s)
 		if err != nil {
 			return err
 		}
 	}
 	if s, ok := sra.GetAllowPortForwardingOk(); ok && *s {
-		err = d.Set("secure-access-allow-port-forwading", s)
+		err = d.Set("secure_access_allow_port_forwading", s)
 		if err != nil {
 			return err
 		}
