@@ -28,7 +28,7 @@ func Provider() *schema.Provider {
 			"api_gateway_address": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc:     schema.EnvDefaultFunc("AKEYLESS_GATEWAY", publicApi) ,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_GATEWAY", publicApi),
 				Description: "Origin URL of the API Gateway server. This is a URL with a scheme, a hostname and a port.",
 			},
 			"api_key_login": {

@@ -26,6 +26,7 @@ func resourceProducerAws() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Producer name",
 			},
 			"target_name": {
@@ -262,10 +263,18 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.UserTtl != nil {
-		err = d.Set("user_ttl", *rOut.UserTtl)
-		if err != nil {
-			return err
+	// if rOut.UserTtl != nil {
+	// 	err = d.Set("user_ttl", *rOut.UserTtl)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+	if common.GetFieldjsonTagName("user_ttl", rOut) != "" {
+		if rOut.UserTtl != nil {
+			err = d.Set("user_ttl", *rOut.UserTtl)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if rOut.AwsAccessKeyId != nil {
@@ -275,19 +284,13 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.AwsSecretAccessKey != nil {
-		err = d.Set("aws_secret_access_key", *rOut.AwsSecretAccessKey)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.AwsSessionToken != nil {
-		err = d.Set("aws_session_token", *rOut.AwsSessionToken)
+		err = d.Set("aws_access_secret_key", *rOut.AwsSecretAccessKey)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AwsRegion != nil {
-		err = d.Set("aws_region", *rOut.AwsRegion)
+		err = d.Set("region", *rOut.AwsRegion)
 		if err != nil {
 			return err
 		}
@@ -299,7 +302,7 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.AwsAccessMode != nil {
-		err = d.Set("aws_access_mode", *rOut.AwsAccessMode)
+		err = d.Set("access_mode", *rOut.AwsAccessMode)
 		if err != nil {
 			return err
 		}

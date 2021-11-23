@@ -247,6 +247,19 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 
+		if itemOut.ItemMetadata != nil {
+			err = d.Set("metadata", *itemOut.ItemMetadata)
+			if err != nil {
+				return err
+			}
+		}
+		if itemOut.ItemTags != nil {
+			err = d.Set("tags", *itemOut.ItemTags)
+			if err != nil {
+				return err
+			}
+		}
+
 		err = d.Set("value", gsvOut[path])
 		if err != nil {
 			return err

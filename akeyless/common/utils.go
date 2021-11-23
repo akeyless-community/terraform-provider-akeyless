@@ -2,7 +2,9 @@ package common
 
 import (
 	"context"
+	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
@@ -165,14 +167,14 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 		}
 	}
 
-	if s, ok := sra.GetIsCliOk(); ok {
+	if s, ok := sra.GetIsCliOk(); ok && *s {
 		err = d.Set("secure-access-ssh-creds", s)
 		if err != nil {
 			return err
 		}
 	}
 
-	if s, ok := sra.GetUseInternalBastionOk(); ok {
+	if s, ok := sra.GetUseInternalBastionOk(); ok && *s {
 		err = d.Set("secure-access-use-internal-bastion", s)
 		if err != nil {
 			return err
@@ -186,11 +188,7 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 		}
 	}
 
-	if s, ok := sra.GetIsWebOk(); ok {
-		err = d.Set("secure-access-web-browsing", s)
-		if err != nil {
-			return err
-		}
+	if s, ok := sra.GetIsWebOk(); ok && *s {
 		err = d.Set("secure-access-web-browsing", s)
 		if err != nil {
 			return err
@@ -211,7 +209,7 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 		}
 	}
 
-	if s, ok := sra.GetAllowProvidingExternalUsernameOk(); ok {
+	if s, ok := sra.GetAllowProvidingExternalUsernameOk(); ok && *s {
 		err = d.Set("secure-access-allow-external-user", s)
 		if err != nil {
 			return err
@@ -251,7 +249,7 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 			return err
 		}
 	}
-	if s, ok := sra.GetNativeOk(); ok {
+	if s, ok := sra.GetNativeOk(); ok && *s {
 		err = d.Set("secure-access-aws-native-cli", s)
 		if err != nil {
 			return err
@@ -269,7 +267,7 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 			return err
 		}
 	}
-	if s, ok := sra.GetAllowPortForwardingOk(); ok {
+	if s, ok := sra.GetAllowPortForwardingOk(); ok && *s {
 		err = d.Set("secure-access-allow-port-forwading", s)
 		if err != nil {
 			return err
@@ -277,4 +275,20 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 	}
 
 	return nil
+}
+
+func GetFieldjsonTagName(tag string, s interface{}) (fieldname string) {
+	rt := reflect.TypeOf(s)
+	if rt.Kind() != reflect.Struct {
+		//panic("bad type")
+		return ""
+	}
+	for i := 0; i < rt.NumField(); i++ {
+		f := rt.Field(i)
+		v := strings.Split(f.Tag.Get("json"), ",")[0] // use split to ignore tag "options" like omitempty, etc.
+		if v == tag {
+			return f.Name
+		}
+	}
+	return ""
 }
