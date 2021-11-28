@@ -10,6 +10,7 @@ import (
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -95,12 +96,16 @@ func Provider() *schema.Provider {
 				},
 			},
 		},
-		ConfigureFunc: configureProvider,
+		//ConfigureFunc: configureProvider,
+		ConfigureContextFunc: configureProvider,
 		ResourcesMap: map[string]*schema.Resource{
-			"akeyless_static_secret": resourceStaticSecret(),
-			"akeyless_auth_method":   resourceAuthMethod(),
-			"akeyless_role":          resourceRole(),
-			"akeyless_producer_aws":  resourceProducerAws(),
+			"akeyless_static_secret":  resourceStaticSecret(),
+			"akeyless_auth_method":    resourceAuthMethod(),
+			"akeyless_role":           resourceRole(),
+			"akeyless_producer_aws":   resourceProducerAws(),
+			"akeyless_producer_rdp":   resourceProducerRdp(),
+			"akeyless_producer_mongo": resourceProducerMongo(),
+			"akeyless_target_aws":     resourceAwsTarget(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_static_secret":  dataSourceStaticSecret(),
@@ -112,15 +117,17 @@ func Provider() *schema.Provider {
 	}
 }
 
-func configureProvider(d *schema.ResourceData) (interface{}, error) {
+func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	//func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	apiGwAddress := d.Get("api_gateway_address").(string)
 
+	diagnostic := diag.Diagnostics{{Severity: diag.Error, Summary: ""}}
 	err := inputValidation(d)
 	if err != nil {
-		return "", err
+		diagnostic[0].Summary = err.Error()
+		return "", diagnostic
 	}
 
-	ctx := context.Background()
 	client := akeyless.NewAPIClient(&akeyless.Configuration{
 		Servers: []akeyless.ServerConfiguration{
 			{
@@ -132,7 +139,8 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	authBody := akeyless.NewAuthWithDefaults()
 	err = setAuthBody(authBody)
 	if err != nil {
-		return "", err
+		diagnostic[0].Summary = err.Error()
+		return "", diagnostic
 	}
 
 	var apiErr akeyless.GenericOpenAPIError
@@ -140,9 +148,11 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	authOut, _, err := client.Auth(ctx).Body(*authBody).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return "", fmt.Errorf("authentication failed: %v", string(apiErr.Body()))
+			diagnostic[0].Summary = fmt.Sprintf("authentication failed: %v", string(apiErr.Body()))
+			return "", diagnostic
 		}
-		return "", fmt.Errorf("authentication failed: %v", err)
+		diagnostic[0].Summary = fmt.Sprintf("authentication failed: %v", err)
+		return "", diagnostic
 	}
 	token := authOut.GetToken()
 

@@ -105,6 +105,13 @@ func resourceProducerAws() *schema.Resource {
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"tags": {
+				Type:        schema.TypeSet,
+				Required:    false,
+				Optional:    true,
+				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"enable_admin_rotation": {
 				Type:        schema.TypeBool,
 				Required:    false,
@@ -180,6 +187,8 @@ func resourceProducerAwsCreate(d *schema.ResourceData, m interface{}) error {
 	awsUserProgrammaticAccess := d.Get("aws_user_programmatic_access").(bool)
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
+	tagsSet := d.Get("tags").(*schema.Set)
+	tags := common.ExpandStringList(tagsSet.List())
 	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
 	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -205,6 +214,7 @@ func resourceProducerAwsCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AwsUserProgrammaticAccess, awsUserProgrammaticAccess)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
 	common.GetAkeylessPtr(&body.AdminRotationIntervalDays, adminRotationIntervalDays)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
@@ -234,19 +244,10 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
-	name := d.Get("name").(string)
 
 	path := d.Id()
-	if path != name {
-		if name == "" {
-			name = path
-		} else {
-			return fmt.Errorf("ID is invalid %v %v", path, name)
-		}
-	}
-
 	body := akeyless.GatewayGetProducer{
-		Name:  name,
+		Name:  path,
 		Token: &token,
 	}
 
@@ -289,6 +290,12 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 	}
 	if rOut.UseGwCloudIdentity != nil {
 		err = d.Set("use_gw_cloud_identity", *rOut.UseGwCloudIdentity)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Tags != nil {
+		err = d.Set("tags", *rOut.Tags)
 		if err != nil {
 			return err
 		}
@@ -375,7 +382,6 @@ func resourceProducerAwsUpdate(d *schema.ResourceData, m interface{}) error {
 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
-	newName := d.Get("new_name").(string)
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	awsAccessKeyId := d.Get("aws_access_key_id").(string)
@@ -389,6 +395,8 @@ func resourceProducerAwsUpdate(d *schema.ResourceData, m interface{}) error {
 	awsUserProgrammaticAccess := d.Get("aws_user_programmatic_access").(bool)
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
+	tagsSet := d.Get("tags").(*schema.Set)
+	tags := common.ExpandStringList(tagsSet.List())
 	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
 	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -402,7 +410,6 @@ func resourceProducerAwsUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.NewName, newName)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.AwsAccessKeyId, awsAccessKeyId)
 	common.GetAkeylessPtr(&body.AwsAccessSecretKey, awsAccessSecretKey)
@@ -415,6 +422,7 @@ func resourceProducerAwsUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AwsUserProgrammaticAccess, awsUserProgrammaticAccess)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
 	common.GetAkeylessPtr(&body.AdminRotationIntervalDays, adminRotationIntervalDays)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)

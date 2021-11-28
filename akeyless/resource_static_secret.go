@@ -317,8 +317,9 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		Token:   &token,
 	}
 
-	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
 	common.GetAkeylessPtr(&bodyItem.AddTag, tagsList)
+
+	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
 	common.GetAkeylessPtr(&bodyItem.NewMetadata, metadata)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCreds, secureAccessSshCreds)
