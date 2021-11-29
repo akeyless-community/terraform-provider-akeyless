@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
@@ -68,6 +69,14 @@ func dataSourceSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	if *itemOut.ItemType == common.DynamicStaticSecretType {
 		err := dataSourceDynamicSecretRead(d, m)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if *itemOut.ItemType == common.RotatedSecretType {
+		err := dataSourceGetRotatedSecretValueRead(d, m)
 		if err != nil {
 			return err
 		}
