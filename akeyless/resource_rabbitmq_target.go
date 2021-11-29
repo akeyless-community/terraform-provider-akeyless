@@ -75,17 +75,17 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
 
-	body := akeyless.CreateRabbitmqTarget{
-		Name:               name,
-		RabbitmqServerUser: rabbitmqServerUser,
-		RabbitmqServerUri:  rabbitmqServerUri,
-		Token:              &token,
+	body := akeyless.CreateRabbitMQTarget{
+		Name:  name,
+		Token: &token,
 	}
+	common.GetAkeylessPtr(&body.RabbitmqServerUser, rabbitmqServerUser)
+	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.RabbitmqServerPassword, rabbitmqServerPassword)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
 
-	_, _, err := client.CreateRabbitmqTarget(ctx).Body(body).Execute()
+	_, _, err := client.CreateRabbitMQTarget(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -176,7 +176,7 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
 
-	body := akeyless.UpdateRabbitmqTarget{
+	body := akeyless.UpdateRabbitMQTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -186,7 +186,7 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
 
-	_, _, err := client.UpdateRabbitmqTarget(ctx).Body(body).Execute()
+	_, _, err := client.UpdateRabbitMQTarget(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))

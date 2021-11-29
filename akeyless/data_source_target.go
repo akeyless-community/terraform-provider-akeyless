@@ -77,6 +77,7 @@ func dataSourceGetTarget() *schema.Resource {
 				Computed:    true,
 				Required:    false,
 				Description: "",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"last_version": {
 				Type:        schema.TypeInt,

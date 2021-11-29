@@ -80,6 +80,7 @@ func dataSourceGatewayGetK8sAuthConfig() *schema.Resource {
 				Computed:    true,
 				Required:    false,
 				Description: "",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"disable_iss_validation": {
 				Type:        schema.TypeBool,

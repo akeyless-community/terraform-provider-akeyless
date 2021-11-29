@@ -41,8 +41,6 @@ func WarningDiagnostics(message string) diag.Diagnostic {
 
 func GetAkeylessPtr(ptr interface{}, val interface{}) {
 
-	//fmt.Printf("t1: %T \n", ptr)
-
 	switch ptr.(type) {
 	case **string:
 		if v, ok := val.(string); ok {
@@ -128,6 +126,43 @@ func GetTargetName(itemTargetsAssoc *[]akeyless.ItemTargetAssociation) string {
 		}
 	}
 	return strings.Join(names, ",")
+}
+
+func GetTagsForUpdate(d *schema.ResourceData, name, token string, newTags []string,
+	client akeyless.V2ApiService) ([]string, []string, error) {
+	ctx := context.Background()
+
+	item := akeyless.GetTags{
+		Name:  name,
+		Token: &token,
+	}
+
+	oldTags, _, err := client.GetTags(ctx).Body(item).Execute()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(oldTags) == 0 {
+		return newTags, nil, nil
+	}
+	add := difference(newTags, oldTags)
+	remove := difference(oldTags, newTags)
+	return add, remove, nil
+}
+
+// difference returns the elements in `a` that aren't in `b`.
+func difference(a, b []string) []string {
+	mb := make(map[string]struct{}, len(b))
+	for _, x := range b {
+		mb[x] = struct{}{}
+	}
+	var diff []string
+	for _, x := range a {
+		if _, found := mb[x]; !found {
+			diff = append(diff, x)
+		}
+	}
+	return diff
 }
 
 func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiService) error {

@@ -26,6 +26,7 @@ func dataSourceGetTags() *schema.Resource {
 				Computed:    true,
 				Required:    false,
 				Description: "",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -57,7 +58,7 @@ func dataSourceGetTagsRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	err = d.Set("tags", *rOut.Tags)
+	err = d.Set("tags", rOut)
 	if err != nil {
 		return err
 	}

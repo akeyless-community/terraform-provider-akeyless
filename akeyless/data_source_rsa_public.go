@@ -32,6 +32,7 @@ func dataSourceGetRSAPublic() *schema.Resource {
 				Computed:    true,
 				Required:    false,
 				Description: "",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

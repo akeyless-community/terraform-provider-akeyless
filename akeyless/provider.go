@@ -116,9 +116,9 @@ func Provider() *schema.Provider {
 			"akeyless_target_gke":        resourceGkeTarget(),
 			"akeyless_target_gcp":        resourceGcpTarget(),
 			"akeyless_target_k8s":        resourceK8sTarget(),
-			"akeyless_target_rabbit":     resourceRabbitTarget(),
+			"akeyless_target_rabbit":     resourceRabbitmqTarget(),
 			"akeyless_target_web":        resourceWebTarget(),
-			"akeyless_target_ssh":        resourceSshTarget(),
+			"akeyless_target_ssh":        resourceSSHTarget(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_static_secret":      dataSourceStaticSecret(),

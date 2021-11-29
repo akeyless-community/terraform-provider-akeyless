@@ -112,7 +112,7 @@ func resourceWebTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.Value.Url != nil {
-		err = d.Set("url", *rOut.Url)
+		err = d.Set("url", *rOut.Value.Url)
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func resourceWebTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	d.SetId(name)
+	d.SetId(path)
 
 	return nil
 }

@@ -51,29 +51,30 @@ func dataSourceGetKubeExecCreds() *schema.Resource {
 				Required:    false,
 				Description: "",
 			},
-			"apiVersion": {
+			"api_version": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Required:    false,
 				Description: "",
 			},
-			"clientCertificateData": {
+			"client_certificate_data": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Required:    false,
 				Description: "",
 			},
-			"clientKeyData": {
+			"client_key_data": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Required:    false,
 				Description: "",
 			},
-			"parentCertificateData": {
+			"parent_certificate_data": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Required:    false,
 				Description: "",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -117,19 +118,19 @@ func dataSourceGetKubeExecCredsRead(d *schema.ResourceData, m interface{}) error
 	if err != nil {
 		return err
 	}
-	err = d.Set("apiVersion", *rOut.ApiVersion)
+	err = d.Set("api_version", *rOut.ApiVersion)
 	if err != nil {
 		return err
 	}
-	err = d.Set("clientCertificateData", rOut.Status.GetClientCertificateData())
+	err = d.Set("client_certificate_data", rOut.Status.GetClientCertificateData())
 	if err != nil {
 		return err
 	}
-	err = d.Set("clientKeyData", rOut.Status.GetClientKeyData())
+	err = d.Set("client_key_Data", rOut.Status.GetClientKeyData())
 	if err != nil {
 		return err
 	}
-	err = d.Set("parentCertificateData", rOut.Status.GetParentCertificateData())
+	err = d.Set("parent_certificate_data", rOut.Status.GetParentCertificateData())
 	if err != nil {
 		return err
 	}

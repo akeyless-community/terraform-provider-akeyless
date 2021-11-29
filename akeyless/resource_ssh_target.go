@@ -165,26 +165,26 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.PrivateKey != nil {
-		err = d.Set("private_key", *rOut.PrivateKey)
+		err = d.Set("private_key", *rOut.Value.PrivateKey)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.Value.PrivateKeyPassword != nil {
-		err = d.Set("private_key_password", *rOut.PrivateKeyPassword)
+		err = d.Set("private_key_password", *rOut.Value.PrivateKeyPassword)
 		if err != nil {
 			return err
 		}
 	}
 
-	if rOut.Value.SshUsername != nil {
-		err = d.Set("ssh_username", *rOut.SshUsername)
+	if rOut.Value.Username != nil {
+		err = d.Set("ssh_username", *rOut.Value.Username)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.SshPassword != nil {
-		err = d.Set("ssh_password", *rOut.SshPassword)
+	if rOut.Value.Password != nil {
+		err = d.Set("ssh_password", *rOut.Value.Password)
 		if err != nil {
 			return err
 		}
@@ -223,9 +223,6 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	privateKey := d.Get("private_key").(string)
 	privateKeyPassword := d.Get("private_key_password").(string)
 	key := d.Get("key").(string)
-
-	/*
-	 */
 
 	body := akeyless.UpdateSSHTarget{
 		Name:  name,

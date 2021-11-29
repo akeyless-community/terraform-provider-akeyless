@@ -300,6 +300,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
+
 	secureAccessHost := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHostList := common.ExpandStringList(secureAccessHost.List())
 
@@ -317,7 +318,15 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		Token:   &token,
 	}
 
-	common.GetAkeylessPtr(&bodyItem.AddTag, tagsList)
+	add, remove, err := common.GetTagsForUpdate(d, path, token, tagsList, client)
+	if err != nil {
+		if len(add) > 0 {
+			common.GetAkeylessPtr(&bodyItem.AddTag, add)
+		}
+		if len(remove) > 0 {
+			common.GetAkeylessPtr(&bodyItem.RmTag, remove)
+		}
+	}
 
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
 	common.GetAkeylessPtr(&bodyItem.NewMetadata, metadata)

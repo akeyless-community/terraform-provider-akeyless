@@ -13,7 +13,7 @@ import (
 
 func resourcePKICertIssuer() *schema.Resource {
 	return &schema.Resource{
-		Description: "PKI Cert Issuer resource",
+		Description: "PKI Cert Issuer  resource",
 		Create:      resourcePKICertIssuerCreate,
 		Read:        resourcePKICertIssuerRead,
 		Update:      resourcePKICertIssuerUpdate,
@@ -165,7 +165,6 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
-
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
 	ttl := d.Get("ttl").(int)
@@ -190,10 +189,10 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	tagSet := d.Get("tag").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 
-	body := akeyless.  CreatePKICertIssuer{
+	body := akeyless.CreatePKICertIssuer{
 		Name:          name,
 		SignerKeyName: signerKeyName,
-		Ttl:           ttl,
+		Ttl:           int64(ttl),
 		Token:         &token,
 	}
 	common.GetAkeylessPtr(&body.AllowedDomains, allowedDomains)
@@ -257,144 +256,141 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	/*
-	   // TODO fix this
-	   	if rOut.Name != nil {
-	   		err = d.Set("name", *rOut.Name)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.SignerKeyName != nil {
-	   		err = d.Set("signer_key_name", *rOut.SignerKeyName)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.Ttl != nil {
-	   		err = d.Set("ttl", *rOut.Ttl)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.AllowedDomains != nil {
-	   		err = d.Set("allowed_domains", *rOut.AllowedDomains)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.AllowedUriSans != nil {
-	   		err = d.Set("allowed_uri_sans", *rOut.AllowedUriSans)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.AllowSubdomains != nil {
-	   		err = d.Set("allow_subdomains", *rOut.AllowSubdomains)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.NotEnforceHostnames != nil {
-	   		err = d.Set("not_enforce_hostnames", *rOut.NotEnforceHostnames)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.AllowAnyName != nil {
-	   		err = d.Set("allow_any_name", *rOut.AllowAnyName)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.NotRequireCn != nil {
-	   		err = d.Set("not_require_cn", *rOut.NotRequireCn)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.ServerFlag != nil {
-	   		err = d.Set("server_flag", *rOut.ServerFlag)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.ClientFlag != nil {
-	   		err = d.Set("client_flag", *rOut.ClientFlag)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.CodeSigningFlag != nil {
-	   		err = d.Set("code_signing_flag", *rOut.CodeSigningFlag)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.KeyUsage != nil {
-	   		err = d.Set("key_usage", *rOut.KeyUsage)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.OrganizationalUnits != nil {
-	   		err = d.Set("organizational_units", *rOut.OrganizationalUnits)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.Organizations != nil {
-	   		err = d.Set("organizations", *rOut.Organizations)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.Country != nil {
-	   		err = d.Set("country", *rOut.Country)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.Locality != nil {
-	   		err = d.Set("locality", *rOut.Locality)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.Province != nil {
-	   		err = d.Set("province", *rOut.Province)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.StreetAddress != nil {
-	   		err = d.Set("street_address", *rOut.StreetAddress)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.PostalCode != nil {
-	   		err = d.Set("postal_code", *rOut.PostalCode)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.Metadata != nil {
-	   		err = d.Set("metadata", *rOut.Metadata)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.Tag != nil {
-	   		err = d.Set("tag", *rOut.Tag)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
+	if rOut.CertIssuerSignerKeyName != nil {
+		err = d.Set("signer_key_name", *rOut.CertIssuerSignerKeyName)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.ItemMetadata != nil {
+		err = d.Set("metadata", *rOut.ItemMetadata)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.ItemTags != nil {
+		err = d.Set("tag", *rOut.ItemTags)
+		if err != nil {
+			return err
+		}
+	}
 
-	   	common.GetSra(d, path, token, client)
+	if rOut.CertificateIssueDetails != nil {
 
-	*/
+		if rOut.CertificateIssueDetails.MaxTtl != nil {
+			err = d.Set("ttl", *rOut.CertificateIssueDetails.MaxTtl)
+			if err != nil {
+				return err
+			}
+		}
+
+		if rOut.CertificateIssueDetails.PkiCertIssuerDetails != nil {
+			pki := rOut.CertificateIssueDetails.PkiCertIssuerDetails
+
+			if pki.AllowedDomainsList != nil {
+				err = d.Set("allowed_domains", *pki.AllowedDomainsList)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.AllowedUriSans != nil {
+				err = d.Set("allowed_uri_sans", *pki.AllowedUriSans)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.AllowSubdomains != nil {
+				err = d.Set("allow_subdomains", *pki.AllowSubdomains)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.EnforceHostnames != nil {
+				err = d.Set("not_enforce_hostnames", *pki.EnforceHostnames)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.AllowAnyName != nil {
+				err = d.Set("allow_any_name", *pki.AllowAnyName)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.RequireCn != nil {
+				err = d.Set("not_require_cn", *pki.RequireCn)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.ServerFlag != nil {
+				err = d.Set("server_flag", *pki.ServerFlag)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.ClientFlag != nil {
+				err = d.Set("client_flag", *pki.ClientFlag)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.CodeSigningFlag != nil {
+				err = d.Set("code_signing_flag", *pki.CodeSigningFlag)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.KeyUsageList != nil {
+				err = d.Set("key_usage", *pki.KeyUsageList)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.OrganizationUnitList != nil {
+				err = d.Set("organizational_units", *pki.OrganizationUnitList)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.OrganizationList != nil {
+				err = d.Set("organizations", *pki.OrganizationList)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.Country != nil {
+				err = d.Set("country", *pki.Country)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.Locality != nil {
+				err = d.Set("locality", *pki.Locality)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.Province != nil {
+				err = d.Set("province", *pki.Province)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.StreetAddress != nil {
+				err = d.Set("street_address", *pki.StreetAddress)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.PostalCode != nil {
+				err = d.Set("postal_code", *pki.PostalCode)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
 
 	d.SetId(path)
 
@@ -429,14 +425,24 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	streetAddress := d.Get("street_address").(string)
 	postalCode := d.Get("postal_code").(string)
 	metadata := d.Get("metadata").(string)
-	tagSet := d.Get("tag").(*schema.Set)
-	tag := common.ExpandStringList(tagSet.List())
 
-	body := akeyless.CreatePKICertIssuer{
+	tagSet := d.Get("tag").(*schema.Set)
+	tagsList := common.ExpandStringList(tagSet.List())
+
+	body := akeyless.UpdatePKICertIssuer{
 		Name:          name,
 		SignerKeyName: signerKeyName,
-		Ttl:           ttl,
+		Ttl:           int64(ttl),
 		Token:         &token,
+	}
+	add, remove, err := common.GetTagsForUpdate(d, name, token, tagsList, client)
+	if err != nil {
+		if len(add) > 0 {
+			common.GetAkeylessPtr(&body.AddTag, add)
+		}
+		if len(remove) > 0 {
+			common.GetAkeylessPtr(&body.RmTag, remove)
+		}
 	}
 	common.GetAkeylessPtr(&body.AllowedDomains, allowedDomains)
 	common.GetAkeylessPtr(&body.AllowedUriSans, allowedUriSans)
@@ -456,9 +462,8 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.StreetAddress, streetAddress)
 	common.GetAkeylessPtr(&body.PostalCode, postalCode)
 	common.GetAkeylessPtr(&body.Metadata, metadata)
-	common.GetAkeylessPtr(&body.Tag, tag)
 
-	_, _, err := client.CreatePKICertIssuer(ctx).Body(body).Execute()
+	_, _, err = client.UpdatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))

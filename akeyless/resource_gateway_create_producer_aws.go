@@ -370,7 +370,7 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetSra(d, path, token, client)
 
-	d.SetId(name)
+	d.SetId(path)
 
 	return nil
 }
