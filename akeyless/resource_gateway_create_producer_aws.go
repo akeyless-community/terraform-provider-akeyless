@@ -112,20 +112,6 @@ func resourceProducerAws() *schema.Resource {
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"enable_admin_rotation": {
-				Type:        schema.TypeBool,
-				Required:    false,
-				Optional:    true,
-				Description: "Enable automatic admin credentials rotation",
-				Default:     "false",
-			},
-			"admin_rotation_interval_days": {
-				Type:        schema.TypeInt,
-				Required:    false,
-				Optional:    true,
-				Description: "Admin credentials rotation interval (days)",
-				Default:     "0",
-			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
 				Required:    false,
@@ -189,8 +175,6 @@ func resourceProducerAwsCreate(d *schema.ResourceData, m interface{}) error {
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
-	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessAwsAccountId := d.Get("secure_access_aws_account_id").(string)
 	secureAccessAwsNativeCli := d.Get("secure_access_aws_native_cli").(bool)
@@ -215,8 +199,6 @@ func resourceProducerAwsCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
-	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
-	common.GetAkeylessPtr(&body.AdminRotationIntervalDays, adminRotationIntervalDays)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessAwsAccountId, secureAccessAwsAccountId)
 	common.GetAkeylessPtr(&body.SecureAccessAwsNativeCli, secureAccessAwsNativeCli)
@@ -312,18 +294,6 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.EnableAdminRotation != nil {
-		err = d.Set("enable_admin_rotation", *rOut.EnableAdminRotation)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.AdminRotationIntervalDays != nil {
-		err = d.Set("admin_rotation_interval_days", *rOut.AdminRotationIntervalDays)
-		if err != nil {
-			return err
-		}
-	}
 	if rOut.AwsUserConsoleAccess != nil {
 		err = d.Set("aws_user_console_access", *rOut.AwsUserConsoleAccess)
 		if err != nil {
@@ -397,8 +367,6 @@ func resourceProducerAwsUpdate(d *schema.ResourceData, m interface{}) error {
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
-	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessAwsAccountId := d.Get("secure_access_aws_account_id").(string)
 	secureAccessAwsNativeCli := d.Get("secure_access_aws_native_cli").(bool)
@@ -423,8 +391,6 @@ func resourceProducerAwsUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
-	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
-	common.GetAkeylessPtr(&body.AdminRotationIntervalDays, adminRotationIntervalDays)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessAwsAccountId, secureAccessAwsAccountId)
 	common.GetAkeylessPtr(&body.SecureAccessAwsNativeCli, secureAccessAwsNativeCli)
