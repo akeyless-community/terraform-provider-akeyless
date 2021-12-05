@@ -224,7 +224,7 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if rOut.AccessInfo.CidrWhitelist != nil {
+	if rOut.AccessInfo.CidrWhitelist != nil && *rOut.AccessInfo.CidrWhitelist != "" {
 		err = d.Set("bound_ips", strings.Split(*rOut.AccessInfo.CidrWhitelist, ","))
 		if err != nil {
 			return err
