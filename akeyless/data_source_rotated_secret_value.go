@@ -48,7 +48,7 @@ func dataSourceGetRotatedSecretValueRead(d *schema.ResourceData, m interface{}) 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	names := d.Get("name").(string)
-	version := d.Get("version").(int32)
+	version := d.Get("version").(int)
 
 	body := akeyless.GetRotatedSecretValue{
 		Names: names,

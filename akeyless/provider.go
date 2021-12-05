@@ -152,7 +152,6 @@ func Provider() *schema.Provider {
 }
 
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	//func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	apiGwAddress := d.Get("api_gateway_address").(string)
 
 	diagnostic := diag.Diagnostics{{Severity: diag.Error, Summary: ""}}

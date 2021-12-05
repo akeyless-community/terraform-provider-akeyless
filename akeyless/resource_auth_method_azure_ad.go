@@ -59,7 +59,7 @@ func resourceAuthMethodAzureAd() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "Issuer URL",
-				Default:     "https://sts.windows.net/---bound_tenant_id---",
+				Default:     "https://sts.windows.net/my-tenant-id/",
 			},
 			"jwks_uri": {
 				Type:        schema.TypeString,

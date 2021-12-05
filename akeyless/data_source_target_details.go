@@ -84,7 +84,7 @@ func dataSourceGetTargetDetailsRead(d *schema.ResourceData, m interface{}) error
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	targetVersion := d.Get("target_version").(int32)
+	targetVersion := d.Get("target_version").(int)
 	showVersions := d.Get("show_versions").(bool)
 
 	body := akeyless.GetTargetDetails{

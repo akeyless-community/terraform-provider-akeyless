@@ -34,7 +34,7 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
-				Default:     "0",
+				Default:     0,
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
@@ -66,7 +66,7 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "Token ttl (in minutes)",
-				Default:     "60",
+				Default:     60,
 			},
 			"access_id": {
 				Type:        schema.TypeString,
@@ -92,7 +92,7 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	denyRotate := d.Get("deny_rotate").(bool)
 	denyInheritance := d.Get("deny_inheritance").(bool)
-	ttl := d.Get("ttl").(int32)
+	ttl := d.Get("ttl").(int)
 
 	body := akeyless.CreateAuthMethodUniversalIdentity{
 		Name:  name,
@@ -215,7 +215,7 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	denyRotate := d.Get("deny_rotate").(bool)
 	denyInheritance := d.Get("deny_inheritance").(bool)
-	ttl := d.Get("ttl").(int32)
+	ttl := d.Get("ttl").(int)
 
 	body := akeyless.UpdateAuthMethodUniversalIdentity{
 		Name:  name,

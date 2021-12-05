@@ -65,15 +65,15 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 			return
 		}
 	case **int64:
-		if v, ok := val.(int64); ok {
+		if v, ok := val.(int); ok {
 			a := ptr.(**int64)
-			*a = akeyless.PtrInt64(v)
+			*a = akeyless.PtrInt64(int64(v))
 			return
 		}
 	case **int32:
-		if v, ok := val.(int32); ok {
+		if v, ok := val.(int); ok {
 			a := ptr.(**int32)
-			*a = akeyless.PtrInt32(v)
+			*a = akeyless.PtrInt32(int32(v))
 			return
 		}
 	case **int:
