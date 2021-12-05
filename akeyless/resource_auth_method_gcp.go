@@ -55,7 +55,8 @@ func resourceAuthMethodGcp() *schema.Resource {
 			},
 			"audience": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Required:    false,
+				Optional:    true,
 				Description: "The audience to verify in the JWT received by the client",
 				Default:     "akeyless.io",
 			},
