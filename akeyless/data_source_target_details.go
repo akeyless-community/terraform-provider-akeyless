@@ -46,6 +46,7 @@ func dataSourceGetTargetDetails() *schema.Resource {
 				Computed:    true,
 				Required:    false,
 				Description: "",
+				Sensitive:   true,
 			},
 			"host": {
 				Type:        schema.TypeString,

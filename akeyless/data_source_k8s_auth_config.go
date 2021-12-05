@@ -43,6 +43,7 @@ func dataSourceGatewayGetK8sAuthConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Required:    false,
+				Sensitive:   true,
 				Description: "",
 			},
 			"am_token_expiration": {

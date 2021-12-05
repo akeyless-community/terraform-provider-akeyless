@@ -25,6 +25,7 @@ func dataSourceGetKubeExecCreds() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "pki key file contents encoded using Base64. If this option is used, the certificate will be printed to stdout",
 			},
 			"common_name": {

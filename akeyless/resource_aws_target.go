@@ -202,7 +202,6 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	newName := d.Get("new_name").(string)
 	comment := d.Get("comment").(string)
 	accessKeyId := d.Get("access_key_id").(string)
 	accessKey := d.Get("access_key").(string)
@@ -210,13 +209,11 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	region := d.Get("region").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
-	updateVersion := d.Get("update_version").(bool)
 
 	body := akeyless.UpdateAWSTarget{
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.NewName, newName)
 	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.AccessKeyId, accessKeyId)
 	common.GetAkeylessPtr(&body.AccessKey, accessKey)
@@ -224,7 +221,6 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Region, region)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.UpdateVersion, updateVersion)
 
 	_, _, err := client.UpdateAWSTarget(ctx).Body(body).Execute()
 	if err != nil {

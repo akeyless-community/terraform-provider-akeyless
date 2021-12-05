@@ -193,9 +193,6 @@ func resourceAzureTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
 
-	/*
-	 */
-
 	body := akeyless.UpdateAzureTarget{
 		Name:  name,
 		Token: &token,
