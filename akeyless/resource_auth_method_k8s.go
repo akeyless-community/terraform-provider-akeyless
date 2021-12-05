@@ -107,7 +107,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	accessExpires := d.Get("access_expires").(int64)
+	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
@@ -206,7 +206,7 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.AccessInfo.CidrWhitelist != nil {
-		err = d.Set("bound_ips", *rOut.AccessInfo.CidrWhitelist)
+		err = d.Set("bound_ips", strings.Split( *rOut.AccessInfo.CidrWhitelist, ","))
 		if err != nil {
 			return err
 		}
@@ -251,7 +251,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	accessExpires := d.Get("access_expires").(int64)
+	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)

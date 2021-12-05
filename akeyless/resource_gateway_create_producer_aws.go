@@ -51,6 +51,7 @@ func resourceProducerAws() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Default:     "iam_user",
 				Description: "The types of credentials to retrieve from AWS. Options:[iam_user,assume_role]",
 			},
 			"region": {
