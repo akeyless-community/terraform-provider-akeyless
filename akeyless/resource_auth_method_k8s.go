@@ -1,11 +1,11 @@
 package akeyless
 
-/*
 import (
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -49,6 +49,11 @@ func resourceAuthMethodK8s() *schema.Resource {
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
+			"public_key": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Base64-encoded public key text",
+			},
 			"audience": {
 				Type:        schema.TypeString,
 				Required:    false,
@@ -76,24 +81,11 @@ func resourceAuthMethodK8s() *schema.Resource {
 				Description: "A list of namespaces that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"public_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: “The generated public key.",
-			},
-			"private_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The generated private key.",
-				Sensitive:   true,
-			},
 			"access_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description:  "Auth Method access ID",
+				Description: "Auth Method access ID",
 			},
 		},
 	}
@@ -108,6 +100,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
+	publicKey := d.Get("public_key").(string)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
@@ -123,14 +116,15 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
+	common.GetAkeylessPtr(&body.GenKey, "false")
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
-	common.GetAkeylessPtr(&body.GenKey, "true")
 	common.GetAkeylessPtr(&body.Audience, audience)
 	common.GetAkeylessPtr(&body.BoundSaNames, boundSaNames)
 	common.GetAkeylessPtr(&body.BoundPodNames, boundPodNames)
 	common.GetAkeylessPtr(&body.BoundNamespaces, boundNamespaces)
+	common.GetAkeylessPtr(&body.PublicKey, publicKey)
 
 	rOut, _, err := client.CreateAuthMethodK8S(ctx).Body(body).Execute()
 	if err != nil {
@@ -142,13 +136,6 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 
 	if rOut.AccessId != nil {
 		err = d.Set("access_id", *rOut.AccessId)
-		if err != nil {
-			return err
-		}
-	}
-
-	if rOut.AccessId != nil {
-		err = d.Set("private_key", *rOut.AccessId)
 		if err != nil {
 			return err
 		}
@@ -205,9 +192,16 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-		if rOut.AccessInfo.CidrWhitelist != nil && *rOut.AccessInfo.CidrWhitelist != ""   {
+	if rOut.AccessInfo.CidrWhitelist != nil && *rOut.AccessInfo.CidrWhitelist != "" {
 
-		err = d.Set("bound_ips", strings.Split( *rOut.AccessInfo.CidrWhitelist, ","))
+		err = d.Set("bound_ips", strings.Split(*rOut.AccessInfo.CidrWhitelist, ","))
+		if err != nil {
+			return err
+		}
+	}
+
+	if rOut.AccessInfo.K8sAccessRules.PubKey != nil {
+		err = d.Set("public_key", *rOut.AccessInfo.K8sAccessRules.PubKey)
 		if err != nil {
 			return err
 		}
@@ -253,10 +247,10 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
+	publicKey := d.Get("public_key").(string)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
-	genKey := d.Get("gen_key").(string)
 	audience := d.Get("audience").(string)
 	boundSaNamesSet := d.Get("bound_sa_names").(*schema.Set)
 	boundSaNames := common.ExpandStringList(boundSaNamesSet.List())
@@ -272,11 +266,12 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
-	common.GetAkeylessPtr(&body.GenKey, genKey)
 	common.GetAkeylessPtr(&body.Audience, audience)
 	common.GetAkeylessPtr(&body.BoundSaNames, boundSaNames)
 	common.GetAkeylessPtr(&body.BoundPodNames, boundPodNames)
 	common.GetAkeylessPtr(&body.BoundNamespaces, boundNamespaces)
+	common.GetAkeylessPtr(&body.PublicKey, publicKey)
+	common.GetAkeylessPtr(&body.GenKey, "false")
 
 	_, _, err := client.UpdateAuthMethodK8S(ctx).Body(body).Execute()
 	if err != nil {
@@ -337,4 +332,3 @@ func resourceAuthMethodK8sImport(d *schema.ResourceData, m interface{}) ([]*sche
 
 	return []*schema.ResourceData{d}, nil
 }
-*/
