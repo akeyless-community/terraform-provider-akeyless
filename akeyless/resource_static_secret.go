@@ -264,7 +264,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return err
 		}
-		common.GetSra(d, path, token, client)
+		common.GetSraFromItem(d, itemOut)
 	}
 	return nil
 }

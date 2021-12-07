@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -50,10 +51,11 @@ func resourceSSHCertIssuer() *schema.Resource {
 				Description: "Signed certificates with principal, e.g example_role1,example_role2",
 			},
 			"extensions": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeMap,
 				Required:    false,
 				Optional:    true,
-				Description: "Signed certificates with extensions, e.g permit-port-forwarding=",
+				Description: "Signed certificates with extensions (key/val), e.g permit-port-forwarding=",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"metadata": {
 				Type:        schema.TypeString,
@@ -61,7 +63,7 @@ func resourceSSHCertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "A metadata about the issuer",
 			},
-			"tag": {
+			"tags": {
 				Type:        schema.TypeSet,
 				Required:    false,
 				Optional:    true,
@@ -121,9 +123,9 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	allowedUsers := d.Get("allowed_users").(string)
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
-	extensions := d.Get("extensions").(string)
+	extensions := d.Get("extensions").(map[string]interface{})
 	metadata := d.Get("metadata").(string)
-	tagSet := d.Get("tag").(*schema.Set)
+	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessBastionApi := d.Get("secure_access_bastion_api").(string)
@@ -199,16 +201,26 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 
+		/*
+				AllowedDomains *[]string `json:"allowed_domains,omitempty"`
+			AllowedUserKeyLengths *map[string]int64 `json:"allowed_user_key_lengths,omitempty"`
+			// Relevant for user certificate
+			CertType *int32 `json:"cert_type,omitempty"`
+			CriticalOptions *map[string]string `json:"critical_options,omitempty"`
+			Extensions *map[string]string `json:"extensions,omitempty"`
+			// In case it is empty, the key ID will be combination of user identifiers and a random string
+			StaticKeyId *string `json:"static_key_id,omitempty"`
+		*/
 		if rOut.CertificateIssueDetails.SshCertIssuerDetails != nil {
 			ssh := rOut.CertificateIssueDetails.SshCertIssuerDetails
 			if ssh.AllowedUsers != nil {
-				err = d.Set("allowed_users", *ssh.AllowedUsers)
+				err = d.Set("allowed_users", strings.Join(*ssh.AllowedUsers, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if ssh.Principals != nil {
-				err = d.Set("principals", *ssh.Principals)
+				err = d.Set("principals", strings.Join(*ssh.Principals, ","))
 				if err != nil {
 					return err
 				}
@@ -235,14 +247,13 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemTags != nil {
-		err = d.Set("tag", *rOut.ItemTags)
+		err = d.Set("tags", *rOut.ItemTags)
 		if err != nil {
 			return err
 		}
 	}
 
-	common.GetSra(d, path, token, client)
-
+	common.GetSraFromItem(d, rOut)
 	d.SetId(path)
 
 	return nil
@@ -260,7 +271,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	allowedUsers := d.Get("allowed_users").(string)
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
-	extensions := d.Get("extensions").(string)
+	extensions := d.Get("extensions").(map[string]interface{})
 	metadata := d.Get("metadata").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessBastionApi := d.Get("secure_access_bastion_api").(string)
@@ -270,7 +281,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessUseInternalBastion := d.Get("secure_access_use_internal_bastion").(bool)
 
-	tagSet := d.Get("tag").(*schema.Set)
+	tagSet := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tagSet.List())
 
 	body := akeyless.UpdateSSHCertIssuer{

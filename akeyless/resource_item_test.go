@@ -108,10 +108,10 @@ func TestPkiResource(t *testing.T) {
 func TestSshCertResource(t *testing.T) {
 	name := "test_ssh"
 	itemPath := testPath("path_ssh")
-	deleteKey("terraform-tests/test_ssh_key")
+	deleteKey("/terraform-tests/test_ssh_key")
 
 	config := fmt.Sprintf(`
-		resource "akeyless_dfc_key" "key" {
+		resource "akeyless_dfc_key" "key_ssh" {
 			name = "terraform-tests/test_ssh_key"
 			alg = "RSA1024"
 		}
@@ -120,17 +120,21 @@ func TestSshCertResource(t *testing.T) {
 			ttl = "390"
 			signer_key_name = "/terraform-tests/test_ssh_key"
 			tags     = ["t1", "t2"]
-			allow_subdomains = true
-			allowed_domains = "jdjdjd"
+			allowed_users = "aaaa"
+			secure_access_enable = "true"
+			secure_access_host = ["1.1.1.1", "2.2.2.2"]
+			secure_access_bastion_api = "https://my.bastion:9900"
+			secure_access_bastion_ssh = "my.bastion:22"
+			secure_access_ssh_creds_user = "aaaa"
 
 			depends_on = [
-    			akeyless_dfc_key.key,
+    			akeyless_dfc_key.key_ssh,
   			]
 		}
 	`, name, itemPath)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_dfc_key" "key" {
+		resource "akeyless_dfc_key" "key_ssh" {
 			name = "terraform-tests/test_ssh_key"
 			alg = "RSA1024"
 			tags     = ["t1", "t2"]
@@ -138,13 +142,18 @@ func TestSshCertResource(t *testing.T) {
 
 		resource "akeyless_ssh_cert_issuer" "%v" {
 			name = "%v"
-			ttl = "390"
-			allow_subdomains = false
-			tags     = ["t1", "t3"]
-			allowed_domains = "ddd,dss"
+			ttl = "290"
 			signer_key_name = "/terraform-tests/test_ssh_key"
+			tags     = ["t1", "t3"]
+			allowed_users = "aaaa2,fffff"
+			secure_access_enable = "true"
+			secure_access_host = ["1.1.1.1", "2.2.2.2"]
+			secure_access_bastion_api = "https://my.bastion:9901"
+			secure_access_bastion_ssh = "my.bastion1:22"
+			secure_access_ssh_creds_user = "aaaa2"
+
 			depends_on = [
-    			akeyless_dfc_key.key,
+    			akeyless_dfc_key.key_ssh,
   			]
 		}
 	`, name, itemPath)
@@ -186,7 +195,6 @@ func deleteFunc() {
 	}
 	client := p.client
 	token := *p.token
-	fmt.Println("RNN ", client, token)
 
 	gsvBody := akeyless.ListItems{
 		Path:  akeyless.PtrString("/terraform-tests"),

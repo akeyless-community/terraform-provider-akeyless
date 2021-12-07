@@ -210,8 +210,6 @@ func resourceEksTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	common.GetSra(d, path, token, client)
-
 	d.SetId(path)
 
 	return nil

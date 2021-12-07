@@ -261,7 +261,7 @@ func resourceProducerGkeRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	common.GetSra(d, path, token, client)
+	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
 	d.SetId(path)
 

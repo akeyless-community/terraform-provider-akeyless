@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -148,6 +149,18 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 			*a = v
 			return
 		}
+	case **map[string]string:
+		if v, ok := val.(map[string]interface{}); ok {
+			mapString := make(map[string]string)
+			for key, value := range v {
+				strKey := fmt.Sprintf("%v", key)
+				strValue := fmt.Sprintf("%v", value)
+				mapString[strKey] = strValue
+			}
+			a := ptr.(**map[string]string)
+			*a = &mapString
+			return
+		}
 	default:
 		panic("invalid type")
 		//*ptr = val
@@ -214,7 +227,7 @@ func difference(a, b []string) []string {
 	return diff
 }
 
-func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiService) error {
+func GetSraWithDescribeItem(d *schema.ResourceData, path, token string, client akeyless.V2ApiService) error {
 
 	ctx := context.Background()
 
@@ -229,12 +242,26 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 		return err
 	}
 
-	if itemOut.GetItemGeneralInfo().SecureRemoteAccessDetails == nil {
+	return GetSraFromItem(d, itemOut)
+}
+
+func GetSraFromItem(d *schema.ResourceData, item akeyless.Item) error {
+
+	if item.GetItemGeneralInfo().SecureRemoteAccessDetails == nil {
 		return nil
 	}
 
-	itemType := itemOut.ItemType
-	sra := itemOut.GetItemGeneralInfo().SecureRemoteAccessDetails
+	itemType := *item.ItemType
+	sra := item.GetItemGeneralInfo().SecureRemoteAccessDetails
+
+	return GetSra(d, sra, itemType)
+}
+
+func GetSra(d *schema.ResourceData, sra *akeyless.SecureRemoteAccess, itemType string) error {
+	var err error
+	if sra == nil {
+		return nil
+	}
 
 	if _, ok := sra.GetEnableOk(); ok {
 		err = d.Set("secure_access_enable", strconv.FormatBool(sra.GetEnable()))
@@ -272,7 +299,7 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 	}
 
 	if s, ok := sra.GetSshUserOk(); ok {
-		if *itemType == "STATIC_SECRET" {
+		if itemType == "STATIC_SECRET" {
 			err = d.Set("secure_access_ssh_user", s)
 			if err != nil {
 				return err
@@ -285,12 +312,12 @@ func GetSra(d *schema.ResourceData, path, token string, client akeyless.V2ApiSer
 		}
 	}
 
-	if s, ok := sra.GetIsCliOk(); ok && *s {
-		err = d.Set("secure_access_ssh_creds", s)
-		if err != nil {
-			return err
-		}
-	}
+	// if s, ok := sra.GetIsCliOk(); ok && *s {
+	// 	err = d.Set("secure_access_ssh_creds", s)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	if s, ok := sra.GetUseInternalBastionOk(); ok && *s {
 		err = d.Set("secure_access_use_internal_bastion", s)
