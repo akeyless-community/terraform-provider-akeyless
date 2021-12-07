@@ -221,51 +221,48 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get Secret value: %v", err)
 	}
 
-	if gsvOut[path] != d.Get("value") {
-		// The secret has been updated outside of the current Terraform workspace
-		item := akeyless.DescribeItem{
-			Name:         path,
-			ShowVersions: akeyless.PtrBool(true),
-			Token:        &token,
-		}
-
-		itemOut, _, err := client.DescribeItem(ctx).Body(item).Execute()
-		if err != nil {
-			return err
-		}
-
-		version := itemOut.LastVersion
-
-		err = d.Set("version", *version)
-		if err != nil {
-			return err
-		}
-
-		pk := itemOut.ProtectionKeyName
-		err = d.Set("protection_key", *pk)
-		if err != nil {
-			return err
-		}
-
-		if itemOut.ItemMetadata != nil {
-			err = d.Set("metadata", *itemOut.ItemMetadata)
-			if err != nil {
-				return err
-			}
-		}
-		if itemOut.ItemTags != nil {
-			err = d.Set("tags", *itemOut.ItemTags)
-			if err != nil {
-				return err
-			}
-		}
-
-		err = d.Set("value", gsvOut[path])
-		if err != nil {
-			return err
-		}
-		common.GetSraFromItem(d, itemOut)
+	item := akeyless.DescribeItem{
+		Name:         path,
+		ShowVersions: akeyless.PtrBool(true),
+		Token:        &token,
 	}
+
+	itemOut, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	if err != nil {
+		return err
+	}
+
+	version := itemOut.LastVersion
+
+	err = d.Set("version", *version)
+	if err != nil {
+		return err
+	}
+
+	pk := itemOut.ProtectionKeyName
+	err = d.Set("protection_key", *pk)
+	if err != nil {
+		return err
+	}
+
+	if itemOut.ItemMetadata != nil {
+		err = d.Set("metadata", *itemOut.ItemMetadata)
+		if err != nil {
+			return err
+		}
+	}
+	if itemOut.ItemTags != nil {
+		err = d.Set("tags", *itemOut.ItemTags)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = d.Set("value", gsvOut[path])
+	if err != nil {
+		return err
+	}
+	common.GetSraFromItem(d, itemOut)
 	return nil
 }
 

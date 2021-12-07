@@ -29,6 +29,7 @@ func TestStaticResource(t *testing.T) {
 			path = "%v"
 			value = "update-secret"
 			secure_access_enable = "false"
+			secure_access_web_browsing = "true"
 			secure_access_url    = "http://google.com"
 			tags     = ["t1", "t3"]
 		}
