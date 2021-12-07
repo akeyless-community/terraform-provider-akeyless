@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -147,7 +148,7 @@ func resourcePKICertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "A metadata about the issuer",
 			},
-			"tag": {
+			"tags": {
 				Type:        schema.TypeSet,
 				Required:    false,
 				Optional:    true,
@@ -186,7 +187,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	streetAddress := d.Get("street_address").(string)
 	postalCode := d.Get("postal_code").(string)
 	metadata := d.Get("metadata").(string)
-	tagSet := d.Get("tag").(*schema.Set)
+	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 
 	body := akeyless.CreatePKICertIssuer{
@@ -269,7 +270,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemTags != nil {
-		err = d.Set("tag", *rOut.ItemTags)
+		err = d.Set("tags", *rOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -288,13 +289,13 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 			pki := rOut.CertificateIssueDetails.PkiCertIssuerDetails
 
 			if pki.AllowedDomainsList != nil {
-				err = d.Set("allowed_domains", *pki.AllowedDomainsList)
+				err = d.Set("allowed_domains", strings.Join(*pki.AllowedDomainsList, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.AllowedUriSans != nil {
-				err = d.Set("allowed_uri_sans", *pki.AllowedUriSans)
+				err = d.Set("allowed_uri_sans", strings.Join(*pki.AllowedUriSans, ","))
 				if err != nil {
 					return err
 				}
@@ -306,7 +307,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if pki.EnforceHostnames != nil {
-				err = d.Set("not_enforce_hostnames", *pki.EnforceHostnames)
+				err = d.Set("not_enforce_hostnames", !*pki.EnforceHostnames)
 				if err != nil {
 					return err
 				}
@@ -318,7 +319,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if pki.RequireCn != nil {
-				err = d.Set("not_require_cn", *pki.RequireCn)
+				err = d.Set("not_require_cn", !*pki.RequireCn)
 				if err != nil {
 					return err
 				}
@@ -342,49 +343,49 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if pki.KeyUsageList != nil {
-				err = d.Set("key_usage", *pki.KeyUsageList)
+				err = d.Set("key_usage", strings.Join(*pki.KeyUsageList, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.OrganizationUnitList != nil {
-				err = d.Set("organizational_units", *pki.OrganizationUnitList)
+				err = d.Set("organizational_units", strings.Join(*pki.OrganizationUnitList, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.OrganizationList != nil {
-				err = d.Set("organizations", *pki.OrganizationList)
+				err = d.Set("organizations", strings.Join(*pki.OrganizationList, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.Country != nil {
-				err = d.Set("country", *pki.Country)
+				err = d.Set("country", strings.Join(*pki.Country, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.Locality != nil {
-				err = d.Set("locality", *pki.Locality)
+				err = d.Set("locality", strings.Join(*pki.Locality, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.Province != nil {
-				err = d.Set("province", *pki.Province)
+				err = d.Set("province", strings.Join(*pki.Province, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.StreetAddress != nil {
-				err = d.Set("street_address", *pki.StreetAddress)
+				err = d.Set("street_address", strings.Join(*pki.StreetAddress, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.PostalCode != nil {
-				err = d.Set("postal_code", *pki.PostalCode)
+				err = d.Set("postal_code", strings.Join(*pki.PostalCode, ","))
 				if err != nil {
 					return err
 				}
@@ -426,7 +427,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	postalCode := d.Get("postal_code").(string)
 	metadata := d.Get("metadata").(string)
 
-	tagSet := d.Get("tag").(*schema.Set)
+	tagSet := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tagSet.List())
 
 	body := akeyless.UpdatePKICertIssuer{
@@ -436,7 +437,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 		Token:         &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagsList, client)
-	if err != nil {
+	if err == nil {
 		if len(add) > 0 {
 			common.GetAkeylessPtr(&body.AddTag, add)
 		}

@@ -319,7 +319,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	add, remove, err := common.GetTagsForUpdate(d, path, token, tagsList, client)
-	if err != nil {
+	if err == nil {
 		if len(add) > 0 {
 			common.GetAkeylessPtr(&bodyItem.AddTag, add)
 		}

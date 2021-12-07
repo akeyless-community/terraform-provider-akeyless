@@ -99,7 +99,10 @@ func Provider() *schema.Provider {
 		//ConfigureFunc: configureProvider,
 		ConfigureContextFunc: configureProvider,
 		ResourcesMap: map[string]*schema.Resource{
+			"akeyless_dfc_key":                        resourceDfcKey(),
 			"akeyless_static_secret":                  resourceStaticSecret(),
+			"akeyless_pki_cert_issuer":                resourcePKICertIssuer(),
+			"akeyless_ssh_cert_issuer":                resourceSSHCertIssuer(),
 			"akeyless_auth_method":                    resourceAuthMethod(),
 			"akeyless_auth_method_api_key":            resourceAuthMethodApiKey(),
 			"akeyless_auth_method_aws_iam":            resourceAuthMethodAwsIam(),

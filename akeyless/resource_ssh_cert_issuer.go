@@ -281,7 +281,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 		Token:         &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagsList, client)
-	if err != nil {
+	if err == nil {
 		if len(add) > 0 {
 			common.GetAkeylessPtr(&body.AddTag, add)
 		}
