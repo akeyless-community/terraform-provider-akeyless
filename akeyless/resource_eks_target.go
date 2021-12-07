@@ -1,4 +1,3 @@
-// generated fule
 package akeyless
 
 import (
@@ -46,14 +45,12 @@ func resourceEksTarget() *schema.Resource {
 			},
 			"eks_access_key_id": {
 				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
+				Required:    true,
 				Description: "EKS access key ID",
 			},
 			"eks_secret_access_key": {
 				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
+				Required:    true,
 				Description: "EKS secret access key",
 			},
 			"use_gw_cloud_identity": {

@@ -42,6 +42,12 @@ func WarningDiagnostics(message string) diag.Diagnostic {
 func GetAkeylessPtr(ptr interface{}, val interface{}) {
 
 	switch ptr.(type) {
+	case *string:
+		if v, ok := val.(string); ok {
+			a := ptr.(*string)
+			*a = v
+			return
+		}
 	case **string:
 		if v, ok := val.(string); ok {
 			a := ptr.(**string)
@@ -64,6 +70,12 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 			*a = akeyless.PtrBool(v)
 			return
 		}
+	case *bool:
+		if v, ok := val.(bool); ok {
+			a := ptr.(*bool)
+			*a = v
+			return
+		}
 	case **int64:
 		if v, ok := val.(int); ok {
 			a := ptr.(**int64)
@@ -80,6 +92,24 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 		if v, ok := val.(int); ok {
 			a := ptr.(**int)
 			*a = akeyless.PtrInt(v)
+			return
+		}
+	case *int64:
+		if v, ok := val.(int); ok {
+			a := ptr.(*int64)
+			*a = int64(v)
+			return
+		}
+	case *int32:
+		if v, ok := val.(int); ok {
+			a := ptr.(*int32)
+			*a = int32(v)
+			return
+		}
+	case *int:
+		if v, ok := val.(int); ok {
+			a := ptr.(*int)
+			*a = v
 			return
 		}
 	case **float32:
@@ -100,7 +130,26 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 			*a = akeyless.PtrTime(v)
 			return
 		}
+	case *float32:
+		if v, ok := val.(float32); ok {
+			a := ptr.(*float32)
+			*a = v
+			return
+		}
+	case *float64:
+		if v, ok := val.(float64); ok {
+			a := ptr.(*float64)
+			*a = v
+			return
+		}
+	case *time.Time:
+		if v, ok := val.(time.Time); ok {
+			a := ptr.(*time.Time)
+			*a = v
+			return
+		}
 	default:
+		panic("invalid type")
 		//*ptr = val
 	}
 }
