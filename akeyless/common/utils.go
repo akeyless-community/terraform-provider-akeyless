@@ -341,6 +341,13 @@ func GetSra(d *schema.ResourceData, sra *akeyless.SecureRemoteAccess, itemType s
 	}
 
 	if s, ok := sra.GetIsWebOk(); ok && *s {
+		err = d.Set("secure_access_web", s)
+		if err != nil {
+			return err
+		}
+	}
+
+	if s, ok := sra.GetIsolatedOk(); ok && *s {
 		err = d.Set("secure_access_web_browsing", s)
 		if err != nil {
 			return err

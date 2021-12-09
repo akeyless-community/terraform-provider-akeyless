@@ -45,6 +45,7 @@ func resourceProducerAws() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Access Secret Key",
 			},
 			"access_mode": {

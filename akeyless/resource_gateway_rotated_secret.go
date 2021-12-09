@@ -272,6 +272,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	rType := "password"
 	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.RotatedSecretDetails != nil {
 		rsd := itemOut.ItemGeneralInfo.RotatedSecretDetails
 		if rsd.RotationHour != nil {
@@ -281,9 +282,11 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if rsd.RotatorType != nil {
-			err = d.Set("rotator_type", *rsd.RotatorType)
-			if err != nil {
-				return err
+			if *rsd.RotatorType == "use_???" {
+				err = d.Set("rotator_type", rType)
+				if err != nil {
+					return err
+				}
 			}
 		}
 		if rsd.RotatorCredsType != nil {
@@ -308,13 +311,13 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			}
 		} else if _, ok := val["target_value"]; ok {
 
-		} else if _, ok := val["Username"]; ok {
-			err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
+		} else if _, ok := val["username"]; ok {
+			err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
 			if err != nil {
 				return err
 			}
-		} else if _, ok := val["Password"]; ok {
-			err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
+		} else if _, ok := val["password"]; ok {
+			err = d.Set("custom_payload", fmt.Sprintf("%v", val["password"]))
 			if err != nil {
 				return err
 			}
@@ -373,61 +376,69 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
+
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	var apiErr akeyless.GenericOpenAPIError
+	ctx := context.Background()
+	name := d.Get("name").(string)
+	key := d.Get("key").(string)
+	autoRotate := d.Get("auto_rotate").(string)
+	rotationInterval := d.Get("rotation_interval").(string)
+	rotationHour := d.Get("rotation_hour").(int)
+	rotatorCredsType := d.Get("rotator_creds_type").(string)
+	apiId := d.Get("api_id").(string)
+	apiKey := d.Get("api_key").(string)
+	rotatedUsername := d.Get("rotated_username").(string)
+	rotatedPassword := d.Get("rotated_password").(string)
+	customPayload := d.Get("custom_payload").(string)
+	tagsSet := d.Get("tags").(*schema.Set)
+	tagsList := common.ExpandStringList(tagsSet.List())
 	/*
-		provider := m.(providerMeta)
-		client := *provider.client
-		token := *provider.token
-
-		var apiErr akeyless.GenericOpenAPIError
-		ctx := context.Background()
-		name := d.Get("name").(string)
-		key := d.Get("key").(string)
-		autoRotate := d.Get("auto_rotate").(string)
-		rotationInterval := d.Get("rotation_interval").(string)
-		rotationHour := d.Get("rotation_hour").(int)
-		rotatorCredsType := d.Get("rotator_creds_type").(string)
-		apiId := d.Get("api_id").(string)
-		apiKey := d.Get("api_key").(string)
-		rotatedUsername := d.Get("rotated_username").(string)
-		rotatedPassword := d.Get("rotated_password").(string)
-		customPayload := d.Get("custom_payload").(string)
-
-		/*
-		       targetName := d.Get("target_name").(string)
-		       metadata := d.Get("metadata").(string)
-		   	tagsSet := d.Get("tags").(*schema.Set)
-		   	tags := common.ExpandStringList(tagsSet.List())
-		       rotatorType := d.Get("rotator_type").(string)
-		       rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
-		       userDn := d.Get("user_dn").(string)
-		       userAttribute := d.Get("user_attribute").(string)
+	   targetName := d.Get("target_name").(string)
+	   metadata := d.Get("metadata").(string)
+	   rotatorType := d.Get("rotator_type").(string)
+	   rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
+	   userDn := d.Get("user_dn").(string)
+	   userAttribute := d.Get("user_attribute").(string)
 	*/
-	/*
-		body := akeyless.GatewayUpdateItem{
-			Name:  name,
-			Token: &token,
-		}
-		common.GetAkeylessPtr(&body.Key, key)
-		common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
-		common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
-		common.GetAkeylessPtr(&body.RotationHour, rotationHour)
-		common.GetAkeylessPtr(&body.RotatorCredsType, rotatorCredsType)
-		common.GetAkeylessPtr(&body.ApiId, apiId)
-		common.GetAkeylessPtr(&body.ApiKey, apiKey)
-		common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
-		common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
-		common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 
-		_, _, err := client.GatewayUpdateItem(ctx).Body(body).Execute()
-		if err != nil {
-			if errors.As(err, &apiErr) {
-				return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-			}
-			return fmt.Errorf("can't update : %v", err)
+	body := akeyless.GatewayUpdateItem{
+		Name:  name,
+		Token: &token,
+	}
+	add, remove, err := common.GetTagsForUpdate(d, name, token, tagsList, client)
+	if err == nil {
+		if len(add) > 0 {
+			common.GetAkeylessPtr(&body.AddTag, add)
 		}
+		if len(remove) > 0 {
+			common.GetAkeylessPtr(&body.RmTag, remove)
+		}
+	}
+	common.GetAkeylessPtr(&body.Key, key)
+	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
+	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
+	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
+	common.GetAkeylessPtr(&body.RotatorCredsType, rotatorCredsType)
+	common.GetAkeylessPtr(&body.ApiId, apiId)
+	common.GetAkeylessPtr(&body.ApiKey, apiKey)
+	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
+	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
+	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 
-		d.SetId(name)
-	*/
+	_, _, err = client.GatewayUpdateItem(ctx).Body(body).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("can't update : %v", err)
+	}
+
+	d.SetId(name)
+
 	return nil
 }
 
