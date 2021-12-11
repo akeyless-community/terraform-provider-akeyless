@@ -107,6 +107,20 @@ func resourceProducerRedshift() *schema.Resource {
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"secure_access_web": {
+				Type:        schema.TypeBool,
+				Required:    false,
+				Optional:    true,
+				Description: "Enable Web Secure Remote Access ",
+				Computed:    true,
+			},
+			"secure_access_db_name": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "Enable Web Secure Remote Access ",
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -248,7 +262,7 @@ func resourceProducerRedshiftRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("producer_encryption_key", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}

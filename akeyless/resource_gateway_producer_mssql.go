@@ -133,6 +133,13 @@ func resourceProducerMssql() *schema.Resource {
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "false",
 			},
+			"secure_access_db_name": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "Enable Web Secure Remote Access ",
+				Computed:    true,
+			},
 		},
 	}
 }

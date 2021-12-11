@@ -151,6 +151,18 @@ func resourceProducerAws() *schema.Resource {
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "true",
 			},
+			"secure_access_url": {
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+				Computed: true,
+			},
+			"secure_access_aws_region": {
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
