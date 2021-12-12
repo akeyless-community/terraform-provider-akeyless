@@ -170,6 +170,7 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 			name = "%v"
 			service_account_creds_data = "%v"
 			bound_service_accounts = ["%v"]
+			type = "gce"
 		}
 	`, name, path, os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT"), os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC"))
 
@@ -178,6 +179,7 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 			name = "%v"
 			service_account_creds_data = "%v"
 			bound_service_accounts = ["%v"]
+			type = "gce"
 			bound_ips = ["1.1.1.0/32"]
 		}
 	`, name, path, os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT"), os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC"))
