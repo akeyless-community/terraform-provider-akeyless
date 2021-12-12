@@ -13,14 +13,13 @@ import (
 func TestStaticResource(t *testing.T) {
 	secretName := "test_secret"
 	secretPath := testPath("path_secret")
+	deleteKey(secretPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
 			path = "%v"
 			value = "secretpassword"
 			tags     = ["t1", "t2"]
-			secure_access_enable = "true"
-			secure_access_url    = "http://googssle.com"
-			secure_access_web_browsing = "true"
 		}
 	`, secretName, secretPath)
 

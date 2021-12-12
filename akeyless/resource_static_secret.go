@@ -107,6 +107,13 @@ func resourceStaticSecret() *schema.Resource {
 				Optional:    true,
 				Description: "Override the SSH username as indicated in SSH Certificate Issuer",
 			},
+			"secure_access_web": {
+				Type:        schema.TypeBool,
+				Required:    false,
+				Optional:    true,
+				Description: "Enable Web Secure Remote Access ",
+				Computed:    true,
+			},
 		},
 	}
 }
