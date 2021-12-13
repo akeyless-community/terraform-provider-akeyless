@@ -82,8 +82,8 @@ func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
-	name := "test_auth_method_saml"
-	path := testPath("path_auth_method_saml")
+	name := "test_auth_method_saml2"
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_saml" "%v" {
 			name = "%v"
