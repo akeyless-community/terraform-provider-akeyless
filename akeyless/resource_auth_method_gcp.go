@@ -265,7 +265,15 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.AccessInfo.GcpAccessRules.BoundLabels != nil {
-		err = d.Set("bound_labels", *rOut.AccessInfo.GcpAccessRules.BoundLabels)
+		boundLabels := *rOut.AccessInfo.GcpAccessRules.BoundLabels
+		a := make([]string, 0)
+		if len(boundLabels) != 0 {
+			for k, v := range boundLabels {
+				a = append(a, fmt.Sprintf("%s:%s", k, v))
+			}
+		}
+
+		err = d.Set("bound_labels", a)
 		if err != nil {
 			return err
 		}
