@@ -3,12 +3,13 @@ package akeyless
 import (
 	"context"
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 func TestOnlyRoleResourceCreate(t *testing.T) {
@@ -26,6 +27,9 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 			assoc_auth_method {
 				am_name = "%v"
 			}
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
 		}
 	`, authMethodPath, rolePath, authMethodPath)
 
