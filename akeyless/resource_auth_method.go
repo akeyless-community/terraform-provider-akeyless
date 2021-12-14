@@ -21,6 +21,7 @@ func resourceAuthMethod() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAuthMethodImport,
 		},
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_auth_method_<TYPE>",
 		Schema: map[string]*schema.Schema{
 			"path": {
 				Type:        schema.TypeString,
