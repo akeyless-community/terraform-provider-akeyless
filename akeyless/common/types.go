@@ -8,4 +8,5 @@ const (
 
 	StaticSecretType        = "STATIC_SECRET"
 	DynamicStaticSecretType = "DYNAMIC_SECRET"
+	RotatedSecretType       = "ROTATED_SECRET"
 )

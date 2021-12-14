@@ -47,9 +47,19 @@ resource "akeyless_static_secret" "secret" {
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **metadata** (String) Metadata about the secret
 - **multiline_value** (Boolean) The provided value is a multiline value (separated by '
 ')
 - **protection_key** (String) The version of the secret.
+- **secure_access_bastion_issuer** (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
+- **secure_access_host** (Set of String) Target servers for connections., For multiple values repeat this flag.
+- **secure_access_ssh_creds** (String) Static-Secret values contains SSH Credentials, either Private Key or Password [password/private-key]
+- **secure_access_ssh_user** (String) Override the SSH username as indicated in SSH Certificate Issuer
+- **secure_access_url** (String) Destination URL to inject secrets.
+- **secure_access_web** (Boolean) Enable Web Secure Remote Access
+- **secure_access_web_browsing** (Boolean) Secure browser via Akeyless Web Access Bastion
+- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 
 ### Read-Only
 

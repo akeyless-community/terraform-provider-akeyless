@@ -3,17 +3,21 @@ package akeyless
 import (
 	"context"
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 func TestOnlyRoleResourceCreate(t *testing.T) {
 	rolePath := testPath("test_role_assoc")
 	authMethodPath := testPath("path_auth_method")
+	deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
@@ -26,6 +30,9 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 			assoc_auth_method {
 				am_name = "%v"
 			}
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
 		}
 	`, authMethodPath, rolePath, authMethodPath)
 
@@ -43,6 +50,8 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 func TestRoleWithAssocResourceUpdate(t *testing.T) {
 	rolePath := testPath("test_role_assoc")
 	authMethodPath := testPath("path_auth_method")
+	deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "auth_method" {
 			path = "%v"
@@ -64,7 +73,11 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 				rule_type = "auth-method-rule"
 			}
 			audit_access = "all"
-  			analytics_access = "all"
+			  analytics_access = "all"
+			  
+			depends_on = [
+    			akeyless_auth_method.auth_method,
+  			]
 		}
 	`, authMethodPath, rolePath, authMethodPath)
 
@@ -95,7 +108,11 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 				rule_type = "auth-method-rule"
 			}
 			audit_access = "all"
-  			analytics_access = "all"
+			  analytics_access = "all"
+			  
+			depends_on = [
+    			akeyless_auth_method.auth_method,
+  			]
 		}
 	`, authMethodPath, rolePath, authMethodPath)
 
@@ -121,7 +138,11 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			}
 
 			audit_access = "all"
-  			analytics_access = "own"
+			  analytics_access = "own"
+
+			depends_on = [
+    			akeyless_auth_method.auth_method,
+  			]
 		}
 	`, authMethodPath, rolePath, authMethodPath)
 
@@ -146,7 +167,11 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 				rule_type = "auth-method-rule"
 			}
 			audit_access = "all"
-  			analytics_access = "all"
+			  analytics_access = "all"
+			  
+			depends_on = [
+    			akeyless_auth_method.auth_method,
+  			]
 		}
 	`, authMethodPath, rolePath, authMethodPath)
 
@@ -277,4 +302,51 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string) resource.TestCheckFu
 
 		return nil
 	}
+}
+
+func deleteRole(path string) error {
+
+	p, err := getProviderMeta()
+	if err != nil {
+		panic(err)
+	}
+
+	client := p.client
+	token := *p.token
+
+	gsvBody := akeyless.DeleteRole{
+		Name:  path,
+		Token: &token,
+	}
+
+	_, _, err = client.DeleteRole(context.Background()).Body(gsvBody).Execute()
+	if err != nil {
+		fmt.Println("error delete role:", err)
+		return err
+	}
+	fmt.Println("deleted", path)
+	return nil
+}
+
+func deleteAuthMethod(path string) error {
+	p, err := getProviderMeta()
+	if err != nil {
+		panic(err)
+	}
+
+	client := p.client
+	token := *p.token
+
+	gsvBody := akeyless.DeleteAuthMethod{
+		Name:  path,
+		Token: &token,
+	}
+
+	_, _, err = client.DeleteAuthMethod(context.Background()).Body(gsvBody).Execute()
+	if err != nil {
+		fmt.Println("error delete auth method:", err)
+		return err
+	}
+	fmt.Println("deleted", path)
+	return nil
 }

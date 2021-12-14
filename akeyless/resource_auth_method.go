@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
 )
 
 func resourceAuthMethod() *schema.Resource {
@@ -20,6 +21,7 @@ func resourceAuthMethod() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAuthMethodImport,
 		},
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_auth_method_<TYPE>",
 		Schema: map[string]*schema.Schema{
 			"path": {
 				Type:        schema.TypeString,
@@ -571,7 +573,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 			Name:                    path,
 			BoundIps:                &boundIpsList,
 			AccessExpires:           &accessExpires,
-			Audience:                akeyless.PtrString(audience),
+			Audience:                audience,
 			ServiceAccountCredsData: akeyless.PtrString(serviceAccountCredsData),
 			Token:                   &token,
 		}
@@ -586,7 +588,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 					body.BoundServiceAccounts = &boundServiceAccountsList
 				}
 			}
-			body.Type = akeyless.PtrString("iam")
+			body.Type = "iam"
 		}
 
 		gce := gcp["gce"].([]interface{})
@@ -609,7 +611,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 					body.BoundLabels = &boundLabelsList
 				}
 			}
-			body.Type = akeyless.PtrString("gce")
+			body.Type = "gce"
 		}
 
 		apiKey, _, err := client.CreateAuthMethodGCP(ctx).Body(body).Execute()
