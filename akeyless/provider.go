@@ -151,10 +151,10 @@ func Provider() *schema.Provider {
 			"akeyless_kube_exec_creds":    dataSourceGetKubeExecCreds(),
 			"akeyless_producer_tmp_creds": dataSourceGatewayGetProducerTmpCreds(),
 			"akeyless_rotated_secret":     dataSourceGetRotatedSecretValue(),
-			"akeyless_rsa_pub":            dataSourceGetRSAPublic(),
-			"akeyless_tags":               dataSourceGetTags(),
-			"akeyless_target_details":     dataSourceGetTargetDetails(),
-			"akeyless_target":             dataSourceGetTarget(),
+			//"akeyless_rsa_pub":            dataSourceGetRSAPublic(),
+			"akeyless_tags":           dataSourceGetTags(),
+			"akeyless_target_details": dataSourceGetTargetDetails(),
+			"akeyless_target":         dataSourceGetTarget(),
 		},
 	}
 }

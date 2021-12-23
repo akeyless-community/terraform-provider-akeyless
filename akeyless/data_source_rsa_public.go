@@ -2,6 +2,7 @@ package akeyless
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -60,17 +61,26 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			err = json.Unmarshal(apiErr.Body(), &rOut)
+			if err != nil {
+				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
+			}
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		if err != nil {
+			return fmt.Errorf("can't get value: %v", err)
+		}
 	}
-	err = d.Set("raw", *rOut.Raw)
-	if err != nil {
-		return err
+	if rOut.Raw != nil {
+		err = d.Set("raw", *rOut.Raw)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("ssh", *rOut.Ssh)
-	if err != nil {
-		return err
+	if rOut.Ssh != nil {
+		err = d.Set("ssh", *rOut.Ssh)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(name)

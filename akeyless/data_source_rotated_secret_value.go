@@ -34,7 +34,7 @@ func dataSourceGetRotatedSecretValue() *schema.Resource {
 				Computed:    true,
 				Required:    false,
 				Description: "output",
-				Sensitive:   true,
+				//Sensitive:   true,
 			},
 		},
 	}
@@ -64,9 +64,15 @@ func dataSourceGetRotatedSecretValueRead(d *schema.ResourceData, m interface{}) 
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			err = json.Unmarshal(apiErr.Body(), &rOut)
+			err = nil
+			if err != nil {
+				return fmt.Errorf("can't get value: %v %v", err, string(apiErr.Body()))
+			}
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		if err != nil {
+			return fmt.Errorf("can't get value: %v", err)
+		}
 	}
 	marshalValue, err := json.Marshal(rOut)
 	if err != nil {
@@ -80,3 +86,16 @@ func dataSourceGetRotatedSecretValueRead(d *schema.ResourceData, m interface{}) 
 	d.SetId(names)
 	return nil
 }
+
+/*
+type RotatedSecretValue struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	//todo
+	// PasswordPolicy string `json:"password_policy,omitempty"`
+	// Token          string `json:"token,omitempty"`
+	TargetValue string                   `json:"target_value,omitempty"`
+	Payload     string                   `json:"payload,omitempty"`
+	LdapPayload RotatedSecretLdapPayload `json:"ldap_payload,omitempty"`
+}
+*/

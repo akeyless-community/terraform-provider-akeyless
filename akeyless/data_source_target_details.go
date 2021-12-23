@@ -106,29 +106,44 @@ func dataSourceGetTargetDetailsRead(d *schema.ResourceData, m interface{}) error
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	err = d.Set("username", *rOut.Value.Username)
-	if err != nil {
-		return err
+	if rOut.Value == nil {
+		return fmt.Errorf("can't get value")
 	}
-	err = d.Set("password", *rOut.Value.Password)
-	if err != nil {
-		return err
+	if rOut.Value.Username != nil {
+		err = d.Set("username", *rOut.Value.Username)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("host", *rOut.Value.Host)
-	if err != nil {
-		return err
+	if rOut.Value.Password != nil {
+		err = d.Set("password", *rOut.Value.Password)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("port", *rOut.Value.Port)
-	if err != nil {
-		return err
+	if rOut.Value.Host != nil {
+		err = d.Set("host", *rOut.Value.Host)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("private_key", *rOut.Value.PrivateKey)
-	if err != nil {
-		return err
+	if rOut.Value.Port != nil {
+		err = d.Set("port", *rOut.Value.Port)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("private_key_password", *rOut.Value.PrivateKeyPassword)
-	if err != nil {
-		return err
+	if rOut.Value.PrivateKey != nil {
+		err = d.Set("private_key", *rOut.Value.PrivateKey)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Value.PrivateKeyPassword != nil {
+		err = d.Set("private_key_password", *rOut.Value.PrivateKeyPassword)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(name)
