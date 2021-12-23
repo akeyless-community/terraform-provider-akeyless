@@ -125,57 +125,84 @@ func dataSourceGatewayGetK8sAuthConfigRead(d *schema.ResourceData, m interface{}
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	err = d.Set("name", *rOut.Name)
-	if err != nil {
-		return err
+
+	if rOut.Name != nil {
+		err = d.Set("name", *rOut.Name)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("id", *rOut.Id)
-	if err != nil {
-		return err
+	if rOut.Id != nil {
+		err = d.Set("id", *rOut.Id)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("protection_key", *rOut.ProtectionKey)
-	if err != nil {
-		return err
+	if rOut.ProtectionKey != nil {
+		err = d.Set("protection_key", *rOut.ProtectionKey)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("auth_method_access_id", *rOut.AuthMethodAccessId)
-	if err != nil {
-		return err
+	if rOut.AuthMethodAccessId != nil {
+		err = d.Set("auth_method_access_id", *rOut.AuthMethodAccessId)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("auth_method_prv_key_pem", *rOut.AuthMethodPrvKeyPem)
-	if err != nil {
-		return err
+	if rOut.AuthMethodPrvKeyPem != nil {
+		err = d.Set("auth_method_prv_key_pem", *rOut.AuthMethodPrvKeyPem)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("am_token_expiration", *rOut.AmTokenExpiration)
-	if err != nil {
-		return err
+	if rOut.AmTokenExpiration != nil {
+		err = d.Set("am_token_expiration", *rOut.AmTokenExpiration)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("k8s_host", *rOut.K8sHost)
-	if err != nil {
-		return err
+	if rOut.K8sHost != nil {
+		err = d.Set("k8s_host", *rOut.K8sHost)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("k8s_ca_cert", *rOut.K8sCaCert)
-	if err != nil {
-		return err
+	if rOut.K8sCaCert != nil {
+		err = d.Set("k8s_ca_cert", *rOut.K8sCaCert)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("k8s_token_reviewer_jwt", *rOut.K8sTokenReviewerJwt)
-	if err != nil {
-		return err
+	if rOut.K8sTokenReviewerJwt != nil {
+		err = d.Set("k8s_token_reviewer_jwt", *rOut.K8sTokenReviewerJwt)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("k8s_issuer", *rOut.K8sIssuer)
-	if err != nil {
-		return err
+	if rOut.K8sIssuer != nil {
+		err = d.Set("k8s_issuer", *rOut.K8sIssuer)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("k8s_pub_keys_pem", *rOut.K8sPubKeysPem)
-	if err != nil {
-		return err
+	if rOut.K8sPubKeysPem != nil {
+		err = d.Set("k8s_pub_keys_pem", *rOut.K8sPubKeysPem)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("disable_iss_validation", *rOut.DisableIssValidation)
-	if err != nil {
-		return err
+	if rOut.DisableIssValidation != nil {
+		err = d.Set("disable_iss_validation", *rOut.DisableIssValidation)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("use_local_ca_jwt", *rOut.UseLocalCaJwt)
-	if err != nil {
-		return err
+	if rOut.UseLocalCaJwt != nil {
+		err = d.Set("use_local_ca_jwt", *rOut.UseLocalCaJwt)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(name)

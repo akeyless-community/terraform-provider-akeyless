@@ -123,53 +123,73 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	err = d.Set("target_name", *rOut.TargetName)
-	if err != nil {
-		return err
+	if rOut.TargetName != nil {
+		err = d.Set("target_name", *rOut.TargetName)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("target_type", *rOut.TargetType)
-	if err != nil {
-		return err
+	if rOut.TargetType != nil {
+		err = d.Set("target_type", *rOut.TargetType)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("target_id", *rOut.TargetId)
-	if err != nil {
-		return err
+	if rOut.TargetId != nil {
+		err = d.Set("target_id", *rOut.TargetId)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("comment", *rOut.Comment)
-	if err != nil {
-		return err
+	if rOut.Comment != nil {
+		err = d.Set("comment", *rOut.Comment)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("with_customer_fragment", *rOut.WithCustomerFragment)
-	if err != nil {
-		return err
+	if rOut.WithCustomerFragment != nil {
+		err = d.Set("with_customer_fragment", *rOut.WithCustomerFragment)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("protection_key_name", *rOut.ProtectionKeyName)
-	if err != nil {
-		return err
+	if rOut.ProtectionKeyName != nil {
+		err = d.Set("protection_key_name", *rOut.ProtectionKeyName)
+		if err != nil {
+			return err
+		}
 	}
-	marshalTargetVersions, err := json.Marshal(rOut.TargetVersions)
-	if err != nil {
-		return err
+	if rOut.TargetVersions != nil {
+		marshalTargetVersions, err := json.Marshal(rOut.TargetVersions)
+		if err != nil {
+			return err
+		}
+		err = d.Set("target_versions", string(marshalTargetVersions))
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("target_versions", string(marshalTargetVersions))
-	if err != nil {
-		return err
+	if rOut.ClientPermissions != nil {
+		err = d.Set("client_permissions", *rOut.ClientPermissions)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("client_permissions", *rOut.ClientPermissions)
-	if err != nil {
-		return err
+	if rOut.LastVersion != nil {
+		err = d.Set("last_version", *rOut.LastVersion)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("last_version", *rOut.LastVersion)
-	if err != nil {
-		return err
-	}
-	marshalTargetItemsAssoc, err := json.Marshal(rOut.TargetItemsAssoc)
-	if err != nil {
-		return err
-	}
-	err = d.Set("target_items_assoc", string(marshalTargetItemsAssoc))
-	if err != nil {
-		return err
+	if rOut.TargetItemsAssoc != nil {
+		marshalTargetItemsAssoc, err := json.Marshal(rOut.TargetItemsAssoc)
+		if err != nil {
+			return err
+		}
+		err = d.Set("target_items_assoc", string(marshalTargetItemsAssoc))
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(name)

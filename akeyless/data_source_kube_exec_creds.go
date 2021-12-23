@@ -115,22 +115,29 @@ func dataSourceGetKubeExecCredsRead(d *schema.ResourceData, m interface{}) error
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	err = d.Set("kind", *rOut.Kind)
-	if err != nil {
-		return err
+	if rOut.Kind != nil {
+		err = d.Set("kind", *rOut.Kind)
+		if err != nil {
+			return err
+		}
 	}
-	err = d.Set("api_version", *rOut.ApiVersion)
-	if err != nil {
-		return err
+	if rOut.ApiVersion != nil {
+		err = d.Set("api_version", *rOut.ApiVersion)
+		if err != nil {
+			return err
+		}
 	}
+
 	err = d.Set("client_certificate_data", rOut.Status.GetClientCertificateData())
 	if err != nil {
 		return err
 	}
+
 	err = d.Set("client_key_Data", rOut.Status.GetClientKeyData())
 	if err != nil {
 		return err
 	}
+
 	err = d.Set("parent_certificate_data", rOut.Status.GetParentCertificateData())
 	if err != nil {
 		return err
