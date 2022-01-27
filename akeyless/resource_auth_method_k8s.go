@@ -93,13 +93,13 @@ func resourceAuthMethodK8s() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "The Private Key",
+				Description: "The generated private key",
 			},
 			"public_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "The public key",
+				Description: "The generated public key",
 			},
 		},
 	}
