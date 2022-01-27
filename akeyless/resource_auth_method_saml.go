@@ -231,6 +231,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
 	common.GetAkeylessPtr(&body.IdpMetadataUrl, idpMetadataUrl)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
+	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodSAML(ctx).Body(body).Execute()
 	if err != nil {

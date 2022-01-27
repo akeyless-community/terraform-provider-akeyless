@@ -399,6 +399,7 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.BoundResourceTypes, boundResourceTypes)
 	common.GetAkeylessPtr(&body.BoundResourceNames, boundResourceNames)
 	common.GetAkeylessPtr(&body.BoundResourceId, boundResourceId)
+	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodAzureAD(ctx).Body(body).Execute()
 	if err != nil {

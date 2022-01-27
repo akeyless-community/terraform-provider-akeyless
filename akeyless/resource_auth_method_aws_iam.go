@@ -328,6 +328,7 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.BoundResourceId, boundResourceId)
 	common.GetAkeylessPtr(&body.BoundUserName, boundUserName)
 	common.GetAkeylessPtr(&body.BoundUserId, boundUserId)
+	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodAWSIAM(ctx).Body(body).Execute()
 	if err != nil {

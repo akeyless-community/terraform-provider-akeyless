@@ -310,6 +310,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundNamespaces, boundNamespaces)
 	common.GetAkeylessPtr(&body.PublicKey, publicKey)
 	common.GetAkeylessPtr(&body.GenKey, "false")
+	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodK8S(ctx).Body(body).Execute()
 	if err != nil {
