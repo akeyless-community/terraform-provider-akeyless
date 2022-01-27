@@ -49,10 +49,12 @@ func resourceAuthMethodK8s() *schema.Resource {
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
-			"public_key": {
+			"gen_key": {
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Base64-encoded public key text",
+				Required:    false,
+				Optional:    true,
+				Description: "If this flag is set to true, there is no need to manually provide a public key for the Kubernetes Auth Method, and instead, a key pair, will be generated as part of the command and the private part of the key will be returned (the private key is required for the K8S Auth Config in the Akeyless Gateway)",
+				Default:     "true",
 			},
 			"audience": {
 				Type:        schema.TypeString,
@@ -87,6 +89,18 @@ func resourceAuthMethodK8s() *schema.Resource {
 				Computed:    true,
 				Description: "Auth Method access ID",
 			},
+			"private_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The generated private key",
+			},
+			"public_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The generated public key",
+			},
 		},
 	}
 }
@@ -104,6 +118,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	genKey := d.Get("gen_key").(string)
 	audience := d.Get("audience").(string)
 	boundSaNamesSet := d.Get("bound_sa_names").(*schema.Set)
 	boundSaNames := common.ExpandStringList(boundSaNamesSet.List())
@@ -125,6 +140,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundPodNames, boundPodNames)
 	common.GetAkeylessPtr(&body.BoundNamespaces, boundNamespaces)
 	common.GetAkeylessPtr(&body.PublicKey, publicKey)
+	common.GetAkeylessPtr(&body.GenKey, genKey)
 
 	rOut, _, err := client.CreateAuthMethodK8S(ctx).Body(body).Execute()
 	if err != nil {
@@ -138,6 +154,28 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 		err = d.Set("access_id", *rOut.AccessId)
 		if err != nil {
 			return err
+		}
+	}
+
+	if rOut.PrvKey != nil {
+		err = d.Set("private_key", *rOut.PrvKey)
+		if err != nil {
+			return err
+		}
+	}
+	if publicKey == "" {
+		body := akeyless.GetAuthMethod{
+			Name:  name,
+			Token: &token,
+		}
+		rOut, _, err := client.GetAuthMethod(ctx).Body(body).Execute()
+		if err == nil {
+			if rOut.AccessInfo.K8sAccessRules.PubKey != nil {
+				err = d.Set("public_key", *rOut.AccessInfo.K8sAccessRules.PubKey)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 
@@ -272,6 +310,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundNamespaces, boundNamespaces)
 	common.GetAkeylessPtr(&body.PublicKey, publicKey)
 	common.GetAkeylessPtr(&body.GenKey, "false")
+	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodK8S(ctx).Body(body).Execute()
 	if err != nil {

@@ -332,6 +332,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundZones, boundZones)
 	common.GetAkeylessPtr(&body.BoundRegions, boundRegions)
 	common.GetAkeylessPtr(&body.BoundLabels, boundLabels)
+	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodGCP(ctx).Body(body).Execute()
 	if err != nil {

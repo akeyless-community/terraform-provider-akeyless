@@ -263,6 +263,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ClientId, clientId)
 	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
+	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodOIDC(ctx).Body(body).Execute()
 	if err != nil {

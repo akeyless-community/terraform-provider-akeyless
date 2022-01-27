@@ -324,14 +324,13 @@ func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
-	name := "test_auth_method_K8s"
-	path := testPath("auth_method_K8s")
+	name := "test_auth_method_K8s_3"
+	path := testPath("auth_method_K8s_test")
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_k8s" "%v" {
 			name = "%v"
 			access_expires = 1638741817
 			bound_ips = ["1.1.4.0/32"]
-			public_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
@@ -339,7 +338,6 @@ func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
 			name = "%v"
 			bound_ips = ["1.1.1.0/32"]
 			access_expires = 1638941817
-			public_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
 		}
 	`, name, path)
 

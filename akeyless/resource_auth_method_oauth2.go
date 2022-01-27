@@ -265,6 +265,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.BoundClientIds, boundClientIds)
 	common.GetAkeylessPtr(&body.Issuer, issuer)
 	common.GetAkeylessPtr(&body.Audience, audience)
+	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodOAuth2(ctx).Body(body).Execute()
 	if err != nil {
