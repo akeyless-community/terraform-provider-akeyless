@@ -50,7 +50,7 @@ resource "akeyless_static_secret" "secret" {
 - **metadata** (String) Metadata about the secret
 - **multiline_value** (Boolean) The provided value is a multiline value (separated by '
 ')
-- **protection_key** (String) The version of the secret.
+- **protection_key** (String) The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - **secure_access_bastion_issuer** (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
 - **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
 - **secure_access_host** (Set of String) Target servers for connections., For multiple values repeat this flag.

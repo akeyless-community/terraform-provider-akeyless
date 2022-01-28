@@ -24,6 +24,11 @@ provider "akeyless" {
 //    access_id = ""
 //  }
 
+// jwt_login {
+//    access_id = ""
+//    // provide your JWT by storing it in an environment variable called JWT
+// }
+
 //  email_login {
 //    admin_email = "user@mail.com"
 //    admin_password = ""
