@@ -5,6 +5,7 @@ const (
 	Password = "password"
 	AzureAD  = "azure_ad"
 	AwsIAM   = "aws_iam"
+	Jwt      = "jwt"
 
 	StaticSecretType        = "STATIC_SECRET"
 	DynamicStaticSecretType = "DYNAMIC_SECRET"

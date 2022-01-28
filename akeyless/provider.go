@@ -21,6 +21,7 @@ var apiKeyLogin []interface{}
 var emailLogin []interface{}
 var awsIAMLogin []interface{}
 var azureADLogin []interface{}
+var jwtLogin []interface{}
 
 // Provider returns Akeyless Terraform provider
 func Provider() *schema.Provider {
@@ -69,6 +70,19 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "A configuration block, described below, that attempts to authenticate using Azure Active Directory authentication.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"jwt_login": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A configuration block, described below, that attempts to authenticate using JWT authentication. The JWT itself should be in an environment variable named `JWT`",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"access_id": {
@@ -249,8 +263,17 @@ func setAuthBody(authBody *akeyless.Auth) error {
 		}
 		authBody.CloudId = akeyless.PtrString(cloudId)
 		authBody.AccessType = akeyless.PtrString(common.AzureAD)
+	} else if jwtLogin != nil && len(jwtLogin) == 1 {
+		login := jwtLogin[0].(map[string]interface{})
+		accessID := login["access_id"].(string)
+		authBody.AccessId = akeyless.PtrString(accessID)
+		if os.Getenv("JWT") != "" {
+			return fmt.Errorf("you must provide your JWT in an environment variable named JWT")
+		}
+		authBody.Jwt = akeyless.PtrString(os.Getenv("JWT"))
+		authBody.AccessType = akeyless.PtrString(common.Jwt)
 	} else {
-		return fmt.Errorf("please support login method: api_key_login/password_login/aws_iam_login/azure_ad_login")
+		return fmt.Errorf("please support login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login")
 	}
 
 	return nil
@@ -277,6 +300,10 @@ func inputValidation(d *schema.ResourceData) error {
 	azureADLogin = d.Get("azure_ad_login").([]interface{})
 	if len(azureADLogin) > 1 {
 		return fmt.Errorf("azure_ad_login block may appear only once")
+	}
+	jwtLogin = d.Get("jwt_login").([]interface{})
+	if len(jwtLogin) > 1 {
+		return fmt.Errorf("jwt_login block may appear only once")
 	}
 	return nil
 }
