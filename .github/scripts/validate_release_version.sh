@@ -7,6 +7,7 @@ version=$(cat "${GITHUB_WORKSPACE}/version" | sed -n '/v[0-9]\{1,\}.[0-9]\{1,\}.
 
 [[ -z "$version" ]] && die "Failed to retrieve version. Please check if the version is correct and follows semantic versioning"
 
-git tag "$version" || die "Release version already exists. Please bump the version file to the appropriate version"
+validate_semver "$version"
+tag_exists "$version"
 
 echo "Version validation succeeded"
