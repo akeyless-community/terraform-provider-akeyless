@@ -206,6 +206,94 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 	})
 }
 
+func TestAssocRoleAuthMethodResource(t *testing.T) {
+	rolePath := testPath("test_role_assoc")
+	authMethodPath := testPath("path_auth_method")
+	deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method" "auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+		resource "akeyless_role" "test_role_assoc" {
+			name = "%v"
+			rules {
+				capability = ["read"]
+				path = "/terraform-tests/*"
+				rule_type = "auth-method-rule"
+			}
+			audit_access = "all"
+			analytics_access = "all"
+		}
+		resource "akeyless_associate_role_auth_method" "aa" {
+			am_name = "%v"
+			role_name = "%v"
+			sub_claims = {
+				"groups" = "admins,developers"  
+			}
+			case_sensitive = "false"
+		depends_on = [
+				akeyless_auth_method.auth_method,
+				akeyless_role.test_role_assoc,
+	 		]
+		}
+	`, authMethodPath, rolePath, authMethodPath, rolePath)
+
+	configUpdateRole := fmt.Sprintf(`
+
+		resource "akeyless_auth_method" "auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+		resource "akeyless_role" "test_role_assoc" {
+			name = "%v"
+			rules {
+				capability = ["read"]
+				path = "/terraform-tests/*"
+				rule_type = "auth-method-rule"
+			}
+			audit_access = "all"
+			analytics_access = "all"
+		}
+		
+		resource "akeyless_associate_role_auth_method" "aa" {
+			am_name = "%v"
+			role_name = "%v"
+			sub_claims = {
+				"groups" = "admins" 
+				"groups2" = "developers,hhh"  
+			}
+			case_sensitive = "false"
+
+		depends_on = [
+				akeyless_auth_method.auth_method,
+				akeyless_role.test_role_assoc,
+	 		]
+		}
+	`, authMethodPath, rolePath, authMethodPath, rolePath)
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkAssocExistsRemotely(t, rolePath, authMethodPath),
+				),
+			},
+			{
+				Config: configUpdateRole,
+				Check: resource.ComposeTestCheckFunc(
+					checkAssocExistsRemotely2(t, rolePath, authMethodPath),
+				),
+			},
+		},
+	})
+}
+
 func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
@@ -239,6 +327,59 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string) reso
 		}
 
 		assert.True(t, exists)
+
+		return nil
+	}
+}
+func checkAssocExistsRemotely(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := *testAccProvider.Meta().(providerMeta).client
+		token := *testAccProvider.Meta().(providerMeta).token
+
+		gsvBody := akeyless.GetRole{
+			Name:  roleName,
+			Token: &token,
+		}
+
+		res, _, err := client.GetRole(context.Background()).Body(gsvBody).Execute()
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
+		association := res.GetRoleAuthMethodsAssoc()[0]
+		assert.Equal(t, authMethodPath, *association.AuthMethodName, "auth method name mismatch")
+		for k, v := range *association.AuthMethodSubClaims {
+			assert.Equal(t, "groups", k)
+			assert.Equal(t, strings.Split("admins,developers", ","), v)
+		}
+		return nil
+	}
+}
+
+func checkAssocExistsRemotely2(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		client := *testAccProvider.Meta().(providerMeta).client
+		token := *testAccProvider.Meta().(providerMeta).token
+
+		gsvBody := akeyless.GetRole{
+			Name:  roleName,
+			Token: &token,
+		}
+
+		res, _, err := client.GetRole(context.Background()).Body(gsvBody).Execute()
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
+		association := res.GetRoleAuthMethodsAssoc()[0]
+		assert.Equal(t, authMethodPath, *association.AuthMethodName, "auth method name mismatch")
+		assert.Equal(t, int(2), len(*association.AuthMethodSubClaims), "auth method name mismatch")
+		for k, v := range *association.AuthMethodSubClaims {
+			if k == "groups" {
+				assert.Equal(t, strings.Split("admins", ","), v)
+			} else if k == "groups2" {
+				assert.Equal(t, strings.Split("developers,hhh", ","), v)
+			} else {
+				t.Fail()
+			}
+		}
 
 		return nil
 	}

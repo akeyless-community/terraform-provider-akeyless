@@ -18,7 +18,6 @@ Kubernetes Auth Method Resource
 ### Required
 
 - **name** (String) Auth Method name
-- **public_key** (String) Base64-encoded public key text
 
 ### Optional
 
@@ -30,6 +29,9 @@ Kubernetes Auth Method Resource
 - **bound_pod_names** (Set of String) A list of pod names that the access is restricted to
 - **bound_sa_names** (Set of String) A list of service account names that the access is restricted to
 - **force_sub_claims** (Boolean) enforce role-association must include sub claims
+- **gen_key** (String) If this flag is set to true, there is no need to manually provide a public key for the Kubernetes Auth Method, and instead, a key pair, will be generated as part of the command and the private part of the key will be returned (the private key is required for the K8S Auth Config in the Akeyless Gateway)
 - **id** (String) The ID of this resource.
+- **private_key** (String) The generated private key
+- **public_key** (String) The generated public key
 
 
