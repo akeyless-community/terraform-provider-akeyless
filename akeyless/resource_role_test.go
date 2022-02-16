@@ -234,7 +234,7 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 			sub_claims = {
 				"groups" = "admins,developers"  
 			}
-			case_sensitive = "false"
+			case_sensitive = "true"
 		depends_on = [
 				akeyless_auth_method.auth_method,
 				akeyless_role.test_role_assoc,
@@ -267,7 +267,7 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 				"groups" = "admins" 
 				"groups2" = "developers,hhh"  
 			}
-			case_sensitive = "false"
+			case_sensitive = "true"
 
 		depends_on = [
 				akeyless_auth_method.auth_method,

@@ -167,6 +167,7 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 	for k, v := range subClaims {
 		sc[k] = v.(string)
 	}
+	caseSensitive := d.Get("case_sensitive").(string)
 
 	id := d.Id()
 
@@ -175,6 +176,7 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 		Token:   &token,
 	}
 	body.SubClaims = &sc
+	common.GetAkeylessPtr(&body.CaseSensitive, caseSensitive)
 
 	_, _, err := client.UpdateAssoc(ctx).Body(body).Execute()
 	if err != nil {
