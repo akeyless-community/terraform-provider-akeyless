@@ -26,7 +26,7 @@ K8S Auth config
 - **id** (String) The ID of this resource.
 - **k8s_ca_cert** (String) Base-64 encoded certificate to use to call into the kubernetes API
 - **k8s_host** (String) The URL of the kubernetes API server
-- **k8s_issuer** (String) The Kubernetes JWT issuer name. If not set, kubernetes/serviceaccount will use as an issuer.
+- **k8s_issuer** (String) The Kubernetes JWT issuer name. If not set, kubernetes/serviceaccount will be used as an issuer.
 - **signing_key** (String) The private key (in base64 encoded of the PEM format) associated with the public key defined in the Kubernetes auth
 - **token_exp** (Number) Time in seconds of expiration of the Akeyless Kube Auth Method token
 - **token_reviewer_jwt** (String) A Kubernetes service account JWT used to access the TokenReview API to validate other JWTs. If not set, the JWT submitted in the authentication process will be used to access the Kubernetes TokenReview API.

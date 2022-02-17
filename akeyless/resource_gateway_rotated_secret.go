@@ -50,7 +50,7 @@ func resourceRotatedSecret() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
+				Description: "The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"auto_rotate": {
 				Type:        schema.TypeString,
