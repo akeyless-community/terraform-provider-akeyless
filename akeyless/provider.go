@@ -125,6 +125,10 @@ func Provider() *schema.Provider {
 			//todo fix gcp BE in next GW
 			//"akeyless_producer_gcp":                   resourceProducerGcp(),
 			"akeyless_producer_gke":               resourceProducerGke(),
+			"akeyless_producer_eks":               resourceProducerEks(),
+			"akeyless_producer_cassandra":         resourceProducerCassandra(),
+			"akeyless_producer_azure":             resourceProducerAzure(),
+			"akeyless_producer_artifactory":       resourceProducerArtifactory(),
 			"akeyless_producer_k8s":               resourceProducerK8s(),
 			"akeyless_target_artifactory":         resourceArtifactoryTarget(),
 			"akeyless_target_aws":                 resourceAwsTarget(),
