@@ -75,7 +75,7 @@ func resourceK8sAuthConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "The Kubernetes JWT issuer name. If not set, kubernetes/serviceaccount will use as an issuer.",
+				Description: "The Kubernetes JWT issuer name. If not set, kubernetes/serviceaccount will be used as an issuer.",
 				Default:     "kubernetes/serviceaccount",
 			},
 		},

@@ -49,7 +49,7 @@ func resourceStaticSecret() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
+				Description: "The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"metadata": {
 				Type:        schema.TypeString,
