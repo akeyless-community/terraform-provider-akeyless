@@ -51,6 +51,7 @@ func resourceProducerEks() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "EKS Cluster certificate. Base 64 encoded certificate.",
 			},
 			"eks_access_key_id": {
