@@ -41,6 +41,7 @@ func resourceEksTarget() *schema.Resource {
 			"eks_cluster_ca_cert": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				Description: "EKS cluster base-64 encoded certificate",
 			},
 			"eks_access_key_id": {
@@ -51,6 +52,7 @@ func resourceEksTarget() *schema.Resource {
 			"eks_secret_access_key": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				Description: "EKS secret access key",
 			},
 			"use_gw_cloud_identity": {
