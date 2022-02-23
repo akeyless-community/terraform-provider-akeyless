@@ -23,7 +23,7 @@ Amazon Elastic Kubernetes Service (Amazon EKS) producer
 
 - **eks_access_key_id** (String) EKS Access Key ID
 - **eks_assume_role** (String) Role ARN. Role to assume when connecting to the EKS cluster
-- **eks_cluster_ca_cert** (String) EKS Cluster certificate. Base 64 encoded certificate.
+- **eks_cluster_ca_cert** (String, Sensitive) EKS Cluster certificate. Base 64 encoded certificate.
 - **eks_cluster_endpoint** (String) EKS Cluster endpoint. https:// , <DNS / IP> of the cluster.
 - **eks_cluster_name** (String) EKS cluster name. Must match the EKS cluster name you want to connect to.
 - **eks_region** (String) EKS Region
