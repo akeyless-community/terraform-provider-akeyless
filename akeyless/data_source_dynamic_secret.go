@@ -60,9 +60,17 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 	var marshal []byte
 
 	if gsvOutIntr != nil {
-		marshal, err = json.Marshal(gsvOutIntr)
-		if err != nil {
-			return err
+		gsvOut = make(map[string]string)
+		for k, val := range gsvOutIntr {
+			if v, ok := val.(string); ok {
+				gsvOut[k] = v
+			} else {
+				ma, err := json.Marshal(val)
+				if err != nil {
+					return err
+				}
+				gsvOut[k] = string(ma)
+			}
 		}
 	}
 
@@ -72,7 +80,6 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-
 	err = d.Set("value", string(marshal))
 	if err != nil {
 		return err
