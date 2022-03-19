@@ -82,13 +82,19 @@ func Provider() *schema.Provider {
 			"jwt_login": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using JWT authentication. The JWT itself should be in an environment variable named `JWT`",
+				Description: "A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"access_id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"jwt": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Sensitive:   true,
+							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_JWT", nil),
+                        },
 					},
 				},
 			},
@@ -268,11 +274,9 @@ func setAuthBody(authBody *akeyless.Auth) error {
 	} else if jwtLogin != nil && len(jwtLogin) == 1 {
 		login := jwtLogin[0].(map[string]interface{})
 		accessID := login["access_id"].(string)
+		jwt := login["jwt"].(string)
 		authBody.AccessId = akeyless.PtrString(accessID)
-		if os.Getenv("JWT") != "" {
-			return fmt.Errorf("you must provide your JWT in an environment variable named JWT")
-		}
-		authBody.Jwt = akeyless.PtrString(os.Getenv("JWT"))
+		authBody.Jwt = akeyless.PtrString(jwt)
 		authBody.AccessType = akeyless.PtrString(common.Jwt)
 	} else {
 		return fmt.Errorf("please support login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login")
