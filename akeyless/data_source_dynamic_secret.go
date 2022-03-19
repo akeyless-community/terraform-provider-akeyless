@@ -43,20 +43,43 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 		Token: &token,
 	}
+	var gsvOutIntr map[string]interface{}
 
 	gsvOut, _, err := client.GetDynamicSecretValue(ctx).Body(gsvBody).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't get Dynamic Secret value: %v", string(apiErr.Body()))
+			bo := apiErr.Body()
+			err = json.Unmarshal(bo, &gsvOutIntr)
+			if err != nil {
+				return fmt.Errorf("can't get Dynamic Secret value: %v", string(bo))
+			}
+		} else {
+			return fmt.Errorf("can't get Dynamic Secret value: %v", err)
 		}
-		return fmt.Errorf("can't get Dynamic Secret value: %v", err)
+	}
+	var marshal []byte
+
+	if gsvOutIntr != nil {
+		gsvOut = make(map[string]string)
+		for k, val := range gsvOutIntr {
+			if v, ok := val.(string); ok {
+				gsvOut[k] = v
+			} else {
+				ma, err := json.Marshal(val)
+				if err != nil {
+					return err
+				}
+				gsvOut[k] = string(ma)
+			}
+		}
 	}
 
-	marshal, err := json.Marshal(gsvOut)
-	if err != nil {
-		return err
+	if gsvOut != nil {
+		marshal, err = json.Marshal(gsvOut)
+		if err != nil {
+			return err
+		}
 	}
-
 	err = d.Set("value", string(marshal))
 	if err != nil {
 		return err

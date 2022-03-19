@@ -1,4 +1,4 @@
-// generated fule
+// generated
 package akeyless
 
 import (
@@ -12,15 +12,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceProducerK8s() *schema.Resource {
+func resourceProducerEks() *schema.Resource {
 	return &schema.Resource{
-		Description: "Native Kubernetes Service producer resource",
-		Create:      resourceProducerK8sCreate,
-		Read:        resourceProducerK8sRead,
-		Update:      resourceProducerK8sUpdate,
-		Delete:      resourceProducerK8sDelete,
+		Description: "Amazon Elastic Kubernetes Service (Amazon EKS) producer",
+		Create:      resourceProducerEksCreate,
+		Read:        resourceProducerEksRead,
+		Update:      resourceProducerEksUpdate,
+		Delete:      resourceProducerEksDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceProducerK8sImport,
+			State: resourceProducerEksImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -35,37 +35,50 @@ func resourceProducerK8s() *schema.Resource {
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
-			"k8s_cluster_endpoint": {
+			"eks_cluster_name": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "K8S Cluster endpoint. https:// , <DNS / IP> of the cluster.",
+				Description: "EKS cluster name. Must match the EKS cluster name you want to connect to.",
 			},
-			"k8s_cluster_ca_cert": {
+			"eks_cluster_endpoint": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "EKS Cluster endpoint. https:// , <DNS / IP> of the cluster.",
+			},
+			"eks_cluster_ca_cert": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Sensitive:   true,
-				Description: "K8S Cluster certificate. Base 64 encoded certificate.",
+				Description: "EKS Cluster certificate. Base 64 encoded certificate.",
 			},
-			"k8s_cluster_token": {
+			"eks_access_key_id": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "K8S Cluster authentication token.",
+				Description: "EKS Access Key ID",
 			},
-			"k8s_service_account": {
+			"eks_secret_access_key": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "K8S ServiceAccount to extract token from.",
+				Sensitive:   true,
+				Description: "EKS Secret Access Key",
 			},
-			"k8s_namespace": {
+			"eks_region": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "K8S Namespace where the ServiceAccount exists.",
-				Default:     "default",
+				Description: "EKS Region",
+				Default:     "us-east-2",
+			},
+			"eks_assume_role": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "Role ARN. Role to assume when connecting to the EKS cluster",
 			},
 			"producer_encryption_key_name": {
 				Type:        schema.TypeString,
@@ -84,7 +97,7 @@ func resourceProducerK8s() *schema.Resource {
 				Type:        schema.TypeSet,
 				Required:    false,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2",
+				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
@@ -97,13 +110,7 @@ func resourceProducerK8s() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "The K8s cluster endpoint",
-			},
-			"secure_access_dashboard_url": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "The K8s dashboard url",
+				Description: "The K8s cluster endpoint URL",
 			},
 			"secure_access_allow_port_forwading": {
 				Type:        schema.TypeBool,
@@ -117,12 +124,6 @@ func resourceProducerK8s() *schema.Resource {
 				Optional:    true,
 				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
 			},
-			"secure_access_web_browsing": {
-				Type:        schema.TypeBool,
-				Required:    false,
-				Optional:    true,
-				Description: "Secure browser via Akeyless Web Access Bastion",
-			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
 				Required:    false,
@@ -134,7 +135,7 @@ func resourceProducerK8s() *schema.Resource {
 	}
 }
 
-func resourceProducerK8sCreate(d *schema.ResourceData, m interface{}) error {
+func resourceProducerEksCreate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -143,45 +144,45 @@ func resourceProducerK8sCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
-	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
-	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
-	k8sClusterToken := d.Get("k8s_cluster_token").(string)
-	k8sServiceAccount := d.Get("k8s_service_account").(string)
-	k8sNamespace := d.Get("k8s_namespace").(string)
+	eksClusterName := d.Get("eks_cluster_name").(string)
+	eksClusterEndpoint := d.Get("eks_cluster_endpoint").(string)
+	eksClusterCaCert := d.Get("eks_cluster_ca_cert").(string)
+	eksAccessKeyId := d.Get("eks_access_key_id").(string)
+	eksSecretAccessKey := d.Get("eks_secret_access_key").(string)
+	eksRegion := d.Get("eks_region").(string)
+	eksAssumeRole := d.Get("eks_assume_role").(string)
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessClusterEndpoint := d.Get("secure_access_cluster_endpoint").(string)
-	secureAccessDashboardUrl := d.Get("secure_access_dashboard_url").(string)
 	secureAccessAllowPortForwading := d.Get("secure_access_allow_port_forwading").(bool)
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
-	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.GatewayCreateProducerNativeK8S{
+	body := akeyless.GatewayCreateProducerEks{
 		Name:  name,
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
-	common.GetAkeylessPtr(&body.K8sClusterEndpoint, k8sClusterEndpoint)
-	common.GetAkeylessPtr(&body.K8sClusterCaCert, k8sClusterCaCert)
-	common.GetAkeylessPtr(&body.K8sClusterToken, k8sClusterToken)
-	common.GetAkeylessPtr(&body.K8sServiceAccount, k8sServiceAccount)
-	common.GetAkeylessPtr(&body.K8sNamespace, k8sNamespace)
+	common.GetAkeylessPtr(&body.EksClusterName, eksClusterName)
+	common.GetAkeylessPtr(&body.EksClusterEndpoint, eksClusterEndpoint)
+	common.GetAkeylessPtr(&body.EksClusterCaCert, eksClusterCaCert)
+	common.GetAkeylessPtr(&body.EksAccessKeyId, eksAccessKeyId)
+	common.GetAkeylessPtr(&body.EksSecretAccessKey, eksSecretAccessKey)
+	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
+	common.GetAkeylessPtr(&body.EksAssumeRole, eksAssumeRole)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessClusterEndpoint, secureAccessClusterEndpoint)
-	common.GetAkeylessPtr(&body.SecureAccessDashboardUrl, secureAccessDashboardUrl)
 	common.GetAkeylessPtr(&body.SecureAccessAllowPortForwading, secureAccessAllowPortForwading)
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
-	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.GatewayCreateProducerNativeK8S(ctx).Body(body).Execute()
+	_, _, err := client.GatewayCreateProducerEks(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -194,7 +195,7 @@ func resourceProducerK8sCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceProducerK8sRead(d *schema.ResourceData, m interface{}) error {
+func resourceProducerEksRead(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -221,20 +222,38 @@ func resourceProducerK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	if rOut.K8sClusterEndpoint != nil {
-		err = d.Set("k8s_cluster_endpoint", *rOut.K8sClusterEndpoint)
+	if rOut.EksClusterName != nil {
+		err = d.Set("eks_cluster_name", *rOut.EksClusterName)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.K8sServiceAccount != nil {
-		err = d.Set("k8s_service_account", *rOut.K8sServiceAccount)
+	if rOut.EksClusterEndpoint != nil {
+		err = d.Set("eks_cluster_endpoint", *rOut.EksClusterEndpoint)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.K8sNamespace != nil {
-		err = d.Set("k8s_namespace", *rOut.K8sNamespace)
+	if rOut.EksAccessKeyId != nil {
+		err = d.Set("eks_access_key_id", *rOut.EksAccessKeyId)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.EksSecretAccessKey != nil {
+		err = d.Set("eks_secret_access_key", *rOut.EksSecretAccessKey)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.EksRegion != nil {
+		err = d.Set("eks_region", *rOut.EksRegion)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.EksAssumeRole != nil {
+		err = d.Set("eks_assume_role", *rOut.EksAssumeRole)
 		if err != nil {
 			return err
 		}
@@ -252,6 +271,13 @@ func resourceProducerK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.DynamicSecretKey != nil {
+		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		if err != nil {
+			return err
+		}
+	}
+
 	if rOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
 		err = d.Set("target_name", targetName)
@@ -260,20 +286,8 @@ func resourceProducerK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if rOut.K8sClusterCaCertificate != nil {
-		err = d.Set("k8s_cluster_ca_cert", *rOut.K8sClusterCaCertificate)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.K8sBearerToken != nil {
-		err = d.Set("k8s_cluster_token", *rOut.K8sBearerToken)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+	if rOut.EksClusterCaCertificate != nil {
+		err = d.Set("eks_cluster_ca_cert", *rOut.EksClusterCaCertificate)
 		if err != nil {
 			return err
 		}
@@ -286,7 +300,7 @@ func resourceProducerK8sRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceProducerK8sUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceProducerEksUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -295,45 +309,45 @@ func resourceProducerK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
-	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
-	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
-	k8sClusterToken := d.Get("k8s_cluster_token").(string)
-	k8sServiceAccount := d.Get("k8s_service_account").(string)
-	k8sNamespace := d.Get("k8s_namespace").(string)
+	eksClusterName := d.Get("eks_cluster_name").(string)
+	eksClusterEndpoint := d.Get("eks_cluster_endpoint").(string)
+	eksClusterCaCert := d.Get("eks_cluster_ca_cert").(string)
+	eksAccessKeyId := d.Get("eks_access_key_id").(string)
+	eksSecretAccessKey := d.Get("eks_secret_access_key").(string)
+	eksRegion := d.Get("eks_region").(string)
+	eksAssumeRole := d.Get("eks_assume_role").(string)
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessClusterEndpoint := d.Get("secure_access_cluster_endpoint").(string)
-	secureAccessDashboardUrl := d.Get("secure_access_dashboard_url").(string)
 	secureAccessAllowPortForwading := d.Get("secure_access_allow_port_forwading").(bool)
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
-	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.GatewayUpdateProducerNativeK8S{
+	body := akeyless.GatewayUpdateProducerEks{
 		Name:  name,
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
-	common.GetAkeylessPtr(&body.K8sClusterEndpoint, k8sClusterEndpoint)
-	common.GetAkeylessPtr(&body.K8sClusterCaCert, k8sClusterCaCert)
-	common.GetAkeylessPtr(&body.K8sClusterToken, k8sClusterToken)
-	common.GetAkeylessPtr(&body.K8sServiceAccount, k8sServiceAccount)
-	common.GetAkeylessPtr(&body.K8sNamespace, k8sNamespace)
+	common.GetAkeylessPtr(&body.EksClusterName, eksClusterName)
+	common.GetAkeylessPtr(&body.EksClusterEndpoint, eksClusterEndpoint)
+	common.GetAkeylessPtr(&body.EksClusterCaCert, eksClusterCaCert)
+	common.GetAkeylessPtr(&body.EksAccessKeyId, eksAccessKeyId)
+	common.GetAkeylessPtr(&body.EksSecretAccessKey, eksSecretAccessKey)
+	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
+	common.GetAkeylessPtr(&body.EksAssumeRole, eksAssumeRole)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessClusterEndpoint, secureAccessClusterEndpoint)
-	common.GetAkeylessPtr(&body.SecureAccessDashboardUrl, secureAccessDashboardUrl)
 	common.GetAkeylessPtr(&body.SecureAccessAllowPortForwading, secureAccessAllowPortForwading)
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
-	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.GatewayUpdateProducerNativeK8S(ctx).Body(body).Execute()
+	_, _, err := client.GatewayUpdateProducerEks(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -346,7 +360,7 @@ func resourceProducerK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceProducerK8sDelete(d *schema.ResourceData, m interface{}) error {
+func resourceProducerEksDelete(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -367,7 +381,7 @@ func resourceProducerK8sDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceProducerK8sImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceProducerEksImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token

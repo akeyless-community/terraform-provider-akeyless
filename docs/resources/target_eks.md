@@ -18,10 +18,10 @@ EKS Target resource
 ### Required
 
 - **eks_access_key_id** (String) EKS access key ID
-- **eks_cluster_ca_cert** (String) EKS cluster base-64 encoded certificate
+- **eks_cluster_ca_cert** (String, Sensitive) EKS cluster base-64 encoded certificate
 - **eks_cluster_endpoint** (String) EKS cluster endpoint (i.e., https://<IP> of the cluster)
 - **eks_cluster_name** (String) EKS cluster name
-- **eks_secret_access_key** (String) EKS secret access key
+- **eks_secret_access_key** (String, Sensitive) EKS secret access key
 - **name** (String) Target name
 
 ### Optional

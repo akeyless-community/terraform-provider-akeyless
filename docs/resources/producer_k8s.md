@@ -22,7 +22,7 @@ Native Kubernetes Service producer resource
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **k8s_cluster_ca_cert** (String) K8S Cluster certificate. Base 64 encoded certificate.
+- **k8s_cluster_ca_cert** (String, Sensitive) K8S Cluster certificate. Base 64 encoded certificate.
 - **k8s_cluster_endpoint** (String) K8S Cluster endpoint. https:// , <DNS / IP> of the cluster.
 - **k8s_cluster_token** (String) K8S Cluster authentication token.
 - **k8s_namespace** (String) K8S Namespace where the ServiceAccount exists.
