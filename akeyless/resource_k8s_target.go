@@ -37,6 +37,7 @@ func resourceK8sTarget() *schema.Resource {
 			"k8s_cluster_ca_cert": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				Description: "K8S Cluster certificate. Base 64 encoded certificate.",
 			},
 			"k8s_cluster_token": {
