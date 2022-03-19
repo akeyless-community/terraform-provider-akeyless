@@ -94,7 +94,7 @@ func Provider() *schema.Provider {
 							Required:    true,
 							Sensitive:   true,
 							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_JWT", nil),
-                        },
+						},
 					},
 				},
 			},
