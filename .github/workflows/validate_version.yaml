@@ -22,6 +22,8 @@ jobs:
       - name: Validate Release Version
         run: .github/scripts/validate_release_version.sh
 
+#      - name: Install Terraform
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v1
         with:
