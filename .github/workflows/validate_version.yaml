@@ -4,7 +4,6 @@ on:
   deployment:
   pull_request:
 
-permissions: write-all
 
 jobs:
   validate:
@@ -12,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
 # remove me later
 
