@@ -13,6 +13,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+# remove me later
+
 #      - name: Fetch history
 #        run: git fetch --prune --unshallow
 
