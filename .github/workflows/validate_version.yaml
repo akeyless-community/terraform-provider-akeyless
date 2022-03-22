@@ -40,4 +40,4 @@ jobs:
           TF_ACC_GCP_SERVICE_ACCOUNT: ${{ secrets.TF_ACC_GCP_SERVICE_ACCOUNT }}
           TF_ACC_GCP_BOUND_SERVICE_ACC: ${{ secrets.TF_ACC_GCP_BOUND_SERVICE_ACC }}
         run: |
-          TF_ACC=1 go test ./... -v -count 1 -timeout 120m
+          TF_ACC=1 go test ./akeyless/... -v -count 1 -timeout 120m
