@@ -12,20 +12,26 @@ provider "akeyless" {
   api_gateway_address = "https://api.akeyless.io"
 
   api_key_login {
-    access_id = ""
+    access_id  = ""
     access_key = ""
   }
 
-//  aws_iam_login {
-//    access_id = ""
-//  }
+  //  aws_iam_login {
+  //    access_id = ""
+  //  }
 
-//  azure_ad_login {
-//    access_id = ""
-//  }
+  //  azure_ad_login {
+  //    access_id = ""
+  //  }
 
-//  email_login {
-//    admin_email = "user@mail.com"
-//    admin_password = ""
-//  }
+  //  email_login {
+  //    admin_email = "user@mail.com"
+  //    admin_password = ""
+  //  }
+
+  // jwt_login {
+  //    access_id = ""
+  //    jwt = var.jwt
+  //    // OR provide your JWT by storing it in an environment variable called AKEYLESS_AUTH_JWT
+  // }
 }
