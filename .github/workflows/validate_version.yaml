@@ -14,13 +14,19 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fetch history
-        run: git fetch --prune --unshallow
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+# remove me later
 
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+#      - name: Fetch history
+#        run: git fetch --prune --unshallow
+
+#      - name: Configure Git
+#        run: |
+#          git config user.name "$GITHUB_ACTOR"
+#          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Validate Release Version
         run: .github/scripts/validate_release_version.sh
@@ -38,4 +44,5 @@ jobs:
           TF_ACC_GCP_SERVICE_ACCOUNT: ${{ secrets.TF_ACC_GCP_SERVICE_ACCOUNT }}
           TF_ACC_GCP_BOUND_SERVICE_ACC: ${{ secrets.TF_ACC_GCP_BOUND_SERVICE_ACC }}
         run: |
-          TF_ACC=1 go test ./... -v -count 1 -timeout 120m
+          make install-linux
+          TF_ACC=1 go test ./akeyless/... -v -count 1 -timeout 120m
