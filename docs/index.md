@@ -114,6 +114,7 @@ output "auth_method" {
 - **aws_iam_login** (Block List) A configuration block, described below, that attempts to authenticate using AWS-IAM authentication credentials. (see [below for nested schema](#nestedblock--aws_iam_login))
 - **azure_ad_login** (Block List) A configuration block, described below, that attempts to authenticate using Azure Active Directory authentication. (see [below for nested schema](#nestedblock--azure_ad_login))
 - **email_login** (Block List) A configuration block, described below, that attempts to authenticate using email and password. (see [below for nested schema](#nestedblock--email_login))
+- **jwt_login** (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT. (see [below for nested schema](#nestedblock--jwt_login))
 
 <a id="nestedblock--api_key_login"></a>
 ### Nested Schema for `api_key_login`
@@ -147,3 +148,12 @@ Required:
 
 - **admin_email** (String)
 - **admin_password** (String)
+
+
+<a id="nestedblock--jwt_login"></a>
+### Nested Schema for `jwt_login`
+
+Required:
+
+- **access_id** (String)
+- **jwt** (String, Sensitive)
