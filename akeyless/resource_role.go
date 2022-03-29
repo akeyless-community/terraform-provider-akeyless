@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
 )
 
 func resourceRole() *schema.Resource {
@@ -240,21 +241,23 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
+	if role.RoleAuthMethodsAssoc != nil && assocAuthMethod != nil {
+		for _, v := range *role.RoleAuthMethodsAssoc {
+			association := akeyless.DeleteRoleAssociation{
+				AssocId: *v.AssocId,
+				Token:   &token,
+			}
 
-	for _, v := range *role.RoleAuthMethodsAssoc {
-		association := akeyless.DeleteRoleAssociation{
-			AssocId: *v.AssocId,
-			Token:   &token,
-		}
-
-		_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
-		if err != nil {
-			if errors.As(err, &apiErr) {
-				if res.StatusCode != http.StatusNotFound {
-					return fmt.Errorf("can't delete Role association: %v", string(apiErr.Body()))
+			_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
+			if err != nil {
+				if errors.As(err, &apiErr) {
+					if res.StatusCode != http.StatusNotFound {
+						return fmt.Errorf("can't delete Role association: %v", string(apiErr.Body()))
+					}
+				} else {
+					return fmt.Errorf("can't delete Role association: %v", err)
 				}
-			} else {
-				return fmt.Errorf("can't delete Role association: %v", err)
 			}
 		}
 	}
@@ -284,7 +287,6 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
 	if assocAuthMethod != nil {
 		for _, v := range assocAuthMethod {
 			assoc := v.(map[string]interface{})
