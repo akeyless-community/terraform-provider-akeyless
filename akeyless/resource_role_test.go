@@ -557,7 +557,13 @@ func checkAddRoleRemotely(t *testing.T, roleName string) resource.TestCheckFunc 
 	}
 }
 
+func checkUpdateRoleRemotelyNoAcc(t *testing.T, roleName string) resource.TestCheckFunc {
+	return checkUpdateRole(t, roleName, 0)
+}
 func checkUpdateRoleRemotely(t *testing.T, roleName string) resource.TestCheckFunc {
+	return checkUpdateRole(t, roleName, 1)
+}
+func checkUpdateRole(t *testing.T, roleName string, accnum int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
@@ -569,7 +575,7 @@ func checkUpdateRoleRemotely(t *testing.T, roleName string) resource.TestCheckFu
 
 		res, _, err := client.GetRole(context.Background()).Body(gsvBody).Execute()
 		assert.NoError(t, err)
-		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
+		assert.Equal(t, accnum, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
 		assert.Equal(t, 4, len(rules.GetPathRules()))
 
@@ -577,13 +583,7 @@ func checkUpdateRoleRemotely(t *testing.T, roleName string) resource.TestCheckFu
 	}
 }
 
-func checkUpdateRoleRemotelyNoAcc(t *testing.T, roleName string) resource.TestCheckFunc {
-	return checkRemoveRole(t, roleName, 0)
-}
-func checkRemoveRoleRemotely(t *testing.T, roleName string) resource.TestCheckFunc {
-	return checkRemoveRole(t, roleName, 1)
-}
-func checkRemoveRole(t *testing.T, roleName string, accLen int) resource.TestCheckFunc {
+func checkRemoveRoleRemotely(t *testing.T, roleName string, accLen int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
