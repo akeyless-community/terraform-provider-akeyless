@@ -331,13 +331,15 @@ func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
 			name = "%v"
 			access_expires = 1638741817
 			bound_ips = ["1.1.4.0/32"]
+			bound_pod_names = ["mypod1", "mypod2"]
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_k8s" "%v" {
 			name = "%v"
-			bound_ips = ["1.1.1.0/32"]
-			access_expires = 1638941817
+			access_expires = 1638741817
+			bound_ips = ["1.1.4.0/32"]
+			bound_pod_names = ["mypod1", "mypod3"]
 		}
 	`, name, path)
 
