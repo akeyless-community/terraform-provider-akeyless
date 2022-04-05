@@ -150,6 +150,7 @@ func Provider() *schema.Provider {
 			"akeyless_producer_azure":             resourceProducerAzure(),
 			"akeyless_producer_artifactory":       resourceProducerArtifactory(),
 			"akeyless_producer_k8s":               resourceProducerK8s(),
+			"akeyless_producer_custom":            resourceProducerCustom(),
 			"akeyless_target_artifactory":         resourceArtifactoryTarget(),
 			"akeyless_target_aws":                 resourceAwsTarget(),
 			"akeyless_target_azure":               resourceAzureTarget(),
