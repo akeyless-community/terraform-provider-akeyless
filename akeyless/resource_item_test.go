@@ -35,6 +35,25 @@ func TestDfcKeyRsaResource(t *testing.T) {
 
 }
 
+func TestRsaPublicResource(t *testing.T) {
+	name := "test_rsa_pub_key"
+	itemPath := testPath("path_rsa_pub_key")
+	config := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "%v" {
+			name = "%v"
+			alg = "RSA2048"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		data "akeyless_rsa_pub" "%v" {
+			name = "%v"
+		}
+	`, name, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
 func TestDfcKeyResource(t *testing.T) {
 	name := "test_dfc_key"
 	itemPath := testPath("path_dfc_key12")

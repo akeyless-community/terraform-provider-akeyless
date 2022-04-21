@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
+	// "akeyless.io/akeyless-main-repo/go/src/client/utils"
+	// "golang.org/x/crypto/ssh"
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -44,9 +46,14 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
-	ctx := context.Background()
+	fmt.Println("--- in dataSourceGetRSAPublicRead ---")
+
 	name := d.Get("name").(string)
+
+	fmt.Println("|||| name:", name)
+
+	ctx := context.Background()
+	var apiErr akeyless.GenericOpenAPIError
 
 	body := akeyless.GetRSAPublic{
 		Name:  name,
@@ -54,33 +61,61 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	rOut, res, err := client.GetRSAPublic(ctx).Body(body).Execute()
+
+	fmt.Println("|||| rOut:", rOut)
+	fmt.Println("|||| res:", res)
+	fmt.Println("|||| err:", err)
+	fmt.Println("|||| rOut.RAW:", rOut.GetRaw())
+	fmt.Println("|||| rOut.SSH:", string(rOut.GetSsh()))
+
 	if err != nil {
 		if errors.As(err, &apiErr) {
+
+			fmt.Println("|||| apiErr.Body:", string(apiErr.Body()))
+
 			if res.StatusCode == http.StatusNotFound {
 				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
 				d.SetId("")
 				return nil
 			}
 			err = json.Unmarshal(apiErr.Body(), &rOut)
+
+			fmt.Println("|||| rOut:", rOut)
+			// fmt.Println("|||| rOut:", *rOut.Raw)
+			// fmt.Println("|||| rOut:", (*rOut.Ssh)[0])
+			fmt.Println("|||| rOut.RAW:", rOut.GetRaw())
+			fmt.Println("|||| rOut.SSH:", rOut.GetSsh())
+
 			if err != nil {
+				fmt.Println("--- error 1 ---")
 				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
 			}
 		}
 		if err != nil {
+			fmt.Println("--- error 2 ---")
 			return fmt.Errorf("can't get value: %v", err)
 		}
 	}
 	if rOut.Raw != nil {
-		err = d.Set("raw", *rOut.Raw)
+		err = d.Set("raw", rOut.GetRaw())
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.Ssh != nil {
-		err = d.Set("ssh", *rOut.Ssh)
+		// publicKey, err := utils.ExtractRSAPubKey(rOut.GetRaw())
+
+		// pk, err := ssh.NewPublicKey(publicKey)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create SSH key: %w", err)
 		}
+
+		// pubBytes := ssh.MarshalAuthorizedKey(pk)
+
+		// err = d.Set("ssh", pubBytes)
+		// if err != nil {
+		// 	return err
+		// }
 	}
 
 	d.SetId(name)
