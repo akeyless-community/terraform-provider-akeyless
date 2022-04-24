@@ -24,7 +24,7 @@ build-linux:
 	GOOS=linux GOARCH=amd64 go build -o ${BINARY}
 
 build-darwin:
-	GOOS=darwin GOARCH=arm64 go build -o ${BINARY}
+	GOOS=darwin GOARCH=amd64 go build -o ${BINARY}
 
 build-darwin-m1:
 	GOOS=darwin GOARCH=arm64 go build -o ${BINARY}
