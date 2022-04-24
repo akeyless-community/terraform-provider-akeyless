@@ -31,7 +31,7 @@ data "akeyless_rsa_pub" "rsa_pub_key" {
 
 ### Read-Only
 
-- **Raw** (Pointer to string) The public key.
-- **Ssh** (Pointer to []byte) The public SSH key.
+- **Raw** (String) The public key.
+- **Ssh** (String) The public SSH key.
 
 

@@ -43,13 +43,12 @@ func TestRsaPublicResource(t *testing.T) {
 			name = "%v"
 			alg = "RSA2048"
 		}
-	`, name, itemPath)
-
-	configUpdate := fmt.Sprintf(`
 		data "akeyless_rsa_pub" "%v" {
-			name = "%v"
+			name = akeyless_dfc_key.%v.name
 		}
-	`, name, itemPath)
+	`, name, itemPath, name+"2", name)
+
+	configUpdate := config
 
 	tesItemResource(t, config, configUpdate, itemPath)
 }
