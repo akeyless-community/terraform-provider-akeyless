@@ -33,7 +33,6 @@ func dataSourceGetRSAPublic() *schema.Resource {
 				Computed:    true,
 				Required:    false,
 				Description: "",
-				//Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -72,17 +71,14 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
 			}
 
-			if out.Raw != nil {
+			if out.Raw != nil && out.Ssh != nil {
 				rawVal = *out.Raw
-			} else {
-				return fmt.Errorf("can't get value: raw key")
-			}
-			if out.Ssh != nil {
 				sshVal = *out.Ssh
 			} else {
-				return fmt.Errorf("can't get value: ssh key")
+				return fmt.Errorf("can't get value: raw or ssh key")
 			}
-		} else {
+		}
+		if err != nil {
 			return fmt.Errorf("can't get value: %v", err)
 		}
 	} else {
@@ -102,10 +98,6 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-
-	fmt.Println("--- raw output:", d.Get("raw"))
-	fmt.Println("--- ssh output:", d.Get("ssh"))
-	fmt.Println()
 
 	d.SetId(name)
 	return nil
