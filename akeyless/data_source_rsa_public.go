@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -55,32 +54,44 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 
+	var out rsaPublicOutput
+	var sshVal string
+	var rawVal string
+
 	rOut, res, err := client.GetRSAPublic(ctx).Body(body).Execute()
-	sshVal := string(*rOut.Ssh)
 
 	if err != nil {
-
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
 				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
 				d.SetId("")
 				return nil
 			}
-		}
+			err = json.Unmarshal(apiErr.Body(), &out)
+			if err != nil {
+				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
+			}
 
-		if reflect.ValueOf(*rOut.Ssh).Kind() == reflect.Slice {
-			if ma, err := json.Marshal(*rOut.Ssh); err != nil {
-				return fmt.Errorf("can't get value: %v", err)
+			if out.Raw != nil {
+				rawVal = *out.Raw
 			} else {
-				sshVal = string(ma)
+				return fmt.Errorf("can't get value: raw key")
+			}
+			if out.Ssh != nil {
+				sshVal = *out.Ssh
+			} else {
+				return fmt.Errorf("can't get value: ssh key")
 			}
 		} else {
 			return fmt.Errorf("can't get value: %v", err)
 		}
+	} else {
+		rawVal = string(*rOut.Raw)
+		sshVal = string(*rOut.Ssh)
 	}
 
 	if rOut.Raw != nil {
-		err = d.Set("raw", *rOut.Raw)
+		err = d.Set("raw", rawVal)
 		if err != nil {
 			return err
 		}
@@ -92,6 +103,15 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	fmt.Println("--- raw output:", d.Get("raw"))
+	fmt.Println("--- ssh output:", d.Get("ssh"))
+	fmt.Println()
+
 	d.SetId(name)
 	return nil
+}
+
+type rsaPublicOutput struct {
+	Raw *string `json:"raw,omitempty"`
+	Ssh *string `json:"ssh,omitempty"`
 }
