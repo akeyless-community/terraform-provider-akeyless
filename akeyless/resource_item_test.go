@@ -43,10 +43,10 @@ func TestRsaPublicResource(t *testing.T) {
 			name = "%v"
 			alg = "RSA2048"
 		}
-		data "akeyless_rsa_pub" "%v" {
+		data "akeyless_rsa_pub" "%v_2" {
 			name = akeyless_dfc_key.%v.name
 		}
-	`, name, itemPath, name+"2", name)
+	`, name, itemPath, name, name)
 
 	configUpdate := config
 

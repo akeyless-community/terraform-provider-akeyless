@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -55,23 +56,29 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	rOut, res, err := client.GetRSAPublic(ctx).Body(body).Execute()
+	sshVal := string(*rOut.Ssh)
 
 	if err != nil {
+
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
 				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
 				d.SetId("")
 				return nil
 			}
-			err = json.Unmarshal(apiErr.Body(), &rOut)
-			if err != nil {
-				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
-			}
 		}
-		if err != nil {
+
+		if reflect.ValueOf(*rOut.Ssh).Kind() == reflect.Slice {
+			if ma, err := json.Marshal(*rOut.Ssh); err != nil {
+				return fmt.Errorf("can't get value: %v", err)
+			} else {
+				sshVal = string(ma)
+			}
+		} else {
 			return fmt.Errorf("can't get value: %v", err)
 		}
 	}
+
 	if rOut.Raw != nil {
 		err = d.Set("raw", *rOut.Raw)
 		if err != nil {
@@ -79,7 +86,7 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Ssh != nil {
-		err = d.Set("ssh", string(*rOut.Ssh))
+		err = d.Set("ssh", sshVal)
 		if err != nil {
 			return err
 		}
