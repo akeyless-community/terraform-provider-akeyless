@@ -29,11 +29,10 @@ func dataSourceGetRSAPublic() *schema.Resource {
 				Description: "",
 			},
 			"ssh": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeString,
 				Computed:    true,
 				Required:    false,
 				Description: "",
-				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -44,16 +43,22 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
-	ctx := context.Background()
 	name := d.Get("name").(string)
+
+	ctx := context.Background()
+	var apiErr akeyless.GenericOpenAPIError
 
 	body := akeyless.GetRSAPublic{
 		Name:  name,
 		Token: &token,
 	}
 
+	var out rsaPublicOutput
+	var sshVal string
+	var rawVal string
+
 	rOut, res, err := client.GetRSAPublic(ctx).Body(body).Execute()
+
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -61,23 +66,34 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			err = json.Unmarshal(apiErr.Body(), &rOut)
+			err = json.Unmarshal(apiErr.Body(), &out)
 			if err != nil {
 				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
+			}
+
+			if out.Raw != nil && out.Ssh != nil {
+				rawVal = *out.Raw
+				sshVal = *out.Ssh
+			} else {
+				return fmt.Errorf("can't get value: raw or ssh key")
 			}
 		}
 		if err != nil {
 			return fmt.Errorf("can't get value: %v", err)
 		}
+	} else {
+		rawVal = string(*rOut.Raw)
+		sshVal = string(*rOut.Ssh)
 	}
+
 	if rOut.Raw != nil {
-		err = d.Set("raw", *rOut.Raw)
+		err = d.Set("raw", rawVal)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.Ssh != nil {
-		err = d.Set("ssh", *rOut.Ssh)
+		err = d.Set("ssh", sshVal)
 		if err != nil {
 			return err
 		}
@@ -85,4 +101,9 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(name)
 	return nil
+}
+
+type rsaPublicOutput struct {
+	Raw *string `json:"raw,omitempty"`
+	Ssh *string `json:"ssh,omitempty"`
 }
