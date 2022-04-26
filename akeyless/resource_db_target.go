@@ -415,10 +415,13 @@ func resourceDbTargetDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	ctx := context.Background()
+	fmt.Println("--- delete: target ---")
 	_, _, err := client.DeleteTarget(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("--- success delete target ---")
 
 	return nil
 }

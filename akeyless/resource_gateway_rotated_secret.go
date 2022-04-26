@@ -53,13 +53,13 @@ func resourceRotatedSecret() *schema.Resource {
 				Description: "The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"auto_rotate": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Required:    false,
 				Optional:    true,
 				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation",
 			},
 			"rotation_interval": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Required:    false,
 				Optional:    true,
 				Description: "The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes",
@@ -139,6 +139,8 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
+	fmt.Println("-- create --")
+
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
@@ -147,8 +149,8 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	key := d.Get("key").(string)
-	autoRotate := d.Get("auto_rotate").(string)
-	rotationInterval := d.Get("rotation_interval").(string)
+	autoRotate := d.Get("auto_rotate").(bool)
+	rotationInterval := d.Get("rotation_interval").(int)
 	rotationHour := d.Get("rotation_hour").(int)
 	rotatorType := d.Get("rotator_type").(string)
 	rotatorCredsType := d.Get("rotator_creds_type").(string)
@@ -201,6 +203,8 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
+	fmt.Println("-- read --")
+
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 
@@ -209,19 +213,6 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 	body := akeyless.GetRotatedSecretValue{
 		Names: path,
 		Token: &token,
-	}
-
-	rOut, res, err := client.GetRotatedSecretValue(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
 	}
 
 	item := akeyless.DescribeItem{
@@ -302,6 +293,21 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 	}
+	fmt.Println("----------------------------------")
+
+	rOut, res, err := client.GetRotatedSecretValue(ctx).Body(body).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			if res.StatusCode == http.StatusNotFound {
+				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+				d.SetId("")
+				return nil
+			}
+			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("can't get value: %v", err)
+	}
+
 	val, ok := rOut["value"]
 	if ok {
 		if _, ok := val["payload"]; ok {
@@ -381,12 +387,14 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
+	fmt.Println("-- update --")
+
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	key := d.Get("key").(string)
-	autoRotate := d.Get("auto_rotate").(string)
-	rotationInterval := d.Get("rotation_interval").(string)
+	autoRotate := d.Get("auto_rotate").(bool)
+	rotationInterval := d.Get("rotation_interval").(int)
 	rotationHour := d.Get("rotation_hour").(int)
 	rotatorCredsType := d.Get("rotator_creds_type").(string)
 	apiId := d.Get("api_id").(string)
@@ -395,21 +403,22 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	rotatedPassword := d.Get("rotated_password").(string)
 	customPayload := d.Get("custom_payload").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
-	tagsList := common.ExpandStringList(tagsSet.List())
-	/*
-	   targetName := d.Get("target_name").(string)
-	   metadata := d.Get("metadata").(string)
-	   rotatorType := d.Get("rotator_type").(string)
-	   rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
-	   userDn := d.Get("user_dn").(string)
-	   userAttribute := d.Get("user_attribute").(string)
-	*/
+	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.GatewayUpdateItem{
+	// targetName := d.Get("target_name").(string)
+	// rotatorType := d.Get("rotator_type").(string)
+	// userDn := d.Get("user_dn").(string)
+	// userAttribute := d.Get("user_attribute").(string)
+	// username := d.Get("username").(string)
+	// password := d.Get("password").(string)
+	metadata := d.Get("metadata").(string)
+	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
+
+	body := akeyless.UpdateRotatedSecret{
 		Name:  name,
 		Token: &token,
 	}
-	add, remove, err := common.GetTagsForUpdate(d, name, token, tagsList, client)
+	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
 	if err == nil {
 		if len(add) > 0 {
 			common.GetAkeylessPtr(&body.AddTag, add)
@@ -418,6 +427,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 			common.GetAkeylessPtr(&body.RmTag, remove)
 		}
 	}
+
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
@@ -428,8 +438,13 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
+	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
+	common.GetAkeylessPtr(&body.NewMetadata, metadata)
 
-	_, _, err = client.GatewayUpdateItem(ctx).Body(body).Execute()
+	// common.GetAkeylessPtr(&body.Username, username)
+	// common.GetAkeylessPtr(&body.Password, password)
+
+	_, _, err = client.UpdateRotatedSecret(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -455,10 +470,13 @@ func resourceRotatedSecretDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	ctx := context.Background()
+	fmt.Println("--- delete: rotated secret ---")
 	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("--- success delete rotated secret ---")
 
 	return nil
 }
