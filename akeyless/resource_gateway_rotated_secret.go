@@ -293,7 +293,6 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 	}
-	fmt.Println("----------------------------------")
 
 	rOut, res, err := client.GetRotatedSecretValue(ctx).Body(body).Execute()
 	if err != nil {
@@ -328,53 +327,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
-
-		//return string(out), nil
-
 	}
-
-	// if rOut.ApiId != nil {
-	// 	err = d.Set("api_id", *rOut.ApiId)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.ApiKey != nil {
-	// 	err = d.Set("api_key", *rOut.ApiKey)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.RotatedUsername != nil {
-	// 	err = d.Set("rotated_username", *rOut.RotatedUsername)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.RotatedPassword != nil {
-	// 	err = d.Set("rotated_password", *rOut.RotatedPassword)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.UserDn != nil {
-	// 	err = d.Set("user_dn", *rOut.UserDn)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.UserAttribute != nil {
-	// 	err = d.Set("user_attribute", *rOut.UserAttribute)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.CustomPayload != nil {
-	// 	err = d.Set("custom_payload", *rOut.CustomPayload)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	d.SetId(path)
 
