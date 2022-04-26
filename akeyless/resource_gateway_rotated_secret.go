@@ -263,7 +263,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	rType := "password"
+
 	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.RotatedSecretDetails != nil {
 		rsd := itemOut.ItemGeneralInfo.RotatedSecretDetails
 		if rsd.RotationHour != nil {
@@ -272,14 +272,14 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
+
 		if rsd.RotatorType != nil {
-			if *rsd.RotatorType == "use_???" {
-				err = d.Set("rotator_type", rType)
-				if err != nil {
-					return err
-				}
+			err = setRotatorType(d, *rsd.RotatorType)
+			if err != nil {
+				return err
 			}
 		}
+
 		if rsd.RotatorCredsType != nil {
 			err = d.Set("rotator_creds_type", *rsd.RotatorCredsType)
 			if err != nil {
@@ -309,20 +309,37 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	val, ok := rOut["value"]
 	if ok {
-		if _, ok := val["payload"]; ok {
+		if isCustomPayload(val) {
 			err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
 			if err != nil {
 				return err
 			}
-		} else if _, ok := val["target_value"]; ok {
+		} else if isLdapPayload(val) {
+			err = d.Set("user_attribute", fmt.Sprintf("%v", val["ldap_user_attr"]))
+			if err != nil {
+				return err
+			}
+			err = d.Set("user_dn", fmt.Sprintf("%v", val["ldap_user_dn"]))
+			if err != nil {
+				return err
+			}
+		} else if isTargetValue(val) {
 
-		} else if _, ok := val["username"]; ok {
+		} else if isUserPasswordValue(val) {
 			err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
 			if err != nil {
 				return err
 			}
-		} else if _, ok := val["password"]; ok {
-			err = d.Set("custom_payload", fmt.Sprintf("%v", val["password"]))
+			err = d.Set("rotated_password", fmt.Sprintf("%v", val["password"]))
+			if err != nil {
+				return err
+			}
+		} else if isApiKeyValue(val) {
+			err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
+			if err != nil {
+				return err
+			}
+			err = d.Set("api_key", fmt.Sprintf("%v", val["password"]))
 			if err != nil {
 				return err
 			}
@@ -357,13 +374,6 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	customPayload := d.Get("custom_payload").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-
-	// targetName := d.Get("target_name").(string)
-	// rotatorType := d.Get("rotator_type").(string)
-	// userDn := d.Get("user_dn").(string)
-	// userAttribute := d.Get("user_attribute").(string)
-	// username := d.Get("username").(string)
-	// password := d.Get("password").(string)
 	metadata := d.Get("metadata").(string)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 
@@ -386,16 +396,13 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
 	common.GetAkeylessPtr(&body.RotatorCredsType, rotatorCredsType)
+	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
 	common.GetAkeylessPtr(&body.ApiId, apiId)
 	common.GetAkeylessPtr(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
-	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
 	common.GetAkeylessPtr(&body.NewMetadata, metadata)
-
-	// common.GetAkeylessPtr(&body.Username, username)
-	// common.GetAkeylessPtr(&body.Password, password)
 
 	_, _, err = client.UpdateRotatedSecret(ctx).Body(body).Execute()
 	if err != nil {
@@ -458,4 +465,42 @@ func resourceRotatedSecretImport(d *schema.ResourceData, m interface{}) ([]*sche
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func setRotatorType(d *schema.ResourceData, rsdType string) error {
+
+	switch rsdType {
+	case "user-pass-rotator":
+		return d.Set("rotator_type", "password")
+	case "api-key-rotator":
+		return d.Set("rotator_type", "api-key")
+	case "custom-rotator":
+		return d.Set("rotator_type", "custom")
+	case "ldap-rotator":
+		return d.Set("rotator_type", "ldap")
+	case "target-rotator":
+		return d.Set("rotator_type", "target")
+	default:
+		return fmt.Errorf("invalid rotator type")
+	}
+}
+
+func isUserPasswordValue(val map[string]interface{}) bool {
+	return val["username"] != nil && val["password"] != nil
+}
+
+func isApiKeyValue(val map[string]interface{}) bool {
+	return val["access_id"] != nil && val["api_key"] != nil
+}
+
+func isLdapPayload(val map[string]interface{}) bool {
+	return val["ldap_user_attr"] != nil && val["ldap_user_dn"] != nil
+}
+
+func isCustomPayload(val map[string]interface{}) bool {
+	return val["payload"] != nil
+}
+
+func isTargetValue(val map[string]interface{}) bool {
+	return val["target_value"] != nil
 }
