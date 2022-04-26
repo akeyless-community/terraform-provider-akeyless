@@ -139,8 +139,6 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	fmt.Println("-- create --")
-
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
@@ -202,8 +200,6 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
-
-	fmt.Println("-- read --")
 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
@@ -357,8 +353,6 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	fmt.Println("-- update --")
-
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
@@ -430,13 +424,10 @@ func resourceRotatedSecretDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	ctx := context.Background()
-	fmt.Println("--- delete: rotated secret ---")
 	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("--- success delete rotated secret ---")
 
 	return nil
 }
