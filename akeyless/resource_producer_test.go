@@ -67,7 +67,7 @@ func TestRotatedSecretResource(t *testing.T) {
 			rotator_type 	= "target"
 			rotated_username = "XXXXXXXX"
 			rotated_password = "XXXXXXXX"
-			rotator_creds_type = "use-target-creds"
+			authentication_credentials = "use-target-creds"
 			key = "XXXXXXXX"
 			depends_on = [
     			akeyless_target_db.%v,
@@ -91,7 +91,7 @@ func TestRotatedSecretResource(t *testing.T) {
 			rotator_type 	= "target"
 			rotated_username = "XXXXXXXX"
 			rotated_password = "XXXXXXXX"
-			rotator_creds_type = "use-target-creds"
+			authentication_credentials = "use-target-creds"
 			key 			= "XXXXXXXX"
 			tags 			= ["abc", "def"]
 			depends_on = [
