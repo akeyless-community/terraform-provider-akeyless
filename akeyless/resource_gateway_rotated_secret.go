@@ -75,11 +75,11 @@ func resourceRotatedSecret() *schema.Resource {
 				Required:    true,
 				Description: "The rotator type password/target/api-key/ldap/custom",
 			},
-			"rotator_creds_type": {
+			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "The credentials to connect with use-user-creds/use-target-creds ",
+				Description: "The credentials to connect with use-user-creds/use-target-creds",
 				Default:     "use-user-creds",
 			},
 			"rotator_custom_cmd": {
@@ -151,7 +151,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	rotationInterval := d.Get("rotation_interval").(int)
 	rotationHour := d.Get("rotation_hour").(int)
 	rotatorType := d.Get("rotator_type").(string)
-	rotatorCredsType := d.Get("rotator_creds_type").(string)
+	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 	apiId := d.Get("api_id").(string)
 	apiKey := d.Get("api_key").(string)
@@ -173,7 +173,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
-	common.GetAkeylessPtr(&body.RotatorCredsType, rotatorCredsType)
+	common.GetAkeylessPtr(&body.RotatorCredsType, authenticationCredentials)
 	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
 	common.GetAkeylessPtr(&body.ApiId, apiId)
 	common.GetAkeylessPtr(&body.ApiKey, apiKey)
@@ -277,7 +277,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 
 		if rsd.RotatorCredsType != nil {
-			err = d.Set("rotator_creds_type", *rsd.RotatorCredsType)
+			err = d.Set("authentication_credentials", *rsd.RotatorCredsType)
 			if err != nil {
 				return err
 			}
@@ -319,8 +319,6 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				return err
 			}
-		} else if isTargetValue(val) {
-
 		} else if isUserPasswordValue(val) {
 			err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
 			if err != nil {
@@ -360,7 +358,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	autoRotate := d.Get("auto_rotate").(bool)
 	rotationInterval := d.Get("rotation_interval").(int)
 	rotationHour := d.Get("rotation_hour").(int)
-	rotatorCredsType := d.Get("rotator_creds_type").(string)
+	authenticationCredentials := d.Get("authentication_credentials").(string)
 	apiId := d.Get("api_id").(string)
 	apiKey := d.Get("api_key").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
@@ -389,7 +387,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
-	common.GetAkeylessPtr(&body.RotatorCredsType, rotatorCredsType)
+	common.GetAkeylessPtr(&body.RotatorCredsType, authenticationCredentials)
 	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
 	common.GetAkeylessPtr(&body.ApiId, apiId)
 	common.GetAkeylessPtr(&body.ApiKey, apiKey)
