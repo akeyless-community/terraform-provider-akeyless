@@ -17,26 +17,26 @@ RDP Producer resource
 
 ### Required
 
-- **name** (String) Producer name
+- `name` (String) Producer name
 
 ### Optional
 
-- **fixed_user_only** (String) Enable fixed user only
-- **id** (String) The ID of this resource.
-- **producer_encryption_key_name** (String) Encrypt producer with following key
-- **rdp_admin_name** (String) RDP Admin name
-- **rdp_admin_pwd** (String) RDP Admin Password
-- **rdp_host_name** (String) RDP Host name
-- **rdp_host_port** (String) RDP Host port
-- **rdp_user_groups** (String) RDP UserGroup name(s). Multiple values should be separated by comma
-- **secure_access_allow_external_user** (Boolean) Allow providing external user for a domain users
-- **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
-- **secure_access_host** (Set of String) Target servers for connections., For multiple values repeat this flag.
-- **secure_access_rdp_domain** (String) Required when the Dynamic Secret is used for a domain user
-- **secure_access_rdp_user** (String) Override the RDP Domain username
-- **secure_access_web** (Boolean) Enable Web Secure Remote Access
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- **target_name** (String) Name of existing target to use in producer creation
-- **user_ttl** (String) User TTL
+- `fixed_user_only` (String) Enable fixed user only
+- `id` (String) The ID of this resource.
+- `producer_encryption_key_name` (String) Encrypt producer with following key
+- `rdp_admin_name` (String) RDP Admin name
+- `rdp_admin_pwd` (String) RDP Admin Password
+- `rdp_host_name` (String) RDP Host name
+- `rdp_host_port` (String) RDP Host port
+- `rdp_user_groups` (String) RDP UserGroup name(s). Multiple values should be separated by comma
+- `secure_access_allow_external_user` (Boolean) Allow providing external user for a domain users
+- `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_host` (Set of String) Target servers for connections., For multiple values repeat this flag.
+- `secure_access_rdp_domain` (String) Required when the Dynamic Secret is used for a domain user
+- `secure_access_rdp_user` (String) Override the RDP Domain username
+- `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target_name` (String) Name of existing target to use in producer creation
+- `user_ttl` (String) User TTL
 
 

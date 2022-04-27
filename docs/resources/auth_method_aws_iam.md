@@ -17,22 +17,22 @@ AWS IAM Auth Method Resource
 
 ### Required
 
-- **bound_aws_account_id** (Set of String) A list of AWS account-IDs that the access is restricted to
-- **name** (String) Auth Method name
+- `bound_aws_account_id` (Set of String) A list of AWS account-IDs that the access is restricted to
+- `name` (String) Auth Method name
 
 ### Optional
 
-- **access_expires** (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- **access_id** (String) Auth Method access ID
-- **bound_arn** (Set of String) A list of full arns that the access is restricted to
-- **bound_ips** (Set of String) A CIDR whitelist with the IPs that the access is restricted to
-- **bound_resource_id** (Set of String) A list of full resource ids that the access is restricted to
-- **bound_role_id** (Set of String) A list of full role ids that the access is restricted to
-- **bound_role_name** (Set of String) A list of full role-name that the access is restricted to
-- **bound_user_id** (Set of String) A list of full user ids that the access is restricted to
-- **bound_user_name** (Set of String) A list of full user-name that the access is restricted to
-- **force_sub_claims** (Boolean) enforce role-association must include sub claims
-- **id** (String) The ID of this resource.
-- **sts_url** (String) sts URL
+- `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
+- `access_id` (String) Auth Method access ID
+- `bound_arn` (Set of String) A list of full arns that the access is restricted to
+- `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
+- `bound_resource_id` (Set of String) A list of full resource ids that the access is restricted to
+- `bound_role_id` (Set of String) A list of full role ids that the access is restricted to
+- `bound_role_name` (Set of String) A list of full role-name that the access is restricted to
+- `bound_user_id` (Set of String) A list of full user ids that the access is restricted to
+- `bound_user_name` (Set of String) A list of full user-name that the access is restricted to
+- `force_sub_claims` (Boolean) enforce role-association must include sub claims
+- `id` (String) The ID of this resource.
+- `sts_url` (String) sts URL
 
 

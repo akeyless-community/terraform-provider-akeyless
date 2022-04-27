@@ -17,31 +17,31 @@ PKI Cert Issuer  resource
 
 ### Required
 
-- **name** (String) PKI certificate issuer name
-- **signer_key_name** (String) A key to sign the certificate with
-- **ttl** (Number) he requested Time To Live for the certificate, in seconds
+- `name` (String) PKI certificate issuer name
+- `signer_key_name` (String) A key to sign the certificate with
+- `ttl` (Number) he requested Time To Live for the certificate, in seconds
 
 ### Optional
 
-- **allow_any_name** (Boolean) If set, clients can request certificates for any CN
-- **allow_subdomains** (Boolean) If set, clients can request certificates for subdomains and wildcard subdomains of the allowed domains
-- **allowed_domains** (String) A list of the allowed domains that clients can request to be included in the certificate (in a comma-delimited list)
-- **allowed_uri_sans** (String) A list of the allowed URIs that clients can request to be included in the certificate as part of the URI Subject Alternative Names (in a comma-delimited list)
-- **client_flag** (Boolean) If set, certificates will be flagged for client auth use
-- **code_signing_flag** (Boolean) If set, certificates will be flagged for code signing use
-- **country** (String) A comma-separated list of the country that will be set in the issued certificate
-- **id** (String) The ID of this resource.
-- **key_usage** (String) A comma-separated string or list of key usages
-- **locality** (String) A comma-separated list of the locality that will be set in the issued certificate
-- **metadata** (String) A metadata about the issuer
-- **not_enforce_hostnames** (Boolean) If set, any names are allowed for CN and SANs in the certificate and not only a valid host name
-- **not_require_cn** (Boolean) If set, clients can request certificates without a CN
-- **organizational_units** (String) A comma-separated list of organizational units (OU) that will be set in the issued certificate
-- **organizations** (String) A comma-separated list of organizations (O) that will be set in the issued certificate
-- **postal_code** (String) A comma-separated list of the postal code that will be set in the issued certificate
-- **province** (String) A comma-separated list of the province that will be set in the issued certificate
-- **server_flag** (Boolean) If set, certificates will be flagged for server auth use
-- **street_address** (String) A comma-separated list of the street address that will be set in the issued certificate
-- **tags** (Set of String) List of the tags attached to this key. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
+- `allow_any_name` (Boolean) If set, clients can request certificates for any CN
+- `allow_subdomains` (Boolean) If set, clients can request certificates for subdomains and wildcard subdomains of the allowed domains
+- `allowed_domains` (String) A list of the allowed domains that clients can request to be included in the certificate (in a comma-delimited list)
+- `allowed_uri_sans` (String) A list of the allowed URIs that clients can request to be included in the certificate as part of the URI Subject Alternative Names (in a comma-delimited list)
+- `client_flag` (Boolean) If set, certificates will be flagged for client auth use
+- `code_signing_flag` (Boolean) If set, certificates will be flagged for code signing use
+- `country` (String) A comma-separated list of the country that will be set in the issued certificate
+- `id` (String) The ID of this resource.
+- `key_usage` (String) A comma-separated string or list of key usages
+- `locality` (String) A comma-separated list of the locality that will be set in the issued certificate
+- `metadata` (String) A metadata about the issuer
+- `not_enforce_hostnames` (Boolean) If set, any names are allowed for CN and SANs in the certificate and not only a valid host name
+- `not_require_cn` (Boolean) If set, clients can request certificates without a CN
+- `organizational_units` (String) A comma-separated list of organizational units (OU) that will be set in the issued certificate
+- `organizations` (String) A comma-separated list of organizations (O) that will be set in the issued certificate
+- `postal_code` (String) A comma-separated list of the postal code that will be set in the issued certificate
+- `province` (String) A comma-separated list of the province that will be set in the issued certificate
+- `server_flag` (Boolean) If set, certificates will be flagged for server auth use
+- `street_address` (String) A comma-separated list of the street address that will be set in the issued certificate
+- `tags` (Set of String) List of the tags attached to this key. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
 
 

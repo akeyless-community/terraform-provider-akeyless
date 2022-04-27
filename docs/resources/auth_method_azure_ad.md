@@ -17,26 +17,26 @@ Azure Active Directory Auth Method Resource
 
 ### Required
 
-- **bound_tenant_id** (String) The Azure tenant id that the access is restricted to
-- **name** (String) Auth Method name
+- `bound_tenant_id` (String) The Azure tenant id that the access is restricted to
+- `name` (String) Auth Method name
 
 ### Optional
 
-- **access_expires** (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- **access_id** (String) Auth Method access ID
-- **audience** (String) The audience in the JWT
-- **bound_group_id** (Set of String) A list of group ids that the access is restricted to
-- **bound_ips** (Set of String) A CIDR whitelist with the IPs that the access is restricted to
-- **bound_providers** (Set of String) A list of resource providers that the access is restricted to (e.g, Microsoft.Compute, Microsoft.ManagedIdentity, etc)
-- **bound_resource_id** (Set of String) A list of full resource ids that the access is restricted to
-- **bound_resource_names** (Set of String) A list of resource names that the access is restricted to (e.g, a virtual machine name, scale set name, etc).
-- **bound_resource_types** (Set of String) A list of resource types that the access is restricted to (e.g, virtualMachines, userAssignedIdentities, etc)
-- **bound_rg_id** (Set of String) A list of resource groups that the access is restricted to
-- **bound_spid** (Set of String) A list of service principal IDs that the access is restricted to
-- **bound_sub_id** (Set of String) A list of subscription ids that the access is restricted to
-- **force_sub_claims** (Boolean) enforce role-association must include sub claims
-- **id** (String) The ID of this resource.
-- **issuer** (String) Issuer URL
-- **jwks_uri** (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.
+- `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
+- `access_id` (String) Auth Method access ID
+- `audience` (String) The audience in the JWT
+- `bound_group_id` (Set of String) A list of group ids that the access is restricted to
+- `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
+- `bound_providers` (Set of String) A list of resource providers that the access is restricted to (e.g, Microsoft.Compute, Microsoft.ManagedIdentity, etc)
+- `bound_resource_id` (Set of String) A list of full resource ids that the access is restricted to
+- `bound_resource_names` (Set of String) A list of resource names that the access is restricted to (e.g, a virtual machine name, scale set name, etc).
+- `bound_resource_types` (Set of String) A list of resource types that the access is restricted to (e.g, virtualMachines, userAssignedIdentities, etc)
+- `bound_rg_id` (Set of String) A list of resource groups that the access is restricted to
+- `bound_spid` (Set of String) A list of service principal IDs that the access is restricted to
+- `bound_sub_id` (Set of String) A list of subscription ids that the access is restricted to
+- `force_sub_claims` (Boolean) enforce role-association must include sub claims
+- `id` (String) The ID of this resource.
+- `issuer` (String) Issuer URL
+- `jwks_uri` (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.
 
 

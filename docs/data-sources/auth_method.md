@@ -23,15 +23,15 @@ data "akeyless_auth_method" "api_key" {
 
 ### Required
 
-- **path** (String) The path where the secret is stored. Defaults to the latest version.
+- `path` (String) The path where the secret is stored. Defaults to the latest version.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
+- `id` (String) The ID of this resource.
 
 ### Read-Only
 
-- **access_id** (String) The version of the secret.
-- **account_id** (String) The version of the secret.
+- `access_id` (String) The version of the secret.
+- `account_id` (String) The version of the secret.
 
 

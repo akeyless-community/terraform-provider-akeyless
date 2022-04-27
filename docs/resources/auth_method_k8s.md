@@ -17,21 +17,21 @@ Kubernetes Auth Method Resource
 
 ### Required
 
-- **name** (String) Auth Method name
+- `name` (String) Auth Method name
 
 ### Optional
 
-- **access_expires** (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- **access_id** (String) Auth Method access ID
-- **audience** (String) The audience in the Kubernetes JWT that the access is restricted to
-- **bound_ips** (Set of String) A CIDR whitelist with the IPs that the access is restricted to
-- **bound_namespaces** (Set of String) A list of namespaces that the access is restricted to
-- **bound_pod_names** (Set of String) A list of pod names that the access is restricted to
-- **bound_sa_names** (Set of String) A list of service account names that the access is restricted to
-- **force_sub_claims** (Boolean) enforce role-association must include sub claims
-- **gen_key** (String) If this flag is set to true, there is no need to manually provide a public key for the Kubernetes Auth Method, and instead, a key pair, will be generated as part of the command and the private part of the key will be returned (the private key is required for the K8S Auth Config in the Akeyless Gateway)
-- **id** (String) The ID of this resource.
-- **private_key** (String) The generated private key
-- **public_key** (String) The generated public key
+- `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
+- `access_id` (String) Auth Method access ID
+- `audience` (String) The audience in the Kubernetes JWT that the access is restricted to
+- `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
+- `bound_namespaces` (Set of String) A list of namespaces that the access is restricted to
+- `bound_pod_names` (Set of String) A list of pod names that the access is restricted to
+- `bound_sa_names` (Set of String) A list of service account names that the access is restricted to
+- `force_sub_claims` (Boolean) enforce role-association must include sub claims
+- `gen_key` (String) If this flag is set to true, there is no need to manually provide a public key for the Kubernetes Auth Method, and instead, a key pair, will be generated as part of the command and the private part of the key will be returned (the private key is required for the K8S Auth Config in the Akeyless Gateway)
+- `id` (String) The ID of this resource.
+- `private_key` (String) The generated private key
+- `public_key` (String) The generated public key
 
 

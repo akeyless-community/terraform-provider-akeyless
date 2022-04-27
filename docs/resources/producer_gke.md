@@ -17,24 +17,24 @@ Google Kubernetes Engine (GKE) producer resource
 
 ### Required
 
-- **name** (String) Producer name
+- `name` (String) Producer name
 
 ### Optional
 
-- **gke_account_key** (String) GKE service account key
-- **gke_cluster_cert** (String) GKE Base-64 encoded cluster certificate
-- **gke_cluster_endpoint** (String) GKE cluster endpoint, i.e., cluster URI https://<DNS/IP>.
-- **gke_cluster_name** (String) GKE cluster name
-- **gke_service_account_email** (String) GKE service account email
-- **id** (String) The ID of this resource.
-- **producer_encryption_key_name** (String) Encrypt producer with following key
-- **secure_access_allow_port_forwading** (Boolean) Enable Port forwarding while using CLI access.
-- **secure_access_bastion_issuer** (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
-- **secure_access_cluster_endpoint** (String) The K8s cluster endpoint URL
-- **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
-- **secure_access_web** (Boolean) Enable Web Secure Remote Access
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- **target_name** (String) Name of existing target to use in producer creation
-- **user_ttl** (String) User TTL
+- `gke_account_key` (String) GKE service account key
+- `gke_cluster_cert` (String) GKE Base-64 encoded cluster certificate
+- `gke_cluster_endpoint` (String) GKE cluster endpoint, i.e., cluster URI https://<DNS/IP>.
+- `gke_cluster_name` (String) GKE cluster name
+- `gke_service_account_email` (String) GKE service account email
+- `id` (String) The ID of this resource.
+- `producer_encryption_key_name` (String) Encrypt producer with following key
+- `secure_access_allow_port_forwading` (Boolean) Enable Port forwarding while using CLI access.
+- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_cluster_endpoint` (String) The K8s cluster endpoint URL
+- `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target_name` (String) Name of existing target to use in producer creation
+- `user_ttl` (String) User TTL
 
 

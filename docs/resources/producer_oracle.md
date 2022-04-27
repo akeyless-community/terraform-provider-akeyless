@@ -17,22 +17,22 @@ Oracle DB producer resource
 
 ### Required
 
-- **name** (String) Producer name
+- `name` (String) Producer name
 
 ### Optional
 
-- **db_server_certificates** (String) the set of root certificate authorities in base64 encoding that clients use when verifying server certificates
-- **db_server_name** (String) Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is given. It is also included in the client's handshake to support virtual hosting unless it is an IP address
-- **id** (String) The ID of this resource.
-- **oracle_host** (String) Oracle host name
-- **oracle_password** (String) Oracle password
-- **oracle_port** (String) Oracle port
-- **oracle_screation_statements** (String) Oracle Creation Statements
-- **oracle_service_name** (String) Oracle service name
-- **oracle_username** (String) Oracle user
-- **producer_encryption_key_name** (String) Encrypt producer with following key
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- **target_name** (String) Name of existing target to use in producer creation
-- **user_ttl** (String) User TTL
+- `db_server_certificates` (String) the set of root certificate authorities in base64 encoding that clients use when verifying server certificates
+- `db_server_name` (String) Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is given. It is also included in the client's handshake to support virtual hosting unless it is an IP address
+- `id` (String) The ID of this resource.
+- `oracle_host` (String) Oracle host name
+- `oracle_password` (String) Oracle password
+- `oracle_port` (String) Oracle port
+- `oracle_screation_statements` (String) Oracle Creation Statements
+- `oracle_service_name` (String) Oracle service name
+- `oracle_username` (String) Oracle user
+- `producer_encryption_key_name` (String) Encrypt producer with following key
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target_name` (String) Name of existing target to use in producer creation
+- `user_ttl` (String) User TTL
 
 

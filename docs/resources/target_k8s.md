@@ -17,15 +17,15 @@ K8S Target resource
 
 ### Required
 
-- **k8s_cluster_ca_cert** (String, Sensitive) K8S Cluster certificate. Base 64 encoded certificate.
-- **k8s_cluster_endpoint** (String) K8S Cluster endpoint. https:// , <DNS / IP> of the cluster.
-- **k8s_cluster_token** (String) K8S Cluster authentication token.
-- **name** (String) Target name
+- `k8s_cluster_ca_cert` (String, Sensitive) K8S Cluster certificate. Base 64 encoded certificate.
+- `k8s_cluster_endpoint` (String) K8S Cluster endpoint. https:// , <DNS / IP> of the cluster.
+- `k8s_cluster_token` (String) K8S Cluster authentication token.
+- `name` (String) Target name
 
 ### Optional
 
-- **comment** (String) Comment about the target
-- **id** (String) The ID of this resource.
-- **key** (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
+- `comment` (String) Comment about the target
+- `id` (String) The ID of this resource.
+- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
 
 

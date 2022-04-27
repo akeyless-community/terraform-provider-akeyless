@@ -17,15 +17,15 @@ Get rotated secret value data source
 
 ### Required
 
-- **name** (String) Secret name
+- `name` (String) Secret name
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **version** (Number) Secret version
+- `id` (String) The ID of this resource.
+- `version` (Number) Secret version
 
 ### Read-Only
 
-- **value** (String) output
+- `value` (String) output
 
 

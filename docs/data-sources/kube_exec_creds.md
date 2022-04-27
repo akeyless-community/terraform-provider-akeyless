@@ -17,22 +17,22 @@ Get credentials for authentication with Kubernetes cluster based on a PKI Cert I
 
 ### Required
 
-- **cert_issuer_name** (String) The name of the PKI certificate issuer
+- `cert_issuer_name` (String) The name of the PKI certificate issuer
 
 ### Optional
 
-- **alt_names** (String) The Subject Alternative Names to be included in the PKI certificate (in a comma-delimited list)
-- **common_name** (String) The common name to be included in the PKI certificate
-- **id** (String) The ID of this resource.
-- **key_data_base64** (String, Sensitive) pki key file contents encoded using Base64. If this option is used, the certificate will be printed to stdout
-- **uri_sans** (String) The URI Subject Alternative Names to be included in the PKI certificate (in a comma-delimited list)
+- `alt_names` (String) The Subject Alternative Names to be included in the PKI certificate (in a comma-delimited list)
+- `common_name` (String) The common name to be included in the PKI certificate
+- `id` (String) The ID of this resource.
+- `key_data_base64` (String, Sensitive) pki key file contents encoded using Base64. If this option is used, the certificate will be printed to stdout
+- `uri_sans` (String) The URI Subject Alternative Names to be included in the PKI certificate (in a comma-delimited list)
 
 ### Read-Only
 
-- **api_version** (String)
-- **client_certificate_data** (String)
-- **client_key_data** (String)
-- **kind** (String)
-- **parent_certificate_data** (String)
+- `api_version` (String)
+- `client_certificate_data` (String)
+- `client_key_data` (String)
+- `kind` (String)
+- `parent_certificate_data` (String)
 
 

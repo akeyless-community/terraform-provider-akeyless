@@ -17,23 +17,23 @@ SSH Cert Issuer  resource
 
 ### Required
 
-- **allowed_users** (String) Users allowed to fetch the certificate, e.g root,ubuntu
-- **name** (String) SSH certificate issuer name
-- **signer_key_name** (String) A key to sign the certificate with
-- **ttl** (Number) he requested Time To Live for the certificate, in seconds
+- `allowed_users` (String) Users allowed to fetch the certificate, e.g root,ubuntu
+- `name` (String) SSH certificate issuer name
+- `signer_key_name` (String) A key to sign the certificate with
+- `ttl` (Number) he requested Time To Live for the certificate, in seconds
 
 ### Optional
 
-- **extensions** (Map of String) Signed certificates with extensions (key/val), e.g permit-port-forwarding=
-- **id** (String) The ID of this resource.
-- **metadata** (String) A metadata about the issuer
-- **principals** (String) Signed certificates with principal, e.g example_role1,example_role2
-- **secure_access_bastion_api** (String) Bastion's SSH control API endpoint. E.g. https://my.bastion:9900
-- **secure_access_bastion_ssh** (String) Bastion's SSH server. E.g. my.bastion:22
-- **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
-- **secure_access_host** (Set of String) Target servers for connections., For multiple values repeat this flag.
-- **secure_access_ssh_creds_user** (String) SSH username to connect to target server, must be in 'Allowed Users' list
-- **secure_access_use_internal_bastion** (Boolean) Use internal SSH Bastion
-- **tags** (Set of String) List of the tags attached to this key. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
+- `extensions` (Map of String) Signed certificates with extensions (key/val), e.g permit-port-forwarding=
+- `id` (String) The ID of this resource.
+- `metadata` (String) A metadata about the issuer
+- `principals` (String) Signed certificates with principal, e.g example_role1,example_role2
+- `secure_access_bastion_api` (String) Bastion's SSH control API endpoint. E.g. https://my.bastion:9900
+- `secure_access_bastion_ssh` (String) Bastion's SSH server. E.g. my.bastion:22
+- `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_host` (Set of String) Target servers for connections., For multiple values repeat this flag.
+- `secure_access_ssh_creds_user` (String) SSH username to connect to target server, must be in 'Allowed Users' list
+- `secure_access_use_internal_bastion` (Boolean) Use internal SSH Bastion
+- `tags` (Set of String) List of the tags attached to this key. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
 
 
