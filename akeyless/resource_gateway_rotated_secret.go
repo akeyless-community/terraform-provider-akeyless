@@ -2,9 +2,11 @@ package akeyless
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -53,13 +55,13 @@ func resourceRotatedSecret() *schema.Resource {
 				Description: "The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"auto_rotate": {
-				Type:        schema.TypeBool,
+				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation",
 			},
 			"rotation_interval": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes",
@@ -92,42 +94,49 @@ func resourceRotatedSecret() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "API ID to rotate (relevant only for rotator-type=api-key)",
 			},
 			"api_key": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "API key to rotate (relevant only for rotator-type=api-key)",
 			},
 			"rotated_username": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password)",
 			},
 			"rotated_password": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "rotated-username password (relevant only for rotator-type=password)",
 			},
 			"user_dn": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "Base DN to Perform User Search",
 			},
 			"user_attribute": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "LDAP User Attribute",
 			},
 			"custom_payload": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "Secret payload to be sent with rotation request (relevant only for rotator-type=custom)",
 			},
 		},
@@ -147,8 +156,8 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	key := d.Get("key").(string)
-	autoRotate := d.Get("auto_rotate").(bool)
-	rotationInterval := d.Get("rotation_interval").(int)
+	autoRotate := d.Get("auto_rotate").(string)
+	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
@@ -248,15 +257,19 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if itemOut.AutoRotate != nil {
-		err = d.Set("auto_rotate", *itemOut.AutoRotate)
-		if err != nil {
-			return err
+		if *itemOut.AutoRotate || d.Get("auto_rotate").(string) != "" {
+			err = d.Set("auto_rotate", strconv.FormatBool(*itemOut.AutoRotate))
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if itemOut.RotationInterval != nil {
-		err = d.Set("rotation_interval", *itemOut.RotationInterval)
-		if err != nil {
-			return err
+		if *itemOut.RotationInterval != 0 || d.Get("rotation_interval").(string) != "" {
+			err = d.Set("rotation_interval", strconv.Itoa(int(*itemOut.RotationInterval)))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -298,9 +311,16 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+
+			var out getDynamicSecretOutput
+			err = json.Unmarshal(apiErr.Body(), &out)
+			if err != nil {
+				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
+			}
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		if err != nil {
+			return fmt.Errorf("can't get value: %v", err)
+		}
 	}
 
 	val, ok := rOut["value"]
@@ -355,8 +375,8 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	key := d.Get("key").(string)
-	autoRotate := d.Get("auto_rotate").(bool)
-	rotationInterval := d.Get("rotation_interval").(int)
+	autoRotate := d.Get("auto_rotate").(string)
+	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	apiId := d.Get("api_id").(string)
@@ -395,6 +415,21 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 	common.GetAkeylessPtr(&body.NewMetadata, metadata)
+
+	bodyItem := akeyless.UpdateItem{
+		Name:        name,
+		NewName:     akeyless.PtrString(name),
+		NewMetadata: akeyless.PtrString(metadata),
+		Token:       &token,
+	}
+
+	_, _, err = client.UpdateItem(ctx).Body(bodyItem).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			return fmt.Errorf("can't update item: %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("can't update item: %v", err)
+	}
 
 	_, _, err = client.UpdateRotatedSecret(ctx).Body(body).Execute()
 	if err != nil {
@@ -492,4 +527,8 @@ func isCustomPayload(val map[string]interface{}) bool {
 
 func isTargetValue(val map[string]interface{}) bool {
 	return val["target_value"] != nil
+}
+
+type getDynamicSecretOutput struct {
+	DynamicSecretValue map[string]map[string]interface{} `json:"raw,omitempty"`
 }
