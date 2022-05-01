@@ -56,6 +56,9 @@ func TestCustomProducerResource(t *testing.T) {
 			create_sync_url = "http://localhost:7890/sync/create"
 			revoke_sync_url = "http://localhost:7890/sync/revoke"
 			payload         = "bbbb"
+			enable_admin_rotation = "true"
+			timeout_sec 	= "30"
+			user_ttl 		= "10"
 			tags 			= ["abc", "def"]
 		}
 	`, name, itemPath)
