@@ -217,33 +217,18 @@ func resourceProducerCustomRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-
-	/*
-	   // TODO fix this
-	   	if rOut.Name != nil {
-	   		err = d.Set("name", *rOut.Name)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.ProducerEncryptionKeyName != nil {
-	   		err = d.Set("producer_encryption_key_name", *rOut.ProducerEncryptionKeyName)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.TimeoutSec != nil {
-	   		err = d.Set("timeout_sec", *rOut.TimeoutSec)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-
-	   	common.GetSraWithDescribeItem(d, path, token, client)
-	   	common.GetSraFromItem(d, rOut)
-	   	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
-
-	*/
+	if rOut.DynamicSecretKey != nil {
+		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.TimeoutSeconds != nil {
+		err = d.Set("timeout_sec", *rOut.TimeoutSeconds)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
