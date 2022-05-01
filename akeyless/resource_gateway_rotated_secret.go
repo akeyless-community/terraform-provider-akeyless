@@ -273,6 +273,8 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	var rotatorType = ""
+
 	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.RotatedSecretDetails != nil {
 		rsd := itemOut.ItemGeneralInfo.RotatedSecretDetails
 		if rsd.RotationHour != nil {
@@ -283,6 +285,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 
 		if rsd.RotatorType != nil {
+			rotatorType = *rsd.RotatorType
 			err = setRotatorType(d, *rsd.RotatorType)
 			if err != nil {
 				return err
@@ -325,12 +328,12 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	val, ok := rOut["value"]
 	if ok {
-		if isCustomPayload(val) {
+		if rotatorType == "custom" {
 			err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
 			if err != nil {
 				return err
 			}
-		} else if isLdapPayload(val) {
+		} else if rotatorType == "ldap" {
 			ldapPayloadInBytes, err := json.Marshal(val["ldap_payload"])
 			if err != nil {
 				return err
@@ -348,7 +351,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				return err
 			}
-		} else if isUserPasswordValue(val) {
+		} else if rotatorType == "password" {
 			err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
 			if err != nil {
 				return err
@@ -357,6 +360,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				return err
 			}
+		} else if rotatorType == "api-key" {
 			err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
 			if err != nil {
 				return err
@@ -515,18 +519,6 @@ func setRotatorType(d *schema.ResourceData, rsdType string) error {
 	default:
 		return fmt.Errorf("invalid rotator type")
 	}
-}
-
-func isUserPasswordValue(val map[string]interface{}) bool {
-	return val["username"] != nil && val["password"] != nil
-}
-
-func isLdapPayload(val map[string]interface{}) bool {
-	return val["ldap_payload"] != nil
-}
-
-func isCustomPayload(val map[string]interface{}) bool {
-	return val["payload"] != nil
 }
 
 type getDynamicSecretOutput struct {
