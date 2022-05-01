@@ -36,6 +36,33 @@ var db_attr = fmt.Sprintf(`
 	db_name   		= "%v"
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
 
+func TestCustomProducerResource(t *testing.T) {
+	t.Skip("must run with server listen the following addresses")
+
+	name := "custom_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_custom" "%v" {
+			name            = "%v"
+			create_sync_url = "http://localhost:7890/sync/create"
+			revoke_sync_url = "http://localhost:7890/sync/revoke"
+			payload         = "aaaa"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_custom" "%v" {
+			name            = "%v"
+			create_sync_url = "http://localhost:7890/sync/create"
+			revoke_sync_url = "http://localhost:7890/sync/revoke"
+			payload         = "bbbb"
+			tags 			= ["abc", "def"]
+		}
+	`, name, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
 func TestMySqlProducerResource(t *testing.T) {
 
 	t.Skip("for now the requested values are fictive")
