@@ -331,11 +331,20 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		} else if isLdapPayload(val) {
-			err = d.Set("user_attribute", fmt.Sprintf("%v", val["ldap_user_attr"]))
+			ldapPayloadInBytes, err := json.Marshal(val["ldap_payload"])
 			if err != nil {
 				return err
 			}
-			err = d.Set("user_dn", fmt.Sprintf("%v", val["ldap_user_dn"]))
+			var ldapPayload map[string]interface{}
+			err = json.Unmarshal(ldapPayloadInBytes, &ldapPayload)
+			if err != nil {
+				return err
+			}
+			err = d.Set("user_attribute", fmt.Sprintf("%v", ldapPayload["ldap_user_attr"]))
+			if err != nil {
+				return err
+			}
+			err = d.Set("user_dn", fmt.Sprintf("%v", ldapPayload["ldap_user_dn"]))
 			if err != nil {
 				return err
 			}
@@ -348,7 +357,6 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				return err
 			}
-		} else if isApiKeyValue(val) {
 			err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
 			if err != nil {
 				return err
@@ -513,20 +521,12 @@ func isUserPasswordValue(val map[string]interface{}) bool {
 	return val["username"] != nil && val["password"] != nil
 }
 
-func isApiKeyValue(val map[string]interface{}) bool {
-	return val["access_id"] != nil && val["api_key"] != nil
-}
-
 func isLdapPayload(val map[string]interface{}) bool {
-	return val["ldap_user_attr"] != nil && val["ldap_user_dn"] != nil
+	return val["ldap_payload"] != nil
 }
 
 func isCustomPayload(val map[string]interface{}) bool {
 	return val["payload"] != nil
-}
-
-func isTargetValue(val map[string]interface{}) bool {
-	return val["target_value"] != nil
 }
 
 type getDynamicSecretOutput struct {
