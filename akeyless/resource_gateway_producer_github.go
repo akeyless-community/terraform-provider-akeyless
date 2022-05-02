@@ -174,51 +174,37 @@ func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	/*
-	   // TODO fix this
-	   	if rOut.Name != nil {
-	   		err = d.Set("name", *rOut.Name)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.InstallationId != nil {
-	   		err = d.Set("installation_id", *rOut.InstallationId)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.InstallationRepository != nil {
-	   		err = d.Set("installation_repository", *rOut.InstallationRepository)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   		if rOut.ItemTargetsAssoc != nil {
-	   		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
-	   		err = d.Set("target_name", targetName)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.TokenPermissions != nil {
-	   		err = d.Set("token_permissions", *rOut.TokenPermissions)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.TokenRepositories != nil {
-	   		err = d.Set("token_repositories", *rOut.TokenRepositories)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-
-	   	common.GetSraWithDescribeItem(d, path, token, client)
-	   	common.GetSraFromItem(d, rOut)
-	   	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
-
-	*/
+	if rOut.GithubInstallationId != nil {
+		err = d.Set("installation_id", *rOut.GithubInstallationId)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GithubRepositoryPath != nil {
+		err = d.Set("installation_repository", *rOut.GithubRepositoryPath)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.ItemTargetsAssoc != nil {
+		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
+		err = d.Set("target_name", targetName)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GithubInstallationTokenPermissions != nil {
+		err = d.Set("token_permissions", *rOut.GithubInstallationTokenPermissions)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GithubInstallationTokenRepositories != nil {
+		err = d.Set("token_repositories", *rOut.GithubInstallationTokenRepositories)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -243,9 +229,6 @@ func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
 	tokenPermissions := common.ExpandStringList(tokenPermissionsSet.List())
 	tokenRepositoriesSet := d.Get("token_repositories").(*schema.Set)
 	tokenRepositories := common.ExpandStringList(tokenRepositoriesSet.List())
-
-	/*
-	 */
 
 	body := akeyless.GatewayUpdateProducerGithub{
 		Name:  name,
