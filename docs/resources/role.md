@@ -71,31 +71,31 @@ output "demo-role" {
 
 ### Required
 
-- `name` (String) Role name
+- **name** (String) Role name
 
 ### Optional
 
-- `analytics_access` (String) Allow this role to view analytics. Currently only 'none' and 'own' values are supported, allowing associated auth methods to view reports produced by the same auth methods
-- `assoc_auth_method` (Block List) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
-- `audit_access` (String) Allow this role to view audit logs. 'none', 'own', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods
-- `comment` (String) Comment about the role
-- `id` (String) The ID of this resource.
-- `rules` (Block List) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
+- **analytics_access** (String) Allow this role to view analytics. Currently only 'none' and 'own' values are supported, allowing associated auth methods to view reports produced by the same auth methods
+- **assoc_auth_method** (Block List) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
+- **audit_access** (String) Allow this role to view audit logs. 'none', 'own', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods
+- **comment** (String) Comment about the role
+- **id** (String) The ID of this resource.
+- **rules** (Block List) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
 
 ### Read-Only
 
-- `assoc_auth_method_with_rules` (String)
+- **assoc_auth_method_with_rules** (String)
 
 <a id="nestedblock--assoc_auth_method"></a>
 ### Nested Schema for `assoc_auth_method`
 
 Required:
 
-- `am_name` (String) The auth method to associate
+- **am_name** (String) The auth method to associate
 
 Optional:
 
-- `sub_claims` (Map of String) key/val of sub claims, e.g group=admins,developers
+- **sub_claims** (Map of String) key/val of sub claims, e.g group=admins,developers
 
 
 <a id="nestedblock--rules"></a>
@@ -103,11 +103,11 @@ Optional:
 
 Required:
 
-- `capability` (Set of String) List of the approved/denied capabilities in the path options: [read, create, update, delete, list, deny]
-- `path` (String) The path the rule refers to
+- **capability** (Set of String) List of the approved/denied capabilities in the path options: [read, create, update, delete, list, deny]
+- **path** (String) The path the rule refers to
 
 Optional:
 
-- `rule_type` (String) item-rule, target-rule, role-rule, auth-method-rule
+- **rule_type** (String) item-rule, target-rule, role-rule, auth-method-rule
 
 

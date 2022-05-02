@@ -17,26 +17,26 @@ Amazon Elastic Kubernetes Service (Amazon EKS) producer
 
 ### Required
 
-- `name` (String) Producer name
+- **name** (String) Producer name
 
 ### Optional
 
-- `eks_access_key_id` (String) EKS Access Key ID
-- `eks_assume_role` (String) Role ARN. Role to assume when connecting to the EKS cluster
-- `eks_cluster_ca_cert` (String, Sensitive) EKS Cluster certificate. Base 64 encoded certificate.
-- `eks_cluster_endpoint` (String) EKS Cluster endpoint. https:// , <DNS / IP> of the cluster.
-- `eks_cluster_name` (String) EKS cluster name. Must match the EKS cluster name you want to connect to.
-- `eks_region` (String) EKS Region
-- `eks_secret_access_key` (String, Sensitive) EKS Secret Access Key
-- `id` (String) The ID of this resource.
-- `producer_encryption_key_name` (String) Encrypt producer with following key
-- `secure_access_allow_port_forwading` (Boolean) Enable Port forwarding while using CLI access.
-- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
-- `secure_access_cluster_endpoint` (String) The K8s cluster endpoint URL
-- `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
-- `secure_access_web` (Boolean) Enable Web Secure Remote Access
-- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in producer creation
-- `user_ttl` (String) User TTL
+- **eks_access_key_id** (String) EKS Access Key ID
+- **eks_assume_role** (String) Role ARN. Role to assume when connecting to the EKS cluster
+- **eks_cluster_ca_cert** (String, Sensitive) EKS Cluster certificate. Base 64 encoded certificate.
+- **eks_cluster_endpoint** (String) EKS Cluster endpoint. https:// , <DNS / IP> of the cluster.
+- **eks_cluster_name** (String) EKS cluster name. Must match the EKS cluster name you want to connect to.
+- **eks_region** (String) EKS Region
+- **eks_secret_access_key** (String, Sensitive) EKS Secret Access Key
+- **id** (String) The ID of this resource.
+- **producer_encryption_key_name** (String) Encrypt producer with following key
+- **secure_access_allow_port_forwading** (Boolean) Enable Port forwarding while using CLI access.
+- **secure_access_bastion_issuer** (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- **secure_access_cluster_endpoint** (String) The K8s cluster endpoint URL
+- **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
+- **secure_access_web** (Boolean) Enable Web Secure Remote Access
+- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- **target_name** (String) Name of existing target to use in producer creation
+- **user_ttl** (String) User TTL
 
 

@@ -17,15 +17,15 @@ Obtain the public key from a specific RSA private key data source
 
 ### Required
 
-- `name` (String) Name of RSA key to extract the public key from
+- **name** (String) Name of RSA key to extract the public key from
 
 ### Optional
 
-- `id` (String) The ID of this resource.
+- **id** (String) The ID of this resource.
 
 ### Read-Only
 
-- `raw` (String)
-- `ssh` (String)
+- **raw** (String)
+- **ssh** (String)
 
 

@@ -17,21 +17,21 @@ Gets K8S Auth config data source
 
 ### Required
 
-- `name` (String) K8S Auth config name
+- **name** (String) K8S Auth config name
 
 ### Read-Only
 
-- `am_token_expiration` (Number)
-- `auth_method_access_id` (String)
-- `auth_method_prv_key_pem` (String, Sensitive)
-- `disable_iss_validation` (Boolean)
-- `id` (String) The ID of this resource.
-- `k8s_ca_cert` (String)
-- `k8s_host` (String)
-- `k8s_issuer` (String)
-- `k8s_pub_keys_pem` (Set of String)
-- `k8s_token_reviewer_jwt` (String)
-- `protection_key` (String)
-- `use_local_ca_jwt` (Boolean)
+- **am_token_expiration** (Number)
+- **auth_method_access_id** (String)
+- **auth_method_prv_key_pem** (String, Sensitive)
+- **disable_iss_validation** (Boolean)
+- **id** (String) The ID of this resource.
+- **k8s_ca_cert** (String)
+- **k8s_host** (String)
+- **k8s_issuer** (String)
+- **k8s_pub_keys_pem** (Set of String)
+- **k8s_token_reviewer_jwt** (String)
+- **protection_key** (String)
+- **use_local_ca_jwt** (Boolean)
 
 

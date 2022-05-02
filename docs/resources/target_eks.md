@@ -17,19 +17,19 @@ EKS Target resource
 
 ### Required
 
-- `eks_access_key_id` (String) EKS access key ID
-- `eks_cluster_ca_cert` (String, Sensitive) EKS cluster base-64 encoded certificate
-- `eks_cluster_endpoint` (String) EKS cluster endpoint (i.e., https://<IP> of the cluster)
-- `eks_cluster_name` (String) EKS cluster name
-- `eks_secret_access_key` (String, Sensitive) EKS secret access key
-- `name` (String) Target name
+- **eks_access_key_id** (String) EKS access key ID
+- **eks_cluster_ca_cert** (String, Sensitive) EKS cluster base-64 encoded certificate
+- **eks_cluster_endpoint** (String) EKS cluster endpoint (i.e., https://<IP> of the cluster)
+- **eks_cluster_name** (String) EKS cluster name
+- **eks_secret_access_key** (String, Sensitive) EKS secret access key
+- **name** (String) Target name
 
 ### Optional
 
-- `comment` (String) Comment about the target
-- `eks_region` (String) EKS region
-- `id` (String) The ID of this resource.
-- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
-- `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
+- **comment** (String) Comment about the target
+- **eks_region** (String) EKS region
+- **id** (String) The ID of this resource.
+- **key** (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
+- **use_gw_cloud_identity** (Boolean) Use the GW's Cloud IAM
 
 
