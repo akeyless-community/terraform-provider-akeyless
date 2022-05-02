@@ -17,19 +17,19 @@ AOAuth2 Auth Method Resource
 
 ### Required
 
-- `jwks_uri` (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.
-- `name` (String) Auth Method name
-- `unique_identifier` (String) A unique identifier (ID) value should be configured for OAuth2, LDAP and SAML authentication method types and is usually a value such as the email, username, or upn for example. Whenever a user logs in with a token, these authentication types issue a sub claim that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.
+- **jwks_uri** (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.
+- **name** (String) Auth Method name
+- **unique_identifier** (String) A unique identifier (ID) value should be configured for OAuth2, LDAP and SAML authentication method types and is usually a value such as the email, username, or upn for example. Whenever a user logs in with a token, these authentication types issue a sub claim that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.
 
 ### Optional
 
-- `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `access_id` (String) Auth Method access ID
-- `audience` (String) The audience in the JWT
-- `bound_client_ids` (Set of String) The clients ids that the access is restricted to
-- `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
-- `force_sub_claims` (Boolean) enforce role-association must include sub claims
-- `id` (String) The ID of this resource.
-- `issuer` (String) Issuer URL
+- **access_expires** (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
+- **access_id** (String) Auth Method access ID
+- **audience** (String) The audience in the JWT
+- **bound_client_ids** (Set of String) The clients ids that the access is restricted to
+- **bound_ips** (Set of String) A CIDR whitelist with the IPs that the access is restricted to
+- **force_sub_claims** (Boolean) enforce role-association must include sub claims
+- **id** (String) The ID of this resource.
+- **issuer** (String) Issuer URL
 
 

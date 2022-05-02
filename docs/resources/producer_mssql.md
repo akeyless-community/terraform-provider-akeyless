@@ -17,27 +17,27 @@ Microsoft SQL Server producer resource
 
 ### Required
 
-- `name` (String) Producer name
+- **name** (String) Producer name
 
 ### Optional
 
-- `id` (String) The ID of this resource.
-- `mssql_create_statements` (String) MSSQL Server Creation Statements
-- `mssql_dbname` (String) MSSQL Server DB Name
-- `mssql_host` (String) MS SQL Server host name
-- `mssql_password` (String) MS SQL Server password
-- `mssql_port` (String) MS SQL Server port
-- `mssql_revocation_statements` (String) MSSQL Server Revocation Statements
-- `mssql_username` (String) MS SQL Server user
-- `producer_encryption_key_name` (String) Encrypt producer with following key
-- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
-- `secure_access_db_name` (String) Enable Web Secure Remote Access
-- `secure_access_db_schema` (String) The db schema
-- `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
-- `secure_access_host` (Set of String) Target DB servers for connections., For multiple values repeat this flag.
-- `secure_access_web` (Boolean) Enable Web Secure Remote Access
-- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in producer creation
-- `user_ttl` (String) User TTL
+- **id** (String) The ID of this resource.
+- **mssql_create_statements** (String) MSSQL Server Creation Statements
+- **mssql_dbname** (String) MSSQL Server DB Name
+- **mssql_host** (String) MS SQL Server host name
+- **mssql_password** (String) MS SQL Server password
+- **mssql_port** (String) MS SQL Server port
+- **mssql_revocation_statements** (String) MSSQL Server Revocation Statements
+- **mssql_username** (String) MS SQL Server user
+- **producer_encryption_key_name** (String) Encrypt producer with following key
+- **secure_access_bastion_issuer** (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- **secure_access_db_name** (String) Enable Web Secure Remote Access
+- **secure_access_db_schema** (String) The db schema
+- **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
+- **secure_access_host** (Set of String) Target DB servers for connections., For multiple values repeat this flag.
+- **secure_access_web** (Boolean) Enable Web Secure Remote Access
+- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- **target_name** (String) Name of existing target to use in producer creation
+- **user_ttl** (String) User TTL
 
 
