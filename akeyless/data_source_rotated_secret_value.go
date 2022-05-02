@@ -34,7 +34,7 @@ func dataSourceGetRotatedSecretValue() *schema.Resource {
 				Computed:    true,
 				Required:    false,
 				Description: "output",
-				//Sensitive:   true,
+				Sensitive:   true,
 			},
 		},
 	}
@@ -86,16 +86,3 @@ func dataSourceGetRotatedSecretValueRead(d *schema.ResourceData, m interface{}) 
 	d.SetId(names)
 	return nil
 }
-
-/*
-type RotatedSecretValue struct {
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-	//todo
-	// PasswordPolicy string `json:"password_policy,omitempty"`
-	// Token          string `json:"token,omitempty"`
-	TargetValue string                   `json:"target_value,omitempty"`
-	Payload     string                   `json:"payload,omitempty"`
-	LdapPayload RotatedSecretLdapPayload `json:"ldap_payload,omitempty"`
-}
-*/

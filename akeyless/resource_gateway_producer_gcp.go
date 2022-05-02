@@ -3,6 +3,7 @@ package akeyless
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -202,7 +203,8 @@ func resourceProducerGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.GcpServiceAccountKey != nil {
-		err = d.Set("gcp_key", *rOut.GcpServiceAccountKey)
+		gcp_key_base64 := base64.StdEncoding.EncodeToString([]byte(*rOut.GcpServiceAccountKey))
+		err = d.Set("gcp_key", gcp_key_base64)
 		if err != nil {
 			return err
 		}

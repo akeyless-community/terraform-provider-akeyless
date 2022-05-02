@@ -26,6 +26,6 @@ Get rotated secret value data source
 
 ### Read-Only
 
-- **value** (String) output
+- **value** (String, Sensitive) output
 
 

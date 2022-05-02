@@ -2,9 +2,11 @@ package akeyless
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -75,11 +77,11 @@ func resourceRotatedSecret() *schema.Resource {
 				Required:    true,
 				Description: "The rotator type password/target/api-key/ldap/custom",
 			},
-			"rotator_creds_type": {
+			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "The credentials to connect with use-user-creds/use-target-creds ",
+				Description: "The credentials to connect with use-user-creds/use-target-creds",
 				Default:     "use-user-creds",
 			},
 			"rotator_custom_cmd": {
@@ -92,42 +94,49 @@ func resourceRotatedSecret() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "API ID to rotate (relevant only for rotator-type=api-key)",
 			},
 			"api_key": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "API key to rotate (relevant only for rotator-type=api-key)",
 			},
 			"rotated_username": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password)",
 			},
 			"rotated_password": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "rotated-username password (relevant only for rotator-type=password)",
 			},
 			"user_dn": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "Base DN to Perform User Search",
 			},
 			"user_attribute": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "LDAP User Attribute",
 			},
 			"custom_payload": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "Secret payload to be sent with rotation request (relevant only for rotator-type=custom)",
 			},
 		},
@@ -151,7 +160,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	rotatorType := d.Get("rotator_type").(string)
-	rotatorCredsType := d.Get("rotator_creds_type").(string)
+	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 	apiId := d.Get("api_id").(string)
 	apiKey := d.Get("api_key").(string)
@@ -173,7 +182,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
-	common.GetAkeylessPtr(&body.RotatorCredsType, rotatorCredsType)
+	common.GetAkeylessPtr(&body.RotatorCredsType, authenticationCredentials)
 	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
 	common.GetAkeylessPtr(&body.ApiId, apiId)
 	common.GetAkeylessPtr(&body.ApiKey, apiKey)
@@ -209,19 +218,6 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 	body := akeyless.GetRotatedSecretValue{
 		Names: path,
 		Token: &token,
-	}
-
-	rOut, res, err := client.GetRotatedSecretValue(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
 	}
 
 	item := akeyless.DescribeItem{
@@ -261,18 +257,24 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if itemOut.AutoRotate != nil {
-		err = d.Set("auto_rotate", *itemOut.AutoRotate)
-		if err != nil {
-			return err
+		if *itemOut.AutoRotate || d.Get("auto_rotate").(string) != "" {
+			err = d.Set("auto_rotate", strconv.FormatBool(*itemOut.AutoRotate))
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if itemOut.RotationInterval != nil {
-		err = d.Set("rotation_interval", *itemOut.RotationInterval)
-		if err != nil {
-			return err
+		if *itemOut.RotationInterval != 0 || d.Get("rotation_interval").(string) != "" {
+			err = d.Set("rotation_interval", strconv.Itoa(int(*itemOut.RotationInterval)))
+			if err != nil {
+				return err
+			}
 		}
 	}
-	rType := "password"
+
+	var rotatorType = ""
+
 	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.RotatedSecretDetails != nil {
 		rsd := itemOut.ItemGeneralInfo.RotatedSecretDetails
 		if rsd.RotationHour != nil {
@@ -281,16 +283,17 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
+
 		if rsd.RotatorType != nil {
-			if *rsd.RotatorType == "use_???" {
-				err = d.Set("rotator_type", rType)
-				if err != nil {
-					return err
-				}
+			rotatorType = *rsd.RotatorType
+			err = setRotatorType(d, *rsd.RotatorType)
+			if err != nil {
+				return err
 			}
 		}
+
 		if rsd.RotatorCredsType != nil {
-			err = d.Set("rotator_creds_type", *rsd.RotatorCredsType)
+			err = d.Set("authentication_credentials", *rsd.RotatorCredsType)
 			if err != nil {
 				return err
 			}
@@ -302,73 +305,72 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 	}
+
+	rOut, res, err := client.GetRotatedSecretValue(ctx).Body(body).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			if res.StatusCode == http.StatusNotFound {
+				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+				d.SetId("")
+				return nil
+			}
+
+			var out getDynamicSecretOutput
+			err = json.Unmarshal(apiErr.Body(), &out)
+			if err != nil {
+				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
+			}
+		}
+		if err != nil {
+			return fmt.Errorf("can't get value: %v", err)
+		}
+	}
+
 	val, ok := rOut["value"]
 	if ok {
-		if _, ok := val["payload"]; ok {
+		if rotatorType == "custom" {
 			err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
 			if err != nil {
 				return err
 			}
-		} else if _, ok := val["target_value"]; ok {
-
-		} else if _, ok := val["username"]; ok {
+		} else if rotatorType == "ldap" {
+			ldapPayloadInBytes, err := json.Marshal(val["ldap_payload"])
+			if err != nil {
+				return err
+			}
+			var ldapPayload map[string]interface{}
+			err = json.Unmarshal(ldapPayloadInBytes, &ldapPayload)
+			if err != nil {
+				return err
+			}
+			err = d.Set("user_attribute", fmt.Sprintf("%v", ldapPayload["ldap_user_attr"]))
+			if err != nil {
+				return err
+			}
+			err = d.Set("user_dn", fmt.Sprintf("%v", ldapPayload["ldap_user_dn"]))
+			if err != nil {
+				return err
+			}
+		} else if rotatorType == "password" {
 			err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
 			if err != nil {
 				return err
 			}
-		} else if _, ok := val["password"]; ok {
-			err = d.Set("custom_payload", fmt.Sprintf("%v", val["password"]))
+			err = d.Set("rotated_password", fmt.Sprintf("%v", val["password"]))
+			if err != nil {
+				return err
+			}
+		} else if rotatorType == "api-key" {
+			err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
+			if err != nil {
+				return err
+			}
+			err = d.Set("api_key", fmt.Sprintf("%v", val["password"]))
 			if err != nil {
 				return err
 			}
 		}
-
-		//return string(out), nil
-
 	}
-
-	// if rOut.ApiId != nil {
-	// 	err = d.Set("api_id", *rOut.ApiId)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.ApiKey != nil {
-	// 	err = d.Set("api_key", *rOut.ApiKey)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.RotatedUsername != nil {
-	// 	err = d.Set("rotated_username", *rOut.RotatedUsername)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.RotatedPassword != nil {
-	// 	err = d.Set("rotated_password", *rOut.RotatedPassword)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.UserDn != nil {
-	// 	err = d.Set("user_dn", *rOut.UserDn)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.UserAttribute != nil {
-	// 	err = d.Set("user_attribute", *rOut.UserAttribute)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.CustomPayload != nil {
-	// 	err = d.Set("custom_payload", *rOut.CustomPayload)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	d.SetId(path)
 
@@ -388,28 +390,22 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
-	rotatorCredsType := d.Get("rotator_creds_type").(string)
+	authenticationCredentials := d.Get("authentication_credentials").(string)
 	apiId := d.Get("api_id").(string)
 	apiKey := d.Get("api_key").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
 	rotatedPassword := d.Get("rotated_password").(string)
 	customPayload := d.Get("custom_payload").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
-	tagsList := common.ExpandStringList(tagsSet.List())
-	/*
-	   targetName := d.Get("target_name").(string)
-	   metadata := d.Get("metadata").(string)
-	   rotatorType := d.Get("rotator_type").(string)
-	   rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
-	   userDn := d.Get("user_dn").(string)
-	   userAttribute := d.Get("user_attribute").(string)
-	*/
+	tags := common.ExpandStringList(tagsSet.List())
+	metadata := d.Get("metadata").(string)
+	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 
-	body := akeyless.GatewayUpdateItem{
+	body := akeyless.UpdateRotatedSecret{
 		Name:  name,
 		Token: &token,
 	}
-	add, remove, err := common.GetTagsForUpdate(d, name, token, tagsList, client)
+	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
 	if err == nil {
 		if len(add) > 0 {
 			common.GetAkeylessPtr(&body.AddTag, add)
@@ -418,18 +414,36 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 			common.GetAkeylessPtr(&body.RmTag, remove)
 		}
 	}
+
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
-	common.GetAkeylessPtr(&body.RotatorCredsType, rotatorCredsType)
+	common.GetAkeylessPtr(&body.RotatorCredsType, authenticationCredentials)
+	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
 	common.GetAkeylessPtr(&body.ApiId, apiId)
 	common.GetAkeylessPtr(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
+	common.GetAkeylessPtr(&body.NewMetadata, metadata)
 
-	_, _, err = client.GatewayUpdateItem(ctx).Body(body).Execute()
+	bodyItem := akeyless.UpdateItem{
+		Name:        name,
+		NewName:     akeyless.PtrString(name),
+		NewMetadata: akeyless.PtrString(metadata),
+		Token:       &token,
+	}
+
+	_, _, err = client.UpdateItem(ctx).Body(bodyItem).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			return fmt.Errorf("can't update item: %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("can't update item: %v", err)
+	}
+
+	_, _, err = client.UpdateRotatedSecret(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -487,4 +501,26 @@ func resourceRotatedSecretImport(d *schema.ResourceData, m interface{}) ([]*sche
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func setRotatorType(d *schema.ResourceData, rsdType string) error {
+
+	switch rsdType {
+	case "user-pass-rotator":
+		return d.Set("rotator_type", "password")
+	case "api-key-rotator":
+		return d.Set("rotator_type", "api-key")
+	case "custom-rotator":
+		return d.Set("rotator_type", "custom")
+	case "ldap-rotator":
+		return d.Set("rotator_type", "ldap")
+	case "target-rotator":
+		return d.Set("rotator_type", "target")
+	default:
+		return fmt.Errorf("invalid rotator type")
+	}
+}
+
+type getDynamicSecretOutput struct {
+	DynamicSecretValue map[string]map[string]interface{} `json:"raw,omitempty"`
 }
