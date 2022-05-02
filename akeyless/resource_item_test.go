@@ -12,6 +12,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func TestClassicKey(t *testing.T) {
+	t.Skip("bla bla")
+	name := "test_classic_key"
+	itemPath := testPath("terraform_tests")
+	config := fmt.Sprintf(`
+		resource "akeyless_classic_key" "%v" {
+			name 	= "%v"
+			tags 	= ["t1", "t2"]
+			alg 	= "RSA1024"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_classic_key" "%v" {
+			name 	= "%v"	
+			tags 	= ["t1", "t3"]
+			alg 	= "RSA1024"
+		}
+	`, name, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
 func TestDfcKeyRsaResource(t *testing.T) {
 	name := "test_rsa_key"
 	itemPath := testPath("path_rsa_key1ss")

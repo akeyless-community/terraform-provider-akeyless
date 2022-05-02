@@ -121,6 +121,7 @@ func Provider() *schema.Provider {
 		//ConfigureFunc: configureProvider,
 		ConfigureContextFunc: configureProvider,
 		ResourcesMap: map[string]*schema.Resource{
+			"akeyless_classic_key":                    resourceClassicKey(),
 			"akeyless_dfc_key":                        resourceDfcKey(),
 			"akeyless_static_secret":                  resourceStaticSecret(),
 			"akeyless_pki_cert_issuer":                resourcePKICertIssuer(),
