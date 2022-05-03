@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -163,10 +164,13 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.ItemType != nil {
-		err = d.Set("alg", *rOut.ItemType)
-		if err != nil {
-			return err
+	if rOut.ItemGeneralInfo.ClassicKeyDetails != nil {
+		keyAlgorithm := rOut.ItemGeneralInfo.ClassicKeyDetails.KeyType
+		if keyAlgorithm != nil {
+			err = d.Set("alg", *keyAlgorithm)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if rOut.PublicValue != nil {
@@ -194,9 +198,13 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ProtectionKeyName != nil {
-		err = d.Set("protection_key_name", *rOut.ProtectionKeyName)
-		if err != nil {
-			return err
+		protectionKeyName := *rOut.ProtectionKeyName
+		// ignore default protection key name
+		if !strings.Contains(protectionKeyName, "__account-def-secrets-key__") {
+			err = d.Set("protection_key_name", protectionKeyName)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if rOut.ItemTargetsAssoc != nil {
@@ -206,24 +214,6 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-
-	classicKeyInfo := rOut.ItemGeneralInfo.ClassicKeyDetails
-
-	attr := classicKeyInfo.ClassicKeyAttributes
-	fmt.Println("attr:", attr)
-
-	// if rOut.VaultName != nil {
-	// 	err = d.Set("vault_name", *rOut.VaultName)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.KeyOperations != nil {
-	// 	err = d.Set("key_operations", *rOut.KeyOperations)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	d.SetId(path)
 
@@ -250,11 +240,13 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
-	if len(add) > 0 {
-		common.GetAkeylessPtr(&body.AddTag, add)
-	}
-	if len(remove) > 0 {
-		common.GetAkeylessPtr(&body.RmTag, remove)
+	if err == nil {
+		if len(add) > 0 {
+			common.GetAkeylessPtr(&body.AddTag, add)
+		}
+		if len(remove) > 0 {
+			common.GetAkeylessPtr(&body.RmTag, remove)
+		}
 	}
 
 	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
@@ -263,22 +255,6 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
 		}
 		return fmt.Errorf("can't update : %v", err)
-	}
-
-	item := akeyless.DescribeItem{
-		Name:         name,
-		ShowVersions: akeyless.PtrBool(false),
-		Token:        &token,
-	}
-
-	itemOut, _, err := client.DescribeItem(ctx).Body(item).Execute()
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("protection_key", *itemOut.ProtectionKeyName)
-	if err != nil {
-		return err
 	}
 
 	d.SetId(name)

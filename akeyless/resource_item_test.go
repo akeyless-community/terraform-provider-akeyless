@@ -13,22 +13,22 @@ import (
 )
 
 func TestClassicKey(t *testing.T) {
-	t.Skip("bla bla")
 	name := "test_classic_key"
-	itemPath := testPath("terraform_tests")
+	itemPath := testPath("path_classic_key")
 	config := fmt.Sprintf(`
 		resource "akeyless_classic_key" "%v" {
-			name 	= "%v"
-			tags 	= ["t1", "t2"]
-			alg 	= "RSA1024"
+			name 		= "%v"
+			alg 		= "RSA2048"
+			tags 		= ["aaaa", "bbbb"]
 		}
 	`, name, itemPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_classic_key" "%v" {
-			name 	= "%v"	
-			tags 	= ["t1", "t3"]
-			alg 	= "RSA1024"
+			name 		= "%v"	
+			alg 		= "RSA2048"
+			tags 		= ["cccc", "dddd"]
+			metadata 	= "abcd"
 		}
 	`, name, itemPath)
 
