@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -174,18 +175,25 @@ func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	// installation_id is relevant when installation_repository isn't (need exactly one)
 	if rOut.GithubInstallationId != nil {
-		err = d.Set("installation_id", *rOut.GithubInstallationId)
-		if err != nil {
-			return err
+		if d.Get("installation_repository").(string) == "" {
+			err = d.Set("installation_id", *rOut.GithubInstallationId)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	// installation_repository is relevant when installation_id isn't (need exactly one)
 	if rOut.GithubRepositoryPath != nil {
-		err = d.Set("installation_repository", *rOut.GithubRepositoryPath)
-		if err != nil {
-			return err
+		if d.Get("installation_id").(int) == 0 {
+			err = d.Set("installation_repository", *rOut.GithubRepositoryPath)
+			if err != nil {
+				return err
+			}
 		}
 	}
+
 	if rOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
 		err = d.Set("target_name", targetName)
@@ -194,7 +202,12 @@ func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.GithubInstallationTokenPermissions != nil {
-		err = d.Set("token_permissions", *rOut.GithubInstallationTokenPermissions)
+		permissionsMap := *rOut.GithubInstallationTokenPermissions
+		tokenPermissionsSet := d.Get("token_permissions").(*schema.Set)
+		tokenPermissionsList := common.ExpandStringList(tokenPermissionsSet.List())
+		relevantPermissionsList := removeIgnoredEntriesFromList(permissionsMap, tokenPermissionsList)
+
+		err = d.Set("token_permissions", relevantPermissionsList)
 		if err != nil {
 			return err
 		}
@@ -301,4 +314,36 @@ func resourceProducerGithubImport(d *schema.ResourceData, m interface{}) ([]*sch
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func removeIgnoredEntriesFromList(origMap map[string]string, list []string) []string {
+	destMap := listToMap(list)
+
+	mapFields := []string{"contents", "actions", "issues", "metadata"}
+
+	for _, field := range mapFields {
+		if _, ok := destMap[field]; !ok {
+			delete(origMap, field)
+		}
+	}
+
+	relevantPermissionsList := mapToList(destMap)
+	return relevantPermissionsList
+}
+
+func listToMap(permList []string) map[string]string {
+	permMap := make(map[string]string)
+	for _, val := range permList {
+		splitedPerm := strings.Split(val, "=")
+		permMap[splitedPerm[0]] = splitedPerm[1]
+	}
+	return permMap
+}
+
+func mapToList(permMap map[string]string) []string {
+	list := make([]string, 0, len(permMap))
+	for key, val := range permMap {
+		list = append(list, fmt.Sprintf("%v=%v", key, val))
+	}
+	return list
 }
