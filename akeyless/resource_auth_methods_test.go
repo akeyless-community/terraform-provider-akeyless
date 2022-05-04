@@ -11,6 +11,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func TestAuthMethodCertResourceCreateNew(t *testing.T) {
+	name := "test_auth_method_cert"
+	path := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_cert" "%v" {
+			name 				= "%v"
+			certificate_data 	= ""
+			unique_identifier 	= "email"
+		}
+	`, name, path)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_cert" "%v" {
+			name 				= "%v"
+			certificate_data 	= ""
+			unique_identifier 	= "email"
+			bound_ips 			= ["1.1.1.0/32"]
+		}
+	`, name, path)
+
+	testAuthMethodResource(t, config, configUpdate, path)
+}
+
 func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 	name := "test_auth_method"
 	path := testPath("path_auth_method")
@@ -26,23 +49,7 @@ func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
@@ -62,23 +69,7 @@ func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
@@ -101,23 +92,7 @@ func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
@@ -139,23 +114,7 @@ func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
@@ -184,23 +143,7 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 		}
 	`, name, path, os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT"), os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC"))
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
@@ -221,23 +164,7 @@ func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodOicdResourceCreateNew(t *testing.T) {
@@ -264,23 +191,7 @@ func TestAuthMethodOicdResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
@@ -304,23 +215,7 @@ func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
@@ -343,11 +238,16 @@ func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
+	testAuthMethodResource(t, config, configUpdate, path)
+}
+
+func testAuthMethodResource(t *testing.T, config, configUpdate, path string) {
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
+				//PreConfig: deleteFunc,
 				Check: resource.ComposeTestCheckFunc(
 					checkMethodExistsRemotelyNew(path),
 				),
