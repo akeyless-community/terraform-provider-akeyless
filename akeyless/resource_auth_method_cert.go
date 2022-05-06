@@ -1,4 +1,3 @@
-// generated fule
 package akeyless
 
 import (
