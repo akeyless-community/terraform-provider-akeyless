@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"unsafe"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -14,7 +15,7 @@ import (
 
 func resourceAuthMethodCert() *schema.Resource {
 	return &schema.Resource{
-		Description: "Client Certificae Auth Method Resource",
+		Description: "Cert Auth Method Resource",
 		Create:      resourceAuthMethodCertCreate,
 		Read:        resourceAuthMethodCertRead,
 		Update:      resourceAuthMethodCertUpdate,
@@ -175,14 +176,13 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 
 	rOut, _, err := client.CreateAuthMethodCert(ctx).Body(body).Execute()
-	fmt.Println("--- out: ", rOut)
 	if err != nil {
-		fmt.Println("--- err: ", err.Error())
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
 		}
 		return fmt.Errorf("can't create Secret: %v", err)
 	}
+	fmt.Println("err:", err)
 	if rOut.AccessId != nil {
 		err = d.Set("access_id", *rOut.AccessId)
 		if err != nil {
@@ -192,10 +192,21 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(name)
 
+	body2 := akeyless.GetAuthMethod{
+		Name:  d.Id(),
+		Token: &token,
+	}
+	rOut2, _, _ := client.GetAuthMethod(ctx).Body(body2).Execute()
+	fmt.Println("------------------------")
+	fmt.Println(*rOut2.AccessInfo)
+	fmt.Println(*rOut2.AccessInfo.RulesType)
+	fmt.Println(*rOut2.AccessInfo.CertAccessRules.UniqueIdentifier)
+
 	return nil
 }
 
 func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- read ---")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -222,6 +233,7 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
+
 	if rOut.AccessInfo != nil {
 		accessInfo := rOut.AccessInfo
 		if accessInfo.AccessExpires != nil {
@@ -299,7 +311,13 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if certAccessRules.Certificate != nil {
-				err = d.Set("certificate_data", *certAccessRules.Certificate)
+				certInInts := certAccessRules.Certificate
+				var certInBytes []byte
+				for i, val := range *certInInts {
+					*(*int32)(unsafe.Pointer(&certInBytes[i*4])) = val
+				}
+				// decoded := base64.StdEncoding.EncodeToString(certAccessRules.Certificate)
+				err = d.Set("certificate_data", certInBytes)
 				if err != nil {
 					return err
 				}
@@ -316,7 +334,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
-
+	fmt.Println("--- update ---")
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
