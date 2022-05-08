@@ -10,6 +10,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func TestDockerhubTargetResource(t *testing.T) {
+	secretName := "dockerhub_test"
+	secretPath := testPath("terraform_tests")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_dockerhub" "%v" {
+			name 				= "%v"
+			dockerhub_username 	= "1234"
+			dockerhub_password 	= "abcd"
+		}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_dockerhub" "%v" {
+			name 				= "%v"
+			dockerhub_username 	= "5678"
+			dockerhub_password 	= "efgh"
+			comment 			= "bla bla"
+		}
+	`, secretName, secretPath)
+
+	tesTargetResource(t, config, configUpdate, secretPath)
+}
+
 func TestAwsTargetResource(t *testing.T) {
 	secretName := "aws123"
 	secretPath := testPath("aws_target1")

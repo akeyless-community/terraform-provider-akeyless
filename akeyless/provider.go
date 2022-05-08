@@ -159,6 +159,7 @@ func Provider() *schema.Provider {
 			"akeyless_target_aws":                     resourceAwsTarget(),
 			"akeyless_target_azure":                   resourceAzureTarget(),
 			"akeyless_target_db":                      resourceDbTarget(),
+			"akeyless_target_dockerhub":               resourceDockerhubTarget(),
 			"akeyless_target_eks":                     resourceEksTarget(),
 			"akeyless_target_gke":                     resourceGkeTarget(),
 			"akeyless_target_gcp":                     resourceGcpTarget(),
