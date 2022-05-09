@@ -159,51 +159,45 @@ func resourceProducerDockerhubRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 
-	/*
-	   // TODO fix this
-	   	if rOut.Name != nil {
-	   		err = d.Set("name", *rOut.Name)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   		if rOut.ItemTargetsAssoc != nil {
-	   		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
-	   		err = d.Set("target_name", targetName)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.DockerhubUsername != nil {
-	   		err = d.Set("dockerhub_username", *rOut.DockerhubUsername)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.DockerhubPassword != nil {
-	   		err = d.Set("dockerhub_password", *rOut.DockerhubPassword)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.DockerhubTokenScopes != nil {
-	   		err = d.Set("dockerhub_token_scopes", *rOut.DockerhubTokenScopes)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
-	   	if rOut.ProducerEncryptionKeyName != nil {
-	   		err = d.Set("producer_encryption_key_name", *rOut.ProducerEncryptionKeyName)
-	   		if err != nil {
-	   			return err
-	   		}
-	   	}
+	if rOut.ItemTargetsAssoc != nil {
+		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
+		err = d.Set("target_name", targetName)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.UserName != nil {
+		err = d.Set("dockerhub_username", *rOut.UserName)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Password != nil {
+		err = d.Set("dockerhub_password", *rOut.Password)
+		if err != nil {
+			return err
+		}
+	}
 
-	   	common.GetSraWithDescribeItem(d, path, token, client)
-	   	common.GetSraFromItem(d, rOut)
-	   	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
-
-	*/
+	if rOut.Scopes != nil {
+		scopes := *rOut.Scopes
+		var scopeString = ""
+		for _, scope := range scopes {
+			scopeString = scopeString + scope + " , "
+		}
+		// remove the last ` , ` from end of string
+		scopeString = scopeString[:len(scopeString)-3]
+		err = d.Set("dockerhub_token_scopes", scopeString)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.DynamicSecretKey != nil {
+		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -226,9 +220,6 @@ func resourceProducerDockerhubUpdate(d *schema.ResourceData, m interface{}) erro
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
-
-	/*
-	 */
 
 	body := akeyless.GatewayUpdateProducerDockerhub{
 		Name:  name,

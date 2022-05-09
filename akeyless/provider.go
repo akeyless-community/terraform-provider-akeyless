@@ -133,6 +133,7 @@ func Provider() *schema.Provider {
 			"akeyless_auth_method_cert":               resourceAuthMethodCert(),
 			"akeyless_auth_method_gcp":                resourceAuthMethodGcp(),
 			"akeyless_auth_method_k8s":                resourceAuthMethodK8s(),
+			"akeyless_auth_method_ldap":               resourceAuthMethodLdap(),
 			"akeyless_auth_method_oauth2":             resourceAuthMethodOauth2(),
 			"akeyless_auth_method_oidc":               resourceAuthMethodOidc(),
 			"akeyless_auth_method_saml":               resourceAuthMethodSaml(),
