@@ -9,18 +9,19 @@ import (
 )
 
 const (
-	GCP_KEY            = "XXXXXXXX"
-	GCP_SA_EMAIL       = "XXXXXXXX"
-	GCP_TOKEN_SCOPES   = "XXXXXXXX"
-	KEY                = "XXXXXXXX"
-	PRODUCER_NAME      = "terraform-tests/mysql_for_rs_test"
-	MYSQL_USERNAME     = "XXXXXXXX"
-	MYSQL_PASSWORD     = "XXXXXXXX"
-	MYSQL_HOST         = "127.0.0.1"
-	MYSQL_PORT         = "3306"
-	MYSQL_DBNAME       = "XXXXXXXX"
-	DOCKERHUB_USERNAME = "XXXXXXXX"
-	DOCKERHUB_PASSWORD = "XXXXXXXX"
+	GCP_KEY                = "XXXXXXXX"
+	GCP_SA_EMAIL           = "XXXXXXXX"
+	GCP_TOKEN_SCOPES       = "XXXXXXXX"
+	KEY                    = "XXXXXXXX"
+	PRODUCER_NAME          = "terraform-tests/mysql_for_rs_test"
+	MYSQL_USERNAME         = "XXXXXXXX"
+	MYSQL_PASSWORD         = "XXXXXXXX"
+	MYSQL_HOST             = "127.0.0.1"
+	MYSQL_PORT             = "3306"
+	MYSQL_DBNAME           = "XXXXXXXX"
+	DOCKERHUB_USERNAME     = "XXXXXXXX"
+	DOCKERHUB_PASSWORD     = "XXXXXXXX"
+	DOCKERHUB_TOKEN_SCOPES = `"repo:read , repo:write"`
 )
 
 var mysql_attr = fmt.Sprintf(`
@@ -58,9 +59,9 @@ func TestDockerhubProducerResource(t *testing.T) {
 			dockerhub_username 		= "%v"
 			dockerhub_password 		= "%v"
 			tags 					= ["abc", "def"]
-			dockerhub_token_scopes 	= "repo:public_read"
+			dockerhub_token_scopes 	= %v
 		}
-	`, name, itemPath, DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD)
+	`, name, itemPath, DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD, DOCKERHUB_TOKEN_SCOPES)
 
 	tesItemResource(t, config, configUpdate, itemPath)
 }
