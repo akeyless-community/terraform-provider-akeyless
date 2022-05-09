@@ -46,17 +46,19 @@ func TestDockerhubProducerResource(t *testing.T) {
 	itemPath := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_producer_dockerhub" "%v" {
-			name            	= "%v"
-			dockerhub_username 	= "%v"
-			dockerhub_password 	= "%v"
+			name            		= "%v"
+			dockerhub_username 		= "%v"
+			dockerhub_password 		= "%v"
 		}
 	`, name, itemPath, DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_producer_dockerhub" "%v" {
-			name            	= "%v"
-			dockerhub_username 	= "%v"
-			dockerhub_password 	= "%v"
+			name            		= "%v"
+			dockerhub_username 		= "%v"
+			dockerhub_password 		= "%v"
+			tags 					= ["abc", "def"]
+			dockerhub_token_scopes 	= "repo:public_read"
 		}
 	`, name, itemPath, DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD)
 

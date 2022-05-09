@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"unsafe"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -60,7 +59,6 @@ func resourceAuthMethodCert() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "creds expiration time in minutes. If not set, use default according to account settings (see get-account-settings)",
-				Default:     "0",
 			},
 			"certificate_data": {
 				Type:        schema.TypeString,
@@ -192,16 +190,6 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(name)
 
-	body2 := akeyless.GetAuthMethod{
-		Name:  d.Id(),
-		Token: &token,
-	}
-	rOut2, _, _ := client.GetAuthMethod(ctx).Body(body2).Execute()
-	fmt.Println("------------------------")
-	fmt.Println(*rOut2.AccessInfo)
-	fmt.Println(*rOut2.AccessInfo.RulesType)
-	fmt.Println(*rOut2.AccessInfo.CertAccessRules.UniqueIdentifier)
-
 	return nil
 }
 
@@ -248,10 +236,28 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
+		bodyAcc := akeyless.GetAccountSettings{
+			Token: &token,
+		}
+		rOutAcc, _, err := client.GetAccountSettings(ctx).Body(bodyAcc).Execute()
+		if err != nil {
+			if errors.As(err, &apiErr) {
+				if res.StatusCode == http.StatusNotFound {
+					// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+					d.SetId("")
+					return nil
+				}
+				return fmt.Errorf("can't get account settings: %v", string(apiErr.Body()))
+			}
+			return fmt.Errorf("can't get account settings: %v", err)
+		}
+		jwtDefault := *rOutAcc.SystemAccessCredsSettings.JwtTtlDefault
 		if accessInfo.JwtTtl != nil {
-			err = d.Set("jwt_ttl", *accessInfo.JwtTtl)
-			if err != nil {
-				return err
+			if *accessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+				err = d.Set("jwt_ttl", *accessInfo.JwtTtl)
+				if err != nil {
+					return err
+				}
 			}
 		}
 		if accessInfo.CidrWhitelist != nil && *accessInfo.CidrWhitelist != "" {
@@ -311,13 +317,7 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if certAccessRules.Certificate != nil {
-				certInInts := certAccessRules.Certificate
-				var certInBytes []byte
-				for i, val := range *certInInts {
-					*(*int32)(unsafe.Pointer(&certInBytes[i*4])) = val
-				}
-				// decoded := base64.StdEncoding.EncodeToString(certAccessRules.Certificate)
-				err = d.Set("certificate_data", certInBytes)
+				err = d.Set("certificate_data", certAccessRules.Certificate)
 				if err != nil {
 					return err
 				}
@@ -360,7 +360,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	revokedCertIdsSet := d.Get("revoked_cert_ids").(*schema.Set)
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
 
-	body := akeyless.CreateAuthMethodCert{
+	body := akeyless.UpdateAuthMethodCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -378,7 +378,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundExtensions, boundExtensions)
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 
-	_, _, err := client.CreateAuthMethodCert(ctx).Body(body).Execute()
+	_, _, err := client.UpdateAuthMethodCert(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
