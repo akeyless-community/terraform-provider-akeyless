@@ -250,81 +250,49 @@ func resourceProducerHanadbRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.HanaDbname != nil {
-		err = d.Set("hana_dbname", *rOut.HanaDbname)
+	if rOut.DbName != nil {
+		err = d.Set("hana_dbname", *rOut.DbName)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.HanadbUsername != nil {
-		err = d.Set("hanadb_username", *rOut.HanadbUsername)
+	if rOut.DbUserName != nil {
+		err = d.Set("hanadb_username", *rOut.DbUserName)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.HanadbPassword != nil {
-		err = d.Set("hanadb_password", *rOut.HanadbPassword)
+	if rOut.DbPwd != nil {
+		err = d.Set("hanadb_password", *rOut.DbPwd)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.HanadbHost != nil {
-		err = d.Set("hanadb_host", *rOut.HanadbHost)
+	if rOut.DbHostName != nil {
+		err = d.Set("hanadb_host", *rOut.DbHostName)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.HanadbPort != nil {
-		err = d.Set("hanadb_port", *rOut.HanadbPort)
+	if rOut.DbPort != nil {
+		err = d.Set("hanadb_port", *rOut.DbPort)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.HanadbCreateStatements != nil {
-		err = d.Set("hanadb_create_statements", *rOut.HanadbCreateStatements)
+	if rOut.HanadbCreationStatements != nil {
+		err = d.Set("hanadb_create_statements", *rOut.HanadbCreationStatements)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.ProducerEncryptionKeyName != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.ProducerEncryptionKeyName)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.SecureAccessEnable != nil {
-		err = d.Set("secure_access_enable", *rOut.SecureAccessEnable)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.SecureAccessBastionIssuer != nil {
-		err = d.Set("secure_access_bastion_issuer", *rOut.SecureAccessBastionIssuer)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.SecureAccessHost != nil {
-		err = d.Set("secure_access_host", *rOut.SecureAccessHost)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.SecureAccessDbSchema != nil {
-		err = d.Set("secure_access_db_schema", *rOut.SecureAccessDbSchema)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.SecureAccessWeb != nil {
-		err = d.Set("secure_access_web", *rOut.SecureAccessWeb)
+	if rOut.DynamicSecretKey != nil {
+		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
 	}
 
-	common.GetSraWithDescribeItem(d, path, token, client)
-	common.GetSraFromItem(d, rOut)
 	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
 	d.SetId(path)
@@ -334,11 +302,11 @@ func resourceProducerHanadbRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceProducerHanadbUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
-	client := *provider.client
+	// client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
-	ctx := context.Background()
+	// var apiErr akeyless.GenericOpenAPIError
+	// ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	hanaDbname := d.Get("hana_dbname").(string)
@@ -380,13 +348,13 @@ func resourceProducerHanadbUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.GatewayUpdateProducerHanaDb(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
-	}
+	// _, _, err := client.GatewayUpdateProducerHanaDb(ctx).Body(body).Execute()
+	// if err != nil {
+	// 	if errors.As(err, &apiErr) {
+	// 		return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+	// 	}
+	// 	return fmt.Errorf("can't update : %v", err)
+	// }
 
 	d.SetId(name)
 

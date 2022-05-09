@@ -9,16 +9,18 @@ import (
 )
 
 const (
-	GCP_KEY          = "XXXXXXXX"
-	GCP_SA_EMAIL     = "XXXXXXXX"
-	GCP_TOKEN_SCOPES = "XXXXXXXX"
-	KEY              = "XXXXXXXX"
-	PRODUCER_NAME    = "terraform-tests/mysql_for_rs_test"
-	MYSQL_USERNAME   = "XXXXXXXX"
-	MYSQL_PASSWORD   = "XXXXXXXX"
-	MYSQL_HOST       = "127.0.0.1"
-	MYSQL_PORT       = "3306"
-	MYSQL_DBNAME     = "XXXXXXXX"
+	GCP_KEY            = "XXXXXXXX"
+	GCP_SA_EMAIL       = "XXXXXXXX"
+	GCP_TOKEN_SCOPES   = "XXXXXXXX"
+	KEY                = "XXXXXXXX"
+	PRODUCER_NAME      = "terraform-tests/mysql_for_rs_test"
+	MYSQL_USERNAME     = "XXXXXXXX"
+	MYSQL_PASSWORD     = "XXXXXXXX"
+	MYSQL_HOST         = "127.0.0.1"
+	MYSQL_PORT         = "3306"
+	MYSQL_DBNAME       = "XXXXXXXX"
+	DOCKERHUB_USERNAME = "XXXXXXXX"
+	DOCKERHUB_PASSWORD = "XXXXXXXX"
 )
 
 var mysql_attr = fmt.Sprintf(`
@@ -35,6 +37,31 @@ var db_attr = fmt.Sprintf(`
 	port      		= "%v"
 	db_name   		= "%v"
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
+
+func TestDockerhubProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "dockerhub_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_dockerhub" "%v" {
+			name            	= "%v"
+			dockerhub_username 	= "%v"
+			dockerhub_password 	= "%v"
+		}
+	`, name, itemPath, DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_dockerhub" "%v" {
+			name            	= "%v"
+			dockerhub_username 	= "%v"
+			dockerhub_password 	= "%v"
+		}
+	`, name, itemPath, DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
 
 func TestCustomProducerResource(t *testing.T) {
 	t.Skip("must run with server listen the following addresses")
