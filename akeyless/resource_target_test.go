@@ -10,6 +10,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func TestGithubTargetResource(t *testing.T) {
+	secretName := "github_test"
+	secretPath := testPath("terraform_tests")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_github" "%v" {
+			name 					= "%v"
+			github_app_id 			= "1234"
+			github_app_private_key 	= "abcd"
+		}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_github" "%v" {
+			name 					= "%v"
+			github_app_id 			= "5678"
+			github_app_private_key 	= "efgh"
+			comment 				= "bla bla"
+		}
+	`, secretName, secretPath)
+
+	tesTargetResource(t, config, configUpdate, secretPath)
+}
+
 func TestDockerhubTargetResource(t *testing.T) {
 	secretName := "dockerhub_test"
 	secretPath := testPath("terraform_tests")
@@ -19,7 +42,7 @@ func TestDockerhubTargetResource(t *testing.T) {
 			dockerhub_username 	= "1234"
 			dockerhub_password 	= "abcd"
 		}
-	`, secretName, secretPath)
+		`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_dockerhub" "%v" {
@@ -27,8 +50,7 @@ func TestDockerhubTargetResource(t *testing.T) {
 			dockerhub_username 	= "5678"
 			dockerhub_password 	= "efgh"
 			comment 			= "bla bla"
-		}
-	`, secretName, secretPath)
+		`, secretName, secretPath)
 
 	tesTargetResource(t, config, configUpdate, secretPath)
 }
@@ -184,21 +206,21 @@ func TestGkeTargetResource(t *testing.T) {
 		resource "akeyless_target_gke" "%v" {
 			name = "%v"
 			gke_service_account_email     = "XXXXXXX"
-			  gke_cluster_endpoint = "https://akaka.com"
-			 gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
-			  gke_account_key = "qwdwd"
-			  gke_cluster_name = "dddd"
+			gke_cluster_endpoint = "https://akaka.com"
+			gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gke_account_key = "qwdwd"
+			gke_cluster_name = "dddd"
 		}
 	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_gke" "%v" {
 			name = "%v"
-				gke_service_account_email     = "XXXXXXX2"
-			  gke_cluster_endpoint = "https://akakad.com"
-			 gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
-			  gke_account_key = "qwdwd"
-			  gke_cluster_name = "dddd"
+			gke_service_account_email     = "XXXXXXX2"
+			gke_cluster_endpoint = "https://akakad.com"
+			gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gke_account_key = "qwdwd"
+			gke_cluster_name = "dddd"
 		}
 	`, secretName, secretPath)
 

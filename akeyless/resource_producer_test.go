@@ -19,10 +19,17 @@ const (
 	MYSQL_HOST             = "127.0.0.1"
 	MYSQL_PORT             = "3306"
 	MYSQL_DBNAME           = "XXXXXXXX"
+	GITHUB_INSTALL_ID      = 1234
+	GITHUB_INSTALL_REPO    = "XXXXXXXX"
+	GITHUB_APP_ID          = 1234
+	GITHUB_APP_KEY         = "XXXXXXXX"
 	DOCKERHUB_USERNAME     = "XXXXXXXX"
 	DOCKERHUB_PASSWORD     = "XXXXXXXX"
 	DOCKERHUB_TOKEN_SCOPES = `"repo:read , repo:write"`
 )
+
+var GITHUB_TOKEN_PERM = `["contents=read", "issues=write", "actions=read"]`
+var GITHUB_TOKEN_REPO = `["github-producer-test1", "github-producer-test2"]`
 
 var mysql_attr = fmt.Sprintf(`
 	mysql_username	= "%v"
@@ -38,6 +45,35 @@ var db_attr = fmt.Sprintf(`
 	port      		= "%v"
 	db_name   		= "%v"
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
+
+func TestGithubProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "github_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_github" "%v" {
+			name            		= "%v"
+			installation_id 		= %v
+			token_permissions 		= %v
+			github_app_id 			= %v
+			github_app_private_key 	= "%v"
+		}
+	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_TOKEN_PERM, GITHUB_APP_ID, GITHUB_APP_KEY)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_github" "%v" {
+			name            		= "%v"
+			installation_repository = "%v"
+			token_repositories 		= %v
+			github_app_id 			= %v
+			github_app_private_key 	= "%v"
+		}
+	`, name, itemPath, GITHUB_INSTALL_REPO, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
 
 func TestDockerhubProducerResource(t *testing.T) {
 
