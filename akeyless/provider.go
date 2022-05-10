@@ -150,6 +150,7 @@ func Provider() *schema.Provider {
 			"akeyless_producer_gke":                   resourceProducerGke(),
 			"akeyless_producer_hanadb":                resourceProducerHanadb(),
 			"akeyless_producer_k8s":                   resourceProducerK8s(),
+			"akeyless_producer_ldap":                  resourceProducerLdap(),
 			"akeyless_producer_mongo":                 resourceProducerMongo(),
 			"akeyless_producer_mssql":                 resourceProducerMssql(),
 			"akeyless_producer_mysql":                 resourceProducerMysql(),

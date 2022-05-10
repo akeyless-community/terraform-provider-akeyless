@@ -225,7 +225,7 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.AccessInfo != nil {
-		accessInfo := rOut.AccessInfo
+		accessInfo := *rOut.AccessInfo
 		if accessInfo.AccessExpires != nil {
 			err = d.Set("access_expires", *accessInfo.AccessExpires)
 			if err != nil {
@@ -339,10 +339,12 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- update ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
-	fmt.Println("--- update ---")
+
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)

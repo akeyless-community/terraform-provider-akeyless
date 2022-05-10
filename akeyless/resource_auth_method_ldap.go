@@ -55,7 +55,6 @@ func resourceAuthMethodLdap() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "creds expiration time in minutes. If not set, use default according to account settings (see get-account-settings)",
-				Default:     "0",
 			},
 			"public_key_data": {
 				Type:        schema.TypeString,
@@ -75,6 +74,8 @@ func resourceAuthMethodLdap() *schema.Resource {
 }
 
 func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- create ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -115,6 +116,8 @@ func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodLdapRead(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- read ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -141,41 +144,63 @@ func resourceAuthMethodLdapRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	if rOut.AccessInfo.AccessExpires != nil {
-		err = d.Set("access_expires", *rOut.AccessInfo.AccessExpires)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.AccessInfo.ForceSubClaims != nil {
-		err = d.Set("force_sub_claims", *rOut.AccessInfo.ForceSubClaims)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.AccessInfo.JwtTtl != nil {
-		err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.AccessInfo.LdapAccessRules.UniqueIdentifier != nil {
-		err = d.Set("unique_identifier", *rOut.AccessInfo.LdapAccessRules.UniqueIdentifier)
-		if err != nil {
-			return err
-		}
-	}
 
-	if rOut.AccessInfo.CidrWhitelist != nil && *rOut.AccessInfo.CidrWhitelist != "" {
-		err = d.Set("bound_ips", strings.Split(*rOut.AccessInfo.CidrWhitelist, ","))
-		if err != nil {
-			return err
+	if rOut.AccessInfo != nil {
+		accessInfo := *rOut.AccessInfo
+		if accessInfo.AccessExpires != nil {
+			err = d.Set("access_expires", *accessInfo.AccessExpires)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	if rOut.AccessInfo.ApiKeyAccessRules != nil {
-		err = d.Set("public_key_data", *rOut.AccessInfo.ApiKeyAccessRules)
+		if accessInfo.ForceSubClaims != nil {
+			err = d.Set("force_sub_claims", *accessInfo.ForceSubClaims)
+			if err != nil {
+				return err
+			}
+		}
+		bodyAcc := akeyless.GetAccountSettings{
+			Token: &token,
+		}
+		rOutAcc, _, err := client.GetAccountSettings(ctx).Body(bodyAcc).Execute()
 		if err != nil {
-			return err
+			if errors.As(err, &apiErr) {
+				if res.StatusCode == http.StatusNotFound {
+					// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+					d.SetId("")
+					return nil
+				}
+				return fmt.Errorf("can't get account settings: %v", string(apiErr.Body()))
+			}
+			return fmt.Errorf("can't get account settings: %v", err)
+		}
+		jwtDefault := *rOutAcc.SystemAccessCredsSettings.JwtTtlDefault
+		if accessInfo.JwtTtl != nil {
+			if *accessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+				err = d.Set("jwt_ttl", *accessInfo.JwtTtl)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		if accessInfo.LdapAccessRules.UniqueIdentifier != nil {
+			err = d.Set("unique_identifier", *accessInfo.LdapAccessRules.UniqueIdentifier)
+			if err != nil {
+				return err
+			}
+		}
+
+		if accessInfo.CidrWhitelist != nil && *accessInfo.CidrWhitelist != "" {
+			err = d.Set("bound_ips", strings.Split(*accessInfo.CidrWhitelist, ","))
+			if err != nil {
+				return err
+			}
+		}
+		if accessInfo.ApiKeyAccessRules != nil {
+			err = d.Set("public_key_data", *accessInfo.ApiKeyAccessRules)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -185,6 +210,8 @@ func resourceAuthMethodLdapRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodLdapUpdate(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- update ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -226,6 +253,8 @@ func resourceAuthMethodLdapUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodLdapDelete(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- delete ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
