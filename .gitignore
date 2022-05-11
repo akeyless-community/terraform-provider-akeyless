@@ -7,3 +7,4 @@ vendor
 *.tfvars
 akeyless/resource_producer1_test.go
 akeyless/resource_auth_methods1_test.go
+akeyless/resource_target1_test.go

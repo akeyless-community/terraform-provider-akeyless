@@ -183,7 +183,7 @@ func TestGcpTargetResource(t *testing.T) {
 		resource "akeyless_target_gcp" "%v" {
 			name = "%v"
 			gcp_sa_email     = "XXXXXXX"
-			gcp_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gcp_key = "XXXXXXXX"
 		}
 	`, secretName, secretPath)
 
@@ -191,7 +191,7 @@ func TestGcpTargetResource(t *testing.T) {
 		resource "akeyless_target_gcp" "%v" {
 			name = "%v"
 			gcp_sa_email     = "YYYYYYY"
-			gcp_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gcp_key = "XXXXXXXX"
 		}
 	`, secretName, secretPath)
 
@@ -207,7 +207,7 @@ func TestGkeTargetResource(t *testing.T) {
 			name = "%v"
 			gke_service_account_email     = "XXXXXXX"
 			gke_cluster_endpoint = "https://akaka.com"
-			gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gke_cluster_cert = "XXXXXXXX"
 			gke_account_key = "qwdwd"
 			gke_cluster_name = "dddd"
 		}
@@ -218,7 +218,7 @@ func TestGkeTargetResource(t *testing.T) {
 			name = "%v"
 			gke_service_account_email     = "XXXXXXX2"
 			gke_cluster_endpoint = "https://akakad.com"
-			gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gke_cluster_cert = "XXXXXXXX"
 			gke_account_key = "qwdwd"
 			gke_cluster_name = "dddd"
 		}
@@ -234,7 +234,7 @@ func TestK8sTargetResource(t *testing.T) {
 		resource "akeyless_target_k8s" "%v" {
 			name = "%v"
 			k8s_cluster_endpoint     = "https://akakad.com"
-			k8s_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			k8s_cluster_ca_cert = "XXXXXXXX"
 			  k8s_cluster_token = "djsdkjdkjdhcj"
 		}
 	`, secretName, secretPath)
@@ -243,7 +243,7 @@ func TestK8sTargetResource(t *testing.T) {
 		resource "akeyless_target_k8s" "%v" {
 			name = "%v"
 			k8s_cluster_endpoint     = "https://akakad.com"
-			k8s_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			k8s_cluster_ca_cert = "XXXXXXXX"
 			  k8s_cluster_token = "djsdkjdkjdhcjs"
 		}
 	`, secretName, secretPath)
@@ -290,7 +290,7 @@ func TestEksTargetResource(t *testing.T) {
 			name = "%v"
 			eks_cluster_name     = "XXXXXXX"
 			eks_cluster_endpoint = "https://jjjj.com"
-			eks_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			eks_cluster_ca_cert = "XXXXXXXX"
 			eks_access_key_id = "eks_access_key_id"
 			eks_secret_access_key = "ddjdjdj"
 		}
@@ -301,7 +301,7 @@ func TestEksTargetResource(t *testing.T) {
 			name = "%v"
 			eks_cluster_name     = "XXXXXXX"
 			eks_cluster_endpoint = "https://jjjj.com"
-			eks_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			eks_cluster_ca_cert = "XXXXXXXX"
 			eks_access_key_id = "eks_access_key_id"
 			eks_secret_access_key = "ddjdjdj"
 		}
