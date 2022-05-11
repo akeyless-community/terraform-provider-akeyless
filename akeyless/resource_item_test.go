@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+const PUB_KEY_DATA = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
 func TestClassicKey(t *testing.T) {
 	name := "test_classic_key"
 	itemPath := testPath("path_classic_key")
@@ -96,7 +98,6 @@ func TestDfcKeyResource(t *testing.T) {
 	`, name, itemPath)
 
 	tesItemResource(t, config, configUpdate, itemPath)
-
 }
 
 func TestPkiResource(t *testing.T) {
@@ -172,7 +173,16 @@ func TestSshCertResource(t *testing.T) {
     			akeyless_dfc_key.key_ssh,
   			]
 		}
-	`, name, itemPath)
+		data "akeyless_ssh_certificate" "ssh_cert" {
+			cert_username     = "aaaa"
+			cert_issuer_name  = "%v"
+			public_key_data   = "%v"
+
+			depends_on = [
+				akeyless_ssh_cert_issuer.%v,
+			]
+		}
+	`, name, itemPath, itemPath, PUB_KEY_DATA, name)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "key_ssh" {
@@ -180,7 +190,6 @@ func TestSshCertResource(t *testing.T) {
 			alg = "RSA1024"
 			tags     = ["t1", "t2"]
 		}
-
 		resource "akeyless_ssh_cert_issuer" "%v" {
 			name = "%v"
 			ttl = "290"
@@ -197,7 +206,16 @@ func TestSshCertResource(t *testing.T) {
     			akeyless_dfc_key.key_ssh,
   			]
 		}
-	`, name, itemPath)
+		data "akeyless_ssh_certificate" "ssh_cert" {
+			cert_username     = "aaaa2"
+			cert_issuer_name  = "%v"
+			public_key_data   = "%v"
+
+			depends_on = [
+				akeyless_ssh_cert_issuer.%v,
+			]
+		}
+	`, name, itemPath, itemPath, PUB_KEY_DATA, name)
 
 	tesItemResource(t, config, configUpdate, itemPath)
 }
