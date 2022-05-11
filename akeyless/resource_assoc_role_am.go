@@ -118,7 +118,6 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 	if role.RoleAuthMethodsAssoc != nil {
 		for _, acc := range *role.RoleAuthMethodsAssoc {
 			if acc.AssocId != nil && *acc.AssocId == id {
-
 				if acc.AuthMethodName != nil {
 					err = d.Set("am_name", *acc.AuthMethodName)
 					if err != nil {
@@ -145,13 +144,15 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 						return err
 					}
 				}
-			}
 
+				d.SetId(id)
+				return nil
+			}
 		}
 	}
 
-	d.SetId(id)
-
+	// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+	d.SetId("")
 	return nil
 }
 
@@ -237,10 +238,10 @@ func resourceAssocRoleAmImport(d *schema.ResourceData, m interface{}) ([]*schema
 			return nil, err
 		}
 	}
+
 	if role.RoleAuthMethodsAssoc != nil {
 		for _, acc := range *role.RoleAuthMethodsAssoc {
 			if acc.AssocId != nil && *acc.AssocId == id {
-
 				if acc.AuthMethodName != nil {
 					err = d.Set("am_name", *acc.AuthMethodName)
 					if err != nil {
@@ -267,12 +268,14 @@ func resourceAssocRoleAmImport(d *schema.ResourceData, m interface{}) ([]*schema
 						return nil, err
 					}
 				}
-			}
 
+				d.SetId(id)
+				return []*schema.ResourceData{d}, nil
+			}
 		}
 	}
 
-	d.SetId(id)
+	d.SetId("")
+	return nil, fmt.Errorf("association id: %v was not found", id)
 
-	return []*schema.ResourceData{d}, nil
 }
