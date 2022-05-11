@@ -46,6 +46,44 @@ var db_attr = fmt.Sprintf(`
 	db_name   		= "%v"
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
 
+func TestRabbitMQProducerResource(t *testing.T) {
+
+	name := "rabbitmq_test"
+	itemPath := testPath(name)
+	serverUrl := "http://127.0.0.1:15672"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_rabbitmq" "%v" {
+			name                            = "%v"
+			rabbitmq_server_uri             = "%v"
+			rabbitmq_user_conf_permission   = ".*"
+			rabbitmq_user_write_permission  = ".*"
+			rabbitmq_user_read_permission   = ".*"
+			rabbitmq_admin_user             = "guest"
+			rabbitmq_admin_pwd              = "guest"
+		}
+	`, name, itemPath, serverUrl)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_rabbitmq" "%v" {
+			name                            = "%v"
+			rabbitmq_server_uri             = "%v"
+			rabbitmq_user_conf_permission   = ".*"
+			rabbitmq_user_write_permission  = ".*"
+			rabbitmq_user_read_permission   = ".*"
+			rabbitmq_admin_user             = "guest"
+			rabbitmq_admin_pwd              = "guest"
+			tags                 			= ["abc", "def"]
+			user_ttl 						= 80
+			secure_access_enable 			= "true"
+			secure_access_web_browsing    	= "true"
+			secure_access_url   			= "http://blabla.com"
+		}
+	`, name, itemPath, serverUrl)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
 func TestGithubProducerResource(t *testing.T) {
 
 	t.Skip("for now the requested values are fictive")

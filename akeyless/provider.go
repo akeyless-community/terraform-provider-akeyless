@@ -157,6 +157,7 @@ func Provider() *schema.Provider {
 			"akeyless_producer_mysql":                 resourceProducerMysql(),
 			"akeyless_producer_oracle":                resourceProducerOracle(),
 			"akeyless_producer_postgres":              resourceProducerPostgresql(),
+			"akeyless_producer_rabbitmq":              resourceProducerRabbitmq(),
 			"akeyless_producer_rdp":                   resourceProducerRdp(),
 			"akeyless_producer_redshift":              resourceProducerRedshift(),
 			"akeyless_rotated_secret":                 resourceRotatedSecret(),
