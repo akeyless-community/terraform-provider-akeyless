@@ -124,6 +124,10 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	name := d.Get("name").(string)
 	comment := d.Get("comment").(string)
+	auditAccess := d.Get("audit_access").(string)
+	analyticsAccess := d.Get("analytics_access").(string)
+	gwAnalyticsAccess := d.Get("gw_analytics_access").(string)
+	sraReportsAccess := d.Get("sra_reports_access").(string)
 
 	var apiErr akeyless.GenericOpenAPIError
 	body := akeyless.CreateRole{
@@ -131,6 +135,10 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		Comment: akeyless.PtrString(comment),
 		Token:   &token,
 	}
+	common.GetAkeylessPtr(&body.AuditAccess, auditAccess)
+	common.GetAkeylessPtr(&body.AnalyticsAccess, analyticsAccess)
+	common.GetAkeylessPtr(&body.GwAnalyticsAccess, gwAnalyticsAccess)
+	common.GetAkeylessPtr(&body.SraReportsAccess, sraReportsAccess)
 
 	_, _, err := client.CreateRole(ctx).Body(body).Execute()
 	if err != nil {
@@ -213,12 +221,6 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		}
 	}
 
-	err = updateRole(d, m, ctx)
-	if err != nil {
-		ok = false
-		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create role: %v", err))}
-	}
-
 	d.SetId(name)
 
 	return warn
@@ -244,7 +246,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-
+	//todo
 	err = d.Set("assoc_auth_method_with_rules", string(roleAsJson))
 	if err != nil {
 		return err
@@ -511,6 +513,12 @@ func updateRole(d *schema.ResourceData, m interface{}, ctx context.Context) erro
 		GwAnalyticsAccess: akeyless.PtrString(gwAnalyticsAccess),
 		SraReportsAccess:  akeyless.PtrString(sraReportsAccess),
 	}
+
+	fmt.Println("name:", updateBody.Name)
+	fmt.Println("AuditAccess:", *updateBody.AuditAccess)
+	fmt.Println("AnalyticsAccess:", *updateBody.AnalyticsAccess)
+	fmt.Println("GwAnalyticsAccess:", *updateBody.GwAnalyticsAccess)
+	fmt.Println("SraReportsAccess:", *updateBody.SraReportsAccess)
 
 	var err error
 	var apiErr akeyless.GenericOpenAPIError
