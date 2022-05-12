@@ -84,15 +84,27 @@ func resourceRole() *schema.Resource {
 			},
 			"audit_access": {
 				Type:        schema.TypeString,
+				Required:    false,
 				Optional:    true,
-				Description: "Allow this role to view audit logs. 'none', 'own', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods",
-				Default:     "none",
+				Description: "Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.",
 			},
 			"analytics_access": {
 				Type:        schema.TypeString,
+				Required:    false,
 				Optional:    true,
-				Description: "Allow this role to view analytics. Currently only 'none' and 'own' values are supported, allowing associated auth methods to view reports produced by the same auth methods",
-				Default:     "none",
+				Description: "Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
+			},
+			"gw_analytics_access": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
+			},
+			"sra_reports_access": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.",
 			},
 
 			"assoc_auth_method_with_rules": {
@@ -103,11 +115,12 @@ func resourceRole() *schema.Resource {
 	}
 }
 
-func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (ret diag.Diagnostics) {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
 	warn := diag.Diagnostics{}
+	ok := true
 
 	name := d.Get("name").(string)
 	comment := d.Get("comment").(string)
@@ -126,6 +139,19 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		}
 		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create Role: %v", err))}
 	}
+	defer func() {
+		if !ok {
+			deleteRole := akeyless.DeleteRole{
+				Name:  name,
+				Token: &token,
+			}
+
+			_, _, err = client.DeleteRole(ctx).Body(deleteRole).Execute()
+			if err != nil {
+				ret = diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("fatal error: role created with errors and failed to be deleted: %v", err))}
+			}
+		}
+	}()
 
 	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
 	if assocAuthMethod != nil {
@@ -147,6 +173,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 			_, _, err = client.AssocRoleAuthMethod(ctx).Body(asBody).Execute()
 			if err != nil {
+				ok = false
 				if errors.As(err, &apiErr) {
 					return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create association: %v", string(apiErr.Body())))}
 				}
@@ -177,6 +204,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 			}
 			_, _, err := client.SetRoleRule(ctx).Body(setRoleRule).Execute()
 			if err != nil {
+				ok = false
 				if errors.As(err, &apiErr) {
 					return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't set rules: %v", string(apiErr.Body())))}
 				}
@@ -187,6 +215,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	err = updateRole(d, m, ctx)
 	if err != nil {
+		ok = false
 		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create role: %v", err))}
 	}
 
@@ -248,7 +277,6 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 				AssocId: *v.AssocId,
 				Token:   &token,
 			}
-
 			_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
 			if err != nil {
 				if errors.As(err, &apiErr) {
@@ -274,7 +302,6 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 			RuleType: v.Type,
 			Token:    &token,
 		}
-
 		_, res, err := client.DeleteRoleRule(ctx).Body(rule).Execute()
 		if err != nil {
 			if errors.As(err, &apiErr) {
@@ -473,12 +500,16 @@ func updateRole(d *schema.ResourceData, m interface{}, ctx context.Context) erro
 	name := d.Get("name").(string)
 	auditAccess := d.Get("audit_access").(string)
 	analyticsAccess := d.Get("analytics_access").(string)
+	gwAnalyticsAccess := d.Get("gw_analytics_access").(string)
+	sraReportsAccess := d.Get("sra_reports_access").(string)
 
 	updateBody := akeyless.UpdateRole{
-		Name:            name,
-		Token:           &token,
-		AuditAccess:     akeyless.PtrString(auditAccess),
-		AnalyticsAccess: akeyless.PtrString(analyticsAccess),
+		Name:              name,
+		Token:             &token,
+		AuditAccess:       akeyless.PtrString(auditAccess),
+		AnalyticsAccess:   akeyless.PtrString(analyticsAccess),
+		GwAnalyticsAccess: akeyless.PtrString(gwAnalyticsAccess),
+		SraReportsAccess:  akeyless.PtrString(sraReportsAccess),
 	}
 
 	var err error
