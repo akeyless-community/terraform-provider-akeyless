@@ -225,6 +225,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("------ update ------")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -248,7 +249,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 				AssocId: *v.AssocId,
 				Token:   &token,
 			}
-
+			fmt.Println("delete role assoc:", association.AssocId)
 			_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
 			if err != nil {
 				if errors.As(err, &apiErr) {
@@ -274,7 +275,8 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 			RuleType: v.Type,
 			Token:    &token,
 		}
-
+		fmt.Println("delete role rule:", rule.RoleName)
+		fmt.Println("rule type:", *rule.RuleType)
 		_, res, err := client.DeleteRoleRule(ctx).Body(rule).Execute()
 		if err != nil {
 			if errors.As(err, &apiErr) {
@@ -351,6 +353,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("------ delete ------")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -481,6 +484,12 @@ func updateRole(d *schema.ResourceData, m interface{}, ctx context.Context) erro
 		AnalyticsAccess: akeyless.PtrString(analyticsAccess),
 	}
 
+	// fmt.Println("name:", updateBody.Name)
+	// fmt.Println("AuditAccess:", *updateBody.AuditAccess)
+	// fmt.Println("AnalyticsAccess:", *updateBody.AnalyticsAccess)
+	// fmt.Println("GwAnalyticsAccess:", *updateBody.GwAnalyticsAccess)
+	// fmt.Println("SraReportsAccess:", *updateBody.SraReportsAccess)
+
 	var err error
 	var apiErr akeyless.GenericOpenAPIError
 	_, _, err = client.UpdateRole(ctx).Body(updateBody).Execute()
@@ -490,6 +499,15 @@ func updateRole(d *schema.ResourceData, m interface{}, ctx context.Context) erro
 		}
 		return fmt.Errorf("%v", err)
 	}
+
+	body := akeyless.GetRole{
+		Name:  name,
+		Token: &token,
+	}
+	role, _ := getRole(d, client, body)
+	rules := role.GetRules()
+	fmt.Println(*role.ClientPermissions)
+	fmt.Println(*(*rules.PathRules)[0].Type)
 
 	return nil
 }

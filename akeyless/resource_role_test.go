@@ -467,7 +467,13 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string) reso
 		}
 
 		rules := res.GetRules()
-		assert.Equal(t, 4, len(rules.GetPathRules()))
+		for _, val := range rules.GetPathRules() {
+			fmt.Println("capabilities:", *val.Capabilities)
+			fmt.Println("path:", *val.Path)
+			fmt.Println("type:", *val.Type)
+		}
+		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
+		fmt.Println("----------------------------------")
 
 		exists := false
 		for _, r := range rules.GetPathRules() {
@@ -551,7 +557,13 @@ func checkAddRoleRemotely(t *testing.T, roleName string) resource.TestCheckFunc 
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		assert.Equal(t, 3, len(rules.GetPathRules()))
+		for _, val := range rules.GetPathRules() {
+			fmt.Println("capabilities:", *val.Capabilities)
+			fmt.Println("path:", *val.Path)
+			fmt.Println("type:", *val.Type)
+		}
+		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
+		fmt.Println("----------------------------------")
 
 		return nil
 	}
@@ -577,7 +589,13 @@ func checkUpdateRole(t *testing.T, roleName string, accnum int) resource.TestChe
 		assert.NoError(t, err)
 		assert.Equal(t, accnum, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		assert.Equal(t, 4, len(rules.GetPathRules()))
+		for _, val := range rules.GetPathRules() {
+			fmt.Println("capabilities:", *val.Capabilities)
+			fmt.Println("path:", *val.Path)
+			fmt.Println("type:", *val.Type)
+		}
+		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
+		fmt.Println("----------------------------------")
 
 		return nil
 	}
@@ -597,7 +615,13 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string) resource.TestCheckFu
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		assert.Equal(t, 3, len(rules.GetPathRules()))
+		for _, val := range rules.GetPathRules() {
+			fmt.Println("capabilities:", *val.Capabilities)
+			fmt.Println("path:", *val.Path)
+			fmt.Println("type:", *val.Type)
+		}
+		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
+		fmt.Println("----------------------------------")
 
 		return nil
 	}
