@@ -74,7 +74,7 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}

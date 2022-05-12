@@ -12,7 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const PUB_KEY_DATA = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+const (
+	PUBLIC_KEY  = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	PRIVATE_KEY = "XXXXXXXX"
+)
 
 func TestClassicKey(t *testing.T) {
 	name := "test_classic_key"
@@ -147,6 +150,45 @@ func TestPkiResource(t *testing.T) {
 	tesItemResource(t, config, configUpdate, itemPath)
 }
 
+func TestPkiDataSource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	keyName := "test_pki_key"
+	keyPath := testPath(keyName)
+	certName := "test_pki_cert"
+	certPath := testPath(certName)
+	config := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "key" {
+			name 				= "%v"
+			alg 				= "RSA1024"
+		}
+		resource "akeyless_pki_cert_issuer" "%v" {
+			name 				= "%v"
+			signer_key_name 	= "/%v"
+			ttl 				= "390"
+			allowed_domains 	= "aaaa"
+
+			depends_on = [
+				akeyless_dfc_key.key,
+			]
+		}
+		data "akeyless_pki_certificate" "pki_cert" {
+			cert_issuer_name  	= "%v"
+			key_data_base64   	= "%v"
+			common_name       	= "aaaa"
+
+			depends_on = [
+				akeyless_pki_cert_issuer.%v,
+			]
+		}
+	`, keyPath, certName, certPath, keyPath, certPath, PRIVATE_KEY, certName)
+
+	configUpdate := config
+
+	tesItemResource(t, config, configUpdate, certPath)
+}
+
 func TestSshCertResource(t *testing.T) {
 	name := "test_ssh"
 	itemPath := testPath("path_ssh")
@@ -182,7 +224,7 @@ func TestSshCertResource(t *testing.T) {
 				akeyless_ssh_cert_issuer.%v,
 			]
 		}
-	`, name, itemPath, itemPath, PUB_KEY_DATA, name)
+	`, name, itemPath, itemPath, PUBLIC_KEY, name)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "key_ssh" {
@@ -215,7 +257,7 @@ func TestSshCertResource(t *testing.T) {
 				akeyless_ssh_cert_issuer.%v,
 			]
 		}
-	`, name, itemPath, itemPath, PUB_KEY_DATA, name)
+	`, name, itemPath, itemPath, PUBLIC_KEY, name)
 
 	tesItemResource(t, config, configUpdate, itemPath)
 }
