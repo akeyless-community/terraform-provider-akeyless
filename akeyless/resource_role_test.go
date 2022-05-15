@@ -47,7 +47,7 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 	})
 }
 
-func TestRoleWithAssocResourceUpdate1(t *testing.T) {
+func TestRoleWithAssocResourceUpdateAccessRules(t *testing.T) {
 	rolePath := testPath("test_role_assoc")
 	authMethodPath := testPath("path_auth_method")
 	deleteRole(rolePath)
@@ -76,7 +76,7 @@ func TestRoleWithAssocResourceUpdate1(t *testing.T) {
 			analytics_access 	= "none"
 			gw_analytics_access = "own"
 			sra_reports_access 	= "all"
-			  
+			
 			depends_on = [
     			akeyless_auth_method.auth_method,
   			]
@@ -99,13 +99,7 @@ func TestRoleWithAssocResourceUpdate1(t *testing.T) {
 				}
 			}
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
-			}
-
-			rules {
-				capability = ["list"]
+				capability = ["read", "list"]
 				path = "/terraform-tests/*"
 				rule_type = "auth-method-rule"
 			}
@@ -140,7 +134,6 @@ func TestRoleWithAssocResourceUpdate1(t *testing.T) {
 				path = "/terraform-tests/*"
 				rule_type = "auth-method-rule"
 			}
-
 			audit_access 		= "all"
 			analytics_access 	= "all"
 			gw_analytics_access = "own"
@@ -166,25 +159,25 @@ func TestRoleWithAssocResourceUpdate1(t *testing.T) {
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 3),
+					checkAddRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 4),
+					checkUpdateRoleRemotely(t, rolePath, 5),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 3),
+					checkRemoveRoleRemotely(t, rolePath, 4),
 				),
 			},
 		},
 	})
 }
-func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) { // FAIL
+func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 	rolePath := testPath("test_role_assoc")
 	authMethodPath := testPath("path_auth_method")
 	deleteRole(rolePath)

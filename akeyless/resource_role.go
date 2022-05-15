@@ -2,7 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -82,34 +81,29 @@ func resourceRole() *schema.Resource {
 					},
 				},
 			},
-			"audit_access": {
+			"audit_access": { // same as search-rule
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.",
 			},
-			"analytics_access": {
+			"analytics_access": { // same as reports-rule
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
 			},
-			"gw_analytics_access": {
+			"gw_analytics_access": { // same as gw-reports-rule
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
 			},
-			"sra_reports_access": {
+			"sra_reports_access": { // same as sra-reports-rule
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.",
-			},
-
-			"assoc_auth_method_with_rules": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -161,64 +155,14 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		}
 	}()
 
-	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
-	if assocAuthMethod != nil {
-		for _, v := range assocAuthMethod {
-			assoc := v.(map[string]interface{})
-			authMethodName := assoc["am_name"].(string)
-			subClaims := assoc["sub_claims"].(map[string]interface{})
-			sc := make(map[string]string, len(subClaims))
-			for k, v := range subClaims {
-				sc[k] = v.(string)
-			}
-
-			asBody := akeyless.AssocRoleAuthMethod{
-				RoleName:  name,
-				AmName:    authMethodName,
-				SubClaims: &sc,
-				Token:     &token,
-			}
-
-			_, _, err = client.AssocRoleAuthMethod(ctx).Body(asBody).Execute()
-			if err != nil {
-				ok = false
-				if errors.As(err, &apiErr) {
-					return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create association: %v", string(apiErr.Body())))}
-				}
-				return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create association: %v", err))}
-			}
-		}
+	err, ok = assocRoleAuthMethod(ctx, d, m)
+	if !ok {
+		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
 
-	roleRules := d.Get("rules").([]interface{})
-	if roleRules != nil {
-		for _, v := range roleRules {
-			roles := v.(map[string]interface{})
-			capability := roles["capability"].(*schema.Set)
-			path := roles["path"].(string)
-			ruleType := roles["rule_type"].(string)
-
-			if ruleType == "search-rule" || ruleType == "reports-rule" {
-				warn = append(warn, common.WarningDiagnostics(
-					fmt.Sprint("Deprecated: rule types 'search-rule and reports-rule' are deprecated and will be removed, please use 'audit_access' or 'analytics_access' instead")))
-			}
-
-			setRoleRule := akeyless.SetRoleRule{
-				RoleName:   name,
-				Capability: common.ExpandStringList(capability.List()),
-				Path:       path,
-				RuleType:   akeyless.PtrString(ruleType),
-				Token:      &token,
-			}
-			_, _, err := client.SetRoleRule(ctx).Body(setRoleRule).Execute()
-			if err != nil {
-				ok = false
-				if errors.As(err, &apiErr) {
-					return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't set rules: %v", string(apiErr.Body())))}
-				}
-				return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't set rules: %v", err))}
-			}
-		}
+	err, ok = setRoleRule(ctx, d, m)
+	if !ok {
+		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
 
 	d.SetId(name)
@@ -242,14 +186,11 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	roleAsJson, err := json.Marshal(role)
-	if err != nil {
-		return err
-	}
-	//todo
-	err = d.Set("assoc_auth_method_with_rules", string(roleAsJson))
-	if err != nil {
-		return err
+	if role.Rules.PathRules != nil {
+		err = readRules(d, *role.Rules.PathRules)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -292,9 +233,9 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	err = updateRole(d, m, ctx)
-	if err != nil {
-		return fmt.Errorf("can't update role: %v", err)
+	err, ok := assocRoleAuthMethod(ctx, d, m)
+	if !ok {
+		return err
 	}
 
 	for _, v := range *role.Rules.PathRules {
@@ -316,62 +257,14 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if assocAuthMethod != nil {
-		for _, v := range assocAuthMethod {
-			assoc := v.(map[string]interface{})
-			authMethodName := assoc["am_name"].(string)
-			subClaims := assoc["sub_claims"].(map[string]interface{})
-			sc := make(map[string]string, len(subClaims))
-			for k, v := range subClaims {
-				sc[k] = v.(string)
-			}
-
-			asBody := akeyless.AssocRoleAuthMethod{
-				RoleName:  name,
-				AmName:    authMethodName,
-				SubClaims: &sc,
-				Token:     &token,
-			}
-
-			_, res, err := client.AssocRoleAuthMethod(ctx).Body(asBody).Execute()
-			if err != nil {
-				if errors.As(err, &apiErr) {
-					if res.StatusCode != http.StatusConflict {
-						return fmt.Errorf("can't create association: %v", string(apiErr.Body()))
-					}
-				} else {
-					return fmt.Errorf("can't create association: %v", err)
-				}
-			}
-		}
+	err, ok = setRoleRule(ctx, d, m)
+	if !ok {
+		return err
 	}
 
-	roleRules := d.Get("rules").([]interface{})
-	if roleRules != nil {
-		for _, v := range roleRules {
-			roles := v.(map[string]interface{})
-			capability := roles["capability"].(*schema.Set)
-			path := roles["path"].(string)
-			ruleType := roles["rule_type"].(string)
-
-			setRoleRule := akeyless.SetRoleRule{
-				RoleName:   name,
-				Capability: common.ExpandStringList(capability.List()),
-				Path:       path,
-				RuleType:   akeyless.PtrString(ruleType),
-				Token:      &token,
-			}
-			_, res, err := client.SetRoleRule(ctx).Body(setRoleRule).Execute()
-			if err != nil {
-				if errors.As(err, &apiErr) {
-					if res.StatusCode != http.StatusConflict {
-						return fmt.Errorf("can't set rules: %v", string(apiErr.Body()))
-					}
-
-				}
-				return fmt.Errorf("can't set rules: %v", err)
-			}
-		}
+	err = updateRoleAccessRules(d, m, ctx)
+	if err != nil {
+		return fmt.Errorf("can't update role access rule: %v", err)
 	}
 
 	d.SetId(name)
@@ -494,7 +387,131 @@ func getRole(d *schema.ResourceData, client akeyless.V2ApiService, body akeyless
 	return role, nil
 }
 
-func updateRole(d *schema.ResourceData, m interface{}, ctx context.Context) error {
+func readRules(d *schema.ResourceData, rules []akeyless.PathRule) error {
+	var err error
+
+	var roleRules []interface{}
+	for _, ruleSrc := range rules {
+
+		if isAccessRule(*ruleSrc.Type) {
+			err = setAccessRuleField(d, *ruleSrc.Type, *ruleSrc.Path)
+			if err != nil {
+				return err
+			}
+		} else {
+			rolesDst := make(map[string]interface{})
+
+			rolesDst["capability"] = *ruleSrc.Capabilities
+			rolesDst["path"] = *ruleSrc.Path
+			rolesDst["rule_type"] = *ruleSrc.Type
+
+			roleRules = append(roleRules, rolesDst)
+		}
+	}
+
+	err = d.Set("rules", roleRules)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func assocRoleAuthMethod(ctx context.Context, d *schema.ResourceData, m interface{}) (error, bool) {
+
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	name := d.Get("name").(string)
+
+	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
+	if assocAuthMethod != nil {
+		for _, v := range assocAuthMethod {
+			assoc := v.(map[string]interface{})
+			authMethodName := assoc["am_name"].(string)
+			subClaims := assoc["sub_claims"].(map[string]interface{})
+			sc := make(map[string]string, len(subClaims))
+			for k, v := range subClaims {
+				sc[k] = v.(string)
+			}
+
+			var apiErr akeyless.GenericOpenAPIError
+			asBody := akeyless.AssocRoleAuthMethod{
+				RoleName:  name,
+				AmName:    authMethodName,
+				SubClaims: &sc,
+				Token:     &token,
+			}
+
+			_, res, err := client.AssocRoleAuthMethod(ctx).Body(asBody).Execute()
+			if err != nil {
+				if errors.As(err, &apiErr) {
+					if res.StatusCode != http.StatusConflict {
+						err = fmt.Errorf("can't create association: %v", string(apiErr.Body()))
+						return err, false
+					}
+				} else {
+					err = fmt.Errorf("can't create association: %v", err)
+					return err, false
+				}
+			}
+		}
+	}
+	return nil, true
+}
+
+func setRoleRule(ctx context.Context, d *schema.ResourceData, m interface{}) (error, bool) {
+	var err error
+	var warn error
+
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	name := d.Get("name").(string)
+
+	roleRules := d.Get("rules").([]interface{})
+	if roleRules != nil {
+		for _, v := range roleRules {
+			var apiErr akeyless.GenericOpenAPIError
+
+			roles := v.(map[string]interface{})
+			capability := roles["capability"].(*schema.Set)
+			path := roles["path"].(string)
+			ruleType := roles["rule_type"].(string)
+			if ruleType == "search-rule" || ruleType == "reports-rule" || ruleType == "gw-reports-rule" || ruleType == "sra_reports_access" {
+				warnMsgToAppend := fmt.Sprint("Deprecated: rule types 'search-rule and reports-rule' are deprecated and will be removed, please use 'audit_access' or 'analytics_access' instead")
+				warn = fmt.Errorf("%v. %v", warn, warnMsgToAppend)
+			} else if ruleType != "item-rule" && ruleType != "role-rule" && ruleType != "target-rule" && ruleType != "auth-method-rule" {
+				err = fmt.Errorf("wrong rule types: %v", string(apiErr.Body()))
+				return err, false
+			}
+
+			setRoleRule := akeyless.SetRoleRule{
+				RoleName:   name,
+				Capability: common.ExpandStringList(capability.List()),
+				Path:       path,
+				RuleType:   akeyless.PtrString(ruleType),
+				Token:      &token,
+			}
+
+			_, _, err = client.SetRoleRule(ctx).Body(setRoleRule).Execute()
+			if err != nil {
+				if errors.As(err, &apiErr) {
+					err = fmt.Errorf("can't set rules: %v", string(apiErr.Body()))
+					return err, false
+				}
+				err = fmt.Errorf("can't set rules: %v", err)
+				return err, false
+			}
+		}
+	}
+
+	return warn, true
+}
+
+func updateRoleAccessRules(d *schema.ResourceData, m interface{}, ctx context.Context) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -514,15 +531,8 @@ func updateRole(d *schema.ResourceData, m interface{}, ctx context.Context) erro
 		SraReportsAccess:  akeyless.PtrString(sraReportsAccess),
 	}
 
-	fmt.Println("name:", updateBody.Name)
-	fmt.Println("AuditAccess:", *updateBody.AuditAccess)
-	fmt.Println("AnalyticsAccess:", *updateBody.AnalyticsAccess)
-	fmt.Println("GwAnalyticsAccess:", *updateBody.GwAnalyticsAccess)
-	fmt.Println("SraReportsAccess:", *updateBody.SraReportsAccess)
-
-	var err error
 	var apiErr akeyless.GenericOpenAPIError
-	_, _, err = client.UpdateRole(ctx).Body(updateBody).Execute()
+	_, _, err := client.UpdateRole(ctx).Body(updateBody).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("%v", string(apiErr.Body()))
@@ -531,4 +541,36 @@ func updateRole(d *schema.ResourceData, m interface{}, ctx context.Context) erro
 	}
 
 	return nil
+}
+
+func isAccessRule(roleType string) bool {
+	return roleType == "search-rule" || roleType == "reports-rule" || roleType == "gw-reports-rule" || roleType == "sra-reports-rule"
+}
+
+func setAccessRuleField(d *schema.ResourceData, roleType, rolePath string) error {
+
+	rolePath = convertPathName(rolePath)
+	switch roleType {
+	case "search-rule":
+		return d.Set("audit_access", rolePath)
+	case "reports-rule":
+		return d.Set("analytics_access", rolePath)
+	case "gw-reports-rule":
+		return d.Set("gw_analytics_access", rolePath)
+	case "sra-reports-rule":
+		return d.Set("sra_reports_access", rolePath)
+	default:
+		return nil
+	}
+}
+
+func convertPathName(rolePath string) string {
+	switch rolePath {
+	case "/*":
+		return "all"
+	case "/self":
+		return "own"
+	default:
+		return ""
+	}
 }
