@@ -13,8 +13,8 @@ import (
 )
 
 func TestOnlyRoleResourceCreate(t *testing.T) {
-	rolePath := testPath("test_role_assoc")
-	authMethodPath := testPath("path_auth_method")
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
@@ -47,9 +47,9 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 	})
 }
 
-func TestRoleWithAssocResourceUpdateRules(t *testing.T) {
-	rolePath := testPath("test_role_assoc")
-	authMethodPath := testPath("path_auth_method")
+func TestRoleResourceUpdateRules(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 	config := fmt.Sprintf(`
@@ -60,17 +60,17 @@ func TestRoleWithAssocResourceUpdateRules(t *testing.T) {
 		}
 
 		resource "akeyless_role" "test_role_assoc" {
-			name = "%v"
+			name 	= "%v"
 			assoc_auth_method {
-				am_name = "%v"
-				sub_claims = {
+				am_name 	= "%v"
+				sub_claims 	= {
 					"groups" = "admins,developers"  
 				}
 			}
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read"]
+				path 		= "/terraform-tests/*"
+				rule_type 	= "auth-method-rule"
 			}
 			audit_access 		= "all"
 			analytics_access 	= "none"
@@ -91,10 +91,10 @@ func TestRoleWithAssocResourceUpdateRules(t *testing.T) {
 		}
 
 		resource "akeyless_role" "test_role_assoc" {
-			name = "%v"
+			name 	= "%v"
 			assoc_auth_method {
-				am_name = "%v"
-				sub_claims = {
+				am_name 	= "%v"
+				sub_claims 	= {
 					"groups" = "admins,developers"
 				}
 			}
@@ -177,9 +177,10 @@ func TestRoleWithAssocResourceUpdateRules(t *testing.T) {
 		},
 	})
 }
-func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
-	rolePath := testPath("test_role_assoc")
-	authMethodPath := testPath("path_auth_method")
+
+func TestRoleResourceUpdateAssoc(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 	config := fmt.Sprintf(`
@@ -297,9 +298,9 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 	})
 }
 
-func TestAssocRoleAuthMethodResource(t *testing.T) {
-	rolePath := testPath("test_role_assoc")
-	authMethodPath := testPath("path_auth_method")
+func TestRoleResourceAuthMethod(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
