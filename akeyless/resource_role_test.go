@@ -73,11 +73,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				path 		= "/terraform-tests/*"
 				rule_type 	= "auth-method-rule"
 			}
-			rules {
-				capability 	= ["read"]
-				path 		= "/terraform-tests/*"
-				rule_type 	= "auth-method-rule"
-			}
 			audit_access 		= "all"
 			analytics_access 	= "none"
 			gw_analytics_access	= "own"
@@ -109,11 +104,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				path 		= "/terraform-tests/*"
 				rule_type 	= "auth-method-rule"
 			}
-			rules {
-				capability 	= ["read", "list"]
-				path 		= "/terraform-tests/*"
-				rule_type 	= "auth-method-rule"
-			}
 			audit_access 		= "all"
 			analytics_access 	= "none"
 			gw_analytics_access = "own"
@@ -139,11 +129,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				sub_claims 	= {
 					"groups" = "admins,developers"
 				}
-			}
-			rules {
-				capability 	= ["read"]
-				path 		= "/terraform-tests/*"
-				rule_type 	= "auth-method-rule"
 			}
 			rules {
 				capability 	= ["read"]
