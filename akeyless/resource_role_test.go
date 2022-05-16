@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOnlyRoleResourceCreate(t *testing.T) {
+func TestRoleResourceOnlyCreate(t *testing.T) {
 	rolePath := testPath("test_role_resource")
 	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
