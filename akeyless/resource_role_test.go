@@ -52,6 +52,7 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "auth_method" {
 			path = "%v"
@@ -74,7 +75,7 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "none"
-			gw_analytics_access = "own"
+			gw_analytics_access	= "own"
 			sra_reports_access 	= "all"
 			
 			depends_on = [
@@ -99,9 +100,14 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				}
 			}
 			rules {
-				capability = ["read", "list"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read", "list"]
+				path 		= "/terraform-tests/*"
+				rule_type 	= "auth-method-rule"
+			}
+			rules {
+				capability 	= ["read", "list"]
+				path 		= "/terraform-tests/*"
+				rule_type 	= "auth-method-rule"
 			}
 			audit_access 		= "all"
 			analytics_access 	= "none"
@@ -124,15 +130,20 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			assoc_auth_method {
-				am_name = "%v"
-				sub_claims = {
+				am_name 	= "%v"
+				sub_claims 	= {
 					"groups" = "admins,developers"
 				}
 			}
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read"]
+				path 		= "/terraform-tests/*"
+				rule_type 	= "auth-method-rule"
+			}
+			rules {
+				capability 	= ["read"]
+				path 		= "/terraform-tests/*"
+				rule_type 	= "auth-method-rule"
 			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
@@ -183,6 +194,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "auth_method" {
 			path = "%v"
