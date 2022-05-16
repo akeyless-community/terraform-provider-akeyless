@@ -223,7 +223,7 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 			assoc_auth_method {
 				am_name 	= "%v"
 				sub_claims 	= {
-					"groups" = "admins,seniors"
+					"groups" = "dogs,rats"
 				}
 			}
 			rules {
@@ -312,20 +312,21 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read"]
+				path 		= "/terraform-tests/*"
+				rule_type 	= "auth-method-rule"
 			}
-			audit_access = "all"
-			analytics_access = "all"
+			audit_access 		= "all"
+			analytics_access 	= "all"
 		}
 		resource "akeyless_associate_role_auth_method" "aa" {
-			am_name = "%v"
-			role_name = "%v"
-			sub_claims = {
+			am_name 	= "%v"
+			role_name 	= "%v"
+			sub_claims 	= {
 				"groups" = "admins,developers"  
 			}
 			case_sensitive = "true"
+
 		depends_on = [
 				akeyless_auth_method.auth_method,
 				akeyless_role.test_role_assoc,
@@ -343,20 +344,20 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read"]
+				path 		= "/terraform-tests/*"
+				rule_type 	= "auth-method-rule"
 			}
-			audit_access = "all"
-			analytics_access = "all"
+			audit_access 		= "all"
+			analytics_access 	= "all"
 		}
 		
 		resource "akeyless_associate_role_auth_method" "aa" {
-			am_name = "%v"
-			role_name = "%v"
-			sub_claims = {
-				"groups" = "admins" 
-				"groups2" = "developers,hhh"  
+			am_name 	= "%v"
+			role_name 	= "%v"
+			sub_claims 	= {
+				"groups" 	= "admins" 
+				"groups2" 	= "developers,hhh"  
 			}
 			case_sensitive = "true"
 
