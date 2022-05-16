@@ -73,6 +73,11 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				path 		= "/terraform-tests/*"
 				rule_type 	= "auth-method-rule"
 			}
+			rules {
+				capability 	= ["read"]
+				path 		= "/terraform-tests/*"
+				rule_type 	= "auth-method-rule"
+			}
 			audit_access 		= "all"
 			analytics_access 	= "none"
 			gw_analytics_access	= "own"
@@ -205,8 +210,8 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			assoc_auth_method {
-				am_name = "%v"
-				sub_claims = {
+				am_name 	= "%v"
+				sub_claims 	= {
 					"groups" = "admins,developers"  
 				}
 			}
@@ -461,7 +466,6 @@ func checkAssocExistsRemotely(t *testing.T, roleName, authMethodPath string) res
 
 func checkAssocExistsRemotely2(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
