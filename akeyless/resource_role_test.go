@@ -47,7 +47,7 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 	})
 }
 
-func TestRoleWithAssocResourceUpdateAccessRules(t *testing.T) {
+func TestRoleWithAssocResourceUpdateRules(t *testing.T) {
 	rolePath := testPath("test_role_assoc")
 	authMethodPath := testPath("path_auth_method")
 	deleteRole(rolePath)
@@ -223,7 +223,7 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 			assoc_auth_method {
 				am_name 	= "%v"
 				sub_claims 	= {
-					"groups" = "admins,developers"
+					"groups" = "admins,seniors"
 				}
 			}
 			rules {
