@@ -13,8 +13,8 @@ import (
 )
 
 func TestRoleResourceOnlyCreate(t *testing.T) {
-	rolePath := testPath("test_role_resource")
-	authMethodPath := testPath("test_am_resource")
+	rolePath := testPath("test_role_resource_only_create")
+	authMethodPath := testPath("test_am_resource_only_create")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
@@ -48,8 +48,8 @@ func TestRoleResourceOnlyCreate(t *testing.T) {
 }
 
 func TestRoleResourceUpdateRules(t *testing.T) {
-	rolePath := testPath("test_role_resource")
-	authMethodPath := testPath("test_am_resource")
+	rolePath := testPath("test_role_resource_update_rules")
+	authMethodPath := testPath("test_am_resource_update_rules")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
@@ -195,8 +195,8 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 }
 
 func TestRoleResourceUpdateAssoc(t *testing.T) {
-	rolePath := testPath("test_role_resource")
-	authMethodPath := testPath("test_am_resource")
+	rolePath := testPath("test_role_resource_update_assoc")
+	authMethodPath := testPath("test_am_resource_update_assoc")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
@@ -315,9 +315,9 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 	})
 }
 
-func TestRoleResourceAuthMethod(t *testing.T) {
-	rolePath := testPath("test_role_resource")
-	authMethodPath := testPath("test_am_resource")
+func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
+	rolePath := testPath("test_role_resource_and_assoc_auth_method")
+	authMethodPath := testPath("test_am_resource_and_assoc_auth_method")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
