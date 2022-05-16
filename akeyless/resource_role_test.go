@@ -20,7 +20,7 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "test_auth_method" {
-			path 	= "%v"
+			path = "%v"
 			api_key {
 			}
 		}
