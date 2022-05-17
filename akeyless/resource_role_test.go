@@ -150,25 +150,25 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 5),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 5),
+					checkAddRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 6),
+					checkUpdateRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 5),
+					checkRemoveRoleRemotely(t, rolePath, 3),
 				),
 			},
 		},
