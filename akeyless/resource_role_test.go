@@ -77,8 +77,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "none"
-			gw_analytics_access	= "own"
-			sra_reports_access 	= "all"
 			
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -107,9 +105,7 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				rule_type 	= "auth-method-rule"
 			}
 			audit_access 		= "all"
-			analytics_access 	= "none"
-			gw_analytics_access = "own"
-			sra_reports_access 	= "all"
+			analytics_access 	= "own"
 			  
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -139,8 +135,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
-			gw_analytics_access = "own"
-			sra_reports_access 	= "own"
 
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
