@@ -142,19 +142,19 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		}
 		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create Role: %v", err))}
 	}
-	defer func() {
-		if !ok {
-			deleteRole := akeyless.DeleteRole{
-				Name:  name,
-				Token: &token,
-			}
+	// defer func() {
+	// 	if !ok {
+	// 		deleteRole := akeyless.DeleteRole{
+	// 			Name:  name,
+	// 			Token: &token,
+	// 		}
 
-			_, _, err = client.DeleteRole(ctx).Body(deleteRole).Execute()
-			if err != nil {
-				ret = diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("fatal error: role created with errors and failed to be deleted: %v", err))}
-			}
-		}
-	}()
+	// 		_, _, err = client.DeleteRole(ctx).Body(deleteRole).Execute()
+	// 		if err != nil {
+	// 			ret = diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("fatal error: role created with errors and failed to be deleted: %v", err))}
+	// 		}
+	// 	}
+	// }()
 
 	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
 	err, ok = assocRoleAuthMethod(ctx, name, assocAuthMethod, m)
