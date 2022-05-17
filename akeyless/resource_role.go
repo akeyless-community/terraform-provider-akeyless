@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+var restrictedRules []string
 
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
@@ -112,7 +113,6 @@ func resourceRole() *schema.Resource {
 }
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (ret diag.Diagnostics) {
-	fmt.Println("--- create ---")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -158,45 +158,10 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		}
 	}()
 
-	sec := 3
-	fmt.Println("--------------------------------------")
-	fmt.Println("SLEEP FOR", sec, "SECONDS ...")
-	time.Sleep(time.Duration(sec) * time.Second)
-	fmt.Println("--------------------------------------")
-
-	// clean up rules
-	role, err := getRole(d, client, name, token)
+	err = initRestrictedRules(d, client, name, token)
 	if err != nil {
-		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't get role: %v", err))}
-	}
-
-	fmt.Println("rules1:")
-	if role.Rules.PathRules != nil {
-		rules := *role.Rules.PathRules
-		for _, ruleSrc := range rules {
-			fmt.Println("capability:", *ruleSrc.Capabilities)
-			fmt.Println("path:", *ruleSrc.Path)
-			fmt.Println("type:", *ruleSrc.Type)
-		}
-	} else {
-		fmt.Println(role.Rules.PathRules)
-	}
-
-	err, ok = deleteRoleRules(ctx, name, role.Rules.PathRules, m)
-	if !ok {
-		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't delete role rules: %v", err))}
-	}
-
-	fmt.Println("rules2:")
-	if role.Rules.PathRules != nil {
-		rules := *role.Rules.PathRules
-		for _, ruleSrc := range rules {
-			fmt.Println("capability:", *ruleSrc.Capabilities)
-			fmt.Println("path:", *ruleSrc.Path)
-			fmt.Println("type:", *ruleSrc.Type)
-		}
-	} else {
-		fmt.Println(role.Rules.PathRules)
+		ok = false
+		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
 
 	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
@@ -216,8 +181,23 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return warn
 }
 
+func initRestrictedRules(d *schema.ResourceData, client akeyless.V2ApiService, name, token string) error {
+	role, err := getRole(d, client, name, token)
+	if err != nil {
+		return fmt.Errorf("can't get old role: %v", err)
+	}
+
+	if role.Rules.PathRules != nil {
+		rules := *role.Rules.PathRules
+		for _, ruleSrc := range rules {
+			restrictedRules = append(restrictedRules, *ruleSrc.Path)
+		}
+	}
+
+	return nil
+}
+
 func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- read ---")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -229,10 +209,15 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	fmt.Println("rules:", role.Rules.PathRules)
-
 	if role.Rules.PathRules != nil {
 		err = readRules(d, *role.Rules.PathRules)
+		if err != nil {
+			return err
+		}
+	}
+
+	if role.RoleAuthMethodsAssoc != nil && len(d.Get("assoc_auth_method").([]interface{})) != 0 {
+		err = readAuthMethodsAssoc(d, *role.RoleAuthMethodsAssoc)
 		if err != nil {
 			return err
 		}
@@ -242,7 +227,6 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
-	fmt.Println("--- update ---")
 	ok := true
 	provider := m.(providerMeta)
 	client := *provider.client
@@ -328,7 +312,6 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 }
 
 func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- delete ---")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -395,7 +378,6 @@ func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	fmt.Println("--- import ---")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -444,6 +426,32 @@ func getRole(d *schema.ResourceData, client akeyless.V2ApiService, name, token s
 	return role, nil
 }
 
+func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc []akeyless.RoleAuthMethodAssociation) error {
+	var err error
+
+	var roleAuthMethodsAssoc []interface{}
+	for _, assosSrc := range authMethodsAssoc {
+		rolesDst := make(map[string]interface{})
+		rolesDst["am_name"] = *assosSrc.AuthMethodName
+
+		subClaims := *assosSrc.AuthMethodSubClaims
+		sc := make(map[string]string, len(subClaims))
+		for k, v := range subClaims {
+			sc[k] = strings.Join(v, ",")
+		}
+		rolesDst["sub_claims"] = sc
+
+		roleAuthMethodsAssoc = append(roleAuthMethodsAssoc, rolesDst)
+	}
+
+	err = d.Set("assoc_auth_method", roleAuthMethodsAssoc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func readRules(d *schema.ResourceData, rules []akeyless.PathRule) error {
 	var err error
 
@@ -456,13 +464,20 @@ func readRules(d *schema.ResourceData, rules []akeyless.PathRule) error {
 				return err
 			}
 		} else {
-			rolesDst := make(map[string]interface{})
-
-			rolesDst["capability"] = *ruleSrc.Capabilities
-			rolesDst["path"] = *ruleSrc.Path
-			rolesDst["rule_type"] = *ruleSrc.Type
-
-			roleRules = append(roleRules, rolesDst)
+			isAdminRule := false
+			for _, adminRule := range restrictedRules {
+				if *ruleSrc.Path == adminRule {
+					isAdminRule = true
+					break
+				}
+			}
+			if !isAdminRule {
+				rolesDst := make(map[string]interface{})
+				rolesDst["capability"] = *ruleSrc.Capabilities
+				rolesDst["path"] = *ruleSrc.Path
+				rolesDst["rule_type"] = *ruleSrc.Type
+				roleRules = append(roleRules, rolesDst)
+			}
 		}
 	}
 

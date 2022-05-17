@@ -15,8 +15,8 @@ import (
 const RULE_PATH = "/terraform-tests/*"
 
 func TestRoleResourceOnlyCreate(t *testing.T) {
-	rolePath := testPath("test_role_resource_only_create")
-	authMethodPath := testPath("test_am_resource_only_create")
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
@@ -50,19 +50,19 @@ func TestRoleResourceOnlyCreate(t *testing.T) {
 }
 
 func TestRoleResourceUpdateRules(t *testing.T) {
-	rolePath := testPath("test_role_resource_update_rules")
-	authMethodPath := testPath("test_am_resource_update_rules")
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
 
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name 	= "%v"
 			assoc_auth_method {
 				am_name 	= "%v"
@@ -81,19 +81,19 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			sra_reports_access 	= "all"
 			
 			depends_on = [
-    			akeyless_auth_method.auth_method,
+    			akeyless_auth_method.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
 
 	configAddRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
 
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name 	= "%v"
 			assoc_auth_method {
 				am_name 	= "%v"
@@ -112,19 +112,19 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			sra_reports_access 	= "all"
 			  
 			depends_on = [
-    			akeyless_auth_method.auth_method,
+    			akeyless_auth_method.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
 
 	configUpdateRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
 
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name = "%v"
 			assoc_auth_method {
 				am_name 	= "%v"
@@ -143,10 +143,131 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			sra_reports_access 	= "own"
 
 			depends_on = [
-    			akeyless_auth_method.auth_method,
+    			akeyless_auth_method.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
+
+	configRemoveRole := config
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 5),
+				),
+			},
+			{
+				Config: configAddRole,
+				Check: resource.ComposeTestCheckFunc(
+					checkAddRoleRemotely(t, rolePath, 5),
+				),
+			},
+			{
+				Config: configUpdateRole,
+				Check: resource.ComposeTestCheckFunc(
+					checkUpdateRoleRemotely(t, rolePath, 6),
+				),
+			},
+			{
+				Config: configRemoveRole,
+				Check: resource.ComposeTestCheckFunc(
+					checkRemoveRoleRemotely(t, rolePath, 5),
+				),
+			},
+		},
+	})
+}
+
+func TestRoleResourceUpdateAssoc(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
+	deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method" "test_auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+
+		resource "akeyless_role" "test_role" {
+			name = "%v"
+			assoc_auth_method {
+				am_name 	= "%v"
+				sub_claims 	= {
+					"groups" = "admins,developers"  
+				}
+			}
+			rules {
+				capability 	= ["read"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
+			}
+			audit_access 		= "all"
+			analytics_access 	= "all"
+			  
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
+		}
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
+
+	configAddRole := fmt.Sprintf(`
+		resource "akeyless_auth_method" "test_auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+
+		resource "akeyless_role" "test_role" {
+			name = "%v"
+			assoc_auth_method {
+				am_name 	= "%v"
+				sub_claims 	= {
+					"groups" = "dogs,rats"
+				}
+			}
+			rules {
+				capability 	= ["read" , "list"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
+			}
+			audit_access 		= "all"
+			analytics_access 	= "all"
+			  
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
+		}
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
+
+	configUpdateRole := fmt.Sprintf(`
+		resource "akeyless_auth_method" "test_auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+
+		resource "akeyless_role" "test_role" {
+			name = "%v"
+			rules {
+				capability 	= ["read"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
+			}
+
+			audit_access 		= "all"
+			analytics_access 	= "own"
+
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
+		}
+	`, authMethodPath, rolePath, RULE_PATH)
 
 	configRemoveRole := config
 
@@ -168,7 +289,7 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 5),
+					checkUpdateRoleRemotelyNoAcc(t, rolePath, 4),
 				),
 			},
 			{
@@ -181,140 +302,19 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 	})
 }
 
-func TestRoleResourceUpdateAssoc(t *testing.T) {
-	rolePath := testPath("test_role_resource_update_assoc")
-	authMethodPath := testPath("test_am_resource_update_assoc")
-	deleteRole(rolePath)
-	deleteAuthMethod(authMethodPath)
-
-	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
-			path = "%v"
-			api_key {
-			}
-		}
-
-		resource "akeyless_role" "test_role_assoc" {
-			name = "%v"
-			assoc_auth_method {
-				am_name 	= "%v"
-				sub_claims 	= {
-					"groups" = "admins,developers"  
-				}
-			}
-			rules {
-				capability 	= ["read"]
-				path 		= "%v"
-				rule_type 	= "auth-method-rule"
-			}
-			audit_access 		= "all"
-			analytics_access 	= "all"
-			  
-			depends_on = [
-    			akeyless_auth_method.auth_method,
-  			]
-		}
-	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
-
-	configAddRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
-			path = "%v"
-			api_key {
-			}
-		}
-
-		resource "akeyless_role" "test_role_assoc" {
-			name = "%v"
-			assoc_auth_method {
-				am_name 	= "%v"
-				sub_claims 	= {
-					"groups" = "dogs,rats"
-				}
-			}
-			rules {
-				capability 	= ["read" , "list"]
-				path 		= "%v"
-				rule_type 	= "auth-method-rule"
-			}
-			audit_access 		= "all"
-			analytics_access 	= "all"
-			  
-			depends_on = [
-    			akeyless_auth_method.auth_method,
-  			]
-		}
-	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
-
-	configUpdateRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
-			path = "%v"
-			api_key {
-			}
-		}
-
-		resource "akeyless_role" "test_role_assoc" {
-			name = "%v"
-			rules {
-				capability 	= ["read"]
-				path 		= "%v"
-				rule_type 	= "auth-method-rule"
-			}
-
-			audit_access 		= "all"
-			analytics_access 	= "own"
-
-			depends_on = [
-    			akeyless_auth_method.auth_method,
-  			]
-		}
-	`, authMethodPath, rolePath, RULE_PATH)
-
-	configRemoveRole := config
-
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
-				),
-			},
-			{
-				Config: configAddRole,
-				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 3),
-				),
-			},
-			{
-				Config: configUpdateRole,
-				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotelyNoAcc(t, rolePath, 3),
-				),
-			},
-			{
-				Config: configRemoveRole,
-				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 3),
-				),
-			},
-		},
-	})
-}
-
 func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
-	rolePath := testPath("test_role_resource_and_assoc_auth_method")
-	authMethodPath := testPath("test_am_resource_and_assoc_auth_method")
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name = "%v"
 			rules {
 				capability 	= ["read"]
@@ -333,20 +333,20 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 			case_sensitive = "true"
 
 		depends_on = [
-				akeyless_auth_method.auth_method,
-				akeyless_role.test_role_assoc,
+				akeyless_auth_method.test_auth_method,
+				akeyless_role.test_role,
 	 		]
 		}
 	`, authMethodPath, rolePath, RULE_PATH, authMethodPath, rolePath)
 
 	configUpdateRole := fmt.Sprintf(`
 
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name = "%v"
 			rules {
 				capability 	= ["read"]
@@ -367,8 +367,8 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 			case_sensitive = "true"
 
 		depends_on = [
-				akeyless_auth_method.auth_method,
-				akeyless_role.test_role_assoc,
+				akeyless_auth_method.test_auth_method,
+				akeyless_role.test_role,
 	 		]
 		}
 	`, authMethodPath, rolePath, RULE_PATH, authMethodPath, rolePath)
@@ -471,7 +471,7 @@ func checkAssocExistsRemotely2(t *testing.T, roleName, authMethodPath string) re
 			if k == "groups" {
 				assert.Equal(t, strings.Split("admins", ","), v)
 			} else if k == "groups2" {
-				assert.Equal(t, strings.Split("developers,hhh", ","), v)
+				assert.Equal(t, strings.Split("dogs,rats", ","), v)
 			} else {
 				t.Fail()
 			}
