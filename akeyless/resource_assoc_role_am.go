@@ -99,12 +99,7 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 
 	id := d.Id()
 
-	body := akeyless.GetRole{
-		Name:  roleName,
-		Token: &token,
-	}
-
-	role, err := getRole(d, client, body)
+	role, err := getRole(d, client, roleName, token)
 	if err != nil {
 		return err
 	}
@@ -222,12 +217,7 @@ func resourceAssocRoleAmImport(d *schema.ResourceData, m interface{}) ([]*schema
 
 	id := d.Id()
 
-	body := akeyless.GetRole{
-		Name:  roleName,
-		Token: &token,
-	}
-
-	role, err := getRole(d, client, body)
+	role, err := getRole(d, client, roleName, token)
 	if err != nil {
 		return nil, err
 	}
