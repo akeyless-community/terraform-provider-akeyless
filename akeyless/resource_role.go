@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -155,6 +156,12 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 			}
 		}
 	}()
+
+	sec := 10
+	fmt.Println("--------------------------------------")
+	fmt.Println("SLEEP FOR", sec, "SECONDS ...")
+	time.Sleep(time.Duration(sec) * time.Second)
+	fmt.Println("--------------------------------------")
 
 	// clean up rules
 	role, err := getRole(d, client, name, token)
