@@ -12,6 +12,7 @@ import (
 )
 
 func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
+	t.Skip("")
 	name := "test_auth_method"
 	path := testPath("path_auth_method")
 	config := fmt.Sprintf(`
@@ -46,6 +47,7 @@ func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
+	t.Skip("")
 	name := "test_auth_method_aws_iam"
 	path := testPath("path_auth_method_aws_iam")
 	config := fmt.Sprintf(`
@@ -82,6 +84,7 @@ func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
+	t.Skip("")
 	name := "test_auth_method_saml2"
 	path := testPath(name)
 	config := fmt.Sprintf(`
@@ -121,6 +124,7 @@ func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
+	t.Skip("")
 	name := "test_auth_method_azure_ad"
 	path := testPath("path_auth_method_azure_ad")
 	config := fmt.Sprintf(`
@@ -159,6 +163,7 @@ func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
+	t.Skip("")
 	if os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT") == "" || os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC") == "" {
 		return
 	}
@@ -204,6 +209,7 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
+	t.Skip("")
 	name := "test_auth_method_universal_identity"
 	path := testPath("auth_method_universal_identity")
 	config := fmt.Sprintf(`
@@ -241,6 +247,7 @@ func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodOicdResourceCreateNew(t *testing.T) {
+	t.Skip("")
 	name := "test_auth_method_oidc"
 	path := testPath("auth_method_oidc")
 	config := fmt.Sprintf(`
@@ -284,6 +291,7 @@ func TestAuthMethodOicdResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
+	t.Skip("")
 	name := "tes_akeyless_auth_method_oauth2"
 	path := testPath("auth_method_oauth2")
 	config := fmt.Sprintf(`
@@ -324,6 +332,7 @@ func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
+	t.Skip("")
 	name := "test_auth_method_K8s_3"
 	path := testPath("auth_method_K8s_test")
 	config := fmt.Sprintf(`

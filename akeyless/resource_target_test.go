@@ -11,6 +11,7 @@ import (
 )
 
 func TestGithubTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "github_test"
 	secretPath := testPath("terraform_tests")
 	config := fmt.Sprintf(`
@@ -34,6 +35,7 @@ func TestGithubTargetResource(t *testing.T) {
 }
 
 func TestAwsTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "aws123"
 	secretPath := testPath("aws_target1")
 	config := fmt.Sprintf(`
@@ -56,6 +58,7 @@ func TestAwsTargetResource(t *testing.T) {
 }
 
 func TestAzureTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "Azure123"
 	secretPath := testPath("Azure_target1")
 	config := fmt.Sprintf(`
@@ -82,6 +85,7 @@ func TestAzureTargetResource(t *testing.T) {
 }
 
 func TestWebTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "web123"
 	secretPath := testPath("web_target1")
 	config := fmt.Sprintf(`
@@ -104,6 +108,7 @@ func TestWebTargetResource(t *testing.T) {
 }
 
 func TestSSHTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "ssh123"
 	secretPath := testPath("ssh_target1")
 	config := fmt.Sprintf(`
@@ -130,6 +135,7 @@ func TestSSHTargetResource(t *testing.T) {
 }
 
 func TestArtifactoryTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "artifactory123"
 	secretPath := testPath("artifactory_target1")
 	config := fmt.Sprintf(`
@@ -155,6 +161,7 @@ func TestArtifactoryTargetResource(t *testing.T) {
 }
 
 func TestGcpTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "gcp123"
 	secretPath := testPath("gcp_target1")
 	config := fmt.Sprintf(`
@@ -178,6 +185,7 @@ func TestGcpTargetResource(t *testing.T) {
 }
 
 func TestGkeTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "gke123"
 	secretPath := testPath("gke_target1")
 	config := fmt.Sprintf(`
@@ -206,6 +214,7 @@ func TestGkeTargetResource(t *testing.T) {
 }
 
 func TestK8sTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "k8s123"
 	secretPath := testPath("k8s_target1")
 	config := fmt.Sprintf(`
@@ -231,6 +240,7 @@ func TestK8sTargetResource(t *testing.T) {
 }
 
 func TestDbTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "Db123"
 	secretPath := testPath("db_target1")
 	config := fmt.Sprintf(`
@@ -261,6 +271,7 @@ func TestDbTargetResource(t *testing.T) {
 }
 
 func TestEksTargetResource(t *testing.T) {
+	t.Skip("")
 	secretName := "eks123"
 	secretPath := testPath("eks_target1")
 	config := fmt.Sprintf(`

@@ -13,6 +13,7 @@ import (
 )
 
 func TestDfcKeyRsaResource(t *testing.T) {
+	t.Skip("")
 	name := "test_rsa_key"
 	itemPath := testPath("path_rsa_key1ss")
 	config := fmt.Sprintf(`
@@ -36,6 +37,7 @@ func TestDfcKeyRsaResource(t *testing.T) {
 }
 
 func TestRsaPublicResource(t *testing.T) {
+	t.Skip("")
 	name := "test_rsa_pub_key"
 	itemPath := testPath("path_rsa_pub_key")
 	config := fmt.Sprintf(`
@@ -54,6 +56,7 @@ func TestRsaPublicResource(t *testing.T) {
 }
 
 func TestDfcKeyResource(t *testing.T) {
+	t.Skip("")
 	name := "test_dfc_key"
 	itemPath := testPath("path_dfc_key12")
 	config := fmt.Sprintf(`
@@ -77,6 +80,7 @@ func TestDfcKeyResource(t *testing.T) {
 }
 
 func TestPkiResource(t *testing.T) {
+	t.Skip("")
 	name := "test_pki"
 	itemPath := testPath("path_pki")
 	deleteKey("terraform-tests/test_pki_key")
@@ -124,6 +128,7 @@ func TestPkiResource(t *testing.T) {
 }
 
 func TestSshCertResource(t *testing.T) {
+	t.Skip("")
 	name := "test_ssh"
 	itemPath := testPath("path_ssh")
 	deleteKey("/terraform-tests/test_ssh_key")
