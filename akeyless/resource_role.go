@@ -84,25 +84,25 @@ func resourceRole() *schema.Resource {
 					},
 				},
 			},
-			"audit_access": { // same as search-rule
+			"audit_access": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.",
 			},
-			"analytics_access": { // same as reports-rule
+			"analytics_access": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
 			},
-			"gw_analytics_access": { // same as gw-reports-rule
+			"gw_analytics_access": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
 			},
-			"sra_reports_access": { // same as sra-reports-rule
+			"sra_reports_access": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
