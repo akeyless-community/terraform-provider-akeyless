@@ -195,6 +195,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 				sub_claims 	= {
 					"groups" = "admins,developers"  
 				}
+				case_sensitive = "false"
 			}
 			rules {
 				capability 	= ["read"]
@@ -203,7 +204,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
-			  
+			
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
   			]
@@ -283,7 +284,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotelyNoAcc(t, rolePath, 4),
+					checkUpdateRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{

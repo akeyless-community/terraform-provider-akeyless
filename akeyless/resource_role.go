@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
@@ -13,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var restrictedRules []string
+var restrictedRules []map[string]string
 
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
@@ -42,6 +44,7 @@ func resourceRole() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "Create an association between role and auth method",
+				Deprecated:  "Deprecated: Please use new resource: akeyless_associate_role_auth_method",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"am_name": {
@@ -54,6 +57,13 @@ func resourceRole() *schema.Resource {
 							Optional:    true,
 							Description: "key/val of sub claims, e.g group=admins,developers",
 							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+						"case_sensitive": {
+							Type:        schema.TypeString,
+							Required:    false,
+							Optional:    true,
+							Description: "Treat sub claims as case-sensitive",
+							Default:     "true",
 						},
 					},
 				},
@@ -146,32 +156,28 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	defer func() {
 		if !ok {
-			deleteRole := akeyless.DeleteRole{
-				Name:  name,
-				Token: &token,
-			}
-
-			_, _, err = client.DeleteRole(ctx).Body(deleteRole).Execute()
+			err = resourceRoleDelete(d, m)
 			if err != nil {
 				ret = diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("fatal error: role created with errors and failed to be deleted: %v", err))}
 			}
 		}
 	}()
 
-	err = initRestrictedRules(d, client, name, token)
+	// rules that created by admin of this account, and can't be removed (usually "deny" rules).
+	err = initRestrictedRules(d, name, m)
 	if err != nil {
 		ok = false
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
 
 	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
-	err, ok = assocRoleAuthMethod(ctx, name, assocAuthMethod, m)
+	err, ok = assocRoleAuthMethod(ctx, name, nil, assocAuthMethod, nil, m)
 	if !ok {
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
 
 	roleRules := d.Get("rules").([]interface{})
-	err, ok = setRoleRule(ctx, name, roleRules, m)
+	err, ok = setRoleRules(ctx, name, nil, roleRules, m)
 	if !ok {
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
@@ -181,8 +187,8 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return warn
 }
 
-func initRestrictedRules(d *schema.ResourceData, client akeyless.V2ApiService, name, token string) error {
-	role, err := getRole(d, client, name, token)
+func initRestrictedRules(d *schema.ResourceData, name string, m interface{}) error {
+	role, err := getRole(d, name, m)
 	if err != nil {
 		return fmt.Errorf("can't get old role: %v", err)
 	}
@@ -190,7 +196,11 @@ func initRestrictedRules(d *schema.ResourceData, client akeyless.V2ApiService, n
 	if role.Rules.PathRules != nil {
 		rules := *role.Rules.PathRules
 		for _, ruleSrc := range rules {
-			restrictedRules = append(restrictedRules, *ruleSrc.Path)
+			rule := make(map[string]string)
+			rule["path"] = *ruleSrc.Path
+			rule["rule_type"] = *ruleSrc.Type
+			rule["capability"] = strings.Join(*ruleSrc.Capabilities, ",")
+			restrictedRules = append(restrictedRules, rule)
 		}
 	}
 
@@ -198,13 +208,9 @@ func initRestrictedRules(d *schema.ResourceData, client akeyless.V2ApiService, n
 }
 
 func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
-
 	name := d.Id()
 
-	role, err := getRole(d, client, name, token)
+	role, err := getRole(d, name, m)
 	if err != nil {
 		return err
 	}
@@ -228,83 +234,69 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	ok := true
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
 	name := d.Get("name").(string)
 	ctx := context.Background()
 
-	role, err := getRole(d, client, name, token)
+	role, err := getRole(d, name, m)
 	if err != nil {
 		return err
 	}
 
-	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
-	assocAuthMethodOldValues := saveAssocAuthMethodOldValues(role.RoleAuthMethodsAssoc)
+	assocAuthMethodNewValues := d.Get("assoc_auth_method").([]interface{})
+	if len(assocAuthMethodNewValues) > 0 {
+		assocAuthMethodOldValues := saveAssocAuthMethodOldValues(role.RoleAuthMethodsAssoc)
 
-	err, ok = deleteRoleAuthMethods(ctx, name, assocAuthMethod, role.RoleAuthMethodsAssoc, m)
-	if !ok {
-		return err
-	}
-	defer func() {
+		assocsToAdd, assosToUpdateNew := extractAssocsToCreateAndUpdate(assocAuthMethodNewValues, assocAuthMethodOldValues)
+		assocsToDelete, assocToRewrite := extractAssocsToCreateAndUpdate(assocAuthMethodOldValues, assocAuthMethodNewValues)
+
+		err, ok = assocRoleAuthMethod(ctx, name, assocsToDelete, assocsToAdd, assosToUpdateNew, m)
 		if !ok {
-			errInner, okInner := assocRoleAuthMethod(ctx, name, assocAuthMethodOldValues, m)
-			if !okInner {
-				err = fmt.Errorf("fatal error, can't restore role association after bad update: %v", errInner)
-			}
+			return err
 		}
-	}()
-
-	err, ok = assocRoleAuthMethod(ctx, name, assocAuthMethod, m)
-	if !ok {
-		return err
+		defer func() {
+			if !ok {
+				err, _ = assocRoleAuthMethod(ctx, name, assocsToAdd, assocsToDelete, assocToRewrite, m)
+				if err != nil {
+					err = fmt.Errorf("fatal error, can't delete new role association after bad update: %v", err)
+				}
+			}
+		}()
 	}
-	defer func() {
+
+	roleRulesNewValues := d.Get("rules").([]interface{})
+	if len(roleRulesNewValues) > 0 {
+		roleRulesOldValues := saveRoleRuleOldValues(role.Rules.PathRules)
+
+		rulesToAdd := extractRulesToSet(roleRulesNewValues, roleRulesOldValues)
+		rulesToDelete := extractRulesToSet(roleRulesOldValues, roleRulesNewValues)
+
+		err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, m)
 		if !ok {
-			err, _ = deleteRoleAuthMethods(ctx, name, assocAuthMethodOldValues, role.RoleAuthMethodsAssoc, m)
-			if err != nil {
-				err = fmt.Errorf("fatal error, can't delete new role association after bad update: %v", err)
-			}
+			return err
 		}
-	}()
-
-	roleRules := d.Get("rules").([]interface{})
-	roleRulesOldValues := saveRoleRuleOldValues(role.Rules.PathRules)
-
-	err, ok = deleteRoleRules(ctx, name, role.Rules.PathRules, m)
-	if !ok {
-		return err
+		defer func() {
+			if !ok {
+				err, _ = setRoleRules(ctx, name, rulesToAdd, rulesToDelete, m)
+				if err != nil {
+					err = fmt.Errorf("fatal error, can't delete new role rules after bad update: %v", err)
+				}
+			}
+		}()
 	}
-	defer func() {
-		if !ok {
-			errInner, okInner := setRoleRule(ctx, name, roleRulesOldValues, m)
-			if !okInner {
-				err = fmt.Errorf("fatal error, can't restore role rules after bad update: %v", errInner)
-			} else {
-				err = nil
-			}
-		}
-	}()
 
-	err, ok = setRoleRule(ctx, name, roleRules, m)
-	if !ok {
-		return err
-	}
-	defer func() {
-		if !ok {
-			err, _ = deleteRoleRules(ctx, name, role.Rules.PathRules, m)
-			if err != nil {
-				err = fmt.Errorf("fatal error, can't delete new role rules after bad update: %v", err)
-			}
-		}
-	}()
+	accessRulesNewValues := getNewAccessRules(d)
+	accessRulesOldValues := saveRoleAccessRuleOldValues(role.Rules.PathRules)
 
-	err, ok = updateRoleAccessRules(d, m, ctx)
+	err, ok = updateRoleAccessRules(ctx, name, accessRulesNewValues, m)
 	if !ok {
+		errInner, okInner := updateRoleAccessRules(ctx, name, accessRulesOldValues, m)
+		if !okInner {
+			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
+		}
+
 		return fmt.Errorf("can't update role access rule: %v", err)
 	}
-	// on error, the defer with deleteRoleRules will delete these rules too
 
 	d.SetId(name)
 
@@ -315,61 +307,15 @@ func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
-
-	name := d.Id()
-
 	ctx := context.Background()
-	role, err := getRole(d, client, name, token)
-	if err != nil {
-		return err
-	}
-
-	for _, v := range role.GetRoleAuthMethodsAssoc() {
-		deleteRoleAssociation := akeyless.DeleteRoleAssociation{
-			AssocId: *v.AssocId,
-			Token:   &token,
-		}
-		_, res, err := client.DeleteRoleAssociation(ctx).Body(deleteRoleAssociation).Execute()
-		if err != nil {
-			var apiErr akeyless.GenericOpenAPIError
-			if errors.As(err, &apiErr) {
-				if res.StatusCode != http.StatusNotFound {
-					return err
-				}
-			} else {
-				return err
-			}
-		}
-	}
-
-	rules := role.GetRules()
-	for _, v := range rules.GetPathRules() {
-		deleteRoleRule := akeyless.DeleteRoleRule{
-			RoleName: name,
-			Path:     *v.Path,
-			RuleType: v.Type,
-			Token:    &token,
-		}
-
-		_, res, err := client.DeleteRoleRule(ctx).Body(deleteRoleRule).Execute()
-		if err != nil {
-			var apiErr akeyless.GenericOpenAPIError
-			if errors.As(err, &apiErr) {
-				if res.StatusCode != http.StatusNotFound {
-					return err
-				}
-			} else {
-				return err
-			}
-		}
-	}
+	name := d.Id()
 
 	deleteRole := akeyless.DeleteRole{
 		Name:  name,
 		Token: &token,
 	}
 
-	_, _, err = client.DeleteRole(ctx).Body(deleteRole).Execute()
+	_, _, err := client.DeleteRole(ctx).Body(deleteRole).Execute()
 	if err != nil {
 		return err
 	}
@@ -403,7 +349,11 @@ func resourceRoleImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 	return []*schema.ResourceData{d}, nil
 }
 
-func getRole(d *schema.ResourceData, client akeyless.V2ApiService, name, token string) (akeyless.Role, error) {
+func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless.Role, error) {
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 
@@ -433,6 +383,7 @@ func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc []akeyless.Ro
 	for _, assosSrc := range authMethodsAssoc {
 		rolesDst := make(map[string]interface{})
 		rolesDst["am_name"] = *assosSrc.AuthMethodName
+		rolesDst["case_sensitive"] = strconv.FormatBool(*assosSrc.SubClaimsCaseSensitive)
 
 		subClaims := *assosSrc.AuthMethodSubClaims
 		sc := make(map[string]string, len(subClaims))
@@ -454,24 +405,23 @@ func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc []akeyless.Ro
 
 func readRules(d *schema.ResourceData, rules []akeyless.PathRule) error {
 	var err error
-
 	var roleRules []interface{}
-	for _, ruleSrc := range rules {
 
+	for _, ruleSrc := range rules {
 		if isAccessRule(*ruleSrc.Type) {
 			err = setAccessRuleField(d, *ruleSrc.Type, *ruleSrc.Path)
 			if err != nil {
 				return err
 			}
 		} else {
-			isAdminRule := false
-			for _, adminRule := range restrictedRules {
-				if *ruleSrc.Path == adminRule {
-					isAdminRule = true
+			isRestrictedRule := false
+			for _, restrictedRule := range restrictedRules {
+				if *ruleSrc.Path == restrictedRule["path"] {
+					isRestrictedRule = true
 					break
 				}
 			}
-			if !isAdminRule {
+			if !isRestrictedRule {
 				rolesDst := make(map[string]interface{})
 				rolesDst["capability"] = *ruleSrc.Capabilities
 				rolesDst["path"] = *ruleSrc.Path
@@ -489,7 +439,118 @@ func readRules(d *schema.ResourceData, rules []akeyless.PathRule) error {
 	return nil
 }
 
-func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethod []interface{}, m interface{}) (error, bool) {
+func extractAssocsToCreateAndUpdate(newAssocs, oldAssocs []interface{}) ([]interface{}, []interface{}) {
+	var toAdd, toUpdate []interface{}
+
+	for _, newAssocInterface := range newAssocs {
+		assocExists := false
+		newAssoc := newAssocInterface.(map[string]interface{})
+		newSubClaims := newAssoc["sub_claims"].(map[string]interface{})
+
+		for _, oldAssocInterface := range oldAssocs {
+			oldAssoc := oldAssocInterface.(map[string]interface{})
+			oldSubClaims := oldAssoc["sub_claims"].(map[string]interface{})
+
+			if newAssoc["am_name"].(string) == oldAssoc["am_name"].(string) {
+				assocExists = true
+				if !reflect.DeepEqual(newSubClaims, oldSubClaims) {
+					assocNewMap := make(map[string]interface{})
+					if oldAssoc["id"] != nil {
+						assocNewMap["id"] = oldAssoc["id"]
+					} else {
+						assocNewMap["id"] = newAssoc["id"] // for delete on error case
+					}
+					assocNewMap["am_name"] = newAssoc["am_name"]
+					assocNewMap["sub_claims"] = newAssoc["sub_claims"].(map[string]interface{})
+					if newAssoc["case_sensitive"] != nil {
+						assocNewMap["case_sensitive"] = newAssoc["case_sensitive"]
+					} else {
+						assocNewMap["case_sensitive"] = ""
+					}
+					toUpdate = append(toUpdate, assocNewMap)
+				}
+				break
+			}
+		}
+		if !assocExists {
+			toAdd = append(toAdd, newAssoc)
+		}
+	}
+
+	return toAdd, toUpdate
+}
+
+func extractRulesToSet(newRules, oldRules []interface{}) []interface{} {
+	var toSet []interface{}
+
+	for _, newRule := range newRules {
+		ruleExists := false
+		if !isAccessRule(newRule.(map[string]interface{})["rule_type"].(string)) {
+			for _, oldRule := range oldRules {
+				if isRulesEqual(newRule.(map[string]interface{}), oldRule.(map[string]interface{})) {
+					ruleExists = true
+					break
+				}
+			}
+			if !ruleExists {
+				toSet = append(toSet, newRule.(map[string]interface{}))
+			}
+		}
+	}
+
+	return toSet
+}
+
+func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDelete, assocAuthMethodToAdd, assocAuthMethodToUpdate []interface{}, m interface{}) (error, bool) {
+	var err error
+	var ok bool
+
+	err, ok = deleteRoleAuthMethods(ctx, name, assocAuthMethodToDelete, m)
+	if !ok {
+		return err, ok
+	}
+
+	err, ok = assocRoleAuthMethodAdd(ctx, name, assocAuthMethodToAdd, m)
+	if !ok {
+		return err, ok
+	}
+
+	err, ok = assocRoleAuthMethodUpdate(ctx, name, assocAuthMethodToUpdate, m)
+	if !ok {
+		return err, ok
+	}
+
+	return nil, true
+}
+
+func deleteRoleAuthMethods(ctx context.Context, name string, assocAuthMethodOldValues []interface{}, m interface{}) (error, bool) {
+
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	for _, v := range assocAuthMethodOldValues {
+		var apiErr akeyless.GenericOpenAPIError
+		association := akeyless.DeleteRoleAssociation{
+			AssocId: v.(map[string]interface{})["id"].(string),
+			Token:   &token,
+		}
+		_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
+		if err != nil {
+			if errors.As(err, &apiErr) {
+				if res.StatusCode != http.StatusNotFound {
+					return fmt.Errorf("can't delete Role association: %v", string(apiErr.Body())), false
+				}
+			} else {
+				return fmt.Errorf("can't delete Role association: %v", err), false
+			}
+		}
+	}
+
+	return nil, true
+}
+
+func assocRoleAuthMethodAdd(ctx context.Context, name string, assocAuthMethod []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(providerMeta)
 	client := *provider.client
@@ -499,6 +560,7 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethod []int
 		assoc := v.(map[string]interface{})
 		authMethodName := assoc["am_name"].(string)
 		subClaims := assoc["sub_claims"].(map[string]interface{})
+		caseSensitive := assoc["case_sensitive"].(string)
 		sc := make(map[string]string, len(subClaims))
 		for k, v := range subClaims {
 			sc[k] = v.(string)
@@ -506,10 +568,11 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethod []int
 
 		var apiErr akeyless.GenericOpenAPIError
 		asBody := akeyless.AssocRoleAuthMethod{
-			RoleName:  name,
-			AmName:    authMethodName,
-			SubClaims: &sc,
-			Token:     &token,
+			RoleName:      name,
+			AmName:        authMethodName,
+			SubClaims:     &sc,
+			CaseSensitive: &caseSensitive,
+			Token:         &token,
 		}
 
 		_, res, err := client.AssocRoleAuthMethod(ctx).Body(asBody).Execute()
@@ -528,7 +591,94 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethod []int
 	return nil, true
 }
 
-func setRoleRule(ctx context.Context, name string, roleRules []interface{}, m interface{}) (error, bool) {
+func assocRoleAuthMethodUpdate(ctx context.Context, name string, assocAuthMethods []interface{}, m interface{}) (error, bool) {
+
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	for _, v := range assocAuthMethods {
+		assoc := v.(map[string]interface{})
+		assocId := assoc["id"].(string)
+		subClaims := assoc["sub_claims"].(map[string]interface{})
+		caseSensitive := assoc["case_sensitive"].(string)
+		sc := make(map[string]string, len(subClaims))
+		for k, v := range subClaims {
+			sc[k] = v.(string)
+		}
+
+		var apiErr akeyless.GenericOpenAPIError
+		asBody := akeyless.UpdateAssoc{
+			AssocId:       assocId,
+			SubClaims:     &sc,
+			Token:         &token,
+			CaseSensitive: &caseSensitive,
+		}
+
+		_, res, err := client.UpdateAssoc(ctx).Body(asBody).Execute()
+		if err != nil {
+			if errors.As(err, &apiErr) {
+				if res.StatusCode != http.StatusConflict {
+					err = fmt.Errorf("can't create association: %v", string(apiErr.Body()))
+					return err, false
+				}
+			} else {
+				err = fmt.Errorf("can't create association: %v", err)
+				return err, false
+			}
+		}
+	}
+	return nil, true
+}
+
+func setRoleRules(ctx context.Context, name string, rulesToDelete, rulesToAdd []interface{}, m interface{}) (error, bool) {
+	var err error
+	var ok bool
+
+	err, ok = deleteRoleRules(ctx, name, rulesToDelete, m)
+	if !ok {
+		return err, ok
+	}
+
+	err, ok = addRoleRules(ctx, name, rulesToAdd, m)
+	if !ok {
+		return err, ok
+	}
+
+	return nil, true
+}
+
+func deleteRoleRules(ctx context.Context, name string, rules []interface{}, m interface{}) (err error, ok bool) {
+
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	for _, v := range rules {
+		ruleMap := v.(map[string]interface{})
+		var apiErr akeyless.GenericOpenAPIError
+		rule := akeyless.DeleteRoleRule{
+			RoleName: name,
+			Path:     ruleMap["path"].(string),
+			RuleType: akeyless.PtrString(ruleMap["rule_type"].(string)),
+			Token:    &token,
+		}
+		_, res, err := client.DeleteRoleRule(ctx).Body(rule).Execute()
+		if err != nil {
+			if errors.As(err, &apiErr) {
+				if res.StatusCode != http.StatusNotFound {
+					return fmt.Errorf("can't delete rule: %v", string(apiErr.Body())), false
+				}
+			} else {
+				return fmt.Errorf("can't delete rule: %v", err), false
+			}
+		}
+	}
+
+	return nil, true
+}
+
+func addRoleRules(ctx context.Context, name string, roleRules []interface{}, m interface{}) (error, bool) {
 	var warn error
 
 	provider := m.(providerMeta)
@@ -568,25 +718,61 @@ func setRoleRule(ctx context.Context, name string, roleRules []interface{}, m in
 	return warn, true
 }
 
-func getCapability(capability interface{}) []string {
-	if capSlice, ok := capability.([]string); ok {
-		return capSlice
-	} else if capSet, ok := capability.(*schema.Set); ok {
-		return common.ExpandStringList(capSet.List())
+func getNewAccessRules(d *schema.ResourceData) []interface{} {
+	var accessRules []interface{}
+
+	auditAccess := d.Get("audit_access").(string)
+	if auditAccess != "" {
+		path := convertPathNameOpposite(auditAccess)
+		auditAccessMap := map[string]interface{}{"capability": "read", "path": path, "rule_type": "search-rule"}
+		accessRules = append(accessRules, auditAccessMap)
 	}
-	return nil
+
+	analyticsAccess := d.Get("analytics_access").(string)
+	if analyticsAccess != "" {
+		path := convertPathNameOpposite(analyticsAccess)
+		analyticsAccessMap := map[string]interface{}{"capability": "read", "path": path, "rule_type": "reports-rule"}
+		accessRules = append(accessRules, analyticsAccessMap)
+	}
+
+	gwAnalyticsAccess := d.Get("gw_analytics_access").(string)
+	if gwAnalyticsAccess != "" {
+		path := convertPathNameOpposite(gwAnalyticsAccess)
+		gwAnalyticsAccessMap := map[string]interface{}{"capability": "read", "path": path, "rule_type": "gw-reports-rule"}
+		accessRules = append(accessRules, gwAnalyticsAccessMap)
+	}
+
+	sraReportsAccess := d.Get("sra_reports_access").(string)
+	if sraReportsAccess != "" {
+		path := convertPathNameOpposite(sraReportsAccess)
+		sraReportsAccessMap := map[string]interface{}{"capability": "read", "path": path, "rule_type": "sra-reports-rule"}
+		accessRules = append(accessRules, sraReportsAccessMap)
+	}
+
+	return accessRules
 }
 
-func updateRoleAccessRules(d *schema.ResourceData, m interface{}, ctx context.Context) (error, bool) {
+func updateRoleAccessRules(ctx context.Context, name string, accessRules []interface{}, m interface{}) (error, bool) {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
 
-	name := d.Get("name").(string)
-	auditAccess := d.Get("audit_access").(string)
-	analyticsAccess := d.Get("analytics_access").(string)
-	gwAnalyticsAccess := d.Get("gw_analytics_access").(string)
-	sraReportsAccess := d.Get("sra_reports_access").(string)
+	var auditAccess, analyticsAccess, gwAnalyticsAccess, sraReportsAccess string
+	for _, rule := range accessRules {
+		ruleType := rule.(map[string]interface{})["rule_type"].(string)
+		rulePath := convertPathNameWithNoneOption(rule.(map[string]interface{})["path"].(string))
+
+		switch ruleType {
+		case "search-rule":
+			auditAccess = rulePath
+		case "reports-rule":
+			analyticsAccess = rulePath
+		case "gw-reports-rule":
+			gwAnalyticsAccess = rulePath
+		case "sra-reports-rule":
+			sraReportsAccess = rulePath
+		}
+	}
 
 	updateBody := akeyless.UpdateRole{
 		Name:              name,
@@ -609,51 +795,26 @@ func updateRoleAccessRules(d *schema.ResourceData, m interface{}, ctx context.Co
 	return nil, true
 }
 
-func saveAssocAuthMethodOldValues(assoc *[]akeyless.RoleAuthMethodAssociation) []interface{} {
+func saveAssocAuthMethodOldValues(assocs *[]akeyless.RoleAuthMethodAssociation) []interface{} {
 	var assocAuthMethodOldValues []interface{}
 
-	if assoc != nil {
-		for _, val := range *assoc {
+	if assocs != nil {
+		for _, assoc := range *assocs {
 			assocMap := make(map[string]interface{})
-			assocMap["am_name"] = *val.AuthMethodName
+			assocMap["id"] = *assoc.AssocId
+			assocMap["am_name"] = *assoc.AuthMethodName
+			assocMap["access_id"] = *assoc.AuthMethodAccessId
 			subClaims := make(map[string]interface{})
-			for key := range *val.AuthMethodSubClaims {
-				subClaims[key] = strings.Join((*val.AuthMethodSubClaims)[key], ",")
+			for key := range *assoc.AuthMethodSubClaims {
+				subClaims[key] = strings.Join((*assoc.AuthMethodSubClaims)[key], ",")
 			}
 			assocMap["sub_claims"] = subClaims
+			assocMap["case_sensitive"] = strconv.FormatBool(*assoc.SubClaimsCaseSensitive)
 			assocAuthMethodOldValues = append(assocAuthMethodOldValues, assocMap)
 		}
 	}
 
 	return assocAuthMethodOldValues
-}
-
-func deleteRoleAuthMethods(ctx context.Context, name string, assocAuthMethod []interface{}, assocAuthMethodOldValues *[]akeyless.RoleAuthMethodAssociation, m interface{}) (error, bool) {
-
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
-
-	if assocAuthMethodOldValues != nil && assocAuthMethod != nil {
-		for _, v := range *assocAuthMethodOldValues {
-			var apiErr akeyless.GenericOpenAPIError
-			association := akeyless.DeleteRoleAssociation{
-				AssocId: *v.AssocId,
-				Token:   &token,
-			}
-			_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
-			if err != nil {
-				if errors.As(err, &apiErr) {
-					if res.StatusCode != http.StatusNotFound {
-						return fmt.Errorf("can't delete Role association: %v", string(apiErr.Body())), false
-					}
-				} else {
-					return fmt.Errorf("can't delete Role association: %v", err), false
-				}
-			}
-		}
-	}
-	return nil, true
 }
 
 func saveRoleRuleOldValues(roleRules *[]akeyless.PathRule) []interface{} {
@@ -674,35 +835,36 @@ func saveRoleRuleOldValues(roleRules *[]akeyless.PathRule) []interface{} {
 	return roleRulesOldValues
 }
 
-func deleteRoleRules(ctx context.Context, name string, PathRules *[]akeyless.PathRule, m interface{}) (err error, ok bool) {
+func saveRoleAccessRuleOldValues(roleRules *[]akeyless.PathRule) []interface{} {
 
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
+	var roleRulesOldValues = generateEmptyAccessRulesSet()
 
-	if PathRules != nil {
-		for _, v := range *PathRules {
-			var apiErr akeyless.GenericOpenAPIError
-			rule := akeyless.DeleteRoleRule{
-				RoleName: name,
-				Path:     *v.Path,
-				RuleType: v.Type,
-				Token:    &token,
-			}
-			_, res, err := client.DeleteRoleRule(ctx).Body(rule).Execute()
-			if err != nil {
-				if errors.As(err, &apiErr) {
-					if res.StatusCode != http.StatusNotFound {
-						return fmt.Errorf("can't delete rule: %v", string(apiErr.Body())), false
+	if roleRules != nil {
+		for _, rule := range *roleRules {
+			rType := *rule.Type
+			if isAccessRule(rType) {
+				for i, val := range roleRulesOldValues {
+					if val.(map[string]interface{})["rule_type"] == rType {
+						roleRulesOldValues[i].(map[string]interface{})["capability"] = *rule.Capabilities
+						roleRulesOldValues[i].(map[string]interface{})["path"] = *rule.Path
 					}
-				} else {
-					return fmt.Errorf("can't delete rule: %v", err), false
 				}
 			}
 		}
 	}
 
-	return nil, true
+	return roleRulesOldValues
+}
+
+func generateEmptyAccessRulesSet() []interface{} {
+	accessCap := []string{"read"}
+
+	searchRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "search-rule"}
+	reportsRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "reports-rule"}
+	gwReportsRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "gw-reports-rule"}
+	sraReportsRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "sra-reports-rule"}
+
+	return []interface{}{searchRule, reportsRule, gwReportsRule, sraReportsRule}
 }
 
 func isAccessRule(roleType string) bool {
@@ -735,4 +897,47 @@ func convertPathName(rolePath string) string {
 	default:
 		return ""
 	}
+}
+
+func convertPathNameWithNoneOption(rolePath string) string {
+	switch rolePath {
+	case "/*":
+		return "all"
+	case "/self":
+		return "own"
+	default:
+		return "none"
+	}
+}
+
+func convertPathNameOpposite(rolePath string) string {
+	switch rolePath {
+	case "all":
+		return "/*"
+	case "own":
+		return "/self"
+	default:
+		return ""
+	}
+}
+
+func getCapability(capability interface{}) []string {
+	if capSlice, ok := capability.([]string); ok {
+		return capSlice
+	} else if capSet, ok := capability.(*schema.Set); ok {
+		return common.ExpandStringList(capSet.List())
+	}
+	return nil
+}
+
+func isRulesEqual(rule1, rule2 map[string]interface{}) bool {
+	rule1Cap := strings.Join(getCapability(rule1["capability"]), ",")
+	rule1Path := rule1["path"].(string)
+	rule1Type := rule1["rule_type"].(string)
+
+	rule2Cap := strings.Join(getCapability(rule2["capability"]), ",")
+	rule2Path := rule2["path"].(string)
+	rule2Type := rule2["rule_type"].(string)
+
+	return rule1Cap == rule2Cap && rule1Path == rule2Path && rule1Type == rule2Type
 }

@@ -91,15 +91,12 @@ func resourceAssocRoleAmCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
 	roleName := d.Get("role_name").(string)
 
 	id := d.Id()
 
-	role, err := getRole(d, client, roleName, token)
+	role, err := getRole(d, roleName, m)
 	if err != nil {
 		return err
 	}
@@ -209,15 +206,12 @@ func resourceAssocRoleAmDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAssocRoleAmImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
 	roleName := d.Get("role_name").(string)
 
 	id := d.Id()
 
-	role, err := getRole(d, client, roleName, token)
+	role, err := getRole(d, roleName, m)
 	if err != nil {
 		return nil, err
 	}

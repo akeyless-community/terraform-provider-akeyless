@@ -9,4 +9,3 @@ akeyless/resource_producer1_test.go
 akeyless/resource_auth_methods1_test.go
 akeyless/resource_item1_test.go
 akeyless/resource_target1_test.go
-akeyless/resource_set_role_rule.go
