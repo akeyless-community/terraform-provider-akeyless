@@ -3,11 +3,9 @@ package akeyless
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"unsafe"
 
@@ -178,27 +176,36 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 
 	fmt.Println("send:", *body.CertificateData)
-	rOut, _, err := client.CreateAuthMethodCert(ctx).Body(body).Execute()
+	rOut, res, err := client.CreateAuthMethodCert(ctx).Body(body).Execute()
 	if err != nil {
+		if errors.As(err, &apiErr) {
+			if res.StatusCode == http.StatusNotFound {
+				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+				d.SetId("")
+				return nil
+			}
+			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+		}
+		// return fmt.Errorf("can't get value: %v", err)
 		// fmt.Println("--- error:", err)
 		// fmt.Println("--- rOut :", rOut)
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create auth method cert: %v", string(apiErr.Body()))
-			// if res.StatusCode == http.StatusNotFound {
-			// 	// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-			// 	d.SetId("")
-			// 	return nil
-			// }
+		// if errors.As(err, &apiErr) {
+		// 	return fmt.Errorf("can't create auth method cert: %v", string(apiErr.Body()))
+		// if res.StatusCode == http.StatusNotFound {
+		// 	// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+		// 	d.SetId("")
+		// 	return nil
+		// }
 
-			// out, err := extractBase64CertificateFromErrorMsg(apiErr.Body())
-			// if err != nil {
-			// 	return fmt.Errorf("can't create auth method cert: %v", err)
-			// }
+		// out, err := extractBase64CertificateFromErrorMsg(apiErr.Body())
+		// if err != nil {
+		// 	return fmt.Errorf("can't create auth method cert: %v", err)
+		// }
 
-			// fmt.Println("-----------------")
-			// fmt.Println("out:", out)
-		}
-		return fmt.Errorf("can't create auth method cert: %v", err)
+		// fmt.Println("-----------------")
+		// fmt.Println("out:", out)
+		// }
+		// return fmt.Errorf("can't create auth method cert: %v", err)
 	}
 
 	if rOut.AccessId != nil {
@@ -213,35 +220,35 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func extractBase64CertificateFromErrorMsg(errMsg []byte) (string, error) {
-	var outErr CertErr
+// func extractBase64CertificateFromErrorMsg(errMsg []byte) (string, error) {
+// 	var outErr CertErr
 
-	err := json.Unmarshal(errMsg, &outErr)
-	if err != nil {
-		return "", fmt.Errorf("can't get value: %v", string(errMsg))
-	}
+// 	err := json.Unmarshal(errMsg, &outErr)
+// 	if err != nil {
+// 		return "", fmt.Errorf("can't get value: %v", string(errMsg))
+// 	}
 
-	msgTrimPrefix := strings.TrimPrefix(outErr.ErrorMsg, "failed to decode certificate data [")
-	errIndex := strings.Index(msgTrimPrefix, "], error: ")
-	suffix := msgTrimPrefix[errIndex:]
-	msg := strings.TrimSuffix(msgTrimPrefix, suffix)
-	msgSet := strings.Fields(msg)
+// 	msgTrimPrefix := strings.TrimPrefix(outErr.ErrorMsg, "failed to decode certificate data [")
+// 	errIndex := strings.Index(msgTrimPrefix, "], error: ")
+// 	suffix := msgTrimPrefix[errIndex:]
+// 	msg := strings.TrimSuffix(msgTrimPrefix, suffix)
+// 	msgSet := strings.Fields(msg)
 
-	var msgStringSet []string
-	for _, val := range msgSet {
-		strVal, _ := strconv.Atoi(val)
-		msgStringSet = append(msgStringSet, string(byte(strVal)))
-	}
+// 	var msgStringSet []string
+// 	for _, val := range msgSet {
+// 		strVal, _ := strconv.Atoi(val)
+// 		msgStringSet = append(msgStringSet, string(byte(strVal)))
+// 	}
 
-	finalMsg := strings.Join(msgStringSet, "")
+// 	finalMsg := strings.Join(msgStringSet, "")
 
-	base64Msg := base64.StdEncoding.EncodeToString([]byte(finalMsg))
-	return base64Msg, nil
-}
+// 	base64Msg := base64.StdEncoding.EncodeToString([]byte(finalMsg))
+// 	return base64Msg, nil
+// }
 
-type CertErr struct {
-	ErrorMsg string `json:"error"`
-}
+// type CertErr struct {
+// 	ErrorMsg string `json:"error"`
+// }
 
 func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 	fmt.Println("--- read ---")

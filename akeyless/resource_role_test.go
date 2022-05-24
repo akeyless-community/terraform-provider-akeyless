@@ -12,6 +12,57 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestSetRoleRuleResource(t *testing.T) {
+	itemPath := testPath("test_set_role_rule")
+	deleteRole(itemPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_role" "test1" {
+			name = "%v"
+		}
+		resource "akeyless_set_role_rule" "test1" {
+			role_name 	= "%v"
+			path 		= "/terraform-tests/*"
+			capability 	= ["read" , "list"]
+			rule_type 	= "item-rule"
+
+			depends_on = [
+    			akeyless_role.test1,
+  			]
+		}
+	`, itemPath, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_role" "test1" {
+			name = "%v"
+		}
+		resource "akeyless_set_role_rule" "test1" {
+			role_name 	= "%v"
+			path 		= "/terraform-tests/*"
+			capability 	= ["read" , "update"]
+			rule_type 	= "item-rule"
+
+			depends_on = [
+    			akeyless_role.test1,
+  			]
+		}
+	`, itemPath, itemPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.ComposeTestCheckFunc(),
+			},
+			{
+				Config: configUpdate,
+				Check:  resource.ComposeTestCheckFunc(),
+			},
+		},
+	})
+}
+
 func TestOnlyRoleResourceCreate(t *testing.T) {
 	rolePath := testPath("test_role_assoc")
 	authMethodPath := testPath("path_auth_method")

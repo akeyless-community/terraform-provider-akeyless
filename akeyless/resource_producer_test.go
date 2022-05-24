@@ -26,6 +26,10 @@ const (
 	DOCKERHUB_USERNAME     = "XXXXXXXX"
 	DOCKERHUB_PASSWORD     = "XXXXXXXX"
 	DOCKERHUB_TOKEN_SCOPES = `"repo:read , repo:write"`
+	SF_ACCOUNT             = "xx11111.us-east-2.aws"
+	SF_USERNAME            = "xxxxxxxx"
+	SF_PASSWORD            = "yyyyyyyy"
+	SF_DBNAME              = "XXXXXXXX"
 )
 
 var GITHUB_TOKEN_PERM = `["contents=read", "issues=write", "actions=read"]`
@@ -45,6 +49,53 @@ var db_attr = fmt.Sprintf(`
 	port      		= "%v"
 	db_name   		= "%v"
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
+
+func TestSnowflakeProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "snowflake_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_snowflake" "%v" {
+			name 				= "%v"
+			account 			= "%v"
+			account_username 	= "%v"
+			account_password 	= "%v"
+			db_name 			= "%v"
+			warehouse 			= "aaaa"
+			role 				= "bbbb"
+		}
+		data "akeyless_dynamic_secret" "secret" {
+			path 		= "%v"
+			depends_on 	= [
+				akeyless_producer_snowflake.%v,
+			]
+		}
+	`, name, itemPath, SF_ACCOUNT, SF_USERNAME, SF_PASSWORD, SF_DBNAME, itemPath, name)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_snowflake" "%v" {
+			name 				= "%v"
+			account 			= "%v"
+			account_username 	= "%v"
+			account_password 	= "%v"
+			db_name 			= "%v"
+			warehouse 			= "aaaaaa"
+			role 				= "bbbbbb"
+			user_ttl 			= "12h"
+			tags 				= ["aaa" , "bbb"]
+		}
+		data "akeyless_dynamic_secret" "secret" {
+			path 		= "%v"
+			depends_on 	= [
+				akeyless_producer_snowflake.%v,
+			]
+		}
+	`, name, itemPath, SF_ACCOUNT, SF_USERNAME, SF_PASSWORD, SF_DBNAME, itemPath, name)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
 
 func TestRabbitMQProducerResource(t *testing.T) {
 

@@ -15,7 +15,7 @@ import (
 
 func resourceProducerRabbitmq() *schema.Resource {
 	return &schema.Resource{
-		Description: "PostgreSQLproducer resource",
+		Description: "RabbitMQ producer resource",
 		Create:      resourceProducerRabbitmqCreate,
 		Read:        resourceProducerRabbitmqRead,
 		Update:      resourceProducerRabbitmqUpdate,

@@ -51,6 +51,7 @@ func resourcesetRoleRule() *schema.Resource {
 }
 
 func resourcesetRoleRuleCreate(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- create ---")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -85,6 +86,7 @@ func resourcesetRoleRuleCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- read ---")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -118,18 +120,27 @@ func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	// if rOut.Capabilities != nil {
-	// 	err = d.Set("capability", *rOut.Capabilities)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// if rOut.RuleType != nil {
-	// 	err = d.Set("rule_type", *rOut.RuleType)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+	if rOut.Rules != nil && rOut.Rules.PathRules != nil {
+		rules := (*rOut.Rules.PathRules)[0]
+		if rules.Path != nil {
+			err = d.Set("path", *rules.Path)
+			if err != nil {
+				return err
+			}
+		}
+		if rules.Capabilities != nil {
+			err = d.Set("capability", *rules.Capabilities)
+			if err != nil {
+				return err
+			}
+		}
+		if rules.Type != nil {
+			err = d.Set("rule_type", *rules.Type)
+			if err != nil {
+				return err
+			}
+		}
+	}
 
 	d.SetId(path)
 
@@ -137,6 +148,7 @@ func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcesetRoleRuleUpdate(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- update ---")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -171,6 +183,7 @@ func resourcesetRoleRuleUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcesetRoleRuleDelete(d *schema.ResourceData, m interface{}) error {
+	fmt.Println("--- delete ---")
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
