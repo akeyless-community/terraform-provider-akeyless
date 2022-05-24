@@ -50,6 +50,34 @@ var db_attr = fmt.Sprintf(`
 	db_name   		= "%v"
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
 
+func TestProducerStartStopResource(t *testing.T) {
+
+	t.Skip("need to use real producer's name")
+
+	name := "some_exist_producer_name"
+	itemPath := testPath(name)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_start_producer" "%v" {
+			name = "%v"
+		}
+		data "akeyless_dynamic_secret" "secret" {
+			path 		= "%v"
+			depends_on 	= [
+				akeyless_start_producer.%v,
+			]
+		}
+	`, name, itemPath, itemPath, name)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_stop_producer" "%v" {
+			name = "%v"
+		}
+	`, name, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
 func TestSnowflakeProducerResource(t *testing.T) {
 
 	t.Skip("for now the requested values are fictive")
