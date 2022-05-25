@@ -98,7 +98,7 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 	})
 }
 
-func TestRoleWithAssocResourceUpdate1(t *testing.T) {
+func TestRoleWithAssocResourceUpdate(t *testing.T) {
 	rolePath := testPath("test_role_assoc")
 	authMethodPath := testPath("path_auth_method")
 	deleteRole(rolePath)
@@ -617,9 +617,10 @@ func deleteRole(path string) error {
 
 	_, _, err = client.DeleteRole(context.Background()).Body(gsvBody).Execute()
 	if err != nil {
+		fmt.Println("error delete role:", err)
 		return err
 	}
-
+	fmt.Println("deleted", path)
 	return nil
 }
 
@@ -639,8 +640,9 @@ func deleteAuthMethod(path string) error {
 
 	_, _, err = client.DeleteAuthMethod(context.Background()).Body(gsvBody).Execute()
 	if err != nil {
+		fmt.Println("error delete auth method:", err)
 		return err
 	}
-
+	fmt.Println("deleted", path)
 	return nil
 }

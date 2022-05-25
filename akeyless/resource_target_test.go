@@ -36,6 +36,8 @@ func TestGithubTargetResource(t *testing.T) {
 func TestDockerhubTargetResource(t *testing.T) {
 	secretName := "dockerhub_test"
 	secretPath := testPath("terraform_tests")
+	deleteTarget(secretPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_dockerhub" "%v" {
 			name 				= "%v"
@@ -348,4 +350,28 @@ func checkTargetExistsRemotelyprod(path string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func deleteTarget(path string) error {
+
+	p, err := getProviderMeta()
+	if err != nil {
+		panic(err)
+	}
+
+	client := p.client
+	token := *p.token
+
+	gsvBody := akeyless.DeleteTarget{
+		Name:  path,
+		Token: &token,
+	}
+
+	_, _, err = client.DeleteTarget(context.Background()).Body(gsvBody).Execute()
+	if err != nil {
+		fmt.Println("error delete target:", err)
+		return err
+	}
+	fmt.Println("deleted", path)
+	return nil
 }

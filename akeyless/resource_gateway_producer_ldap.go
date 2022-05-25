@@ -290,9 +290,6 @@ func resourceProducerLdapUpdate(d *schema.ResourceData, m interface{}) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	/*
-	 */
-
 	body := akeyless.GatewayUpdateProducerLdap{
 		Name:  name,
 		Token: &token,

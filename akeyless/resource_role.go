@@ -225,7 +225,6 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
-
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -352,7 +351,6 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
-
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token

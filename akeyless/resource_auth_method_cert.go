@@ -128,10 +128,11 @@ func resourceAuthMethodCert() *schema.Resource {
 }
 
 func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
-	fmt.Println("--- create ---")
+
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
@@ -175,7 +176,6 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundExtensions, boundExtensions)
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 
-	fmt.Println("send:", *body.CertificateData)
 	rOut, res, err := client.CreateAuthMethodCert(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
@@ -184,7 +184,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't create auth method cert: %v", string(apiErr.Body()))
 		}
 	}
 
@@ -201,7 +201,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- read ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -344,7 +344,6 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- update ---")
 
 	provider := m.(providerMeta)
 	client := *provider.client

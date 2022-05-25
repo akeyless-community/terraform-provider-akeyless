@@ -163,6 +163,41 @@ func TestRabbitMQProducerResource(t *testing.T) {
 	tesItemResource(t, config, configUpdate, itemPath)
 }
 
+func TestHanadbProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "hanadb_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_hanadb" "%v" {
+			hana_dbname		= "%v"
+			hana_dbname     = "XXXXXX"
+			hanadb_username = "YYYYYY"
+			hanadb_password = "12345678"
+			hanadb_host     = "127.0.0.1"
+			hanadb_port     = "30013"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_hanadb" "%v" {
+			name 			= "%v"
+			hana_dbname     = "XXXXXX"
+			hanadb_username = "YYYYYY"
+			hanadb_password = "12345678"
+			hanadb_host     = "127.0.0.1"
+			hanadb_port     = "30013"
+			secure_access_enable 	= "true"
+			secure_access_web    	= "true"
+			secure_access_host   	= ["http://abcdef.com"]
+			tags                 	= ["aaa", "bbb"]
+		}
+	`, name, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
 func TestGithubProducerResource(t *testing.T) {
 
 	t.Skip("for now the requested values are fictive")

@@ -302,11 +302,11 @@ func resourceProducerHanadbRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceProducerHanadbUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
-	// client := *provider.client
+	client := *provider.client
 	token := *provider.token
 
-	// var apiErr akeyless.GenericOpenAPIError
-	// ctx := context.Background()
+	var apiErr akeyless.GenericOpenAPIError
+	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	hanaDbname := d.Get("hana_dbname").(string)
@@ -348,13 +348,13 @@ func resourceProducerHanadbUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	// _, _, err := client.GatewayUpdateProducerHanaDb(ctx).Body(body).Execute()
-	// if err != nil {
-	// 	if errors.As(err, &apiErr) {
-	// 		return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-	// 	}
-	// 	return fmt.Errorf("can't update : %v", err)
-	// }
+	_, _, err := client.GatewayUpdateProducerHanaDb(ctx).Body(body).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			return fmt.Errorf("can't update producer: %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("can't update producer: %v", err)
+	}
 
 	d.SetId(name)
 

@@ -281,10 +281,9 @@ func deleteKey(path string) error {
 
 	_, _, err = client.DeleteItem(context.Background()).Body(gsvBody).Execute()
 	if err != nil {
-		fmt.Println("error delete key:", err)
 		return err
 	}
-	fmt.Println("deleted", path)
+
 	return nil
 }
 
