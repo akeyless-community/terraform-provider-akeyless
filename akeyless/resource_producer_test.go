@@ -6,6 +6,9 @@ import (
 	"testing"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -76,6 +79,24 @@ func TestProducerStartStopResource(t *testing.T) {
 	`, name, itemPath)
 
 	tesItemResource(t, config, configUpdate, itemPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkActiveStatusRemotely(t, itemPath, true),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkActiveStatusRemotely(t, itemPath, false),
+				),
+			},
+		},
+	})
 }
 
 func TestSnowflakeProducerResource(t *testing.T) {
@@ -457,5 +478,28 @@ func deleteProducer(client *akeyless.V2ApiService, token string) {
 		fmt.Println("failed to delete producer:", err)
 	} else {
 		fmt.Println("deleted", PRODUCER_NAME)
+	}
+}
+
+func checkActiveStatusRemotely(t *testing.T, path string, isActive bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := *testAccProvider.Meta().(providerMeta).client
+		token := *testAccProvider.Meta().(providerMeta).token
+
+		gsvBody := akeyless.GatewayGetProducer{
+			Name:  path,
+			Token: &token,
+		}
+
+		res, _, err := client.GatewayGetProducer(context.Background()).Body(gsvBody).Execute()
+		if err != nil {
+			return err
+		}
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res, "producer details must not be nil")
+		assert.NotNil(t, res.Active, "producer Active details must not be nil")
+		assert.Equal(t, isActive, *res.Active)
+		return nil
 	}
 }
