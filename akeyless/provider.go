@@ -189,7 +189,6 @@ func Provider() *schema.Provider {
 			"akeyless_role":               dataSourceRole(),
 			"akeyless_k8s_auth_config":    dataSourceGatewayGetK8sAuthConfig(),
 			"akeyless_kube_exec_creds":    dataSourceGetKubeExecCreds(),
-			"akeyless_list_producers":     dataSourceGatewayListProducers(),
 			"akeyless_pki_certificate":    dataSourceGetPKICertificate(),
 			"akeyless_producer_tmp_creds": dataSourceGatewayGetProducerTmpCreds(),
 			"akeyless_rotated_secret":     dataSourceGetRotatedSecretValue(),

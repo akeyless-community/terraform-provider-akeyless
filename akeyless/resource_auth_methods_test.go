@@ -254,20 +254,20 @@ func testAuthMethodResource(t *testing.T, config, configUpdate, path string) {
 				Config: config,
 				//PreConfig: deleteFunc,
 				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
+					checkMethodExistsRemotely(path),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
+					checkMethodExistsRemotely(path),
 				),
 			},
 		},
 	})
 }
 
-func checkMethodExistsRemotelyNew(path string) resource.TestCheckFunc {
+func checkMethodExistsRemotely(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
