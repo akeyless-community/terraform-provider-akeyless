@@ -75,6 +75,7 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 			api_key {
 			}
 		}
+		
 		resource "akeyless_role" "test_role" {
 			name = "%v"
 			assoc_auth_method {
@@ -108,6 +109,7 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			api_key {
 			}
 		}
+
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			assoc_auth_method {
@@ -136,6 +138,7 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			api_key {
 			}
 		}
+
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			assoc_auth_method {
@@ -149,6 +152,7 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 				path = "/terraform-tests/*"
 				rule_type = "auth-method-rule"
 			}
+
 			rules {
 				capability = ["list"]
 				path = "/terraform-tests/secrets/*"
@@ -169,6 +173,7 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			api_key {
 			}
 		}
+
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			assoc_auth_method {
@@ -182,8 +187,10 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 				path = "/terraform-tests/*"
 				rule_type = "auth-method-rule"
 			}
+
 			audit_access = "all"
 			  analytics_access = "own"
+
 			depends_on = [
     			akeyless_auth_method.auth_method,
   			]
@@ -196,6 +203,7 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			api_key {
 			}
 		}
+
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			assoc_auth_method {
@@ -259,6 +267,7 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 			api_key {
 			}
 		}
+
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			assoc_auth_method {
@@ -287,6 +296,7 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 			api_key {
 			}
 		}
+
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			assoc_auth_method {
@@ -300,6 +310,7 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 				path = "/terraform-tests/*"
 				rule_type = "auth-method-rule"
 			}
+
 			rules {
 				capability = ["list"]
 				path = "/terraform-tests/secrets/*"
@@ -320,6 +331,7 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 			api_key {
 			}
 		}
+
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			rules {
@@ -327,8 +339,10 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 				path = "/terraform-tests/*"
 				rule_type = "auth-method-rule"
 			}
+
 			audit_access = "all"
 			  analytics_access = "own"
+
 			depends_on = [
     			akeyless_auth_method.auth_method,
   			]
@@ -341,6 +355,7 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) {
 			api_key {
 			}
 		}
+
 		resource "akeyless_role" "test_role_assoc" {
 			name = "%v"
 			assoc_auth_method {
@@ -431,6 +446,7 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 	`, authMethodPath, rolePath, authMethodPath, rolePath)
 
 	configUpdateRole := fmt.Sprintf(`
+	
 		resource "akeyless_auth_method" "auth_method" {
 			path = "%v"
 			api_key {
@@ -454,6 +470,7 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 				"groups" = "admins" 
 				"groups2" = "developers,hhh"  
 			}
+			
 			case_sensitive = "true"
 		depends_on = [
 				akeyless_auth_method.auth_method,
