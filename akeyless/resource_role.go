@@ -156,9 +156,9 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	defer func() {
 		if !ok {
-			err = resourceRoleDelete(d, m)
+			errInner := resourceRoleDelete(d, m)
 			if err != nil {
-				ret = diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("fatal error: role created with errors and failed to be deleted: %v", err))}
+				ret = diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("fatal error: role created with errors and failed to be deleted: %v. delete error: %v", err, errInner))}
 			}
 		}
 	}()
@@ -215,7 +215,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if role.Rules.PathRules != nil {
+	if role.Rules.PathRules != nil && len(d.Get("rules").([]interface{})) != 0 {
 		err = readRules(d, *role.Rules.PathRules)
 		if err != nil {
 			return err
