@@ -48,19 +48,78 @@ func TestSetRoleRuleResource(t *testing.T) {
 		}
 	`, itemPath, itemPath)
 
+	configUpdateNewRule := fmt.Sprintf(`
+		resource "akeyless_role" "test1" {
+			name = "%v"
+		}
+		resource "akeyless_set_role_rule" "test1" {
+			role_name 	= "%v"
+			path 		= "/terraform-tests/*"
+			capability 	= ["read" , "update"]
+			rule_type 	= "target-rule"
+
+			depends_on = [
+    			akeyless_role.test1,
+  			]
+		}
+	`, itemPath, itemPath)
+
+	configUpdateOldRule := fmt.Sprintf(`
+		resource "akeyless_role" "test1" {
+			name = "%v"
+		}
+		resource "akeyless_set_role_rule" "test1" {
+			role_name 	= "%v"
+			path 		= "/terraform-tests/*"
+			capability 	= ["list"]
+			rule_type 	= "item-rule"
+
+			depends_on = [
+    			akeyless_role.test1,
+  			]
+		}
+	`, itemPath, itemPath)
+
+	expRules1 := []map[string]interface{}{
+		{"capability": []string{"read", "list"}, "path": "/terraform-tests/*", "rule_type": "item-rule"},
+	}
+	expRules2 := []map[string]interface{}{
+		{"capability": []string{"read", "update", "delete"}, "path": "/terraform-tests/*", "rule_type": "item-rule"},
+	}
+	expRules3 := []map[string]interface{}{
+		{"capability": []string{"read", "update", "delete"}, "path": "/terraform-tests/*", "rule_type": "item-rule"},
+		{"capability": []string{"read", "update"}, "path": "/terraform-tests/*", "rule_type": "target-rule"},
+	}
+	expRules4 := []map[string]interface{}{
+		{"capability": []string{"list"}, "path": "/terraform-tests/*", "rule_type": "item-rule"},
+		{"capability": []string{"read", "update"}, "path": "/terraform-tests/*", "rule_type": "target-rule"},
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRulesExistRemotely(t, itemPath, 2),
+					checkRulesExistRemotely(t, itemPath, expRules1),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					checkRulesExistRemotely(t, itemPath, 3),
+					checkRulesExistRemotely(t, itemPath, expRules2),
+				),
+			},
+			{
+				Config: configUpdateNewRule,
+				Check: resource.ComposeTestCheckFunc(
+					checkRulesExistRemotely(t, itemPath, expRules3),
+				),
+			},
+			{
+				Config: configUpdateOldRule,
+				Check: resource.ComposeTestCheckFunc(
+					checkRulesExistRemotely(t, itemPath, expRules4),
 				),
 			},
 		},
@@ -501,7 +560,7 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 	})
 }
 
-func checkRulesExistRemotely(t *testing.T, roleName string, capabilitiesNum int) resource.TestCheckFunc {
+func checkRulesExistRemotely(t *testing.T, roleName string, expRules []map[string]interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
@@ -516,11 +575,17 @@ func checkRulesExistRemotely(t *testing.T, roleName string, capabilitiesNum int)
 		assert.NotNil(t, res.Rules.PathRules, "rules must not be nil")
 
 		rules := *res.Rules.PathRules
+		i := 0
 		for _, rule := range rules {
+
 			if *rule.Path == "/terraform-tests/*" {
-				assert.Equal(t, capabilitiesNum, len(*rule.Capabilities), "rule capability mismatch")
-				assert.Equal(t, "item-rule", *rule.Type, "rule type mismatch")
-				assert.Equal(t, "/terraform-tests/*", *rule.Path, "rule path mismatch")
+				expCap := expRules[i]["capability"].([]string)
+				expType := expRules[i]["rule_type"].(string)
+				expPath := expRules[i]["path"].(string)
+				assert.Equal(t, expCap, *rule.Capabilities, "rule capability mismatch")
+				assert.Equal(t, expType, *rule.Type, "rule type mismatch")
+				assert.Equal(t, expPath, *rule.Path, "rule path mismatch")
+				i = i + 1
 			}
 		}
 

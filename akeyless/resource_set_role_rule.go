@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -121,21 +122,40 @@ func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.Rules != nil && rOut.Rules.PathRules != nil {
-		rules := (*rOut.Rules.PathRules)[0]
-		if rules.Path != nil {
-			err = d.Set("path", *rules.Path)
+		rules := *rOut.Rules.PathRules
+
+		pathExp := d.Get("path").(string)
+		capabilitySet := d.Get("capability").(*schema.Set)
+		capabilityExp := common.ExpandStringList(capabilitySet.List())
+		ruleTypeExp := d.Get("rule_type").(string)
+
+		var ruleCap []string
+		var rulePath string
+		var ruleType string
+
+		for _, rule := range rules {
+			if reflect.DeepEqual(*rule.Capabilities, capabilityExp) && *rule.Path == pathExp && *rule.Type == ruleTypeExp {
+				ruleCap = *rule.Capabilities
+				rulePath = *rule.Path
+				ruleType = *rule.Type
+				break
+			}
+		}
+
+		if ruleCap != nil {
+			err = d.Set("capability", ruleCap)
 			if err != nil {
 				return err
 			}
 		}
-		if rules.Capabilities != nil {
-			err = d.Set("capability", *rules.Capabilities)
+		if rulePath != "" {
+			err = d.Set("path", rulePath)
 			if err != nil {
 				return err
 			}
 		}
-		if rules.Type != nil {
-			err = d.Set("rule_type", *rules.Type)
+		if ruleType != "" {
+			err = d.Set("rule_type", ruleType)
 			if err != nil {
 				return err
 			}
