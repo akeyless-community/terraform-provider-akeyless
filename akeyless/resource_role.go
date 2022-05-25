@@ -225,7 +225,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("------ update ------")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -249,7 +249,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 				AssocId: *v.AssocId,
 				Token:   &token,
 			}
-			fmt.Println("delete role assoc:", association.AssocId)
+
 			_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
 			if err != nil {
 				if errors.As(err, &apiErr) {
@@ -275,8 +275,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 			RuleType: v.Type,
 			Token:    &token,
 		}
-		fmt.Println("delete role rule:", rule.RoleName)
-		fmt.Println("rule type:", *rule.RuleType)
+
 		_, res, err := client.DeleteRoleRule(ctx).Body(rule).Execute()
 		if err != nil {
 			if errors.As(err, &apiErr) {
@@ -353,7 +352,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("------ delete ------")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token

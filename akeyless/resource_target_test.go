@@ -50,6 +50,7 @@ func TestDockerhubTargetResource(t *testing.T) {
 			dockerhub_username 	= "5678"
 			dockerhub_password 	= "efgh"
 			comment 			= "bla bla"
+		}
 		`, secretName, secretPath)
 
 	tesTargetResource(t, config, configUpdate, secretPath)

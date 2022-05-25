@@ -51,7 +51,7 @@ func resourcesetRoleRule() *schema.Resource {
 }
 
 func resourcesetRoleRuleCreate(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- create ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -86,7 +86,7 @@ func resourcesetRoleRuleCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- read ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -148,7 +148,7 @@ func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcesetRoleRuleUpdate(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- update ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -183,7 +183,7 @@ func resourcesetRoleRuleUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcesetRoleRuleDelete(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- delete ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token

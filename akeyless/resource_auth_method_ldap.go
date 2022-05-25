@@ -74,7 +74,6 @@ func resourceAuthMethodLdap() *schema.Resource {
 }
 
 func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- create ---")
 
 	provider := m.(providerMeta)
 	client := *provider.client
@@ -116,7 +115,6 @@ func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodLdapRead(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- read ---")
 
 	provider := m.(providerMeta)
 	client := *provider.client
@@ -210,7 +208,6 @@ func resourceAuthMethodLdapRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodLdapUpdate(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- update ---")
 
 	provider := m.(providerMeta)
 	client := *provider.client
@@ -253,7 +250,6 @@ func resourceAuthMethodLdapUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodLdapDelete(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- delete ---")
 
 	provider := m.(providerMeta)
 	client := *provider.client

@@ -90,7 +90,7 @@ func resourceProducerSnowflake() *schema.Resource {
 }
 
 func resourceProducerSnowflakeCreate(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- create ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -123,9 +123,6 @@ func resourceProducerSnowflakeCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
-	fmt.Println("role :", *body.Role)
-	fmt.Println("house:", *body.Warehouse)
-
 	_, _, err := client.GatewayCreateProducerSnowflake(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
@@ -140,7 +137,7 @@ func resourceProducerSnowflakeCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceProducerSnowflakeRead(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- read ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -211,14 +208,12 @@ func resourceProducerSnowflakeRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 	if rOut.SfUserRole != nil {
-		fmt.Println("role :", *rOut.SfUserRole)
 		err = d.Set("role", *rOut.SfUserRole)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.SfWarehouseName != nil {
-		fmt.Println("house:", *rOut.SfWarehouseName)
 		err = d.Set("warehouse", *rOut.SfWarehouseName)
 		if err != nil {
 			return err
@@ -231,7 +226,7 @@ func resourceProducerSnowflakeRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceProducerSnowflakeUpdate(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- update ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -278,7 +273,7 @@ func resourceProducerSnowflakeUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceProducerSnowflakeDelete(d *schema.ResourceData, m interface{}) error {
-	fmt.Println("--- delete ---")
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token

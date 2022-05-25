@@ -464,13 +464,7 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rule
 		}
 
 		rules := res.GetRules()
-		for _, val := range rules.GetPathRules() {
-			fmt.Println("capabilities:", *val.Capabilities)
-			fmt.Println("path:", *val.Path)
-			fmt.Println("type:", *val.Type)
-		}
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
-		fmt.Println("----------------------------------")
 
 		exists := false
 		for _, r := range rules.GetPathRules() {
@@ -554,13 +548,7 @@ func checkAddRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		for _, val := range rules.GetPathRules() {
-			fmt.Println("capabilities:", *val.Capabilities)
-			fmt.Println("path:", *val.Path)
-			fmt.Println("type:", *val.Type)
-		}
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
-		fmt.Println("----------------------------------")
 
 		return nil
 	}
@@ -586,13 +574,7 @@ func checkUpdateRole(t *testing.T, roleName string, accnum, rulesNum int) resour
 		assert.NoError(t, err)
 		assert.Equal(t, accnum, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		for _, val := range rules.GetPathRules() {
-			fmt.Println("capabilities:", *val.Capabilities)
-			fmt.Println("path:", *val.Path)
-			fmt.Println("type:", *val.Type)
-		}
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
-		fmt.Println("----------------------------------")
 
 		return nil
 	}
@@ -612,13 +594,7 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string, rulesNum int) resour
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
-		for _, val := range rules.GetPathRules() {
-			fmt.Println("capabilities:", *val.Capabilities)
-			fmt.Println("path:", *val.Path)
-			fmt.Println("type:", *val.Type)
-		}
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
-		fmt.Println("----------------------------------")
 
 		return nil
 	}
@@ -641,10 +617,9 @@ func deleteRole(path string) error {
 
 	_, _, err = client.DeleteRole(context.Background()).Body(gsvBody).Execute()
 	if err != nil {
-		fmt.Println("error delete role:", err)
 		return err
 	}
-	fmt.Println("deleted", path)
+
 	return nil
 }
 
@@ -664,9 +639,8 @@ func deleteAuthMethod(path string) error {
 
 	_, _, err = client.DeleteAuthMethod(context.Background()).Body(gsvBody).Execute()
 	if err != nil {
-		fmt.Println("error delete auth method:", err)
 		return err
 	}
-	fmt.Println("deleted", path)
+
 	return nil
 }
