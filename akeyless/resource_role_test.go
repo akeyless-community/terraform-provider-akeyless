@@ -516,9 +516,13 @@ func checkRulesExistRemotely(t *testing.T, roleName string, capabilitiesNum int)
 		assert.NotNil(t, res.Rules.PathRules, "rules must not be nil")
 
 		rules := *res.Rules.PathRules
-		assert.Equal(t, capabilitiesNum, len(*rules[0].Capabilities), "rule capability mismatch")
-		assert.Equal(t, "item-rule", *rules[0].Type, "rule type mismatch")
-		assert.Equal(t, "/terraform-tests/*", *rules[0].Path, "rule path mismatch")
+		for _, rule := range rules {
+			if *rule.Path == "/terraform-tests/*" {
+				assert.Equal(t, capabilitiesNum, len(*rule.Capabilities), "rule capability mismatch")
+				assert.Equal(t, "item-rule", *rule.Type, "rule type mismatch")
+				assert.Equal(t, "/terraform-tests/*", *rule.Path, "rule path mismatch")
+			}
+		}
 
 		return nil
 	}
