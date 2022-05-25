@@ -19,7 +19,7 @@ const (
 
 func TestClassicKey(t *testing.T) {
 	name := "test_classic_key"
-	itemPath := testPath("path_classic_key")
+	itemPath := testPath(name)
 	deleteItem(itemPath)
 
 	config := fmt.Sprintf(`
@@ -407,8 +407,10 @@ func deleteItem(path string) error {
 	token := *p.token
 
 	gsvBody := akeyless.DeleteItem{
-		Name:  path,
-		Token: &token,
+		Name:              path,
+		Token:             &token,
+		DeleteInDays:      akeyless.PtrInt64(-1),
+		DeleteImmediately: akeyless.PtrBool(true),
 	}
 
 	_, _, err = client.DeleteItem(context.Background()).Body(gsvBody).Execute()
