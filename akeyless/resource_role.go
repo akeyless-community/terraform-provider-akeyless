@@ -248,6 +248,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 				AssocId: *v.AssocId,
 				Token:   &token,
 			}
+
 			_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
 			if err != nil {
 				if errors.As(err, &apiErr) {
@@ -273,6 +274,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 			RuleType: v.Type,
 			Token:    &token,
 		}
+
 		_, res, err := client.DeleteRoleRule(ctx).Body(rule).Execute()
 		if err != nil {
 			if errors.As(err, &apiErr) {

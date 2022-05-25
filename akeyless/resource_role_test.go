@@ -39,7 +39,7 @@ func TestSetRoleRuleResource(t *testing.T) {
 		resource "akeyless_set_role_rule" "test1" {
 			role_name 	= "%v"
 			path 		= "/terraform-tests/*"
-			capability 	= ["read" , "update"]
+			capability 	= ["read" , "update" , "delete"]
 			rule_type 	= "item-rule"
 
 			depends_on = [
@@ -53,11 +53,15 @@ func TestSetRoleRuleResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					checkRulesExistRemotely(t, itemPath, 2),
+				),
 			},
 			{
 				Config: configUpdate,
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					checkRulesExistRemotely(t, itemPath, 3),
+				),
 			},
 		},
 	})
@@ -75,7 +79,7 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 			api_key {
 			}
 		}
-		
+
 		resource "akeyless_role" "test_role" {
 			name = "%v"
 			assoc_auth_method {
@@ -446,7 +450,7 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 	`, authMethodPath, rolePath, authMethodPath, rolePath)
 
 	configUpdateRole := fmt.Sprintf(`
-	
+
 		resource "akeyless_auth_method" "auth_method" {
 			path = "%v"
 			api_key {
@@ -470,8 +474,8 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 				"groups" = "admins" 
 				"groups2" = "developers,hhh"  
 			}
-			
 			case_sensitive = "true"
+
 		depends_on = [
 				akeyless_auth_method.auth_method,
 				akeyless_role.test_role_assoc,
@@ -495,6 +499,29 @@ func TestAssocRoleAuthMethodResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func checkRulesExistRemotely(t *testing.T, roleName string, capabilitiesNum int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := *testAccProvider.Meta().(providerMeta).client
+		token := *testAccProvider.Meta().(providerMeta).token
+
+		gsvBody := akeyless.GetRole{
+			Name:  roleName,
+			Token: &token,
+		}
+
+		res, _, err := client.GetRole(context.Background()).Body(gsvBody).Execute()
+		assert.NoError(t, err)
+		assert.NotNil(t, res.Rules.PathRules, "rules must not be nil")
+
+		rules := *res.Rules.PathRules
+		assert.Equal(t, capabilitiesNum, len(*rules[0].Capabilities), "rule capability mismatch")
+		assert.Equal(t, "item-rule", *rules[0].Type, "rule type mismatch")
+		assert.Equal(t, "/terraform-tests/*", *rules[0].Path, "rule path mismatch")
+
+		return nil
+	}
 }
 
 func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
