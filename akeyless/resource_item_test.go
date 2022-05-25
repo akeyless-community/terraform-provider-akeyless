@@ -20,6 +20,8 @@ const (
 func TestClassicKey(t *testing.T) {
 	name := "test_classic_key"
 	itemPath := testPath("path_classic_key")
+	deleteItem(itemPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_classic_key" "%v" {
 			name 		= "%v"
@@ -392,4 +394,28 @@ func getProviderMeta() (*providerMeta, error) {
 	token := authOut.GetToken()
 
 	return &providerMeta{client, &token}, nil
+}
+
+func deleteItem(path string) error {
+
+	p, err := getProviderMeta()
+	if err != nil {
+		panic(err)
+	}
+
+	client := p.client
+	token := *p.token
+
+	gsvBody := akeyless.DeleteItem{
+		Name:  path,
+		Token: &token,
+	}
+
+	_, _, err = client.DeleteItem(context.Background()).Body(gsvBody).Execute()
+	if err != nil {
+		fmt.Println("error delete item:", err)
+		return err
+	}
+	fmt.Println("deleted", path)
+	return nil
 }

@@ -13,6 +13,8 @@ import (
 func TestGithubTargetResource(t *testing.T) {
 	secretName := "github_test"
 	secretPath := testPath("terraform_tests")
+	deleteTarget(secretPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_github" "%v" {
 			name 					= "%v"
