@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const RULE_PATH = "/terraform-tests/*"
+
 func TestSetRoleRuleResource(t *testing.T) {
 	itemPath := testPath("test_set_role_rule")
 	deleteRole(itemPath)
@@ -63,9 +65,9 @@ func TestSetRoleRuleResource(t *testing.T) {
 	})
 }
 
-func TestOnlyRoleResourceCreate(t *testing.T) {
-	rolePath := testPath("test_role_assoc")
-	authMethodPath := testPath("path_auth_method")
+func TestRoleResourceOnlyCreate(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
@@ -98,110 +100,98 @@ func TestOnlyRoleResourceCreate(t *testing.T) {
 	})
 }
 
-func TestRoleWithAssocResourceUpdate(t *testing.T) {
-	rolePath := testPath("test_role_assoc")
-	authMethodPath := testPath("path_auth_method")
+func TestRoleResourceUpdateRules(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
+
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
 
-		resource "akeyless_role" "test_role_assoc" {
-			name = "%v"
+		resource "akeyless_role" "test_role" {
+			name 	= "%v"
 			assoc_auth_method {
-				am_name = "%v"
-				sub_claims = {
+				am_name 	= "%v"
+				sub_claims 	= {
 					"groups" = "admins,developers"  
 				}
 			}
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
 			}
 			audit_access 		= "all"
 			analytics_access 	= "none"
-			gw_analytics_access = "own"
-			sra_reports_access 	= "all"
-			  
+			
 			depends_on = [
-    			akeyless_auth_method.auth_method,
+    			akeyless_auth_method.test_auth_method,
   			]
 		}
-	`, authMethodPath, rolePath, authMethodPath)
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
 
 	configAddRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
 
-		resource "akeyless_role" "test_role_assoc" {
-			name = "%v"
+		resource "akeyless_role" "test_role" {
+			name 	= "%v"
 			assoc_auth_method {
-				am_name = "%v"
-				sub_claims = {
+				am_name 	= "%v"
+				sub_claims 	= {
 					"groups" = "admins,developers"
 				}
 			}
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
-			}
-
-			rules {
-				capability = ["list"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read", "list"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
 			}
 			audit_access 		= "all"
-			analytics_access 	= "none"
-			gw_analytics_access = "own"
-			sra_reports_access 	= "all"
+			analytics_access 	= "own"
 			  
 			depends_on = [
-    			akeyless_auth_method.auth_method,
+    			akeyless_auth_method.test_auth_method,
   			]
 		}
-	`, authMethodPath, rolePath, authMethodPath)
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
 
 	configUpdateRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
 
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name = "%v"
 			assoc_auth_method {
-				am_name = "%v"
-				sub_claims = {
+				am_name 	= "%v"
+				sub_claims 	= {
 					"groups" = "admins,developers"
 				}
 			}
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
 			}
-
 			audit_access 		= "all"
 			analytics_access 	= "all"
-			gw_analytics_access = "own"
-			sra_reports_access 	= "own"
 
 			depends_on = [
-    			akeyless_auth_method.auth_method,
+    			akeyless_auth_method.test_auth_method,
   			]
 		}
-	`, authMethodPath, rolePath, authMethodPath)
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
 
 	configRemoveRole := config
 
@@ -211,13 +201,13 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 3),
+					checkAddRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
@@ -235,81 +225,84 @@ func TestRoleWithAssocResourceUpdate(t *testing.T) {
 		},
 	})
 }
-func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) { // FAIL
-	rolePath := testPath("test_role_assoc")
-	authMethodPath := testPath("path_auth_method")
+
+func TestRoleResourceUpdateAssoc(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
+
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
 
-		resource "akeyless_role" "test_role_assoc" {
-			name = "%v"
-			assoc_auth_method {
-				am_name = "%v"
-				sub_claims = {
-					"groups" = "admins,developers"  
-				}
-			}
-			rules {
-				capability 	= ["read"]
-				path 		= "/terraform-tests/*"
-				rule_type 	= "auth-method-rule"
-			}
-			audit_access 		= "all"
-			analytics_access 	= "all"
-			  
-			depends_on = [
-    			akeyless_auth_method.auth_method,
-  			]
-		}
-	`, authMethodPath, rolePath, authMethodPath)
-
-	configAddRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
-			path = "%v"
-			api_key {
-			}
-		}
-
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name = "%v"
 			assoc_auth_method {
 				am_name 	= "%v"
 				sub_claims 	= {
-					"groups" = "admins,developers"
+					"groups" = "admins,developers"  
+				}
+				case_sensitive = "false"
+			}
+			rules {
+				capability 	= ["read"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
+			}
+			audit_access 		= "all"
+			analytics_access 	= "all"
+			
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
+		}
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
+
+	configAddRole := fmt.Sprintf(`
+		resource "akeyless_auth_method" "test_auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+
+		resource "akeyless_role" "test_role" {
+			name = "%v"
+			assoc_auth_method {
+				am_name 	= "%v"
+				sub_claims 	= {
+					"groups" = "dogs,rats"
 				}
 			}
 			rules {
 				capability 	= ["read" , "list"]
-				path 		= "/terraform-tests/*"
+				path 		= "%v"
 				rule_type 	= "auth-method-rule"
 			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
 			  
 			depends_on = [
-    			akeyless_auth_method.auth_method,
+    			akeyless_auth_method.test_auth_method,
   			]
 		}
-	`, authMethodPath, rolePath, authMethodPath)
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
 
 	configUpdateRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
 
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name = "%v"
 			rules {
 				capability 	= ["read"]
-				path 		= "/terraform-tests/*"
+				path 		= "%v"
 				rule_type 	= "auth-method-rule"
 			}
 
@@ -317,10 +310,10 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) { // FAIL
 			analytics_access 	= "own"
 
 			depends_on = [
-    			akeyless_auth_method.auth_method,
+    			akeyless_auth_method.test_auth_method,
   			]
 		}
-	`, authMethodPath, rolePath)
+	`, authMethodPath, rolePath, RULE_PATH)
 
 	configRemoveRole := config
 
@@ -330,100 +323,101 @@ func TestRoleWithAssocResourceUpdateDeleteAssoc(t *testing.T) { // FAIL
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 3),
+					checkAddRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotelyNoAcc(t, rolePath, 3),
+					checkUpdateRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 3),
+					checkRemoveRoleRemotely(t, rolePath, 4),
 				),
 			},
 		},
 	})
 }
 
-func TestAssocRoleAuthMethodResource(t *testing.T) {
-	rolePath := testPath("test_role_assoc")
-	authMethodPath := testPath("path_auth_method")
+func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name = "%v"
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
 			}
-			audit_access = "all"
-			analytics_access = "all"
+			audit_access 		= "all"
+			analytics_access 	= "all"
 		}
 		resource "akeyless_associate_role_auth_method" "aa" {
-			am_name = "%v"
-			role_name = "%v"
-			sub_claims = {
+			am_name 	= "%v"
+			role_name 	= "%v"
+			sub_claims 	= {
 				"groups" = "admins,developers"  
 			}
 			case_sensitive = "true"
+
 		depends_on = [
-				akeyless_auth_method.auth_method,
-				akeyless_role.test_role_assoc,
+				akeyless_auth_method.test_auth_method,
+				akeyless_role.test_role,
 	 		]
 		}
-	`, authMethodPath, rolePath, authMethodPath, rolePath)
+	`, authMethodPath, rolePath, RULE_PATH, authMethodPath, rolePath)
 
 	configUpdateRole := fmt.Sprintf(`
 
-		resource "akeyless_auth_method" "auth_method" {
+		resource "akeyless_auth_method" "test_auth_method" {
 			path = "%v"
 			api_key {
 			}
 		}
-		resource "akeyless_role" "test_role_assoc" {
+		resource "akeyless_role" "test_role" {
 			name = "%v"
 			rules {
-				capability = ["read"]
-				path = "/terraform-tests/*"
-				rule_type = "auth-method-rule"
+				capability 	= ["read"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
 			}
-			audit_access = "all"
-			analytics_access = "all"
+			audit_access 		= "all"
+			analytics_access 	= "all"
 		}
 		
 		resource "akeyless_associate_role_auth_method" "aa" {
-			am_name = "%v"
-			role_name = "%v"
-			sub_claims = {
-				"groups" = "admins" 
-				"groups2" = "developers,hhh"  
+			am_name 	= "%v"
+			role_name 	= "%v"
+			sub_claims 	= {
+				"groups" 	= "admins" 
+				"groups2" 	= "dogs,rats"  
 			}
 			case_sensitive = "true"
 
 		depends_on = [
-				akeyless_auth_method.auth_method,
-				akeyless_role.test_role_assoc,
+				akeyless_auth_method.test_auth_method,
+				akeyless_role.test_role,
 	 		]
 		}
-	`, authMethodPath, rolePath, authMethodPath, rolePath)
+	`, authMethodPath, rolePath, RULE_PATH, authMethodPath, rolePath)
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
@@ -468,7 +462,7 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rule
 
 		exists := false
 		for _, r := range rules.GetPathRules() {
-			if strings.Contains(r.GetPath(), "/terraform-tests/*") {
+			if strings.Contains(r.GetPath(), RULE_PATH) {
 				exists = true
 				assert.Equal(t, []string{"read"}, r.GetCapabilities())
 				assert.Equal(t, "auth-method-rule", r.GetType())
@@ -505,7 +499,6 @@ func checkAssocExistsRemotely(t *testing.T, roleName, authMethodPath string) res
 
 func checkAssocExistsRemotely2(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
@@ -524,7 +517,7 @@ func checkAssocExistsRemotely2(t *testing.T, roleName, authMethodPath string) re
 			if k == "groups" {
 				assert.Equal(t, strings.Split("admins", ","), v)
 			} else if k == "groups2" {
-				assert.Equal(t, strings.Split("developers,hhh", ","), v)
+				assert.Equal(t, strings.Split("dogs,rats", ","), v)
 			} else {
 				t.Fail()
 			}
