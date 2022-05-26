@@ -194,7 +194,7 @@ func TestHanadbProducerResource(t *testing.T) {
 	itemPath := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_producer_hanadb" "%v" {
-			hana_dbname		= "%v"
+			name			= "%v"
 			hana_dbname     = "XXXXXX"
 			hanadb_username = "YYYYYY"
 			hanadb_password = "12345678"

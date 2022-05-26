@@ -12,6 +12,30 @@ import (
 )
 
 const CERT_DATA = `"XXXXXXXX="`
+const PUB_KEY = `"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXwIDAQAB"`
+
+func TestAuthMethodLDAPResource(t *testing.T) {
+	name := "test_auth_method_ldap"
+	path := testPath(name)
+	deleteAuthMethod(path)
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_ldap" "%v" {
+			name 				= "%v"
+			public_key_data 	= %v
+		}
+	`, name, path, PUB_KEY)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_ldap" "%v" {
+			name 				= "%v"
+			public_key_data 	= %v
+			unique_identifier 	= "email"
+			bound_ips 			= ["1.1.1.0/32"]
+		}
+	`, name, path, PUB_KEY)
+
+	testAuthMethodResource(t, config, configUpdate, path)
+}
 
 func TestAuthMethodCertResource(t *testing.T) {
 
