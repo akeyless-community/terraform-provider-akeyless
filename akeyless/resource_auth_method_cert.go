@@ -2,12 +2,10 @@ package akeyless
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
-	"unsafe"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -324,13 +322,7 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if certAccessRules.Certificate != nil {
-				certInInts := *certAccessRules.Certificate
-				var certInBytes []byte
-				for i, val := range certInInts {
-					*(*int32)(unsafe.Pointer(&certInBytes[i*4])) = val
-				}
-				decoded := base64.StdEncoding.EncodeToString(certInBytes)
-				err = d.Set("certificate_data", decoded)
+				err = d.Set("certificate_data", *certAccessRules.Certificate)
 				if err != nil {
 					return err
 				}
