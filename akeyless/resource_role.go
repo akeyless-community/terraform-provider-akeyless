@@ -171,13 +171,13 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
-	err, ok = assocRoleAuthMethod(ctx, name, nil, assocAuthMethod, nil, m)
+	err, ok = assocRoleAuthMethodAdd(ctx, name, assocAuthMethod, m)
 	if !ok {
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
 
 	roleRules := d.Get("rules").([]interface{})
-	err, ok = setRoleRules(ctx, name, nil, roleRules, m)
+	err, ok = addRoleRules(ctx, name, roleRules, m)
 	if !ok {
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
