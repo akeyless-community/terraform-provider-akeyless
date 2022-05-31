@@ -75,16 +75,14 @@ output "demo-role" {
 
 ### Optional
 
-- **analytics_access** (String) Allow this role to view analytics. Currently only 'none' and 'own' values are supported, allowing associated auth methods to view reports produced by the same auth methods
-- **assoc_auth_method** (Block List) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
-- **audit_access** (String) Allow this role to view audit logs. 'none', 'own', and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods
+- **analytics_access** (String) Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
+- **assoc_auth_method** (Block List, Deprecated) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
+- **audit_access** (String) Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.
 - **comment** (String) Comment about the role
+- **gw_analytics_access** (String) Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
 - **id** (String) The ID of this resource.
 - **rules** (Block List) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
-
-### Read-Only
-
-- **assoc_auth_method_with_rules** (String)
+- **sra_reports_access** (String) Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.
 
 <a id="nestedblock--assoc_auth_method"></a>
 ### Nested Schema for `assoc_auth_method`
@@ -95,6 +93,7 @@ Required:
 
 Optional:
 
+- **case_sensitive** (String) Treat sub claims as case-sensitive
 - **sub_claims** (Map of String) key/val of sub claims, e.g group=admins,developers
 
 
