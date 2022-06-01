@@ -87,18 +87,11 @@ func resourcesetRoleRuleCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
+	roleName := d.Get("role_name").(string)
 
-	path := d.Id()
+	id := d.Id()
 
-	body := akeyless.GetRole{
-		Name:  path,
-		Token: &token,
-	}
-
-	role, err := getRole(d, client, body)
+	role, err := getRole(d, roleName, m)
 	if err != nil {
 		return err
 	}
@@ -150,7 +143,7 @@ func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	d.SetId(path)
+	d.SetId(id)
 
 	return nil
 }
@@ -213,18 +206,12 @@ func resourcesetRoleRuleDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcesetRoleRuleImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
+
+	roleName := d.Get("role_name").(string)
 
 	id := d.Id()
 
-	body := akeyless.GetRole{
-		Name:  id,
-		Token: &token,
-	}
-
-	role, err := getRole(d, client, body)
+	role, err := getRole(d, roleName, m)
 	if err != nil {
 		return nil, err
 	}
