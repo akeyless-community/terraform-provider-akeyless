@@ -126,9 +126,11 @@ func TestSetRoleRuleResource(t *testing.T) {
 	})
 }
 
-func TestOnlyRoleResourceCreate(t *testing.T) {
-	rolePath := testPath("test_role_assoc")
-	authMethodPath := testPath("path_auth_method")
+const RULE_PATH = "/terraform-tests/*"
+
+func TestRoleResourceOnlyCreate(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
 	deleteAuthMethod(authMethodPath)
 
@@ -531,7 +533,7 @@ func checkRulesExistRemotely(t *testing.T, roleName string, expRules []map[strin
 	}
 }
 
-func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
+func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rulesNum int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
