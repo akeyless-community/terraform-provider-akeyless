@@ -44,7 +44,7 @@ func TestClassicKey(t *testing.T) {
 
 func TestDfcKeyRsaResource(t *testing.T) {
 	name := "test_rsa_key"
-	itemPath := testPath("path_rsa_key1ss")
+	itemPath := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"

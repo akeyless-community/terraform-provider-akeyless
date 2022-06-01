@@ -63,7 +63,7 @@ func TestAuthMethodCertResource(t *testing.T) {
 	testAuthMethodResource(t, config, configUpdate, path)
 }
 
-func TestAuthMethodApiKeyResource(t *testing.T) {
+func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 	name := "test_auth_method"
 	path := testPath("path_auth_method")
 	config := fmt.Sprintf(`
@@ -81,7 +81,7 @@ func TestAuthMethodApiKeyResource(t *testing.T) {
 	testAuthMethodResource(t, config, configUpdate, path)
 }
 
-func TestAuthMethodAWSResource(t *testing.T) {
+func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 	name := "test_auth_method_aws_iam"
 	path := testPath("path_auth_method_aws_iam")
 	config := fmt.Sprintf(`
@@ -101,7 +101,7 @@ func TestAuthMethodAWSResource(t *testing.T) {
 	testAuthMethodResource(t, config, configUpdate, path)
 }
 
-func TestAuthMethodSAMLResource(t *testing.T) {
+func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 	name := "test_auth_method_saml2"
 	path := testPath(name)
 	config := fmt.Sprintf(`
@@ -124,7 +124,7 @@ func TestAuthMethodSAMLResource(t *testing.T) {
 	testAuthMethodResource(t, config, configUpdate, path)
 }
 
-func TestAuthMethodAzureResource(t *testing.T) {
+func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
 	name := "test_auth_method_azure_ad"
 	path := testPath("path_auth_method_azure_ad")
 	config := fmt.Sprintf(`
@@ -146,7 +146,7 @@ func TestAuthMethodAzureResource(t *testing.T) {
 	testAuthMethodResource(t, config, configUpdate, path)
 }
 
-func TestAuthMethodGCPResource(t *testing.T) {
+func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 	if os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT") == "" || os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC") == "" {
 		return
 	}

@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"reflect"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
@@ -92,9 +91,6 @@ func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
-	ctx := context.Background()
-
 	path := d.Id()
 
 	body := akeyless.GetRole{
@@ -102,27 +98,19 @@ func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetRole(ctx).Body(body).Execute()
+	role, err := getRole(d, client, body)
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return err
 	}
-	if rOut.RoleName != nil {
-		err = d.Set("role_name", *rOut.RoleName)
+	if role.RoleName != nil {
+		err = d.Set("role_name", *role.RoleName)
 		if err != nil {
 			return err
 		}
 	}
 
-	if rOut.Rules != nil && rOut.Rules.PathRules != nil {
-		rules := *rOut.Rules.PathRules
+	if role.Rules != nil && role.Rules.PathRules != nil {
+		rules := *role.Rules.PathRules
 
 		pathExp := d.Get("path").(string)
 		capabilitySet := d.Get("capability").(*schema.Set)
@@ -229,23 +217,59 @@ func resourcesetRoleRuleImport(d *schema.ResourceData, m interface{}) ([]*schema
 	client := *provider.client
 	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetRole{
-		Name:  path,
+	body := akeyless.GetRole{
+		Name:  id,
 		Token: &token,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.GetRole(ctx).Body(item).Execute()
+	role, err := getRole(d, client, body)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
-	if err != nil {
-		return nil, err
+	if role.RoleName != nil {
+		err = d.Set("role_name", *role.RoleName)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if role.Rules != nil && role.Rules.PathRules != nil {
+		rules := *role.Rules.PathRules
+
+		pathExp := d.Get("path").(string)
+		capabilitySet := d.Get("capability").(*schema.Set)
+		capabilityExp := common.ExpandStringList(capabilitySet.List())
+		ruleTypeExp := d.Get("rule_type").(string)
+
+		for _, rule := range rules {
+			if reflect.DeepEqual(*rule.Capabilities, capabilityExp) && *rule.Path == pathExp && *rule.Type == ruleTypeExp {
+				if *rule.Capabilities != nil {
+					err = d.Set("capability", *rule.Capabilities)
+					if err != nil {
+						return nil, err
+					}
+				}
+				if *rule.Path != "" {
+					err = d.Set("path", *rule.Path)
+					if err != nil {
+						return nil, err
+					}
+				}
+				if *rule.Type != "" {
+					err = d.Set("rule_type", *rule.Type)
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				d.SetId(id)
+				return []*schema.ResourceData{d}, nil
+			}
+		}
 	}
 
-	return []*schema.ResourceData{d}, nil
+	d.SetId("")
+	return nil, fmt.Errorf("role id: %v. requested rule was not found", id)
 }

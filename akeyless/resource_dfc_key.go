@@ -128,13 +128,10 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if rOut.ItemGeneralInfo.ClassicKeyDetails != nil {
-		keyAlgorithm := rOut.ItemGeneralInfo.ClassicKeyDetails.KeyType
-		if keyAlgorithm != nil {
-			err = d.Set("alg", *keyAlgorithm)
-			if err != nil {
-				return err
-			}
+	if rOut.ItemType != nil {
+		err = d.Set("alg", *rOut.ItemType)
+		if err != nil {
+			return err
 		}
 	}
 
