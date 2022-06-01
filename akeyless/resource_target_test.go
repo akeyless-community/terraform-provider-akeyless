@@ -26,7 +26,7 @@ func TestGithubTargetResource(t *testing.T) {
 			name 					= "%v"
 			github_app_id 			= "5678"
 			github_app_private_key 	= "efgh"
-			comment 				= "bla bla"
+			comment 				= "bla bla "
 		}
 	`, secretName, secretPath)
 
