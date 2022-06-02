@@ -2,6 +2,7 @@ package akeyless
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -322,7 +323,13 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if certAccessRules.Certificate != nil {
-				err = d.Set("certificate_data", *certAccessRules.Certificate)
+
+				certData := *certAccessRules.Certificate
+				if !isBase64Encoded(certData) {
+					certData = base64.StdEncoding.EncodeToString([]byte(certData))
+				}
+
+				err = d.Set("certificate_data", certData)
 				if err != nil {
 					return err
 				}
@@ -333,6 +340,11 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 	d.SetId(path)
 
 	return nil
+}
+
+func isBase64Encoded(data string) bool {
+	_, err := base64.StdEncoding.DecodeString(data)
+	return err == nil
 }
 
 func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {

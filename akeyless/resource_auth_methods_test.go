@@ -1,34 +1,44 @@
 package akeyless
 
 import (
+	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/base64"
+	"encoding/pem"
 	"fmt"
+	"math/big"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
-const CERT_DATA = `"XXXXXXXX="`
-const PUB_KEY = `"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXwIDAQAB"`
+const PUB_KEY = `MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXwIDAQAB`
 
 func TestAuthMethodLDAPResource(t *testing.T) {
 	name := "test_auth_method_ldap"
 	path := testPath(name)
 	deleteAuthMethod(path)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_ldap" "%v" {
 			name 				= "%v"
-			public_key_data 	= %v
+			public_key_data 	= "%v"
 		}
 	`, name, path, PUB_KEY)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_ldap" "%v" {
 			name 				= "%v"
-			public_key_data 	= %v
+			public_key_data 	= "%v"
 			unique_identifier 	= "email"
 			bound_ips 			= ["1.1.1.0/32"]
 		}
@@ -38,27 +48,28 @@ func TestAuthMethodLDAPResource(t *testing.T) {
 }
 
 func TestAuthMethodCertResource(t *testing.T) {
-
-	t.Skip("certificate_data value is fictive")
-
 	name := "test_auth_method_cert"
 	path := testPath(name)
+
+	certBytes := generateCert(t)
+	certData := base64.StdEncoding.EncodeToString(certBytes)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_cert" "%v" {
 			name 				= "%v"
-			certificate_data 	= %v
+			certificate_data 	= "%v"
 			unique_identifier 	= "email"
 		}
-	`, name, path, CERT_DATA)
+	`, name, path, certData)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_cert" "%v" {
 			name 				= "%v"
-			certificate_data 	= %v
+			certificate_data 	= "%v"
 			unique_identifier 	= "email"
 			bound_ips 			= ["1.1.1.0/32"]
 		}
-	`, name, path, CERT_DATA)
+	`, name, path, certData)
 
 	testAuthMethodResource(t, config, configUpdate, path)
 }
@@ -308,4 +319,39 @@ func checkMethodExistsRemotelyNew(path string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func generateCert(t *testing.T) []byte {
+	ca := &x509.Certificate{
+		SerialNumber: big.NewInt(20202),
+		Subject: pkix.Name{
+			Organization: []string{"akeyless.io"},
+		},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().AddDate(0, 3, 0),
+		IsCA:                  true,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		BasicConstraintsValid: true,
+	}
+
+	caPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
+	require.NoError(t, err)
+
+	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
+	require.NoError(t, err)
+
+	caPEM := new(bytes.Buffer)
+	pem.Encode(caPEM, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: caBytes,
+	})
+
+	caPrivKeyPEM := new(bytes.Buffer)
+	pem.Encode(caPrivKeyPEM, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(caPrivKey),
+	})
+
+	return caPEM.Bytes()
 }

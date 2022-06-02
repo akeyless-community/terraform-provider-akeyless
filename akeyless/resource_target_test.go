@@ -12,8 +12,8 @@ import (
 
 func TestGithubTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "github_test"
-	secretPath := testPath("terraform_tests")
+	secretName := "github_target_test"
+	secretPath := testPath(secretName)
 	deleteTarget(secretPath)
 
 	config := fmt.Sprintf(`
@@ -38,8 +38,8 @@ func TestGithubTargetResource(t *testing.T) {
 
 func TestDockerhubTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "dockerhub_test"
-	secretPath := testPath("terraform_tests")
+	secretName := "dockerhub_target_test"
+	secretPath := testPath(secretName)
 	deleteTarget(secretPath)
 
 	config := fmt.Sprintf(`
@@ -64,8 +64,8 @@ func TestDockerhubTargetResource(t *testing.T) {
 
 func TestAwsTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "aws123"
-	secretPath := testPath("aws_target1")
+	secretName := "aws_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_aws" "%v" {
 			name = "%v"
@@ -87,8 +87,8 @@ func TestAwsTargetResource(t *testing.T) {
 
 func TestAzureTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "Azure123"
-	secretPath := testPath("Azure_target1")
+	secretName := "azure_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_azure" "%v" {
 			name = "%v"
@@ -114,8 +114,8 @@ func TestAzureTargetResource(t *testing.T) {
 
 func TestWebTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "web123"
-	secretPath := testPath("web_target1")
+	secretName := "web_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_web" "%v" {
 			name = "%v"
@@ -137,8 +137,8 @@ func TestWebTargetResource(t *testing.T) {
 
 func TestSSHTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "ssh123"
-	secretPath := testPath("ssh_target1")
+	secretName := "ssh_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_ssh" "%v" {
 			name = "%v"
@@ -164,8 +164,8 @@ func TestSSHTargetResource(t *testing.T) {
 
 func TestArtifactoryTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "artifactory123"
-	secretPath := testPath("artifactory_target1")
+	secretName := "artifactory_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_artifactory" "%v" {
 			name = "%v"
@@ -190,8 +190,8 @@ func TestArtifactoryTargetResource(t *testing.T) {
 
 func TestGcpTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "gcp123"
-	secretPath := testPath("gcp_target1")
+	secretName := "gcp_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gcp" "%v" {
 			name = "%v"
@@ -214,8 +214,8 @@ func TestGcpTargetResource(t *testing.T) {
 
 func TestGkeTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "gke123"
-	secretPath := testPath("gke_target1")
+	secretName := "gke_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gke" "%v" {
 			name = "%v"
@@ -243,8 +243,8 @@ func TestGkeTargetResource(t *testing.T) {
 
 func TestK8sTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "k8s123"
-	secretPath := testPath("k8s_target1")
+	secretName := "k8s_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_k8s" "%v" {
 			name = "%v"
@@ -269,8 +269,8 @@ func TestK8sTargetResource(t *testing.T) {
 
 func TestDbTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "Db123"
-	secretPath := testPath("db_target1")
+	secretName := "mysql_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name = "%v"
@@ -300,8 +300,8 @@ func TestDbTargetResource(t *testing.T) {
 
 func TestEksTargetResource(t *testing.T) {
 	t.Parallel()
-	secretName := "eks123"
-	secretPath := testPath("eks_target1")
+	secretName := "eks_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_eks" "%v" {
 			name = "%v"
