@@ -21,6 +21,8 @@ func TestDfcKeyResource(t *testing.T) {
 	t.Parallel()
 	name := "test_dfc_key"
 	itemPath := testPath("path_dfc_key12")
+	deleteKey(itemPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"
@@ -44,6 +46,8 @@ func TestDfcKeyRsaResource(t *testing.T) {
 	t.Parallel()
 	name := "test_rsa_key"
 	itemPath := testPath(name)
+	deleteKey(itemPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"
@@ -67,6 +71,8 @@ func TestRsaPublicResource(t *testing.T) {
 	t.Parallel()
 	name := "test_rsa_pub_key"
 	itemPath := testPath("path_rsa_pub_key")
+	deleteKey(itemPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"
@@ -83,9 +89,10 @@ func TestRsaPublicResource(t *testing.T) {
 }
 
 func TestClassicKey(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 	name := "test_classic_key"
 	itemPath := testPath(name)
+	deleteKey(itemPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_classic_key" "%v" {
