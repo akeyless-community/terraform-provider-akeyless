@@ -89,6 +89,9 @@ func TestRsaPublicResource(t *testing.T) {
 }
 
 func TestClassicKey(t *testing.T) {
+
+	t.Skip("not authorized to create producer on public gateway")
+
 	t.Parallel()
 	name := "test_classic_key"
 	itemPath := testPath(name)
