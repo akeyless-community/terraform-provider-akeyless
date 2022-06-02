@@ -83,7 +83,7 @@ func TestRsaPublicResource(t *testing.T) {
 }
 
 func TestClassicKey(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 	name := "test_classic_key"
 	itemPath := testPath(name)
 

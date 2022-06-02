@@ -24,6 +24,7 @@ import (
 const PUB_KEY = `MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXwIDAQAB`
 
 func TestAuthMethodLDAPResource(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_ldap"
 	path := testPath(name)
 	deleteAuthMethod(path)
@@ -48,6 +49,7 @@ func TestAuthMethodLDAPResource(t *testing.T) {
 }
 
 func TestAuthMethodCertResource(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_cert"
 	path := testPath(name)
 
@@ -75,8 +77,9 @@ func TestAuthMethodCertResource(t *testing.T) {
 }
 
 func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method"
-	path := testPath("path_auth_method")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "%v" {
 			name = "%v"
@@ -93,8 +96,9 @@ func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_aws_iam"
-	path := testPath("path_auth_method_aws_iam")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_aws_iam" "%v" {
 			name = "%v"
@@ -113,6 +117,7 @@ func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_saml2"
 	path := testPath(name)
 	config := fmt.Sprintf(`
@@ -136,8 +141,9 @@ func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_azure_ad"
-	path := testPath("path_auth_method_azure_ad")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_azure_ad" "%v" {
 			name = "%v"
@@ -162,8 +168,9 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 		return
 	}
 
+	t.Parallel()
 	name := "test_auth_method_gcp"
-	path := testPath("path_auth_method_gcp")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_gcp" "%v" {
 			name = "%v"
@@ -187,8 +194,9 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodUIDResource(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_universal_identity"
-	path := testPath("auth_method_universal_identity")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_universal_identity" "%v" {
 			name = "%v"
@@ -208,8 +216,9 @@ func TestAuthMethodUIDResource(t *testing.T) {
 }
 
 func TestAuthMethodOicdResource(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_oidc"
-	path := testPath("auth_method_oidc")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_oidc" "%v" {
 			name = "%v"
@@ -235,8 +244,9 @@ func TestAuthMethodOicdResource(t *testing.T) {
 }
 
 func TestAuthMethodOauth2Resource(t *testing.T) {
+	t.Parallel()
 	name := "tes_akeyless_auth_method_oauth2"
-	path := testPath("auth_method_oauth2")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_oauth2" "%v" {
 			name = "%v"
@@ -259,8 +269,9 @@ func TestAuthMethodOauth2Resource(t *testing.T) {
 }
 
 func TestAuthMethodK8sResource(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_K8s_3"
-	path := testPath("auth_method_K8s_test")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_k8s" "%v" {
 			name = "%v"
