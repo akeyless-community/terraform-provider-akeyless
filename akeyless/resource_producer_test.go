@@ -102,8 +102,6 @@ func TestSnowflakeProducerResource(t *testing.T) {
 
 func TestRabbitMQProducerResource(t *testing.T) {
 
-	t.Skip("wait for sdk update")
-
 	name := "rabbitmq_test"
 	itemPath := testPath(name)
 	serverUrl := "http://127.0.0.1:15672"

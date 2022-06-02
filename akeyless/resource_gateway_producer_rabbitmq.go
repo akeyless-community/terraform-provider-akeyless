@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -117,6 +116,13 @@ func resourceProducerRabbitmq() *schema.Resource {
 				Description: "Secure browser via Akeyless Web Access Bastion",
 				Default:     "false",
 			},
+			"secure_access_web": {
+				Type:        schema.TypeBool,
+				Required:    false,
+				Optional:    true,
+				Description: "Enable Web Secure Remote Access",
+				Default:     "true",
+			},
 			"secure_access_url": {
 				Type:        schema.TypeString,
 				Required:    false,
@@ -150,6 +156,7 @@ func resourceProducerRabbitmqCreate(d *schema.ResourceData, m interface{}) error
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
+	secureAccessWeb := d.Get("secure_access_web").(bool)
 	secureAccessUrl := d.Get("secure_access_url").(string)
 
 	body := akeyless.GatewayCreateProducerRabbitMQ{
@@ -170,6 +177,7 @@ func resourceProducerRabbitmqCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
+	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 	common.GetAkeylessPtr(&body.SecureAccessUrl, secureAccessUrl)
 
 	_, _, err := client.GatewayCreateProducerRabbitMQ(ctx).Body(body).Execute()
@@ -287,7 +295,7 @@ func resourceProducerRabbitmqRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	GetRabbitMQSra(d, rOut.SecureRemoteAccessDetails)
+	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
 	d.SetId(path)
 
@@ -317,6 +325,7 @@ func resourceProducerRabbitmqUpdate(d *schema.ResourceData, m interface{}) error
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
+	secureAccessWeb := d.Get("secure_access_web").(bool)
 	secureAccessUrl := d.Get("secure_access_url").(string)
 
 	body := akeyless.GatewayUpdateProducerRabbitMQ{
@@ -337,6 +346,7 @@ func resourceProducerRabbitmqUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
+	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 	common.GetAkeylessPtr(&body.SecureAccessUrl, secureAccessUrl)
 
 	_, _, err := client.GatewayUpdateProducerRabbitMQ(ctx).Body(body).Execute()
@@ -397,34 +407,4 @@ func resourceProducerRabbitmqImport(d *schema.ResourceData, m interface{}) ([]*s
 	}
 
 	return []*schema.ResourceData{d}, nil
-}
-
-func GetRabbitMQSra(d *schema.ResourceData, sra *akeyless.SecureRemoteAccess) error {
-	var err error
-	if sra == nil {
-		return nil
-	}
-
-	if _, ok := sra.GetEnableOk(); ok {
-		err = d.Set("secure_access_enable", strconv.FormatBool(sra.GetEnable()))
-		if err != nil {
-			return err
-		}
-	}
-
-	if s, ok := sra.GetUrlOk(); ok {
-		err = d.Set("secure_access_url", s)
-		if err != nil {
-			return err
-		}
-	}
-
-	if s, ok := sra.GetIsolatedOk(); ok && *s {
-		err = d.Set("secure_access_web_browsing", s)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
