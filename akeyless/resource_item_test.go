@@ -17,25 +17,22 @@ const (
 	PRIVATE_KEY = "XXXXXXXX"
 )
 
-func TestClassicKey(t *testing.T) {
-	name := "test_classic_key"
-	itemPath := testPath(name)
-	deleteItem(itemPath)
-
+func TestDfcKeyResource(t *testing.T) {
+	name := "test_dfc_key"
+	itemPath := testPath("path_dfc_key12")
 	config := fmt.Sprintf(`
-		resource "akeyless_classic_key" "%v" {
-			name 		= "%v"
-			alg 		= "RSA2048"
-			tags 		= ["aaaa", "bbbb"]
+		resource "akeyless_dfc_key" "%v" {
+			name = "%v"
+			tags     = ["t1", "t2"]
+			alg = "AES128SIV"
 		}
 	`, name, itemPath)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_classic_key" "%v" {
-			name 		= "%v"	
-			alg 		= "RSA2048"
-			tags 		= ["cccc", "dddd"]
-			metadata 	= "abcd"
+		resource "akeyless_dfc_key" "%v" {
+			name = "%v"	
+			tags     = ["t1", "t3"]
+			alg = "AES128SIV"
 		}
 	`, name, itemPath)
 
@@ -62,7 +59,6 @@ func TestDfcKeyRsaResource(t *testing.T) {
 	`, name, itemPath)
 
 	tesItemResource(t, config, configUpdate, itemPath)
-
 }
 
 func TestRsaPublicResource(t *testing.T) {
@@ -83,22 +79,24 @@ func TestRsaPublicResource(t *testing.T) {
 	tesItemResource(t, config, configUpdate, itemPath)
 }
 
-func TestDfcKeyResource(t *testing.T) {
-	name := "test_dfc_key"
-	itemPath := testPath("path_dfc_key12")
+func TestClassicKey(t *testing.T) {
+	name := "test_classic_key"
+	itemPath := testPath(name)
+
 	config := fmt.Sprintf(`
-		resource "akeyless_dfc_key" "%v" {
-			name = "%v"
-			tags     = ["t1", "t2"]
-			alg = "AES128SIV"
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"
+			alg 		= "RSA2048"
+			tags 		= ["aaaa", "bbbb"]
 		}
 	`, name, itemPath)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_dfc_key" "%v" {
-			name = "%v"	
-			tags     = ["t1", "t3"]
-			alg = "AES128SIV"
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"	
+			alg 		= "RSA2048"
+			tags 		= ["cccc", "dddd"]
+			metadata 	= "abcd"
 		}
 	`, name, itemPath)
 
