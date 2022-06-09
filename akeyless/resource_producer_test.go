@@ -33,6 +33,8 @@ const (
 	SF_USERNAME            = "xxxxxxxx"
 	SF_PASSWORD            = "yyyyyyyy"
 	SF_DBNAME              = "XXXXXXXX"
+	LDAP_PASS              = "XXXXXXXX"
+	LDAP_CERT              = "XXXXXXXX="
 )
 
 var GITHUB_TOKEN_PERM = `["contents=read", "issues=write", "actions=read"]`
@@ -52,6 +54,53 @@ var db_attr = fmt.Sprintf(`
 	port      		= "%v"
 	db_name   		= "%v"
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
+
+func TestLdapProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "ldap_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_ldap" "%v" {
+			name              = "%v"
+			ldap_url          = "ldap://127.0.0.1:10389"
+			bind_dn           = "cn=admin,dc=planetexpress,dc=com"
+			bind_dn_password  = "%v"
+			ldap_ca_cert      = "%v"
+			user_dn           = "ou=people,dc=planetexpress,dc=com"
+		}
+		data "akeyless_dynamic_secret" "secret" {
+			path 		= "%v"
+			depends_on 	= [
+				akeyless_producer_ldap.%v,
+			]
+		}
+	`, name, itemPath, LDAP_PASS, LDAP_CERT, itemPath, name)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_ldap" "%v" {
+			name              	= "%v"
+			ldap_url          	= "ldap://127.0.0.1:10389"
+			bind_dn           	= "cn=admin,dc=planetexpress,dc=com"
+			bind_dn_password  	= "%v"
+			ldap_ca_cert      	= "%v"
+			user_dn           	= "ou=people,dc=planetexpress,dc=com"
+			user_attribute 		= "uid"
+			token_expiration 	= "10"
+			user_ttl 			= "10m"
+			tags 				= ["abc", "def"]
+		}
+		data "akeyless_dynamic_secret" "secret" {
+			path 		= "%v"
+			depends_on 	= [
+				akeyless_producer_ldap.%v,
+			]
+		}
+	`, name, itemPath, LDAP_PASS, LDAP_CERT, itemPath, name)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
 
 func TestSnowflakeProducerResource(t *testing.T) {
 

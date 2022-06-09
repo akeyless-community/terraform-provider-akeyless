@@ -3,6 +3,7 @@ package akeyless
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -83,6 +84,7 @@ func resourceProducerLdap() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "LDAP token expiration in seconds",
+				Default:     "60",
 			},
 			"producer_encryption_key_name": {
 				Type:        schema.TypeString,
@@ -227,7 +229,8 @@ func resourceProducerLdapRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.LdapCertificate != nil {
-		err = d.Set("ldap_ca_cert", *rOut.LdapCertificate)
+		certEncodedData := base64.StdEncoding.EncodeToString([]byte(*rOut.LdapCertificate))
+		err = d.Set("ldap_ca_cert", certEncodedData)
 		if err != nil {
 			return err
 		}
