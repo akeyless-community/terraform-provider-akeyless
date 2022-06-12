@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -102,43 +101,38 @@ func resourcesetRoleRuleRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	pathExpect := d.Get("path").(string)
+	capabilitySet := d.Get("capability").(*schema.Set)
+	capabilityExpect := common.ExpandStringList(capabilitySet.List())
+	ruleTypeExpect := d.Get("rule_type").(string)
+
+	d.Set("capability", []string{})
+	d.Set("path", "")
+	d.Set("rule_type", "")
+
 	if role.Rules != nil && role.Rules.PathRules != nil {
 		rules := *role.Rules.PathRules
-
-		pathExp := d.Get("path").(string)
-		capabilitySet := d.Get("capability").(*schema.Set)
-		capabilityExp := common.ExpandStringList(capabilitySet.List())
-		ruleTypeExp := d.Get("rule_type").(string)
-
-		var ruleCap []string
-		var rulePath string
-		var ruleType string
-
 		for _, rule := range rules {
-			if reflect.DeepEqual(*rule.Capabilities, capabilityExp) && *rule.Path == pathExp && *rule.Type == ruleTypeExp {
-				ruleCap = *rule.Capabilities
-				rulePath = *rule.Path
-				ruleType = *rule.Type
+			if areListsEqualInAnyOrder(*rule.Capabilities, capabilityExpect) && *rule.Path == pathExpect && *rule.Type == ruleTypeExpect {
+				if rule.Capabilities != nil {
+					err = d.Set("capability", *rule.Capabilities)
+					if err != nil {
+						return err
+					}
+				}
+				if rule.Path != nil {
+					err = d.Set("path", *rule.Path)
+					if err != nil {
+						return err
+					}
+				}
+				if rule.Type != nil {
+					err = d.Set("rule_type", *rule.Type)
+					if err != nil {
+						return err
+					}
+				}
 				break
-			}
-		}
-
-		if ruleCap != nil {
-			err = d.Set("capability", ruleCap)
-			if err != nil {
-				return err
-			}
-		}
-		if rulePath != "" {
-			err = d.Set("path", rulePath)
-			if err != nil {
-				return err
-			}
-		}
-		if ruleType != "" {
-			err = d.Set("rule_type", ruleType)
-			if err != nil {
-				return err
 			}
 		}
 	}
@@ -222,16 +216,16 @@ func resourcesetRoleRuleImport(d *schema.ResourceData, m interface{}) ([]*schema
 			return nil, err
 		}
 	}
+
+	pathExpect := d.Get("path").(string)
+	capabilitySet := d.Get("capability").(*schema.Set)
+	capabilityExpect := common.ExpandStringList(capabilitySet.List())
+	ruleTypeExpect := d.Get("rule_type").(string)
+
 	if role.Rules != nil && role.Rules.PathRules != nil {
 		rules := *role.Rules.PathRules
-
-		pathExp := d.Get("path").(string)
-		capabilitySet := d.Get("capability").(*schema.Set)
-		capabilityExp := common.ExpandStringList(capabilitySet.List())
-		ruleTypeExp := d.Get("rule_type").(string)
-
 		for _, rule := range rules {
-			if reflect.DeepEqual(*rule.Capabilities, capabilityExp) && *rule.Path == pathExp && *rule.Type == ruleTypeExp {
+			if areListsEqualInAnyOrder(*rule.Capabilities, capabilityExpect) && *rule.Path == pathExpect && *rule.Type == ruleTypeExpect {
 				if *rule.Capabilities != nil {
 					err = d.Set("capability", *rule.Capabilities)
 					if err != nil {
@@ -257,6 +251,33 @@ func resourcesetRoleRuleImport(d *schema.ResourceData, m interface{}) ([]*schema
 		}
 	}
 
+	d.Set("capability", []string{})
+	d.Set("path", "")
+	d.Set("rule_type", "")
 	d.SetId("")
 	return nil, fmt.Errorf("role id: %v. requested rule was not found", id)
+}
+
+// lists may be equal but in different order. it is considered equal too.
+func areListsEqualInAnyOrder(x, y []string) bool {
+	if len(x) != len(y) {
+		return false
+	}
+	// create a map of string -> int
+	diff := make(map[string]int, len(x))
+	for _, _x := range x {
+		// 0 value for int is 0, so just increment a counter for the string
+		diff[_x] += 1
+	}
+	for _, _y := range y {
+		// If the string _y is not in diff bail out early
+		if _, ok := diff[_y]; !ok {
+			return false
+		}
+		diff[_y] -= 1
+		if diff[_y] == 0 {
+			delete(diff, _y)
+		}
+	}
+	return len(diff) == 0
 }

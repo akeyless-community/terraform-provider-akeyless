@@ -157,6 +157,8 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	revokedCertIdsSet := d.Get("revoked_cert_ids").(*schema.Set)
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
 
+	certificateData = base64.StdEncoding.EncodeToString([]byte(certificateData))
+
 	body := akeyless.CreateAuthMethodCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,

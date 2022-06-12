@@ -68,7 +68,7 @@ func TestAuthMethodCertResource(t *testing.T) {
 		resource "akeyless_auth_method_cert" "%v" {
 			name 				= "%v"
 			certificate_data 	= "%v"
-			unique_identifier 	= "email"
+			unique_identifier 	= "uid"
 			bound_ips 			= ["1.1.1.0/32"]
 		}
 	`, name, path, certData)
