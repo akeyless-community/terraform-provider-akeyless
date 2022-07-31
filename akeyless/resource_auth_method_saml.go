@@ -64,7 +64,7 @@ func resourceAuthMethodSaml() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "IDP metadata xml data",
+				Description: "IDP metadata xml data for saml authentication",
 			},
 			"allowed_redirect_uri": {
 				Type:        schema.TypeSet,
