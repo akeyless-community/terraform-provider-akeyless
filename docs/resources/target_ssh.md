@@ -17,18 +17,21 @@ SSH Target resource
 
 ### Required
 
-- **name** (String) Target name
+- `name` (String) Target name
 
 ### Optional
 
-- **comment** (String) Comment about the target
-- **host** (String) SSH host name
-- **id** (String) The ID of this resource.
-- **key** (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
-- **port** (String) SSH port
-- **private_key** (String) SSH private key
-- **private_key_password** (String) SSH private key password
-- **ssh_password** (String) SSH password to rotate
-- **ssh_username** (String) SSH username
+- `comment` (String) Comment about the target
+- `host` (String) SSH host name
+- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `port` (String) SSH port
+- `private_key` (String) SSH private key
+- `private_key_password` (String) SSH private key password
+- `ssh_password` (String) SSH password to rotate
+- `ssh_username` (String) SSH username
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

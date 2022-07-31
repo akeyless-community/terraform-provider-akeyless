@@ -17,15 +17,18 @@ Artifactory Target resource
 
 ### Required
 
-- **artifactory_admin_name** (String) Admin name
-- **artifactory_admin_pwd** (String) Admin API Key/Password
-- **base_url** (String) Artifactory REST URL, must end with artifactory postfix
-- **name** (String) Target name
+- `artifactory_admin_name` (String) Admin name
+- `artifactory_admin_pwd` (String) Admin API Key/Password
+- `base_url` (String) Artifactory REST URL, must end with artifactory postfix
+- `name` (String) Target name
 
 ### Optional
 
-- **comment** (String) Comment about the target
-- **id** (String) The ID of this resource.
-- **key** (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `comment` (String) Comment about the target
+- `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

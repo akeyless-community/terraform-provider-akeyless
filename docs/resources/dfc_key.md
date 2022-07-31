@@ -17,14 +17,17 @@ DFC Key resource
 
 ### Required
 
-- **alg** (String) DFCKey type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, RSA1024, RSA2048, RSA3072, RSA4096]
-- **name** (String) DFCKey name
+- `alg` (String) DFCKey type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, RSA1024, RSA2048, RSA3072, RSA4096]
+- `name` (String) DFCKey name
 
 ### Optional
 
-- **customer_frg_id** (String) The customer fragment ID that will be used to create the DFC key (if empty, the key will be created independently of a customer fragment)
-- **id** (String) The ID of this resource.
-- **metadata** (String) Metadata about the DFC key
-- **tags** (Set of String) List of the tags attached to this DFC key. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `customer_frg_id` (String) The customer fragment ID that will be used to create the DFC key (if empty, the key will be created independently of a customer fragment)
+- `metadata` (String) Metadata about the DFC key
+- `tags` (Set of String) List of the tags attached to this DFC key. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -17,19 +17,22 @@ Google Cloud Provider (GCP)  producer resource
 
 ### Required
 
-- **name** (String) Producer name
+- `name` (String) Producer name
 
 ### Optional
 
-- **gcp_cred_type** (String) Credentials type, options are [token, key]
-- **gcp_key** (String) Base64-encoded service account private key text
-- **gcp_key_algo** (String) Service account key algorithm, e.g. KEY_ALG_RSA_1024
-- **gcp_sa_email** (String) GCP service account email
-- **gcp_token_scopes** (String) Access token scopes list, e.g. scope1,scope2
-- **id** (String) The ID of this resource.
-- **producer_encryption_key_name** (String) Dynamic producer encryption key
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
-- **target_name** (String) Name of existing target to use in producer creation
-- **user_ttl** (String) User TTL (<=60m for access token)
+- `gcp_cred_type` (String) Credentials type, options are [token, key]
+- `gcp_key` (String) Base64-encoded service account private key text
+- `gcp_key_algo` (String) Service account key algorithm, e.g. KEY_ALG_RSA_1024
+- `gcp_sa_email` (String) GCP service account email
+- `gcp_token_scopes` (String) Access token scopes list, e.g. scope1,scope2
+- `producer_encryption_key_name` (String) Dynamic producer encryption key
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
+- `target_name` (String) Name of existing target to use in producer creation
+- `user_ttl` (String) User TTL (<=60m for access token)
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

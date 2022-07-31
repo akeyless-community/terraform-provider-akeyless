@@ -17,19 +17,22 @@ Cassandra producer resource
 
 ### Required
 
-- **name** (String) Producer name
+- `name` (String) Producer name
 
 ### Optional
 
-- **cassandra_creation_statements** (String) Cassandra Creation Statements
-- **cassandra_hosts** (String) Cassandra hosts names or IP addresses, comma separated
-- **cassandra_password** (String) Cassandra superuser password
-- **cassandra_port** (String) Cassandra port
-- **cassandra_username** (String) Cassandra superuser user name
-- **id** (String) The ID of this resource.
-- **producer_encryption_key_name** (String) Dynamic producer encryption key
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- **target_name** (String) Target name
-- **user_ttl** (String) User TTL (<=60m for access token)
+- `cassandra_creation_statements` (String) Cassandra Creation Statements
+- `cassandra_hosts` (String) Cassandra hosts names or IP addresses, comma separated
+- `cassandra_password` (String) Cassandra superuser password
+- `cassandra_port` (String) Cassandra port
+- `cassandra_username` (String) Cassandra superuser user name
+- `producer_encryption_key_name` (String) Dynamic producer encryption key
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target_name` (String) Target name
+- `user_ttl` (String) User TTL (<=60m for access token)
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

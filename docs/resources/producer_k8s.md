@@ -17,26 +17,29 @@ Native Kubernetes Service producer resource
 
 ### Required
 
-- **name** (String) Producer name
+- `name` (String) Producer name
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **k8s_cluster_ca_cert** (String, Sensitive) K8S Cluster certificate. Base 64 encoded certificate.
-- **k8s_cluster_endpoint** (String) K8S Cluster endpoint. https:// , <DNS / IP> of the cluster.
-- **k8s_cluster_token** (String) K8S Cluster authentication token.
-- **k8s_namespace** (String) K8S Namespace where the ServiceAccount exists.
-- **k8s_service_account** (String) K8S ServiceAccount to extract token from.
-- **producer_encryption_key_name** (String) Encrypt producer with following key
-- **secure_access_allow_port_forwading** (Boolean) Enable Port forwarding while using CLI access.
-- **secure_access_bastion_issuer** (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
-- **secure_access_cluster_endpoint** (String) The K8s cluster endpoint
-- **secure_access_dashboard_url** (String) The K8s dashboard url
-- **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
-- **secure_access_web** (Boolean) Enable Web Secure Remote Access
-- **secure_access_web_browsing** (Boolean) Secure browser via Akeyless Web Access Bastion
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
-- **target_name** (String) Name of existing target to use in producer creation
-- **user_ttl** (String) User TTL
+- `k8s_cluster_ca_cert` (String, Sensitive) K8S Cluster certificate. Base 64 encoded certificate.
+- `k8s_cluster_endpoint` (String) K8S Cluster endpoint. https:// , <DNS / IP> of the cluster.
+- `k8s_cluster_token` (String) K8S Cluster authentication token.
+- `k8s_namespace` (String) K8S Namespace where the ServiceAccount exists.
+- `k8s_service_account` (String) K8S ServiceAccount to extract token from.
+- `producer_encryption_key_name` (String) Encrypt producer with following key
+- `secure_access_allow_port_forwading` (Boolean) Enable Port forwarding while using CLI access.
+- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_cluster_endpoint` (String) The K8s cluster endpoint
+- `secure_access_dashboard_url` (String) The K8s dashboard url
+- `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
+- `target_name` (String) Name of existing target to use in producer creation
+- `user_ttl` (String) User TTL
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

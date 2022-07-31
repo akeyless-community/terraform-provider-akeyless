@@ -17,21 +17,21 @@ Get target details data source
 
 ### Required
 
-- **name** (String) Target name
+- `name` (String) Target name
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **show_versions** (Boolean) Include all target versions in reply
-- **target_version** (Number) Target version
+- `show_versions` (Boolean) Include all target versions in reply
+- `target_version` (Number) Target version
 
 ### Read-Only
 
-- **host** (String)
-- **password** (String, Sensitive)
-- **port** (String)
-- **private_key** (String)
-- **private_key_password** (String)
-- **username** (String)
+- `host` (String)
+- `id` (String) The ID of this resource.
+- `password` (String, Sensitive)
+- `port` (String)
+- `private_key` (String)
+- `private_key_password` (String)
+- `username` (String)
 
 

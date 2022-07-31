@@ -17,28 +17,31 @@ DB Target resource
 
 ### Required
 
-- **db_type** (String) Database type: mysql/mssql/postgres/mongodb/snowflake/oracle/cassandra/redshift
-- **name** (String) Target name
+- `db_type` (String) Database type: mysql/mssql/postgres/mongodb/snowflake/oracle/cassandra/redshift
+- `name` (String) Target name
 
 ### Optional
 
-- **comment** (String) Comment about the target
-- **db_name** (String) Database name
-- **db_server_certificates** (String) Set of root certificate authorities in base64 encoding used by clients to verify server certificates
-- **db_server_name** (String) Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is provided. It is also included in the client's handshake to support virtual hosting unless it is an IP address
-- **host** (String) Database host
-- **id** (String) The ID of this resource.
-- **key** (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
-- **mongodb_atlas** (Boolean) Flag, set database type to mongodb and the flag to true to create Mongo Atlas target
-- **mongodb_atlas_api_private_key** (String) MongoDB Atlas private key
-- **mongodb_atlas_api_public_key** (String) MongoDB Atlas public key
-- **mongodb_atlas_project_id** (String) MongoDB Atlas project ID
-- **mongodb_default_auth_db** (String) MongoDB server default authentication database
-- **mongodb_uri_options** (String) MongoDB server URI options (e.g. replicaSet=mySet&authSource=authDB)
-- **oracle_service_name** (String) oracle db service name
-- **port** (String) Database port
-- **pwd** (String) Database password
-- **snowflake_account** (String) Snowflake account name
-- **user_name** (String) Database user name
+- `comment` (String) Comment about the target
+- `db_name` (String) Database name
+- `db_server_certificates` (String) Set of root certificate authorities in base64 encoding used by clients to verify server certificates
+- `db_server_name` (String) Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is provided. It is also included in the client's handshake to support virtual hosting unless it is an IP address
+- `host` (String) Database host
+- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `mongodb_atlas` (Boolean) Flag, set database type to mongodb and the flag to true to create Mongo Atlas target
+- `mongodb_atlas_api_private_key` (String) MongoDB Atlas private key
+- `mongodb_atlas_api_public_key` (String) MongoDB Atlas public key
+- `mongodb_atlas_project_id` (String) MongoDB Atlas project ID
+- `mongodb_default_auth_db` (String) MongoDB server default authentication database
+- `mongodb_uri_options` (String) MongoDB server URI options (e.g. replicaSet=mySet&authSource=authDB)
+- `oracle_service_name` (String) oracle db service name
+- `port` (String) Database port
+- `pwd` (String) Database password
+- `snowflake_account` (String) Snowflake account name
+- `user_name` (String) Database user name
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

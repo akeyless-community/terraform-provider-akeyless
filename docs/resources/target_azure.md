@@ -17,16 +17,19 @@ Azure Target resource
 
 ### Required
 
-- **name** (String) Target name
+- `name` (String) Target name
 
 ### Optional
 
-- **client_id** (String) Azure client/application id
-- **client_secret** (String) Azure client secret
-- **comment** (String) Comment about the target
-- **id** (String) The ID of this resource.
-- **key** (String) Key name. The key is used to encrypt the target secret value. If the key name is not specified, the account default protection key is used
-- **tenant_id** (String) Azure tenant id
-- **use_gw_cloud_identity** (Boolean) Use the GW's Cloud IAM
+- `client_id` (String) Azure client/application id
+- `client_secret` (String) Azure client secret
+- `comment` (String) Comment about the target
+- `key` (String) Key name. The key is used to encrypt the target secret value. If the key name is not specified, the account default protection key is used
+- `tenant_id` (String) Azure tenant id
+- `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

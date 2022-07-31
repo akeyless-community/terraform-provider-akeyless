@@ -17,24 +17,27 @@ Redshift producer resource
 
 ### Required
 
-- **name** (String) Producer name
+- `name` (String) Producer name
 
 ### Optional
 
-- **creation_statements** (String) Redshift Creation Statements
-- **id** (String) The ID of this resource.
-- **producer_encryption_key** (String) Encrypt producer with following key
-- **redshift_db_name** (String) Redshift DB name
-- **redshift_host** (String) Redshift host name
-- **redshift_password** (String) Redshift password
-- **redshift_port** (String) Redshift port
-- **redshift_username** (String) redshiftL user
-- **secure_access_db_name** (String) Enable Web Secure Remote Access
-- **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
-- **secure_access_host** (Set of String) Target DB servers for connections., For multiple values repeat this flag.
-- **secure_access_web** (Boolean) Enable Web Secure Remote Access
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- **target_name** (String) Name of existing target to use in producer creation
-- **user_ttl** (String) User TTL
+- `creation_statements` (String) Redshift Creation Statements
+- `producer_encryption_key` (String) Encrypt producer with following key
+- `redshift_db_name` (String) Redshift DB name
+- `redshift_host` (String) Redshift host name
+- `redshift_password` (String) Redshift password
+- `redshift_port` (String) Redshift port
+- `redshift_username` (String) redshiftL user
+- `secure_access_db_name` (String) Enable Web Secure Remote Access
+- `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_host` (Set of String) Target DB servers for connections., For multiple values repeat this flag.
+- `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target_name` (String) Name of existing target to use in producer creation
+- `user_ttl` (String) User TTL
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

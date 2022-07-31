@@ -17,15 +17,18 @@ Github Target resource
 
 ### Required
 
-- **name** (String) Target name
+- `name` (String) Target name
 
 ### Optional
 
-- **comment** (String) Comment about the target
-- **github_app_id** (Number) Github application id
-- **github_app_private_key** (String) Github application private key (base64 encoded key)
-- **github_base_url** (String) Github base url
-- **id** (String) The ID of this resource.
-- **key** (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
+- `comment` (String) Comment about the target
+- `github_app_id` (Number) Github application id
+- `github_app_private_key` (String) Github application private key (base64 encoded key)
+- `github_base_url` (String) Github base url
+- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

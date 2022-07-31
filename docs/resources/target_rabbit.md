@@ -17,15 +17,18 @@ RabbitMQT Target resource
 
 ### Required
 
-- **name** (String) Target name
-- **rabbitmq_server_uri** (String) RabbitMQ server URI
-- **rabbitmq_server_user** (String) RabbitMQ server user
+- `name` (String) Target name
+- `rabbitmq_server_uri` (String) RabbitMQ server URI
+- `rabbitmq_server_user` (String) RabbitMQ server user
 
 ### Optional
 
-- **comment** (String) Comment about the target
-- **id** (String) The ID of this resource.
-- **key** (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
-- **rabbitmq_server_password** (String) RabbitMQ server password
+- `comment` (String) Comment about the target
+- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `rabbitmq_server_password` (String) RabbitMQ server password
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

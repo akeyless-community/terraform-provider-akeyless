@@ -30,6 +30,7 @@ resource "akeyless_auth_method" "aws_iam" {
   }
 }
 
+
 data "akeyless_auth_method" "api_key" {
   path = "auth-method-api-key"
 }
