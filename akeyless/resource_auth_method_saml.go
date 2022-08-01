@@ -233,7 +233,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	idpMetadataUrl := d.Get("idp_metadata_url").(string)
-	idpMetadataXmlData := d.Get("idp_metadata_xml").(string)
+	idpMetadataXmlData := d.Get("idp_metadata_xml_data").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
 
