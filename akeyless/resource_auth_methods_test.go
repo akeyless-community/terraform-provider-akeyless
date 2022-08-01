@@ -120,6 +120,45 @@ func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 	})
 }
 
+func TestAuthMethodSAMLWithXmlResourceCreateNew(t *testing.T) {
+	name := "test_auth_method_saml2"
+	path := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_saml" "%v" {
+			name = "%v"
+			idp_metadata_xml_data = "<ss>cccc<ss>"
+			unique_identifier = "email"
+		}
+	`, name, path)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_saml" "%v" {
+			name = "%v"
+			idp_metadata_xml_data = "<ss>ddddd<ss>"
+			unique_identifier = "email"
+			bound_ips = ["1.1.1.0/32"]
+		}
+	`, name, path)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkMethodExistsRemotelyNew(path),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkMethodExistsRemotelyNew(path),
+				),
+			},
+		},
+	})
+}
+
 func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
 	name := "test_auth_method_azure_ad"
 	path := testPath("path_auth_method_azure_ad")

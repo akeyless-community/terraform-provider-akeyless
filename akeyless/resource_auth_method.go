@@ -67,8 +67,13 @@ func resourceAuthMethod() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"idp_metadata_url": {
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 							Description: "IDP metadata url",
+						},
+						"idp_metadata_xml_data": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "IDP metadata xml data",
 						},
 						"unique_identifier": {
 							Type:        schema.TypeString,
@@ -435,14 +440,16 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	if samlAuthMethod != nil && len(samlAuthMethod) == 1 {
 		saml := samlAuthMethod[0].(map[string]interface{})
 		idpMetadataUrl := saml["idp_metadata_url"].(string)
+		idpMetadataXmlData := saml["idp_metadata_xml_data"].(string)
 		uniqueIdentifier := saml["unique_identifier"].(string)
 		body := akeyless.CreateAuthMethodSAML{
-			Name:             path,
-			BoundIps:         &boundIpsList,
-			AccessExpires:    &accessExpires,
-			IdpMetadataUrl:   akeyless.PtrString(idpMetadataUrl),
-			UniqueIdentifier: uniqueIdentifier,
-			Token:            &token,
+			Name:               path,
+			BoundIps:           &boundIpsList,
+			AccessExpires:      &accessExpires,
+			IdpMetadataUrl:     akeyless.PtrString(idpMetadataUrl),
+			IdpMetadataXmlData: akeyless.PtrString(idpMetadataXmlData),
+			UniqueIdentifier:   uniqueIdentifier,
+			Token:              &token,
 		}
 		apiKey, _, err := client.CreateAuthMethodSAML(ctx).Body(body).Execute()
 		if err != nil {
