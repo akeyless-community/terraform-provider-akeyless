@@ -154,8 +154,12 @@ Optional:
 
 Required:
 
-- **idp_metadata_url** (String) IDP metadata url
 - **unique_identifier** (String) A unique identifier (ID) value should be configured for OAuth2, LDAP and SAML authentication method types and is usually a value such as the email, username, or upn for example
+
+Optional:
+
+- **idp_metadata_url** (String) IDP metadata url
+- **idp_metadata_xml_data** (String) IDP metadata xml data
 
 
 <a id="nestedblock--api_key"></a>

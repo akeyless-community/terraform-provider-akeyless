@@ -84,6 +84,8 @@ func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 	name := "test_auth_method_saml2"
 	path := testPath(name)
+	deleteAuthMethod(path)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_saml" "%v" {
 			name = "%v"
@@ -96,6 +98,47 @@ func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 		resource "akeyless_auth_method_saml" "%v" {
 			name = "%v"
 			idp_metadata_url = "https://dev-1111.okta.com/app/abc12345/sso/saml/metadata"
+			unique_identifier = "email"
+			bound_ips = ["1.1.1.0/32"]
+		}
+	`, name, path)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkMethodExistsRemotelyNew(path),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkMethodExistsRemotelyNew(path),
+				),
+			},
+		},
+	})
+}
+
+func TestAuthMethodSAMLWithXmlResourceCreateNew(t *testing.T) {
+	name := "test_auth_method_saml_xml"
+	path := testPath(name)
+	deleteAuthMethod(path)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_saml" "%v" {
+			name = "%v"
+			idp_metadata_xml_data = "<ss>cccc<ss>"
+			unique_identifier = "email"
+		}
+	`, name, path)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_saml" "%v" {
+			name = "%v"
+			idp_metadata_xml_data = "<ss>ddddd<ss>"
 			unique_identifier = "email"
 			bound_ips = ["1.1.1.0/32"]
 		}
