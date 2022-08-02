@@ -3,16 +3,18 @@ package akeyless
 import (
 	"context"
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"os"
-	"testing"
 )
 
 func TestAuthMethodApiKeyResourceCreate(t *testing.T) {
-	name := "test_auth_method"
-	path := testPath("path_auth_method")
+	t.Parallel()
+	name := "test_auth_method_old"
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "%v" {
 			path = "%v"
@@ -35,8 +37,9 @@ func TestAuthMethodApiKeyResourceCreate(t *testing.T) {
 }
 
 func TestAuthMethodAWSResourceCreate(t *testing.T) {
-	name := "test_auth_method_aws_iam"
-	path := testPath("path_auth_method_aws_iam")
+	t.Parallel()
+	name := "test_auth_method_aws_iam_old"
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "%v" {
 			path = "%v"
@@ -60,8 +63,9 @@ func TestAuthMethodAWSResourceCreate(t *testing.T) {
 }
 
 func TestAuthMethodSAMLResourceCreate(t *testing.T) {
-	name := "test_auth_method_saml"
-	path := testPath("path_auth_method_saml")
+	t.Parallel()
+	name := "test_auth_method_saml_old"
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "%v" {
 			path = "%v"
@@ -86,8 +90,9 @@ func TestAuthMethodSAMLResourceCreate(t *testing.T) {
 }
 
 func TestAuthMethodAzureResourceCreate(t *testing.T) {
-	name := "test_auth_method_azure_ad"
-	path := testPath("path_auth_method_azure_ad")
+	t.Parallel()
+	name := "test_auth_method_azure_ad_old"
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "%v" {
 			path = "%v"
@@ -115,8 +120,9 @@ func TestAuthMethodGCPResourceCreate(t *testing.T) {
 		return
 	}
 
-	name := "test_auth_method_gcp"
-	path := testPath("path_auth_method_gcp")
+	t.Parallel()
+	name := "test_auth_method_gcp_old"
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "%v" {
 			path = "%v"

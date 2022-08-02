@@ -12,9 +12,42 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+const (
+	PUBLIC_KEY  = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	PRIVATE_KEY = "XXXXXXXX"
+)
+
+func TestDfcKeyResource(t *testing.T) {
+	t.Parallel()
+	name := "test_dfc_key"
+	itemPath := testPath("path_dfc_key12")
+	deleteKey(itemPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "%v" {
+			name = "%v"
+			tags     = ["t1", "t2"]
+			alg = "AES128SIV"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "%v" {
+			name = "%v"	
+			tags     = ["t1", "t3"]
+			alg = "AES128SIV"
+		}
+	`, name, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
 func TestDfcKeyRsaResource(t *testing.T) {
+	t.Parallel()
 	name := "test_rsa_key"
-	itemPath := testPath("path_rsa_key1ss")
+	itemPath := testPath(name)
+	deleteKey(itemPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"
@@ -32,12 +65,14 @@ func TestDfcKeyRsaResource(t *testing.T) {
 	`, name, itemPath)
 
 	tesItemResource(t, config, configUpdate, itemPath)
-
 }
 
 func TestRsaPublicResource(t *testing.T) {
+	t.Parallel()
 	name := "test_rsa_pub_key"
 	itemPath := testPath("path_rsa_pub_key")
+	deleteKey(itemPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"
@@ -53,30 +88,37 @@ func TestRsaPublicResource(t *testing.T) {
 	tesItemResource(t, config, configUpdate, itemPath)
 }
 
-func TestDfcKeyResource(t *testing.T) {
-	name := "test_dfc_key"
-	itemPath := testPath("path_dfc_key12")
+func TestClassicKey(t *testing.T) {
+
+	t.Skip("not authorized to create producer on public gateway")
+
+	t.Parallel()
+	name := "test_classic_key"
+	itemPath := testPath(name)
+	deleteKey(itemPath)
+
 	config := fmt.Sprintf(`
-		resource "akeyless_dfc_key" "%v" {
-			name = "%v"
-			tags     = ["t1", "t2"]
-			alg = "AES128SIV"
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"
+			alg 		= "RSA2048"
+			tags 		= ["aaaa", "bbbb"]
 		}
 	`, name, itemPath)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_dfc_key" "%v" {
-			name = "%v"	
-			tags     = ["t1", "t3"]
-			alg = "AES128SIV"
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"	
+			alg 		= "RSA2048"
+			tags 		= ["cccc", "dddd"]
+			metadata 	= "abcd"
 		}
 	`, name, itemPath)
 
 	tesItemResource(t, config, configUpdate, itemPath)
-
 }
 
 func TestPkiResource(t *testing.T) {
+	t.Parallel()
 	name := "test_pki"
 	itemPath := testPath("path_pki")
 	deleteKey("terraform-tests/test_pki_key")
@@ -123,7 +165,47 @@ func TestPkiResource(t *testing.T) {
 	tesItemResource(t, config, configUpdate, itemPath)
 }
 
+func TestPkiDataSource(t *testing.T) {
+	t.Parallel()
+	t.Skip("for now the requested values are fictive")
+
+	keyName := "test_pki_key"
+	keyPath := testPath(keyName)
+	certName := "test_pki_cert"
+	certPath := testPath(certName)
+	config := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "key" {
+			name 				= "%v"
+			alg 				= "RSA1024"
+		}
+		resource "akeyless_pki_cert_issuer" "%v" {
+			name 				= "%v"
+			signer_key_name 	= "/%v"
+			ttl 				= "390"
+			allowed_domains 	= "aaaa"
+
+			depends_on = [
+				akeyless_dfc_key.key,
+			]
+		}
+		data "akeyless_pki_certificate" "pki_cert" {
+			cert_issuer_name  	= "%v"
+			key_data_base64   	= "%v"
+			common_name       	= "aaaa"
+
+			depends_on = [
+				akeyless_pki_cert_issuer.%v,
+			]
+		}
+	`, keyPath, certName, certPath, keyPath, certPath, PRIVATE_KEY, certName)
+
+	configUpdate := config
+
+	tesItemResource(t, config, configUpdate, certPath)
+}
+
 func TestSshCertResource(t *testing.T) {
+	t.Parallel()
 	name := "test_ssh"
 	itemPath := testPath("path_ssh")
 	deleteKey("/terraform-tests/test_ssh_key")
@@ -149,7 +231,16 @@ func TestSshCertResource(t *testing.T) {
     			akeyless_dfc_key.key_ssh,
   			]
 		}
-	`, name, itemPath)
+		data "akeyless_ssh_certificate" "ssh_cert" {
+			cert_username     = "aaaa"
+			cert_issuer_name  = "%v"
+			public_key_data   = "%v"
+
+			depends_on = [
+				akeyless_ssh_cert_issuer.%v,
+			]
+		}
+	`, name, itemPath, itemPath, PUBLIC_KEY, name)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "key_ssh" {
@@ -157,7 +248,6 @@ func TestSshCertResource(t *testing.T) {
 			alg = "RSA1024"
 			tags     = ["t1", "t2"]
 		}
-
 		resource "akeyless_ssh_cert_issuer" "%v" {
 			name = "%v"
 			ttl = "290"
@@ -174,7 +264,16 @@ func TestSshCertResource(t *testing.T) {
     			akeyless_dfc_key.key_ssh,
   			]
 		}
-	`, name, itemPath)
+		data "akeyless_ssh_certificate" "ssh_cert" {
+			cert_username     = "aaaa2"
+			cert_issuer_name  = "%v"
+			public_key_data   = "%v"
+
+			depends_on = [
+				akeyless_ssh_cert_issuer.%v,
+			]
+		}
+	`, name, itemPath, itemPath, PUBLIC_KEY, name)
 
 	tesItemResource(t, config, configUpdate, itemPath)
 }
@@ -198,10 +297,9 @@ func deleteKey(path string) error {
 
 	_, _, err = client.DeleteItem(context.Background()).Body(gsvBody).Execute()
 	if err != nil {
-		fmt.Println("error delete key:", err)
 		return err
 	}
-	fmt.Println("deleted", path)
+
 	return nil
 }
 
@@ -310,4 +408,30 @@ func getProviderMeta() (*providerMeta, error) {
 	token := authOut.GetToken()
 
 	return &providerMeta{client, &token}, nil
+}
+
+func deleteItem(path string) error {
+
+	p, err := getProviderMeta()
+	if err != nil {
+		panic(err)
+	}
+
+	client := p.client
+	token := *p.token
+
+	gsvBody := akeyless.DeleteItem{
+		Name:              path,
+		Token:             &token,
+		DeleteInDays:      akeyless.PtrInt64(-1),
+		DeleteImmediately: akeyless.PtrBool(true),
+	}
+
+	_, _, err = client.DeleteItem(context.Background()).Body(gsvBody).Execute()
+	if err != nil {
+		fmt.Println("error delete item:", err)
+		return err
+	}
+	fmt.Println("deleted", path)
+	return nil
 }

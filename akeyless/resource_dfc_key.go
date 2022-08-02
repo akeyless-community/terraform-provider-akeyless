@@ -170,11 +170,13 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
-	if len(add) > 0 {
-		common.GetAkeylessPtr(&body.AddTag, add)
-	}
-	if len(remove) > 0 {
-		common.GetAkeylessPtr(&body.RmTag, remove)
+	if err == nil {
+		if len(add) > 0 {
+			common.GetAkeylessPtr(&body.AddTag, add)
+		}
+		if len(remove) > 0 {
+			common.GetAkeylessPtr(&body.RmTag, remove)
+		}
 	}
 
 	_, _, err = client.UpdateItem(ctx).Body(body).Execute()

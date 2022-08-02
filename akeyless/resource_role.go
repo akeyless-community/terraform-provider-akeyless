@@ -214,10 +214,13 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if role.Rules.PathRules != nil && len(d.Get("rules").([]interface{})) != 0 {
-		err = readRules(d, *role.Rules.PathRules)
-		if err != nil {
-			return err
+	if role.Rules != nil {
+		rules := *role.Rules
+		if rules.PathRules != nil && len(d.Get("rules").([]interface{})) != 0 {
+			err = readRules(d, *rules.PathRules)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
