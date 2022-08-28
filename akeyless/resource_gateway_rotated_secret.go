@@ -326,48 +326,52 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	val, ok := rOut["value"]
+	value, ok := rOut["value"]
 	if ok {
-		if rotatorType == "custom" {
-			err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
-			if err != nil {
-				return err
-			}
-		} else if rotatorType == "ldap" {
-			ldapPayloadInBytes, err := json.Marshal(val["ldap_payload"])
-			if err != nil {
-				return err
-			}
-			var ldapPayload map[string]interface{}
-			err = json.Unmarshal(ldapPayloadInBytes, &ldapPayload)
-			if err != nil {
-				return err
-			}
-			err = d.Set("user_attribute", fmt.Sprintf("%v", ldapPayload["ldap_user_attr"]))
-			if err != nil {
-				return err
-			}
-			err = d.Set("user_dn", fmt.Sprintf("%v", ldapPayload["ldap_user_dn"]))
-			if err != nil {
-				return err
-			}
-		} else if rotatorType == "password" {
-			err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
-			if err != nil {
-				return err
-			}
-			err = d.Set("rotated_password", fmt.Sprintf("%v", val["password"]))
-			if err != nil {
-				return err
-			}
-		} else if rotatorType == "api-key" {
-			err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
-			if err != nil {
-				return err
-			}
-			err = d.Set("api_key", fmt.Sprintf("%v", val["password"]))
-			if err != nil {
-				return err
+		var val map[string]interface{}
+		val, ok = value.(map[string]interface{})
+		if ok {
+			if rotatorType == "custom" {
+				err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
+				if err != nil {
+					return err
+				}
+			} else if rotatorType == "ldap" {
+				ldapPayloadInBytes, err := json.Marshal(val["ldap_payload"])
+				if err != nil {
+					return err
+				}
+				var ldapPayload map[string]interface{}
+				err = json.Unmarshal(ldapPayloadInBytes, &ldapPayload)
+				if err != nil {
+					return err
+				}
+				err = d.Set("user_attribute", fmt.Sprintf("%v", ldapPayload["ldap_user_attr"]))
+				if err != nil {
+					return err
+				}
+				err = d.Set("user_dn", fmt.Sprintf("%v", ldapPayload["ldap_user_dn"]))
+				if err != nil {
+					return err
+				}
+			} else if rotatorType == "password" {
+				err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
+				if err != nil {
+					return err
+				}
+				err = d.Set("rotated_password", fmt.Sprintf("%v", val["password"]))
+				if err != nil {
+					return err
+				}
+			} else if rotatorType == "api-key" {
+				err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
+				if err != nil {
+					return err
+				}
+				err = d.Set("api_key", fmt.Sprintf("%v", val["password"]))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

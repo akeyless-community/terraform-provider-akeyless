@@ -60,6 +60,12 @@ func resourceAuthMethodSaml() *schema.Resource {
 				Optional:    true,
 				Description: "IDP metadata url",
 			},
+			"idp_metadata_xml_data": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "IDP metadata xml data for saml authentication",
+			},
 			"allowed_redirect_uri": {
 				Type:        schema.TypeSet,
 				Required:    false,
@@ -91,6 +97,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	idpMetadataUrl := d.Get("idp_metadata_url").(string)
+	idpMetadataXmlData := d.Get("idp_metadata_xml_data").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
 
@@ -103,6 +110,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
 	common.GetAkeylessPtr(&body.IdpMetadataUrl, idpMetadataUrl)
+	common.GetAkeylessPtr(&body.IdpMetadataXmlData, idpMetadataXmlData)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
 
 	rOut, _, err := client.CreateAuthMethodSAML(ctx).Body(body).Execute()
@@ -192,6 +200,13 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.AccessInfo.SamlAccessRules.IdpMetadataXml != nil {
+		err = d.Set("idp_metadata_xml_data", *rOut.AccessInfo.SamlAccessRules.IdpMetadataXml)
+		if err != nil {
+			return err
+		}
+	}
+
 	if rOut.AccessInfo.SamlAccessRules.AllowedRedirectURIs != nil {
 		err = d.Set("allowed_redirect_uri", *rOut.AccessInfo.SamlAccessRules.AllowedRedirectURIs)
 		if err != nil {
@@ -218,6 +233,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	idpMetadataUrl := d.Get("idp_metadata_url").(string)
+	idpMetadataXmlData := d.Get("idp_metadata_xml_data").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
 
@@ -230,6 +246,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
 	common.GetAkeylessPtr(&body.IdpMetadataUrl, idpMetadataUrl)
+	common.GetAkeylessPtr(&body.IdpMetadataXmlData, idpMetadataXmlData)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
 	common.GetAkeylessPtr(&body.NewName, name)
 

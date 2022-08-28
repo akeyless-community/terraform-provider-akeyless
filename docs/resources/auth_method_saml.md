@@ -29,5 +29,6 @@ SAML Auth Method Resource
 - **force_sub_claims** (Boolean) enforce role-association must include sub claims
 - **id** (String) The ID of this resource.
 - **idp_metadata_url** (String) IDP metadata url
+- **idp_metadata_xml_data** (String) IDP metadata xml data for saml authentication
 
 
