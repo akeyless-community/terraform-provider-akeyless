@@ -192,8 +192,13 @@ func initRestrictedRules(d *schema.ResourceData, name string, m interface{}) err
 		return fmt.Errorf("can't get old role: %v", err)
 	}
 
-	if role.Rules.PathRules != nil {
-		rules := *role.Rules.PathRules
+	rules := role.Rules
+	if rules == nil {
+		return nil
+	}
+
+	if rules.PathRules != nil {
+		rules := *rules.PathRules
 		for _, ruleSrc := range rules {
 			rule := make(map[string]string)
 			rule["path"] = *ruleSrc.Path
@@ -214,8 +219,12 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if role.Rules.PathRules != nil && len(d.Get("rules").([]interface{})) != 0 {
-		err = readRules(d, *role.Rules.PathRules)
+	rules := role.Rules
+	if rules == nil {
+		return nil
+	}
+	if rules.PathRules != nil && len(d.Get("rules").([]interface{})) != 0 {
+		err = readRules(d, *rules.PathRules)
 		if err != nil {
 			return err
 		}
@@ -263,9 +272,14 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 		}()
 	}
 
+	rules := role.Rules
+	if rules == nil {
+		return nil
+	}
+
 	roleRulesNewValues := d.Get("rules").([]interface{})
 	if len(roleRulesNewValues) > 0 {
-		roleRulesOldValues := saveRoleRuleOldValues(role.Rules.PathRules)
+		roleRulesOldValues := saveRoleRuleOldValues(rules.PathRules)
 
 		rulesToAdd := extractRulesToSet(roleRulesNewValues, roleRulesOldValues)
 		rulesToDelete := extractRulesToSet(roleRulesOldValues, roleRulesNewValues)
@@ -285,7 +299,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	}
 
 	accessRulesNewValues := getNewAccessRules(d)
-	accessRulesOldValues := saveRoleAccessRuleOldValues(role.Rules.PathRules)
+	accessRulesOldValues := saveRoleAccessRuleOldValues(rules.PathRules)
 
 	err, ok = updateRoleAccessRules(ctx, name, accessRulesNewValues, m)
 	if !ok {
