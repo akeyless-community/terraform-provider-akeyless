@@ -64,6 +64,16 @@ func resourceRole() *schema.Resource {
 							Description: "Treat sub claims as case-sensitive",
 							Default:     "true",
 						},
+						"access_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "",
+						},
+						"id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "",
+						},
 					},
 				},
 			},
@@ -231,7 +241,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if role.RoleAuthMethodsAssoc != nil && len(d.Get("assoc_auth_method").([]interface{})) != 0 {
-		err = readAuthMethodsAssoc(d, *role.RoleAuthMethodsAssoc)
+		err = readAuthMethodsAssoc(d, role.RoleAuthMethodsAssoc)
 		if err != nil {
 			return err
 		}
@@ -253,7 +263,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 
 	assocAuthMethodNewValues := d.Get("assoc_auth_method").([]interface{})
 	if len(assocAuthMethodNewValues) > 0 {
-		assocAuthMethodOldValues := saveAssocAuthMethodOldValues(role.RoleAuthMethodsAssoc)
+		assocAuthMethodOldValues := saveAssocAuthMethodValues(role.RoleAuthMethodsAssoc)
 
 		assocsToAdd, assosToUpdateNew := extractAssocsToCreateAndUpdate(assocAuthMethodNewValues, assocAuthMethodOldValues)
 		assocsToDelete, assocToRewrite := extractAssocsToCreateAndUpdate(assocAuthMethodOldValues, assocAuthMethodNewValues)
@@ -389,30 +399,14 @@ func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless.Role,
 	return role, nil
 }
 
-func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc []akeyless.RoleAuthMethodAssociation) error {
-	var err error
+func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc *[]akeyless.RoleAuthMethodAssociation) error {
 
-	var roleAuthMethodsAssoc []interface{}
-	for _, assosSrc := range authMethodsAssoc {
-		rolesDst := make(map[string]interface{})
-		rolesDst["am_name"] = *assosSrc.AuthMethodName
-		rolesDst["case_sensitive"] = strconv.FormatBool(*assosSrc.SubClaimsCaseSensitive)
+	roleAuthMethodsAssoc := saveAssocAuthMethodValues(authMethodsAssoc)
 
-		subClaims := *assosSrc.AuthMethodSubClaims
-		sc := make(map[string]string, len(subClaims))
-		for k, v := range subClaims {
-			sc[k] = strings.Join(v, ",")
-		}
-		rolesDst["sub_claims"] = sc
-
-		roleAuthMethodsAssoc = append(roleAuthMethodsAssoc, rolesDst)
-	}
-
-	err = d.Set("assoc_auth_method", roleAuthMethodsAssoc)
+	err := d.Set("assoc_auth_method", roleAuthMethodsAssoc)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -808,8 +802,8 @@ func updateRoleAccessRules(ctx context.Context, name string, accessRules []inter
 	return nil, true
 }
 
-func saveAssocAuthMethodOldValues(assocs *[]akeyless.RoleAuthMethodAssociation) []interface{} {
-	var assocAuthMethodOldValues []interface{}
+func saveAssocAuthMethodValues(assocs *[]akeyless.RoleAuthMethodAssociation) []interface{} {
+	var assocAuthMethodValues []interface{}
 
 	if assocs != nil {
 		for _, assoc := range *assocs {
@@ -817,17 +811,20 @@ func saveAssocAuthMethodOldValues(assocs *[]akeyless.RoleAuthMethodAssociation) 
 			assocMap["id"] = *assoc.AssocId
 			assocMap["am_name"] = *assoc.AuthMethodName
 			assocMap["access_id"] = *assoc.AuthMethodAccessId
+			assocMap["case_sensitive"] = strconv.FormatBool(*assoc.SubClaimsCaseSensitive)
+
+			sc := *assoc.AuthMethodSubClaims
 			subClaims := make(map[string]interface{})
-			for key := range *assoc.AuthMethodSubClaims {
-				subClaims[key] = strings.Join((*assoc.AuthMethodSubClaims)[key], ",")
+			for key, value := range sc {
+				subClaims[key] = strings.Join(value, ",")
 			}
 			assocMap["sub_claims"] = subClaims
-			assocMap["case_sensitive"] = strconv.FormatBool(*assoc.SubClaimsCaseSensitive)
-			assocAuthMethodOldValues = append(assocAuthMethodOldValues, assocMap)
+
+			assocAuthMethodValues = append(assocAuthMethodValues, assocMap)
 		}
 	}
 
-	return assocAuthMethodOldValues
+	return assocAuthMethodValues
 }
 
 func saveRoleRuleOldValues(roleRules *[]akeyless.PathRule) []interface{} {
