@@ -59,7 +59,6 @@ func resourceRole() *schema.Resource {
 						},
 						"case_sensitive": {
 							Type:        schema.TypeString,
-							Required:    false,
 							Optional:    true,
 							Description: "Treat sub claims as case-sensitive",
 							Default:     "true",
@@ -67,12 +66,12 @@ func resourceRole() *schema.Resource {
 						"access_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "",
+							Description: "The access ID of the auth method",
 						},
 						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "",
+							Description: "The association ID",
 						},
 					},
 				},
