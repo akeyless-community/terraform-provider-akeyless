@@ -68,7 +68,7 @@ func resourceRole() *schema.Resource {
 							Computed:    true,
 							Description: "The access ID of the auth method",
 						},
-						"id": {
+						"assoc_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The association ID",
@@ -461,10 +461,10 @@ func extractAssocsToCreateAndUpdate(newAssocs, oldAssocs []interface{}) ([]inter
 				assocExists = true
 				if !reflect.DeepEqual(newSubClaims, oldSubClaims) {
 					assocNewMap := make(map[string]interface{})
-					if oldAssoc["id"] != nil {
-						assocNewMap["id"] = oldAssoc["id"]
+					if oldAssoc["assoc_id"] != nil {
+						assocNewMap["assoc_id"] = oldAssoc["assoc_id"]
 					} else {
-						assocNewMap["id"] = newAssoc["id"] // for delete on error case
+						assocNewMap["assoc_id"] = newAssoc["assoc_id"] // for delete on error case
 					}
 					assocNewMap["am_name"] = newAssoc["am_name"]
 					assocNewMap["sub_claims"] = newAssoc["sub_claims"].(map[string]interface{})
@@ -538,7 +538,7 @@ func deleteRoleAuthMethods(ctx context.Context, name string, assocAuthMethodOldV
 	for _, v := range assocAuthMethodOldValues {
 		var apiErr akeyless.GenericOpenAPIError
 		association := akeyless.DeleteRoleAssociation{
-			AssocId: v.(map[string]interface{})["id"].(string),
+			AssocId: v.(map[string]interface{})["assoc_id"].(string),
 			Token:   &token,
 		}
 		_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
@@ -605,7 +605,7 @@ func assocRoleAuthMethodUpdate(ctx context.Context, name string, assocAuthMethod
 
 	for _, v := range assocAuthMethods {
 		assoc := v.(map[string]interface{})
-		assocId := assoc["id"].(string)
+		assocId := assoc["assoc_id"].(string)
 		subClaims := assoc["sub_claims"].(map[string]interface{})
 		caseSensitive := assoc["case_sensitive"].(string)
 		sc := make(map[string]string, len(subClaims))
@@ -807,7 +807,7 @@ func saveAssocAuthMethodValues(assocs *[]akeyless.RoleAuthMethodAssociation) []i
 	if assocs != nil {
 		for _, assoc := range *assocs {
 			assocMap := make(map[string]interface{})
-			assocMap["id"] = *assoc.AssocId
+			assocMap["assoc_id"] = *assoc.AssocId
 			assocMap["am_name"] = *assoc.AuthMethodName
 			assocMap["access_id"] = *assoc.AuthMethodAccessId
 			assocMap["case_sensitive"] = strconv.FormatBool(*assoc.SubClaimsCaseSensitive)
