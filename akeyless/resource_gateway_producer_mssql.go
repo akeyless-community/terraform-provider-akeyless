@@ -79,6 +79,7 @@ func resourceProducerMssql() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "MSSQL Server Revocation Statements",
+				Default:     "DROP LOGIN [{{name}}];",
 			},
 			"producer_encryption_key_name": {
 				Type:        schema.TypeString,
