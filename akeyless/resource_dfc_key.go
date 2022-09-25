@@ -94,31 +94,12 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
-
-	var apiErr akeyless.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DescribeItem{
-		Name:  path,
-		Token: &token,
-	}
-
-	rOut, res, err := client.DescribeItem(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't key: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get key: %v", err)
+	rOut, err := getItem(d, m)
+	if err != nil || rOut == nil {
+		return err
 	}
 
 	if rOut.ItemMetadata != nil {
@@ -154,6 +135,12 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
+
+	err := validateDfcKeyUpdateParams(d, m)
+	if err != nil {
+		return fmt.Errorf("can't update: %v", err)
+	}
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -161,28 +148,32 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
+	metadata := d.Get("metadata").(string)
 	tagSet := d.Get("tags").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 
 	body := akeyless.UpdateItem{
-		Name:  name,
-		Token: &token,
+		Name:        name,
+		NewMetadata: &metadata,
+		Token:       &token,
 	}
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
-	if len(add) > 0 {
-		common.GetAkeylessPtr(&body.AddTag, add)
-	}
-	if len(remove) > 0 {
-		common.GetAkeylessPtr(&body.RmTag, remove)
+	if err == nil {
+		if len(add) > 0 {
+			common.GetAkeylessPtr(&body.AddTag, add)
+		}
+		if len(remove) > 0 {
+			common.GetAkeylessPtr(&body.RmTag, remove)
+		}
 	}
 
 	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+			return fmt.Errorf("can't update: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't update : %v", err)
+		return fmt.Errorf("can't update: %v", err)
 	}
 
 	d.SetId(name)
@@ -237,4 +228,48 @@ func resourceDfcKeyImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func getItem(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	var apiErr akeyless.GenericOpenAPIError
+	ctx := context.Background()
+
+	path := d.Id()
+
+	body := akeyless.DescribeItem{
+		Name:  path,
+		Token: &token,
+	}
+
+	rOut, res, err := client.DescribeItem(ctx).Body(body).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			if res.StatusCode == http.StatusNotFound {
+				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+				d.SetId("")
+				return nil, nil
+			}
+			return nil, fmt.Errorf("can't get key: %v", string(apiErr.Body()))
+		}
+		return nil, fmt.Errorf("can't get key: %v", err)
+	}
+
+	return &rOut, nil
+}
+
+func validateDfcKeyUpdateParams(d *schema.ResourceData, m interface{}) error {
+	oldDetails, err := getItem(d, m)
+	if err != nil || oldDetails == nil {
+		return fmt.Errorf("TODO only 'return err': can't get item: %v", err)
+	}
+
+	alg := d.Get("alg").(string)
+	if oldDetails.ItemType != nil && alg != *oldDetails.ItemType {
+		return fmt.Errorf("dfc key's algorithm should not be updated")
+	}
+	return nil
 }
