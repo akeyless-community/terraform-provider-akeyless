@@ -411,6 +411,92 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 	})
 }
 
+func TestRoleResourceAddAssoc(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath1 := testPath("test_am_resource1")
+	authMethodPath2 := testPath("test_am_resource2")
+	deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath1)
+	deleteAuthMethod(authMethodPath2)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method" "test_auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+
+		resource "akeyless_role" "test_role" {
+			name = "%v"
+			assoc_auth_method {
+				am_name 	= "%v"
+				sub_claims 	= {
+					"groups" = "admins,developers"  
+				}
+				case_sensitive = "false"
+			}
+			rules {
+				capability 	= ["read"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
+			}
+			audit_access 		= "all"
+			
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
+		}
+	`, authMethodPath1, rolePath, authMethodPath1, RULE_PATH)
+
+	configAddAssoc := fmt.Sprintf(`
+		resource "akeyless_auth_method" "test_auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+
+		resource "akeyless_role" "test_role" {
+			name = "%v"
+			assoc_auth_method {
+				am_name 	= "%v"
+				sub_claims 	= {
+					"groups" = "dogs,rats"
+				}
+			}
+			  
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
+		}
+	`, authMethodPath2, rolePath, authMethodPath2)
+
+	configRemoveRole := config
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkRoleExistsRemotely(t, rolePath, authMethodPath1, 3),
+				),
+			},
+			{
+				Config: configAddAssoc,
+				Check: resource.ComposeTestCheckFunc(
+					checkAddRoleRemotely(t, rolePath, 3),
+				),
+			},
+			{
+				Config: configRemoveRole,
+				Check: resource.ComposeTestCheckFunc(
+					checkRemoveRoleRemotely(t, rolePath, 3),
+				),
+			},
+		},
+	})
+}
+
 func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 	rolePath := testPath("test_role_resource")
 	authMethodPath := testPath("test_am_resource")
