@@ -97,7 +97,7 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	rOut, err := getItem(d, m)
+	rOut, err := getDfcKey(d, m)
 	if err != nil || rOut == nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func resourceDfcKeyImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 	return []*schema.ResourceData{d}, nil
 }
 
-func getItem(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
+func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -262,9 +262,9 @@ func getItem(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
 }
 
 func validateDfcKeyUpdateParams(d *schema.ResourceData, m interface{}) error {
-	oldDetails, err := getItem(d, m)
+	oldDetails, err := getDfcKey(d, m)
 	if err != nil || oldDetails == nil {
-		return fmt.Errorf("TODO only 'return err': can't get item: %v", err)
+		return err
 	}
 
 	alg := d.Get("alg").(string)
