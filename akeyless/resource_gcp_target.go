@@ -71,7 +71,6 @@ func resourceGcpTargetCreate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	gcpSaEmail := d.Get("gcp_sa_email").(string)
 	gcpKey := d.Get("gcp_key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
@@ -81,7 +80,6 @@ func resourceGcpTargetCreate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.GcpSaEmail, gcpSaEmail)
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
@@ -172,7 +170,6 @@ func resourceGcpTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	gcpSaEmail := d.Get("gcp_sa_email").(string)
 	gcpKey := d.Get("gcp_key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
@@ -182,9 +179,8 @@ func resourceGcpTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	 */
 
 	body := akeyless.UpdateGcpTarget{
-		Name:       name,
-		GcpSaEmail: gcpSaEmail,
-		Token:      &token,
+		Name:  name,
+		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)

@@ -78,6 +78,8 @@ github.com/akeylesslabs/akeyless-go/v2 v2.16.4 h1:YM316JTS2HQtxV13Xp4OcjN6mnToKS
 github.com/akeylesslabs/akeyless-go/v2 v2.16.4/go.mod h1:uOdXD49NCCe4rexeSc2aBU5Qv4KZgJE6YlbtYalvb+I=
 github.com/akeylesslabs/akeyless-go/v2 v2.17.0 h1:dC257qIL63tuqKCqDLCKblwudwh7gimm4/GrkXUHchc=
 github.com/akeylesslabs/akeyless-go/v2 v2.17.0/go.mod h1:uOdXD49NCCe4rexeSc2aBU5Qv4KZgJE6YlbtYalvb+I=
+github.com/akeylesslabs/akeyless-go/v2 v2.20.1 h1:Ak+atguNBWQzIlS8bI23kgoe9OM7+A4hKu7LU9VyGYk=
+github.com/akeylesslabs/akeyless-go/v2 v2.20.1/go.mod h1:uOdXD49NCCe4rexeSc2aBU5Qv4KZgJE6YlbtYalvb+I=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 h1:uSoVVbwJiQipAclBbw+8quDsfcvFjOpI5iCf4p/cqCs=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7/go.mod h1:6zEj6s6u/ghQa61ZWa/C2Aw3RkjiTBOix7dkqa1VLIs=
 github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f/go.mod h1:k8feO4+kXDxro6ErPXBRTJ/ro2mf0SsFG8s7doP9kJE=
