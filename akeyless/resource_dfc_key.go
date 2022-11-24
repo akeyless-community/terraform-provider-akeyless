@@ -136,7 +136,7 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 
-	err := validateDfcKeyUpdateParams(d, m)
+	err := validateDfcKeyUpdateParams(d)
 	if err != nil {
 		return fmt.Errorf("can't update: %v", err)
 	}
@@ -261,14 +261,9 @@ func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
 	return &rOut, nil
 }
 
-func validateDfcKeyUpdateParams(d *schema.ResourceData, m interface{}) error {
-	oldDetails, err := getDfcKey(d, m)
-	if err != nil || oldDetails == nil {
-		return err
-	}
+func validateDfcKeyUpdateParams(d *schema.ResourceData) error {
 
-	alg := d.Get("alg").(string)
-	if oldDetails.ItemType != nil && alg != *oldDetails.ItemType {
+	if d.HasChange("alg") {
 		return fmt.Errorf("dfc key's algorithm should not be updated")
 	}
 	return nil
