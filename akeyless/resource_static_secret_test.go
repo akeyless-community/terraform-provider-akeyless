@@ -13,7 +13,7 @@ import (
 func TestStaticResource(t *testing.T) {
 	secretName := "test_secret"
 	secretPath := testPath("path_secret")
-	deleteKey(secretPath)
+	deleteItem(t, secretPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {

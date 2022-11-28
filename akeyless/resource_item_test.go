@@ -10,6 +10,7 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDfcKeyRsaResource(t *testing.T) {
@@ -79,7 +80,7 @@ func TestDfcKeyResource(t *testing.T) {
 func TestPkiResource(t *testing.T) {
 	name := "test_pki"
 	itemPath := testPath("path_pki")
-	deleteKey("terraform-tests/test_pki_key")
+	deleteItem(t, "terraform-tests/test_pki_key")
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "key" {
@@ -126,7 +127,7 @@ func TestPkiResource(t *testing.T) {
 func TestSshCertResource(t *testing.T) {
 	name := "test_ssh"
 	itemPath := testPath("path_ssh")
-	deleteKey("/terraform-tests/test_ssh_key")
+	deleteItem(t, "/terraform-tests/test_ssh_key")
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "key_ssh" {
@@ -179,12 +180,10 @@ func TestSshCertResource(t *testing.T) {
 	tesItemResource(t, config, configUpdate, itemPath)
 }
 
-func deleteKey(path string) error {
+func deleteItem(t *testing.T, path string) {
 
 	p, err := getProviderMeta()
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
 	client := p.client
 	token := *p.token
@@ -196,13 +195,7 @@ func deleteKey(path string) error {
 		Token:             &token,
 	}
 
-	_, _, err = client.DeleteItem(context.Background()).Body(gsvBody).Execute()
-	if err != nil {
-		fmt.Println("error delete key:", err)
-		return err
-	}
-	fmt.Println("deleted", path)
-	return nil
+	client.DeleteItem(context.Background()).Body(gsvBody).Execute()
 }
 
 func deleteFunc() {
