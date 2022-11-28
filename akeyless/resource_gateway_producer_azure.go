@@ -49,8 +49,8 @@ func resourceProducerAzure() *schema.Resource {
 			},
 			"azure_client_secret": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Azure AD Client Secret",
 			},
 			"user_portal_access": {

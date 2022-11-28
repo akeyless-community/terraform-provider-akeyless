@@ -4,9 +4,11 @@ package akeyless
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -32,60 +34,67 @@ func resourceProducerGcp() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"gcp_sa_email": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "GCP service account email",
 			},
 			"gcp_cred_type": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Credentials type, options are [token, key]",
 				Default:     "token",
 			},
 			"gcp_key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Base64-encoded service account private key text",
 			},
 			"gcp_token_scopes": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Access token scopes list, e.g. scope1,scope2",
 			},
 			"gcp_key_algo": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Service account key algorithm, e.g. KEY_ALG_RSA_1024",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL (<=60m for access token)",
 				Default:     "60m",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"producer_encryption_key_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Dynamic producer encryption key",
+			},
+			"service_account_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "fixed",
+				Description: "The type of the gcp dynamic secret. Options[fixed, dynamic]",
+			},
+			"role_binding": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Role binding definitions in json format",
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this item, [true/false]",
 			},
 		},
 	}
@@ -109,6 +118,9 @@ func resourceProducerGcpCreate(d *schema.ResourceData, m interface{}) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	serviceAccountType := d.Get("service_account_type").(string)
+	roleBinding := d.Get("role_binding").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless.GatewayCreateProducerGcp{
 		Name:  name,
@@ -123,6 +135,9 @@ func resourceProducerGcpCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
+	common.GetAkeylessPtr(&body.ServiceAccountType, serviceAccountType)
+	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.GatewayCreateProducerGcp(ctx).Body(body).Execute()
 	if err != nil {
@@ -221,6 +236,29 @@ func resourceProducerGcpRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.GcpServiceAccountType != nil {
+		err = d.Set("service_account_type", *rOut.GcpServiceAccountType)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GcpRoleBindings != nil {
+		bytes, err := json.Marshal(*rOut.GcpRoleBindings)
+		if err != nil {
+			return err
+		}
+
+		err = d.Set("role_binding", string(bytes))
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -245,6 +283,9 @@ func resourceProducerGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	serviceAccountType := d.Get("service_account_type").(string)
+	roleBinding := d.Get("role_binding").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless.GatewayUpdateProducerGcp{
 		Name:  name,
@@ -259,6 +300,9 @@ func resourceProducerGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
+	common.GetAkeylessPtr(&body.ServiceAccountType, serviceAccountType)
+	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.GatewayUpdateProducerGcp(ctx).Body(body).Execute()
 	if err != nil {
