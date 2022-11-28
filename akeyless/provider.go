@@ -169,6 +169,7 @@ func Provider() *schema.Provider {
 			"akeyless_target_ssh":                     resourceSSHTarget(),
 			"akeyless_k8s_auth_config":                resourceK8sAuthConfig(),
 			"akeyless_associate_role_auth_method":     resourceAssocRoleAm(),
+			"akeyless_tokenizer":                      resourceTokenizer(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_static_secret":      dataSourceStaticSecret(),
@@ -184,6 +185,8 @@ func Provider() *schema.Provider {
 			"akeyless_tags":               dataSourceGetTags(),
 			"akeyless_target_details":     dataSourceGetTargetDetails(),
 			"akeyless_target":             dataSourceGetTarget(),
+			"akeyless_tokenize":           dataSourceTokenize(),
+			"akeyless_detokenize":         dataSourceDetokenize(),
 		},
 	}
 }
