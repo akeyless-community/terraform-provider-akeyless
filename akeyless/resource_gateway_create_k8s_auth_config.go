@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -31,7 +32,6 @@ func resourceK8sAuthConfig() *schema.Resource {
 			},
 			"config_encryption_key_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Encrypt K8S Auth config with following key",
 			},
@@ -42,41 +42,41 @@ func resourceK8sAuthConfig() *schema.Resource {
 			},
 			"signing_key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The private key (in base64 encoded of the PEM format) associated with the public key defined in the Kubernetes auth",
 			},
 			"token_exp": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Time in seconds of expiration of the Akeyless Kube Auth Method token",
 				Default:     "300",
 			},
 			"k8s_host": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The URL of the kubernetes API server",
 			},
 			"k8s_ca_cert": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Base-64 encoded certificate to use to call into the kubernetes API",
 			},
 			"token_reviewer_jwt": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "A Kubernetes service account JWT used to access the TokenReview API to validate other JWTs. If not set, the JWT submitted in the authentication process will be used to access the Kubernetes TokenReview API.",
 			},
 			"k8s_issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The Kubernetes JWT issuer name. If not set, kubernetes/serviceaccount will be used as an issuer.",
 				Default:     "kubernetes/serviceaccount",
+			},
+			"disable_issuer_validation": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "false",
+				Description: "Disable issuer validation [true/false]",
 			},
 		},
 	}
@@ -98,6 +98,7 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	k8sCaCert := d.Get("k8s_ca_cert").(string)
 	tokenReviewerJwt := d.Get("token_reviewer_jwt").(string)
 	k8sIssuer := d.Get("k8s_issuer").(string)
+	disableIssValidation := d.Get("disable_issuer_validation").(string)
 
 	body := akeyless.GatewayCreateK8SAuthConfig{
 		Name:     name,
@@ -111,6 +112,7 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.K8sCaCert, k8sCaCert)
 	common.GetAkeylessPtr(&body.TokenReviewerJwt, tokenReviewerJwt)
 	common.GetAkeylessPtr(&body.K8sIssuer, k8sIssuer)
+	common.GetAkeylessPtr(&body.DisableIssuerValidation, disableIssValidation)
 
 	_, _, err := client.GatewayCreateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
@@ -176,6 +178,12 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.DisableIssValidation != nil {
+		err = d.Set("disable_issuer_validation", strconv.FormatBool(*rOut.DisableIssValidation))
+		if err != nil {
+			return err
+		}
+	}
 	if rOut.ProtectionKey != nil {
 		err = d.Set("config_encryption_key_name", *rOut.ProtectionKey)
 		if err != nil {
@@ -229,6 +237,7 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	k8sCaCert := d.Get("k8s_ca_cert").(string)
 	tokenReviewerJwt := d.Get("token_reviewer_jwt").(string)
 	k8sIssuer := d.Get("k8s_issuer").(string)
+	disableIssValidation := d.Get("disable_issuer_validation").(string)
 
 	body := akeyless.GatewayUpdateK8SAuthConfig{
 		Name:     name,
@@ -242,6 +251,7 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.K8sCaCert, k8sCaCert)
 	common.GetAkeylessPtr(&body.TokenReviewerJwt, tokenReviewerJwt)
 	common.GetAkeylessPtr(&body.K8sIssuer, k8sIssuer)
+	common.GetAkeylessPtr(&body.DisableIssuerValidation, disableIssValidation)
 
 	_, _, err := client.GatewayUpdateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
