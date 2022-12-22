@@ -446,3 +446,24 @@ func GetFieldjsonTagName(tag string, s interface{}) (fieldname string) {
 	}
 	return ""
 }
+
+func GetErrorOnUpdateParam(d *schema.ResourceData, paramNames []string) error {
+	changed := []string{}
+
+	for _, paramName := range paramNames {
+		if d.HasChange(paramName) {
+			// need to explicit rollback param due to unresolved bug in terraform:
+			// https://github.com/hashicorp/terraform-provider-helm/issues/472
+			old, _ := d.GetChange(paramName)
+			d.Set(paramName, old)
+
+			changed = append(changed, paramName)
+		}
+	}
+
+	if len(changed) > 0 {
+		changedParams := "\"" + strings.Join(changed, "\", \"") + "\""
+		return fmt.Errorf("%s can not be updated", changedParams)
+	}
+	return nil
+}
