@@ -162,7 +162,6 @@ func Provider() *schema.Provider {
 			"akeyless_producer_redshift":              resourceProducerRedshift(),
 			"akeyless_producer_snowflake":             resourceProducerSnowflake(),
 			"akeyless_rotated_secret":                 resourceRotatedSecret(),
-			"akeyless_set_role_rule":                  resourcesetRoleRule(),
 			"akeyless_target_artifactory":             resourceArtifactoryTarget(),
 			"akeyless_target_aws":                     resourceAwsTarget(),
 			"akeyless_target_azure":                   resourceAzureTarget(),
