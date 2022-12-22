@@ -463,7 +463,7 @@ func GetErrorOnUpdateParam(d *schema.ResourceData, paramNames []string) error {
 
 	if len(changed) > 0 {
 		changedParams := "\"" + strings.Join(changed, "\", \"") + "\""
-		return fmt.Errorf("%s can not be updated", changedParams)
+		return fmt.Errorf("%s must not be updated", changedParams)
 	}
 	return nil
 }
