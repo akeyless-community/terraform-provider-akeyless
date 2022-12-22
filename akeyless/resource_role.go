@@ -44,6 +44,7 @@ func resourceRole() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "Create an association between role and auth method",
+				Deprecated:  "Deprecated: Please use new resource: akeyless_associate_role_auth_method",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"am_name": {
@@ -80,6 +81,7 @@ func resourceRole() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "Set a rule to a role",
+				Deprecated:  "Deprecated: Please use new resource: akeyless_set_role_rule",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"capability": {
