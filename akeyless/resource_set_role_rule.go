@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/akeylesslabs/akeyless-go/v2"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -40,10 +41,14 @@ func resourcesetRoleRule() *schema.Resource {
 			},
 			"rule_type": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
-				Description: "item-rule, target-rule, role-rule, auth-method-rule",
 				Default:     "item-rule",
+				Description: "item-rule, target-rule, role-rule, auth-method-rule",
+			},
+			"ttl": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The time (in minutes) until the rule expires. If not used the rule will apply until manually removed",
 			},
 		},
 	}
@@ -79,7 +84,8 @@ func resourcesetRoleRuleCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't create Secret: %v", err)
 	}
 
-	d.SetId(roleName)
+	roleRuleId := buildRoleRuleId(roleName, ruleType, path)
+	d.SetId(roleRuleId)
 
 	return nil
 }
@@ -172,7 +178,7 @@ func resourcesetRoleRuleUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't update : %v", err)
 	}
 
-	d.SetId(roleName)
+	// d.SetId(roleName)
 
 	return nil
 }
@@ -183,11 +189,15 @@ func resourcesetRoleRuleDelete(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	path := d.Id()
+	roleName := d.Get("role_name").(string)
+	rulePath := d.Get("path").(string)
+	ruleType := d.Get("rule_type").(string)
 
 	deleteItem := akeyless.DeleteRoleRule{
 		Token:    &token,
-		RoleName: path,
+		RoleName: roleName,
+		Path:     rulePath,
+		RuleType: &ruleType,
 	}
 
 	ctx := context.Background()
@@ -255,7 +265,7 @@ func resourcesetRoleRuleImport(d *schema.ResourceData, m interface{}) ([]*schema
 	d.Set("path", "")
 	d.Set("rule_type", "")
 	d.SetId("")
-	return nil, fmt.Errorf("role id: %v. requested rule was not found", id)
+	return nil, fmt.Errorf("role name: %v. requested rule was not found", roleName)
 }
 
 // lists may be equal but in different order. it is considered equal too.
@@ -280,4 +290,9 @@ func areListsEqualInAnyOrder(x, y []string) bool {
 		}
 	}
 	return len(diff) == 0
+}
+
+func buildRoleRuleId(roleName, ruleType, rulePath string) string {
+	params := []string{roleName, ruleType, rulePath}
+	return strings.Join(params, "__")
 }

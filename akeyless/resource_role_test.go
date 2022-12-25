@@ -14,6 +14,86 @@ import (
 
 const RULE_PATH = "/terraform-tests/*"
 
+func TestSetRoleRuleMultipleResource(t *testing.T) {
+	itemPath := testPath("set_role_rule")
+	deleteRole(itemPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_role" "test1" {
+			name = "%v"
+		}
+		resource "akeyless_set_role_rule" "test1" {
+			role_name 	= "%v"
+			path 		= "%v"
+			capability 	= ["read"]
+			rule_type 	= "item-rule"
+			depends_on 	= [
+    			akeyless_role.test1,
+  			]
+		}
+		resource "akeyless_set_role_rule" "test2" {
+			role_name 	= "%v"
+			path 		= "/terraform-tests/self"
+			capability 	= ["create"]
+			rule_type 	= "item-rule"
+			depends_on 	= [
+    			akeyless_role.test1,
+  			]
+		}
+	`, itemPath, itemPath, RULE_PATH, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_role" "test1" {
+			name = "%v"
+		}
+		resource "akeyless_set_role_rule" "test1" {
+			role_name 	= "%v"
+			path 		= "%v"
+			capability 	= ["list"]
+			rule_type 	= "item-rule"
+			depends_on 	= [
+    			akeyless_role.test1,
+  			]
+		}
+		resource "akeyless_set_role_rule" "test2" {
+			role_name 	= "%v"
+			path 		= "/terraform-tests/self"
+			capability 	= ["update"]
+			rule_type 	= "item-rule"
+			depends_on 	= [
+    			akeyless_role.test1,
+  			]
+		}
+	`, itemPath, itemPath, RULE_PATH, itemPath)
+
+	expRules1 := []map[string]interface{}{
+		{"capability": []string{"read"}, "path": "/terraform-tests/*", "rule_type": "item-rule"},
+		{"capability": []string{"create"}, "path": "/terraform-tests/self", "rule_type": "item-rule"},
+	}
+	expRules2 := []map[string]interface{}{
+		{"capability": []string{"list"}, "path": "/terraform-tests/*", "rule_type": "item-rule"},
+		{"capability": []string{"update"}, "path": "/terraform-tests/self", "rule_type": "item-rule"},
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkRulesExistRemotely(t, itemPath, expRules1),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkRulesExistRemotely(t, itemPath, expRules2),
+				),
+			},
+		},
+	})
+}
+
 func TestSetRoleRuleResource(t *testing.T) {
 	itemPath := testPath("test_set_role_rule")
 	deleteRole(itemPath)
