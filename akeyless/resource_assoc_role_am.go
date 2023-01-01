@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ErrFormatMsg = "resource id must be in 1 of 2 formats - <role_name>:<am_name> or <role_name>:<association_id>"
+	ErrFormatMsg = "resource-id should be one of the following: <role_name>:<am_name> or <role_name>:<association_id>"
 )
 
 func resourceAssocRoleAm() *schema.Resource {
@@ -263,7 +263,7 @@ func importByAuthMethod(d *schema.ResourceData, role akeyless.Role, amName strin
 		return nil, fmt.Errorf("association %v was not found", id)
 	}
 	if count > 1 {
-		return nil, fmt.Errorf("found more than 1 results for %s. please import by association id: <role_name>:<association_id>", id)
+		return nil, fmt.Errorf("found more than one result for %s. please import by association id: <role_name>:<association_id>", id)
 	}
 
 	for _, acc := range assocs {
