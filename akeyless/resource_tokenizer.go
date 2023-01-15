@@ -369,30 +369,8 @@ func resourceTokenizerImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 }
 
 func validateTokenizerUpdateParams(d *schema.ResourceData) error {
-
-	if d.HasChange("tokenizer_type") {
-		return fmt.Errorf("tokenizer's type should not be updated")
-	}
-	if d.HasChange("template_type") {
-		return fmt.Errorf("tokenizer's template type should not be updated")
-	}
-	if d.HasChange("encryption_key_name") {
-		return fmt.Errorf("tokenizer's encryption key name should not be updated")
-	}
-	if d.HasChange("tweak_type") {
-		return fmt.Errorf("tokenizer's tweak type should not be updated")
-	}
-	if d.HasChange("alphabet") {
-		return fmt.Errorf("tokenizer's alphabet should not be updated")
-	}
-	if d.HasChange("pattern") {
-		return fmt.Errorf("tokenizer's pattern should not be updated")
-	}
-	if d.HasChange("encoding_template") {
-		return fmt.Errorf("tokenizer's encoding template should not be updated")
-	}
-	if d.HasChange("decoding_template") {
-		return fmt.Errorf("tokenizer's decoding template should not be updated")
-	}
-	return nil
+	paramsMustNotUpdate := []string{"tokenizer_type", "template_type",
+		"encryption_key_name", "tweak_type", "alphabet", "pattern",
+		"encoding_template", "decoding_template"}
+	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }

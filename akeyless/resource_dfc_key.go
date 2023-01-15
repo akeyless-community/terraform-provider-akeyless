@@ -262,9 +262,6 @@ func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
 }
 
 func validateDfcKeyUpdateParams(d *schema.ResourceData) error {
-
-	if d.HasChange("alg") {
-		return fmt.Errorf("dfc key's algorithm should not be updated")
-	}
-	return nil
+	paramsMustNotUpdate := []string{"alg"}
+	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }
