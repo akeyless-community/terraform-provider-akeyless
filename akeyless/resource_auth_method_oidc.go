@@ -79,6 +79,17 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Description: "Allowed redirect URIs after the authentication (default is https://console.akeyless.io/login-oidc to enable OIDC via Akeyless Console and  http://127.0.0.1:* to enable OIDC via akeyless CLI)",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"required_scopes": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Required scopes that the oidc method will request from the oidc provider and the user must approve",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"required_scopes_prefix": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A prefix to add to all required-scopes when requesting them from the oidc server (for example, azure's Application ID URI)",
+			},
 			"access_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -107,6 +118,9 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
+	requiredScopesSet := d.Get("required_scopes").(*schema.Set)
+	requiredScopes := common.ExpandStringList(requiredScopesSet.List())
+	requiredScopesPrefix := d.Get("required_scopes_prefix").(string)
 
 	body := akeyless.CreateAuthMethodOIDC{
 		Name:             name,
@@ -120,6 +134,8 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ClientId, clientId)
 	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
+	common.GetAkeylessPtr(&body.RequiredScopes, requiredScopes)
+	common.GetAkeylessPtr(&body.RequiredScopesPrefix, requiredScopesPrefix)
 
 	rOut, _, err := client.CreateAuthMethodOIDC(ctx).Body(body).Execute()
 	if err != nil {
@@ -227,6 +243,20 @@ func resourceAuthMethodOidcRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.AccessInfo.OidcAccessRules.RequiredScopes != nil {
+		err = d.Set("required_scopes", *rOut.AccessInfo.OidcAccessRules.RequiredScopes)
+		if err != nil {
+			return err
+		}
+	}
+
+	if rOut.AccessInfo.OidcAccessRules.RequiredScopesPrefix != nil {
+		err = d.Set("required_scopes_prefix", *rOut.AccessInfo.OidcAccessRules.RequiredScopesPrefix)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -250,6 +280,9 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
+	requiredScopesSet := d.Get("required_scopes").(*schema.Set)
+	requiredScopes := common.ExpandStringList(requiredScopesSet.List())
+	requiredScopesPrefix := d.Get("required_scopes_prefix").(string)
 
 	body := akeyless.UpdateAuthMethodOIDC{
 		Name:             name,
@@ -263,6 +296,8 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ClientId, clientId)
 	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
+	common.GetAkeylessPtr(&body.RequiredScopes, requiredScopes)
+	common.GetAkeylessPtr(&body.RequiredScopesPrefix, requiredScopesPrefix)
 	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodOIDC(ctx).Body(body).Execute()
