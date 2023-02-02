@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -49,9 +49,14 @@ func resourceGithubTarget() *schema.Resource {
 			},
 			"comment": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "Comment about the target",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 			"key": {
 				Type:        schema.TypeString,
@@ -75,6 +80,7 @@ func resourceGithubTargetCreate(d *schema.ResourceData, m interface{}) error {
 	githubAppPrivateKey := d.Get("github_app_private_key").(string)
 	githubBaseUrl := d.Get("github_base_url").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 
 	body := akeyless.CreateGithubTarget{
@@ -86,6 +92,7 @@ func resourceGithubTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 
 	_, _, err := client.CreateGithubTarget(ctx).Body(body).Execute()
@@ -148,7 +155,7 @@ func resourceGithubTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err = d.Set("comment", *rOut.Target.Comment)
+		err = d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -177,6 +184,7 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	githubAppPrivateKey := d.Get("github_app_private_key").(string)
 	githubBaseUrl := d.Get("github_base_url").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 
 	body := akeyless.UpdateGithubTarget{
@@ -188,6 +196,7 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 
 	_, _, err := client.UpdateGithubTarget(ctx).Body(body).Execute()

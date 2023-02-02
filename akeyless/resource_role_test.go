@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
@@ -14,35 +14,33 @@ import (
 
 const RULE_PATH = "/terraform-tests/*"
 
-func TestRoleResourceOnlyCreate(t *testing.T) {
+func TestRoleResourceBasic(t *testing.T) {
 	rolePath := testPath("test_role_resource")
-	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
-	deleteAuthMethod(authMethodPath)
 
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
-		}
-
 		resource "akeyless_role" "test_role" {
-			name = "%v"
-			assoc_auth_method {
-				am_name = "%v"
-			}
-			depends_on = [
-    			akeyless_auth_method.test_auth_method,
-  			]
+			name 	= "%v1"
+			comment = "aaaa"
 		}
-	`, authMethodPath, rolePath, authMethodPath)
+	`, rolePath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_role" "test_role" {
+			name 		= "%v2"
+			description = "bbbb"
+		}
+	`, rolePath)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
+				Check:  resource.ComposeTestCheckFunc(),
+			},
+			{
+				Config: configUpdate,
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 		},

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -37,9 +37,14 @@ func resourceRotatedSecret() *schema.Resource {
 			},
 			"metadata": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "Metadata about the secret",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -153,6 +158,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	metadata := d.Get("metadata").(string)
+	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	key := d.Get("key").(string)
@@ -177,6 +183,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 		Token:       &token,
 	}
 	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
@@ -239,7 +246,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if itemOut.ItemMetadata != nil {
-		err = d.Set("metadata", *itemOut.ItemMetadata)
+		err = d.Set("description", *itemOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -403,6 +410,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	metadata := d.Get("metadata").(string)
+	description := d.Get("description").(string)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 
 	body := akeyless.UpdateRotatedSecret{
@@ -431,6 +439,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 	common.GetAkeylessPtr(&body.NewMetadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	bodyItem := akeyless.UpdateItem{
 		Name:        name,

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -79,7 +79,13 @@ func resourceTokenizer() *schema.Resource {
 			"metadata": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "A metadata about the tokenizer",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 			"tag": {
 				Type:        schema.TypeSet,
@@ -114,6 +120,7 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	encodingTemplate := d.Get("encoding_template").(string)
 	decodingTemplate := d.Get("decoding_template").(string)
 	metadata := d.Get("metadata").(string)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tag").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
@@ -131,6 +138,7 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.EncodingTemplate, encodingTemplate)
 	common.GetAkeylessPtr(&body.DecodingTemplate, decodingTemplate)
 	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
@@ -249,7 +257,7 @@ func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.ItemMetadata != nil {
-		err = d.Set("metadata", *rOut.ItemMetadata)
+		err = d.Set("description", *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -287,16 +295,19 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	metadata := d.Get("metadata").(string)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tag").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless.UpdateItem{
 		Name:             name,
-		NewMetadata:      &metadata,
 		DeleteProtection: &deleteProtection,
 		Token:            &token,
 	}
+
+	common.GetAkeylessPtr(&body.NewMetadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
 	if err == nil {

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -73,9 +73,14 @@ func resourceGkeTarget() *schema.Resource {
 			},
 			"comment": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "Comment about the target",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 		},
 	}
@@ -97,6 +102,7 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.CreateGKETarget{
 		Name:  name,
@@ -110,6 +116,7 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateGKETarget(ctx).Body(body).Execute()
 	if err != nil {
@@ -195,7 +202,7 @@ func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err = d.Set("comment", *rOut.Target.Comment)
+		err = d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -222,6 +229,7 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.UpdateGKETarget{
 		Name:  name,
@@ -235,6 +243,7 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateGKETarget(ctx).Body(body).Execute()
 	if err != nil {

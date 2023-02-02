@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -61,9 +61,14 @@ func resourceAzureTarget() *schema.Resource {
 			},
 			"comment": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "Comment about the target",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 		},
 	}
@@ -83,6 +88,7 @@ func resourceAzureTargetCreate(d *schema.ResourceData, m interface{}) error {
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.CreateAzureTarget{
 		Name:  name,
@@ -94,6 +100,7 @@ func resourceAzureTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateAzureTarget(ctx).Body(body).Execute()
 	if err != nil {
@@ -167,7 +174,7 @@ func resourceAzureTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err = d.Set("comment", *rOut.Target.Comment)
+		err = d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -192,6 +199,7 @@ func resourceAzureTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.UpdateAzureTarget{
 		Name:  name,
@@ -203,6 +211,7 @@ func resourceAzureTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateAzureTarget(ctx).Body(body).Execute()
 	if err != nil {

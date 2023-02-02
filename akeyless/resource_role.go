@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -37,8 +37,13 @@ func resourceRole() *schema.Resource {
 			"comment": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "Comment about the role",
-				Default:     "",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 			"assoc_auth_method": {
 				Type:        schema.TypeList,
@@ -139,6 +144,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	name := d.Get("name").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 	auditAccess := d.Get("audit_access").(string)
 	analyticsAccess := d.Get("analytics_access").(string)
 	gwAnalyticsAccess := d.Get("gw_analytics_access").(string)
@@ -146,10 +152,11 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	var apiErr akeyless.GenericOpenAPIError
 	body := akeyless.CreateRole{
-		Name:    name,
-		Comment: akeyless.PtrString(comment),
-		Token:   &token,
+		Name:  name,
+		Token: &token,
 	}
+	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.AuditAccess, auditAccess)
 	common.GetAkeylessPtr(&body.AnalyticsAccess, analyticsAccess)
 	common.GetAkeylessPtr(&body.GwAnalyticsAccess, gwAnalyticsAccess)
@@ -310,9 +317,11 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	accessRulesNewValues := getNewAccessRules(d)
 	accessRulesOldValues := saveRoleAccessRuleOldValues(rules.PathRules)
 
-	err, ok = updateRoleAccessRules(ctx, name, accessRulesNewValues, m)
+	description := d.Get("description").(string)
+
+	err, ok = updateRoleAccessRules(ctx, name, description, accessRulesNewValues, m)
 	if !ok {
-		errInner, okInner := updateRoleAccessRules(ctx, name, accessRulesOldValues, m)
+		errInner, okInner := updateRoleAccessRules(ctx, name, description, accessRulesOldValues, m)
 		if !okInner {
 			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
 		}
@@ -758,7 +767,9 @@ func getNewAccessRules(d *schema.ResourceData) []interface{} {
 	return accessRules
 }
 
-func updateRoleAccessRules(ctx context.Context, name string, accessRules []interface{}, m interface{}) (error, bool) {
+func updateRoleAccessRules(ctx context.Context, name, description string,
+	accessRules []interface{}, m interface{}) (error, bool) {
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -782,6 +793,7 @@ func updateRoleAccessRules(ctx context.Context, name string, accessRules []inter
 
 	updateBody := akeyless.UpdateRole{
 		Name:              name,
+		Description:       akeyless.PtrString(description),
 		Token:             &token,
 		AuditAccess:       akeyless.PtrString(auditAccess),
 		AnalyticsAccess:   akeyless.PtrString(analyticsAccess),

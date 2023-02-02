@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,9 +35,14 @@ func resourceDfcKey() *schema.Resource {
 			},
 			"metadata": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "Metadata about the DFC key",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -66,6 +71,7 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
 	metadata := d.Get("metadata").(string)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	customerFrgId := d.Get("customer_frg_id").(string)
@@ -77,6 +83,7 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.SplitLevel, 3)
 	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.CustomerFrgId, customerFrgId)
 
@@ -103,7 +110,7 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.ItemMetadata != nil {
-		err = d.Set("metadata", *rOut.ItemMetadata)
+		err = d.Set("description", *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -149,14 +156,17 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	metadata := d.Get("metadata").(string)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tags").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 
 	body := akeyless.UpdateItem{
-		Name:        name,
-		NewMetadata: &metadata,
-		Token:       &token,
+		Name:  name,
+		Token: &token,
 	}
+
+	common.GetAkeylessPtr(&body.NewMetadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
 	if err == nil {

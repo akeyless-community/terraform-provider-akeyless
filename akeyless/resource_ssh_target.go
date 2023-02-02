@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -31,9 +31,14 @@ func resourceSSHTarget() *schema.Resource {
 			},
 			"comment": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "Comment about the target",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 			"host": {
 				Type:        schema.TypeString,
@@ -91,6 +96,7 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
 	sshUsername := d.Get("ssh_username").(string)
@@ -104,6 +110,7 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Port, port)
 	common.GetAkeylessPtr(&body.SshUsername, sshUsername)
@@ -196,7 +203,7 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err = d.Set("comment", *rOut.Target.Comment)
+		err = d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -216,6 +223,7 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
 	sshUsername := d.Get("ssh_username").(string)
@@ -229,6 +237,7 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Port, port)
 	common.GetAkeylessPtr(&body.SshUsername, sshUsername)

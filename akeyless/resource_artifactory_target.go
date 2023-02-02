@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -51,9 +51,14 @@ func resourceArtifactoryTarget() *schema.Resource {
 			},
 			"comment": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "Comment about the target",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 		},
 	}
@@ -72,6 +77,7 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.CreateArtifactoryTarget{
 		Name:                 name,
@@ -82,6 +88,7 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	}
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateArtifactoryTarget(ctx).Body(body).Execute()
 	if err != nil {
@@ -148,7 +155,7 @@ func resourceArtifactoryTargetRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err = d.Set("comment", *rOut.Target.Comment)
+		err = d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -172,6 +179,7 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.UpdateArtifactoryTarget{
 		Name:                 name,
@@ -182,6 +190,7 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	}
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateArtifactoryTarget(ctx).Body(body).Execute()
 	if err != nil {
