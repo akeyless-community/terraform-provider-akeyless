@@ -72,10 +72,9 @@ func resourceGkeTarget() *schema.Resource {
 				Description: "Use the GW's Cloud IAM",
 			},
 			"comment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "Comment about the target",
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,

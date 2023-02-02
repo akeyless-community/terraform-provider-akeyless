@@ -8,6 +8,7 @@ import (
 	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGithubTargetResource(t *testing.T) {
@@ -327,4 +328,20 @@ func checkTargetExistsRemotelyprod(path string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func deleteTarget(t *testing.T, name string) {
+
+	p, err := getProviderMeta()
+	require.NoError(t, err)
+
+	client := p.client
+	token := *p.token
+
+	gsvBody := akeyless.DeleteTarget{
+		Name:  name,
+		Token: &token,
+	}
+
+	client.DeleteTarget(context.Background()).Body(gsvBody).Execute()
 }

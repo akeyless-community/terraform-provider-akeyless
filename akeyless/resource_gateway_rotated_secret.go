@@ -36,10 +36,9 @@ func resourceRotatedSecret() *schema.Resource {
 				Description: "The target name to associate",
 			},
 			"metadata": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "Metadata about the secret",
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,

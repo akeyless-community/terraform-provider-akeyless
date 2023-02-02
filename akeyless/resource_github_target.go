@@ -48,10 +48,9 @@ func resourceGithubTarget() *schema.Resource {
 				Default:     "https://api.github.com/",
 			},
 			"comment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "Comment about the target",
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,

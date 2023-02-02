@@ -52,10 +52,9 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"metadata": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "Metadata about the secret",
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,

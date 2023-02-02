@@ -50,10 +50,9 @@ func resourceArtifactoryTarget() *schema.Resource {
 				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"comment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "Comment about the target",
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,

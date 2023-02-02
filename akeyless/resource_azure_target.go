@@ -60,10 +60,9 @@ func resourceAzureTarget() *schema.Resource {
 				Description: "Key name. The key is used to encrypt the target secret value. If the key name is not specified, the account default protection key is used",
 			},
 			"comment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "Comment about the target",
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,

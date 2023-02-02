@@ -35,10 +35,9 @@ func resourceRole() *schema.Resource {
 				Description: "Role name",
 			},
 			"comment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "Comment about the role",
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,
