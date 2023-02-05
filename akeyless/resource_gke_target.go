@@ -201,7 +201,7 @@ func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err = d.Set("description", *rOut.Target.Comment)
+		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}

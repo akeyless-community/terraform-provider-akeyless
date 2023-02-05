@@ -271,7 +271,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemMetadata != nil {
-		err = d.Set("description", *rOut.ItemMetadata)
+		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}

@@ -245,7 +245,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if itemOut.ItemMetadata != nil {
-		err = d.Set("description", *itemOut.ItemMetadata)
+		err := common.SetDescriptionBc(d, *itemOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
