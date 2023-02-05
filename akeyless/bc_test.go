@@ -56,9 +56,9 @@ func TestBCDescription(t *testing.T) {
 func testBCSecretResource(t *testing.T, field string) {
 	t.Parallel()
 
-	secretName := "test_bc_secret_" + field
-	secretPath := testPath(secretName)
-	defer deleteItem(t, secretPath)
+	itemName := "test_bc_secret_" + field
+	itemPath := testPath(itemName)
+	defer deleteItem(t, itemPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
@@ -66,7 +66,7 @@ func testBCSecretResource(t *testing.T, field string) {
 			value	= "1234"
 			%s 		= "aaa"
 		}
-	`, secretName, secretPath, field)
+	`, itemName, itemPath, field)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
@@ -74,17 +74,17 @@ func testBCSecretResource(t *testing.T, field string) {
 			value 	= "1234"
 			%s 		= ""
 		}
-	`, secretName, secretPath, field)
+	`, itemName, itemPath, field)
 
-	tesItemResource(t, config, configUpdate, secretPath)
+	tesItemResource(t, config, configUpdate, itemPath)
 }
 
 func testBCKeyResource(t *testing.T, field string) {
 	t.Parallel()
 
-	secretName := "test_bc_key_" + field
-	secretPath := testPath(secretName)
-	defer deleteItem(t, secretPath)
+	itemName := "test_bc_key_" + field
+	itemPath := testPath(itemName)
+	defer deleteItem(t, itemPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
@@ -92,7 +92,7 @@ func testBCKeyResource(t *testing.T, field string) {
 			alg 	= "RSA1024"
 			%s 		= "aaa"
 		}
-	`, secretName, secretPath, field)
+	`, itemName, itemPath, field)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
@@ -100,9 +100,9 @@ func testBCKeyResource(t *testing.T, field string) {
 			alg 	= "RSA1024"
 			%s 		= ""
 		}
-	`, secretName, secretPath, field)
+	`, itemName, itemPath, field)
 
-	tesItemResource(t, config, configUpdate, secretPath)
+	tesItemResource(t, config, configUpdate, itemPath)
 }
 
 func testBCTargetResource(t *testing.T, field string) {
