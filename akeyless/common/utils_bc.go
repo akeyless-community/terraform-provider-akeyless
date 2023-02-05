@@ -2,6 +2,10 @@ package common
 
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+const (
+	DefaultDescription string = "default_metadata"
+)
+
 func SetDescriptionBc(d *schema.ResourceData, description string) error {
 
 	if d.HasChange("description") {
@@ -28,4 +32,12 @@ func SetDescriptionBc(d *schema.ResourceData, description string) error {
 	}
 
 	return nil
+}
+
+func GetDescriptionBc(d *schema.ResourceData) string {
+
+	if d.Get("description").(string) != "" {
+		return d.Get("description").(string)
+	}
+	return d.Get("metadata").(string)
 }

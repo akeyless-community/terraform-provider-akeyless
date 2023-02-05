@@ -156,8 +156,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
-	metadata := d.Get("metadata").(string)
-	description := d.Get("description").(string)
+	description := common.GetDescriptionBc(d)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	key := d.Get("key").(string)
@@ -181,7 +180,6 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 		RotatorType: rotatorType,
 		Token:       &token,
 	}
-	common.GetAkeylessPtr(&body.Metadata, metadata)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.Key, key)
@@ -408,8 +406,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	customPayload := d.Get("custom_payload").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	metadata := d.Get("metadata").(string)
-	description := d.Get("description").(string)
+	description := common.GetDescriptionBc(d)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 
 	body := akeyless.UpdateRotatedSecret{
@@ -437,14 +434,13 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
-	common.GetAkeylessPtr(&body.NewMetadata, metadata)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultDescription)
 
 	bodyItem := akeyless.UpdateItem{
-		Name:        name,
-		NewName:     akeyless.PtrString(name),
-		NewMetadata: akeyless.PtrString(metadata),
-		Token:       &token,
+		Name:    name,
+		NewName: akeyless.PtrString(name),
+		Token:   &token,
 	}
 
 	_, _, err = client.UpdateItem(ctx).Body(bodyItem).Execute()

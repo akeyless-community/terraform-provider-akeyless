@@ -69,8 +69,7 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
-	metadata := d.Get("metadata").(string)
-	description := d.Get("description").(string)
+	description := common.GetDescriptionBc(d)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	customerFrgId := d.Get("customer_frg_id").(string)
@@ -81,7 +80,6 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.SplitLevel, 3)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.CustomerFrgId, customerFrgId)
@@ -154,8 +152,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	metadata := d.Get("metadata").(string)
-	description := d.Get("description").(string)
+	description := common.GetDescriptionBc(d)
 	tagSet := d.Get("tags").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 
@@ -164,8 +161,8 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 
-	common.GetAkeylessPtr(&body.NewMetadata, metadata)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultDescription)
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
 	if err == nil {
