@@ -181,6 +181,32 @@ func testBCRoleResource(t *testing.T, field string) {
 	})
 }
 
+func TestBCItemBothMetadataAndDescription(t *testing.T) {
+	t.Parallel()
+
+	itemName := "test_bc_item_both"
+	itemPath := testPath(itemName)
+	defer deleteItem(t, itemPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "%v" {
+			name 		= "%v"
+			alg 		= "RSA1024"
+			metadata 	= "aaa"
+		}
+	`, itemName, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "%v" {
+			name 		= "%v"
+			alg 		= "RSA1024"
+			description = "bbb"
+		}
+	`, itemName, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
 func checkRemoveRoleRemotelyProd(roleName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
