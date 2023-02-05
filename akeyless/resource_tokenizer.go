@@ -119,7 +119,7 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	pattern := d.Get("pattern").(string)
 	encodingTemplate := d.Get("encoding_template").(string)
 	decodingTemplate := d.Get("decoding_template").(string)
-	description := common.GetDescriptionBc(d)
+	description := common.GetItemDescription(d)
 	tagSet := d.Get("tag").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
@@ -292,7 +292,7 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	description := common.GetDescriptionBc(d)
+	description := common.GetItemDescription(d)
 	tagSet := d.Get("tag").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
@@ -304,7 +304,7 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultDescription)
+	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultMetadata)
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
 	if err == nil {

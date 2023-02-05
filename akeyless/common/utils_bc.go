@@ -3,7 +3,8 @@ package common
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 const (
-	DefaultDescription string = "default_metadata"
+	DefaultMetadata string = "default_metadata"
+	DefaultComment  string = "default_comment"
 )
 
 func SetDescriptionBc(d *schema.ResourceData, description string) error {
@@ -34,10 +35,18 @@ func SetDescriptionBc(d *schema.ResourceData, description string) error {
 	return nil
 }
 
-func GetDescriptionBc(d *schema.ResourceData) string {
+func GetItemDescription(d *schema.ResourceData) string {
 
 	if d.Get("description").(string) != "" {
 		return d.Get("description").(string)
 	}
 	return d.Get("metadata").(string)
+}
+
+func GetRoleDescription(d *schema.ResourceData) string {
+
+	if d.Get("description").(string) != "" {
+		return d.Get("description").(string)
+	}
+	return d.Get("comment").(string)
 }

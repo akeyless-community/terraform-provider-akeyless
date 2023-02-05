@@ -156,7 +156,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
-	description := common.GetDescriptionBc(d)
+	description := common.GetItemDescription(d)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	key := d.Get("key").(string)
@@ -406,7 +406,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	customPayload := d.Get("custom_payload").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	description := common.GetDescriptionBc(d)
+	description := common.GetItemDescription(d)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 
 	body := akeyless.UpdateRotatedSecret{
@@ -435,7 +435,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultDescription)
+	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultMetadata)
 
 	bodyItem := akeyless.UpdateItem{
 		Name:    name,

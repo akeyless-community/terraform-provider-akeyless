@@ -131,7 +131,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	value := d.Get("value").(string)
 	ProtectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
-	description := common.GetDescriptionBc(d)
+	description := common.GetItemDescription(d)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessSshCreds := d.Get("secure_access_ssh_creds").(string)
 	secureAccessUrl := d.Get("secure_access_url").(string)
@@ -285,7 +285,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	value := d.Get("value").(string)
 	protectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
-	description := common.GetDescriptionBc(d)
+	description := common.GetItemDescription(d)
 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
@@ -335,7 +335,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	common.GetAkeylessPtr(&bodyItem.Description, description)
-	common.GetAkeylessPtr(&bodyItem.NewMetadata, common.DefaultDescription)
+	common.GetAkeylessPtr(&bodyItem.NewMetadata, common.DefaultMetadata)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCreds, secureAccessSshCreds)

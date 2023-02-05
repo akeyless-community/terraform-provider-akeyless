@@ -142,8 +142,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	ok := true
 
 	name := d.Get("name").(string)
-	comment := d.Get("comment").(string)
-	description := d.Get("description").(string)
+	description := common.GetRoleDescription(d)
 	auditAccess := d.Get("audit_access").(string)
 	analyticsAccess := d.Get("analytics_access").(string)
 	gwAnalyticsAccess := d.Get("gw_analytics_access").(string)
@@ -154,7 +153,6 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.AuditAccess, auditAccess)
 	common.GetAkeylessPtr(&body.AnalyticsAccess, analyticsAccess)
@@ -316,7 +314,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	accessRulesNewValues := getNewAccessRules(d)
 	accessRulesOldValues := saveRoleAccessRuleOldValues(rules.PathRules)
 
-	description := d.Get("description").(string)
+	description := common.GetRoleDescription(d)
 
 	err, ok = updateRoleAccessRules(ctx, name, description, accessRulesNewValues, m)
 	if !ok {
@@ -792,13 +790,14 @@ func updateRoleAccessRules(ctx context.Context, name, description string,
 
 	updateBody := akeyless.UpdateRole{
 		Name:              name,
-		Description:       akeyless.PtrString(description),
 		Token:             &token,
 		AuditAccess:       akeyless.PtrString(auditAccess),
 		AnalyticsAccess:   akeyless.PtrString(analyticsAccess),
 		GwAnalyticsAccess: akeyless.PtrString(gwAnalyticsAccess),
 		SraReportsAccess:  akeyless.PtrString(sraReportsAccess),
 	}
+	common.GetAkeylessPtr(&updateBody.Description, description)
+	common.GetAkeylessPtr(&updateBody.NewComment, common.DefaultComment)
 
 	var apiErr akeyless.GenericOpenAPIError
 	_, _, err := client.UpdateRole(ctx).Body(updateBody).Execute()

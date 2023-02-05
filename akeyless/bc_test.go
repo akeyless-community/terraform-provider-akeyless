@@ -10,6 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+type configDescriptionTest struct {
+	Config            string
+	ExpectDescription string
+}
+
 func TestBCDescription(t *testing.T) {
 	t.Run("secret", func(t *testing.T) {
 		t.Run("metadata", func(t *testing.T) {
@@ -63,7 +68,7 @@ func testBCSecretResource(t *testing.T, field string) {
 	itemPath := testPath(itemName)
 	defer deleteItem(t, itemPath)
 
-	config := fmt.Sprintf(`
+	config0 := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
 			path 	= "%v"
 			value	= "1234"
@@ -71,7 +76,15 @@ func testBCSecretResource(t *testing.T, field string) {
 		}
 	`, itemName, itemPath, field)
 
-	configUpdate := fmt.Sprintf(`
+	config1 := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path 	= "%v"
+			value	= "1234"
+			%s 		= "bbb"
+		}
+	`, itemName, itemPath, field)
+
+	config2 := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
 			path 	= "%v"
 			value 	= "1234"
@@ -79,7 +92,13 @@ func testBCSecretResource(t *testing.T, field string) {
 		}
 	`, itemName, itemPath, field)
 
-	testItemDescriptionBC(t, config, "aaa", configUpdate, "", itemPath)
+	steps := []configDescriptionTest{
+		{Config: config0, ExpectDescription: "aaa"},
+		{Config: config1, ExpectDescription: "bbb"},
+		{Config: config2, ExpectDescription: ""},
+	}
+
+	testItemDescriptionBC(t, steps, itemPath)
 }
 
 func testBCKeyResource(t *testing.T, field string) {
@@ -89,7 +108,7 @@ func testBCKeyResource(t *testing.T, field string) {
 	itemPath := testPath(itemName)
 	defer deleteItem(t, itemPath)
 
-	config := fmt.Sprintf(`
+	config0 := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name 	= "%v"
 			alg 	= "RSA1024"
@@ -97,7 +116,15 @@ func testBCKeyResource(t *testing.T, field string) {
 		}
 	`, itemName, itemPath, field)
 
-	configUpdate := fmt.Sprintf(`
+	config1 := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "%v" {
+			name 	= "%v"
+			alg 	= "RSA1024"
+			%s 		= "bbb"
+		}
+	`, itemName, itemPath, field)
+
+	config2 := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name 	= "%v"
 			alg 	= "RSA1024"
@@ -105,7 +132,13 @@ func testBCKeyResource(t *testing.T, field string) {
 		}
 	`, itemName, itemPath, field)
 
-	testItemDescriptionBC(t, config, "aaa", configUpdate, "", itemPath)
+	steps := []configDescriptionTest{
+		{Config: config0, ExpectDescription: "aaa"},
+		{Config: config1, ExpectDescription: "bbb"},
+		{Config: config2, ExpectDescription: ""},
+	}
+
+	testItemDescriptionBC(t, steps, itemPath)
 }
 
 func testBCTargetResource(t *testing.T, field string) {
@@ -115,7 +148,7 @@ func testBCTargetResource(t *testing.T, field string) {
 	targetPath := testPath(targetName)
 	defer deleteTarget(t, targetPath)
 
-	config := fmt.Sprintf(`
+	config0 := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 		= "%v"
 			db_type   	= "mysql"
@@ -128,7 +161,20 @@ func testBCTargetResource(t *testing.T, field string) {
 		}
 	`, targetName, targetPath, field)
 
-	configUpdate := fmt.Sprintf(`
+	config1 := fmt.Sprintf(`
+		resource "akeyless_target_db" "%v" {
+			name 		= "%v"
+			db_type   	= "mysql"
+			user_name 	= "user1"
+			pwd 		= "1234"
+			host 		= "127.0.0.1"
+			port 		= "3306"
+			db_name 	= "mysql"
+			%s 			= "bbb"
+		}
+	`, targetName, targetPath, field)
+
+	config2 := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 		= "%v"
 			db_type   	= "mysql"
@@ -141,7 +187,13 @@ func testBCTargetResource(t *testing.T, field string) {
 		}
 	`, targetName, targetPath, field)
 
-	testTargetDescriptionBC(t, config, "aaa", configUpdate, "", targetPath)
+	steps := []configDescriptionTest{
+		{Config: config0, ExpectDescription: "aaa"},
+		{Config: config1, ExpectDescription: "bbb"},
+		{Config: config2, ExpectDescription: ""},
+	}
+
+	testTargetDescriptionBC(t, steps, targetPath)
 }
 
 func testBCRoleResource(t *testing.T, field string) {
@@ -151,21 +203,34 @@ func testBCRoleResource(t *testing.T, field string) {
 	rolePath := testPath(roleName)
 	defer deleteRole(rolePath)
 
-	config := fmt.Sprintf(`
+	config0 := fmt.Sprintf(`
 		resource "akeyless_role" "%v" {
 			name	= "%v"
 			%s 		= "aaa"
 		}
 	`, roleName, rolePath, field)
 
-	configUpdate := fmt.Sprintf(`
+	config1 := fmt.Sprintf(`
+		resource "akeyless_role" "%v" {
+			name	= "%v"
+			%s 		= "bbb"
+		}
+	`, roleName, rolePath, field)
+
+	config2 := fmt.Sprintf(`
 		resource "akeyless_role" "%v" {
 			name	= "%v"
 			%s 		= ""
 		}
 	`, roleName, rolePath, field)
 
-	testRoleDescriptionBC(t, config, "aaa", configUpdate, "", rolePath)
+	steps := []configDescriptionTest{
+		{Config: config0, ExpectDescription: "aaa"},
+		{Config: config1, ExpectDescription: "bbb"},
+		{Config: config2, ExpectDescription: ""},
+	}
+
+	testRoleDescriptionBC(t, steps, rolePath)
 }
 
 func testBCItemBothMetadataAndDescription(t *testing.T) {
@@ -175,23 +240,36 @@ func testBCItemBothMetadataAndDescription(t *testing.T) {
 	itemPath := testPath(itemName)
 	defer deleteItem(t, itemPath)
 
-	config := fmt.Sprintf(`
+	config0 := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name 		= "%v"
 			alg 		= "RSA1024"
-			description = "aaa"
+			metadata 	= "aaa"
 		}
 	`, itemName, itemPath)
 
-	configUpdate := fmt.Sprintf(`
+	config1 := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name 		= "%v"
 			alg 		= "RSA1024"
-			metadata 	= "bbb"
+			description = "bbb"
 		}
 	`, itemName, itemPath)
 
-	testItemDescriptionBC(t, config, "aaa", configUpdate, "bbb", itemPath)
+	config2 := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "%v" {
+			name 		= "%v"
+			alg 		= "RSA1024"
+		}
+	`, itemName, itemPath)
+
+	steps := []configDescriptionTest{
+		{Config: config0, ExpectDescription: "aaa"},
+		{Config: config1, ExpectDescription: "bbb"},
+		{Config: config2, ExpectDescription: ""},
+	}
+
+	testItemDescriptionBC(t, steps, itemPath)
 }
 
 func testBCTargetBothMetadataAndDescription(t *testing.T) {
@@ -201,7 +279,7 @@ func testBCTargetBothMetadataAndDescription(t *testing.T) {
 	targetPath := testPath(targetName)
 	defer deleteTarget(t, targetPath)
 
-	config := fmt.Sprintf(`
+	config0 := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 		= "%v"
 			db_type   	= "mysql"
@@ -210,11 +288,11 @@ func testBCTargetBothMetadataAndDescription(t *testing.T) {
 			host 		= "127.0.0.1"
 			port 		= "3306"
 			db_name 	= "mysql"
-			description = "aaa"
+			comment  	= "aaa"
 		}
 	`, targetName, targetPath)
 
-	configUpdate := fmt.Sprintf(`
+	config1 := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 		= "%v"
 			db_type   	= "mysql"
@@ -223,28 +301,53 @@ func testBCTargetBothMetadataAndDescription(t *testing.T) {
 			host 		= "127.0.0.1"
 			port 		= "3306"
 			db_name 	= "mysql"
-			comment 	= "bbb"
+			description = "bbb"
 		}
 	`, targetName, targetPath)
 
-	testTargetDescriptionBC(t, config, "aaa", configUpdate, "bbb", targetPath)
+	config2 := fmt.Sprintf(`
+		resource "akeyless_target_db" "%v" {
+			name 		= "%v"
+			db_type   	= "mysql"
+			user_name 	= "user1"
+			pwd 		= "1234"
+			host 		= "127.0.0.1"
+			port 		= "3306"
+			db_name 	= "mysql"
+		}
+	`, targetName, targetPath)
+
+	steps := []configDescriptionTest{
+		{Config: config0, ExpectDescription: "aaa"},
+		{Config: config1, ExpectDescription: "bbb"},
+		{Config: config2, ExpectDescription: ""},
+	}
+
+	testTargetDescriptionBC(t, steps, targetPath)
 }
 
-func testItemDescriptionBC(t *testing.T, config, expDescription,
-	configUpdate, expDescriptionUpdate, itemPath string) {
+func testItemDescriptionBC(t *testing.T, steps []configDescriptionTest,
+	itemPath string) {
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: steps[0].Config,
 				Check: resource.ComposeTestCheckFunc(
-					checkItemDescriptionRemotely(itemPath, expDescription),
+					checkItemDescriptionRemotely(itemPath, steps[0].ExpectDescription),
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: steps[1].Config,
 				Check: resource.ComposeTestCheckFunc(
-					checkItemDescriptionRemotely(itemPath, expDescriptionUpdate),
+					checkItemDescriptionRemotely(itemPath, steps[1].ExpectDescription),
+				),
+			},
+			{
+				Config: steps[2].Config,
+				Check: resource.ComposeTestCheckFunc(
+					checkItemDescriptionRemotely(itemPath, steps[2].ExpectDescription),
 				),
 			},
 		},
@@ -278,21 +381,28 @@ func checkItemDescriptionRemotely(path, expDescription string) resource.TestChec
 	}
 }
 
-func testTargetDescriptionBC(t *testing.T, config, expDescription,
-	configUpdate, expDescriptionUpdate, itemPath string) {
+func testTargetDescriptionBC(t *testing.T, steps []configDescriptionTest,
+	itemPath string) {
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: steps[0].Config,
 				Check: resource.ComposeTestCheckFunc(
-					checkTargetDescriptionRemotely(itemPath, expDescription),
+					checkTargetDescriptionRemotely(itemPath, steps[0].ExpectDescription),
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: steps[1].Config,
 				Check: resource.ComposeTestCheckFunc(
-					checkTargetDescriptionRemotely(itemPath, expDescriptionUpdate),
+					checkTargetDescriptionRemotely(itemPath, steps[1].ExpectDescription),
+				),
+			},
+			{
+				Config: steps[2].Config,
+				Check: resource.ComposeTestCheckFunc(
+					checkTargetDescriptionRemotely(itemPath, steps[2].ExpectDescription),
 				),
 			},
 		},
@@ -333,21 +443,28 @@ func checkTargetDescriptionRemotely(path, expDescription string) resource.TestCh
 	}
 }
 
-func testRoleDescriptionBC(t *testing.T, config, expDescription,
-	configUpdate, expDescriptionUpdate, itemPath string) {
+func testRoleDescriptionBC(t *testing.T, steps []configDescriptionTest,
+	itemPath string) {
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: steps[0].Config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleDescriptionRemotely(itemPath, expDescription),
+					checkRoleDescriptionRemotely(itemPath, steps[0].ExpectDescription),
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: steps[1].Config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleDescriptionRemotely(itemPath, expDescriptionUpdate),
+					checkRoleDescriptionRemotely(itemPath, steps[1].ExpectDescription),
+				),
+			},
+			{
+				Config: steps[2].Config,
+				Check: resource.ComposeTestCheckFunc(
+					checkRoleDescriptionRemotely(itemPath, steps[2].ExpectDescription),
 				),
 			},
 		},

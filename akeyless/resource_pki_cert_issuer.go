@@ -191,7 +191,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	province := d.Get("province").(string)
 	streetAddress := d.Get("street_address").(string)
 	postalCode := d.Get("postal_code").(string)
-	description := common.GetDescriptionBc(d)
+	description := common.GetItemDescription(d)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 
@@ -430,7 +430,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	province := d.Get("province").(string)
 	streetAddress := d.Get("street_address").(string)
 	postalCode := d.Get("postal_code").(string)
-	description := common.GetDescriptionBc(d)
+	description := common.GetItemDescription(d)
 
 	tagSet := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tagSet.List())
