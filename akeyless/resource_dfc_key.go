@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -34,10 +34,14 @@ func resourceDfcKey() *schema.Resource {
 				Description: "DFCKey type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, RSA1024, RSA2048, RSA3072, RSA4096]",
 			},
 			"metadata": {
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
+			},
+			"description": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
-				Description: "Metadata about the DFC key",
+				Description: "Description of the object",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -65,7 +69,7 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
-	metadata := d.Get("metadata").(string)
+	description := common.GetItemDescription(d)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	customerFrgId := d.Get("customer_frg_id").(string)
@@ -76,7 +80,7 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.SplitLevel, 3)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.CustomerFrgId, customerFrgId)
 
@@ -103,7 +107,7 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.ItemMetadata != nil {
-		err = d.Set("metadata", *rOut.ItemMetadata)
+		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -148,15 +152,17 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	metadata := d.Get("metadata").(string)
+	description := common.GetItemDescription(d)
 	tagSet := d.Get("tags").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 
 	body := akeyless.UpdateItem{
-		Name:        name,
-		NewMetadata: &metadata,
-		Token:       &token,
+		Name:  name,
+		Token: &token,
 	}
+
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultMetadata)
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
 	if err == nil {

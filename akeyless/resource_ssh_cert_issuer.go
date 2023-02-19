@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -59,9 +59,14 @@ func resourceSSHCertIssuer() *schema.Resource {
 			},
 			"metadata": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "A metadata about the issuer",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -124,7 +129,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	metadata := d.Get("metadata").(string)
+	description := common.GetItemDescription(d)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -144,7 +149,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionApi, secureAccessBastionApi)
@@ -241,7 +246,7 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemMetadata != nil {
-		err = d.Set("metadata", *rOut.ItemMetadata)
+		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -272,7 +277,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	metadata := d.Get("metadata").(string)
+	description := common.GetItemDescription(d)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessBastionApi := d.Get("secure_access_bastion_api").(string)
 	secureAccessBastionSsh := d.Get("secure_access_bastion_ssh").(string)
@@ -302,7 +307,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionApi, secureAccessBastionApi)
 	common.GetAkeylessPtr(&body.SecureAccessBastionSsh, secureAccessBastionSsh)

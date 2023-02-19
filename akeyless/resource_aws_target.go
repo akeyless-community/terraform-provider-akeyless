@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -65,10 +65,14 @@ func resourceAwsTarget() *schema.Resource {
 				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used",
 			},
 			"comment": {
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
+			},
+			"description": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
-				Description: "Comment about the target",
+				Description: "Description of the object",
 			},
 		},
 	}
@@ -89,6 +93,7 @@ func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.CreateAWSTarget{
 		Name:  name,
@@ -101,6 +106,7 @@ func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateAWSTarget(ctx).Body(body).Execute()
 	if err != nil {
@@ -158,7 +164,7 @@ func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err = d.Set("comment", *rOut.Target.Comment)
+		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -203,6 +209,7 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 	accessKeyId := d.Get("access_key_id").(string)
 	accessKey := d.Get("access_key").(string)
 	sessionToken := d.Get("session_token").(string)
@@ -215,6 +222,7 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.AccessKeyId, accessKeyId)
 	common.GetAkeylessPtr(&body.AccessKey, accessKey)
 	common.GetAkeylessPtr(&body.SessionToken, sessionToken)

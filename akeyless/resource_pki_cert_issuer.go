@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -144,9 +144,14 @@ func resourcePKICertIssuer() *schema.Resource {
 			},
 			"metadata": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Deprecated:  "Deprecated: Use description instead",
 				Description: "A metadata about the issuer",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -186,7 +191,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	province := d.Get("province").(string)
 	streetAddress := d.Get("street_address").(string)
 	postalCode := d.Get("postal_code").(string)
-	metadata := d.Get("metadata").(string)
+	description := common.GetItemDescription(d)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 
@@ -213,7 +218,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Province, province)
 	common.GetAkeylessPtr(&body.StreetAddress, streetAddress)
 	common.GetAkeylessPtr(&body.PostalCode, postalCode)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 
 	_, _, err := client.CreatePKICertIssuer(ctx).Body(body).Execute()
@@ -264,7 +269,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemMetadata != nil {
-		err = d.Set("metadata", *rOut.ItemMetadata)
+		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -425,7 +430,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	province := d.Get("province").(string)
 	streetAddress := d.Get("street_address").(string)
 	postalCode := d.Get("postal_code").(string)
-	metadata := d.Get("metadata").(string)
+	description := common.GetItemDescription(d)
 
 	tagSet := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tagSet.List())
@@ -462,7 +467,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Province, province)
 	common.GetAkeylessPtr(&body.StreetAddress, streetAddress)
 	common.GetAkeylessPtr(&body.PostalCode, postalCode)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err = client.UpdatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {

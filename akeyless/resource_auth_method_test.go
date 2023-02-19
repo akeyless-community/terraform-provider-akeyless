@@ -3,11 +3,12 @@ package akeyless
 import (
 	"context"
 	"fmt"
-	"github.com/akeylesslabs/akeyless-go/v2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"os"
 	"testing"
+
+	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAuthMethodApiKeyResourceCreate(t *testing.T) {

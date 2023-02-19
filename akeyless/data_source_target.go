@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -51,7 +51,12 @@ func dataSourceGetTarget() *schema.Resource {
 			"comment": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Required:    false,
+				Deprecated:  "Deprecated: Use description instead",
+				Description: "",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Computed:    true,
 				Description: "",
 			},
 			"with_customer_fragment": {
@@ -143,6 +148,10 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 	if rOut.Comment != nil {
 		err = d.Set("comment", *rOut.Comment)
+		if err != nil {
+			return err
+		}
+		err = d.Set("description", *rOut.Comment)
 		if err != nil {
 			return err
 		}

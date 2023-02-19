@@ -8,7 +8,7 @@ import (
 
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"

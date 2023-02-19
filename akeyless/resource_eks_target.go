@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -75,10 +75,14 @@ func resourceEksTarget() *schema.Resource {
 				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.",
 			},
 			"comment": {
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
+			},
+			"description": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
-				Description: "Comment about the target",
+				Description: "Description of the object",
 			},
 		},
 	}
@@ -101,6 +105,7 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	eksRegion := d.Get("eks_region").(string)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.CreateEKSTarget{
 		Name:               name,
@@ -115,6 +120,7 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateEKSTarget(ctx).Body(body).Execute()
 	if err != nil {
@@ -206,7 +212,7 @@ func resourceEksTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err = d.Set("comment", *rOut.Target.Comment)
+		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -234,6 +240,7 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	eksRegion := d.Get("eks_region").(string)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.UpdateEKSTarget{
 		Name:               name,
@@ -248,6 +255,7 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateEKSTarget(ctx).Body(body).Execute()
 	if err != nil {

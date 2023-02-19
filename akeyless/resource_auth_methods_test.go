@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
@@ -321,7 +321,7 @@ func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodOicdResourceCreateNew(t *testing.T) {
+func TestAuthMethodOidcResourceCreateNew(t *testing.T) {
 	name := "test_auth_method_oidc"
 	path := testPath("auth_method_oidc")
 	config := fmt.Sprintf(`
@@ -332,6 +332,8 @@ func TestAuthMethodOicdResourceCreateNew(t *testing.T) {
 			issuer = "https://dev-9yl2unqy.us.auth0.com/"
 			client_id = "trst-ci"
 			access_expires = 1638741817
+			required_scopes = ["email", "profile"]
+			required_scopes_prefix = "devops"
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
@@ -342,6 +344,8 @@ func TestAuthMethodOicdResourceCreateNew(t *testing.T) {
 			issuer = "https://dev-9yl2unqy.us.auth0.com/"
 			client_id = "trst-ci2"
 			bound_ips = ["1.1.1.0/32"]
+			required_scopes = ["id"]
+			required_scopes_prefix = "rnd"
 		}
 	`, name, path)
 

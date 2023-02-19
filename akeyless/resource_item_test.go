@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -196,42 +196,6 @@ func deleteItem(t *testing.T, path string) {
 	}
 
 	client.DeleteItem(context.Background()).Body(gsvBody).Execute()
-}
-
-func deleteFunc() {
-
-	p, err := getProviderMeta()
-	if err != nil {
-		panic(err)
-	}
-	client := p.client
-	token := *p.token
-
-	gsvBody := akeyless.ListItems{
-		Path:  akeyless.PtrString("/terraform-tests"),
-		Token: &token,
-	}
-	s, _, err := client.ListItems(context.Background()).Body(gsvBody).Execute()
-	if err != nil {
-		panic(err)
-	}
-	if s.Items == nil || len(*s.Items) == 0 {
-		return
-	}
-	for _, item := range *s.Items {
-		body := akeyless.DeleteItem{
-			Name:              *item.ItemName,
-			DeleteImmediately: akeyless.PtrBool(true),
-			DeleteInDays:      akeyless.PtrInt64(-1),
-			Token:             &token,
-		}
-		_, _, err = client.DeleteItem(context.Background()).Body(body).Execute()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println("deleted", *item.ItemName)
-
-	}
 }
 
 func tesItemResource(t *testing.T, config, configUpdate, itemPath string) {
