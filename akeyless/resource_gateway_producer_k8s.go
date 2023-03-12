@@ -142,11 +142,6 @@ func resourceProducerK8s() *schema.Resource {
 				Description: "Web-Proxy via Akeyless Web Access Bastion",
 				Default:     "false",
 			},
-			"uid_token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The universal identity token, Required only for universal_identity authentication",
-			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -186,7 +181,6 @@ func resourceProducerK8sCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
-	uidToken := d.Get("uid_token").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless.GatewayCreateProducerNativeK8S{
@@ -214,7 +208,6 @@ func resourceProducerK8sCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
-	common.GetAkeylessPtr(&body.UidToken, uidToken)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.GatewayCreateProducerNativeK8S(ctx).Body(body).Execute()
@@ -382,7 +375,6 @@ func resourceProducerK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
-	uidToken := d.Get("uid_token").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless.GatewayUpdateProducerNativeK8S{
@@ -410,7 +402,6 @@ func resourceProducerK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
-	common.GetAkeylessPtr(&body.UidToken, uidToken)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.GatewayUpdateProducerNativeK8S(ctx).Body(body).Execute()
