@@ -57,8 +57,8 @@ github.com/agext/levenshtein v1.2.2 h1:0S/Yg6LYmFJ5stwQeRp6EeOcCbj7xiqQSdNelsXva
 github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/akeylesslabs/akeyless-go-cloud-id v0.3.1 h1:GcFiqgBd4gpERgOL4jE1xzXpg2ExdqdffbBk9JN1iy0=
 github.com/akeylesslabs/akeyless-go-cloud-id v0.3.1/go.mod h1:ionnWiARf5TYoFGuHS7syh51/7lYosZejpZbnECFJcU=
-github.com/akeylesslabs/akeyless-go/v3 v3.2.3 h1:scc2VzqBeYSYh9Vk8amKFduW9u9fT8A6mfFSLz3txRg=
-github.com/akeylesslabs/akeyless-go/v3 v3.2.3/go.mod h1:XtPdOYw+rrG9bxyBzuQ5zAGCUTd364R2grs7GsZ5nos=
+github.com/akeylesslabs/akeyless-go/v3 v3.2.7 h1:OnZ3v4Kp4afhprCjw/FiLaQAhLcccCRaXXUELYZd8Q4=
+github.com/akeylesslabs/akeyless-go/v3 v3.2.7/go.mod h1:XtPdOYw+rrG9bxyBzuQ5zAGCUTd364R2grs7GsZ5nos=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/apparentlymart/go-dump v0.0.0-20190214190832-042adf3cf4a0 h1:MzVXffFUye+ZcSR6opIgz9Co7WcDx6ZcY+RjfFHoA0I=
 github.com/apparentlymart/go-textseg v1.0.0/go.mod h1:z96Txxhf3xSFMPmb5X/1W05FF/Nj9VFpLOpjS5yuumk=
