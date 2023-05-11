@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -12,6 +13,9 @@ func resourceGatewayCluster() *schema.Resource {
 	return &schema.Resource{
 		Description: "Gateway cluster",
 		Delete:      resourceGatewayClusterDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceGatewayClusterImport,
+		},
 		Schema: map[string]*schema.Schema{
 			"cluster_name": {
 				Type:        schema.TypeString,
@@ -28,20 +32,25 @@ func resourceGatewayCluster() *schema.Resource {
 	}
 }
 
-func resourceGwClusterDelete(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayClusterDelete(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
 
-	path := d.Id()
+	// path := d.Id()
 
-	params := akeyless.DeleteGatewayCluster{
-		Token: &token,
-		Name:  path,
+	clusterName := d.Get("cluster_name").(string)
+	forceDeletion := d.Get("force_deletion").(bool)
+
+	body := akeyless.DeleteGwCluster{
+		Token:       &token,
+		ClusterName: clusterName,
 	}
 
+	common.GetAkeylessPtr(&body.ForceDeletion, forceDeletion)
+
 	ctx := context.Background()
-	_, _, err := client.DeleteGatewayCluster(ctx).Body(params).Execute()
+	_, _, err := client.DeleteGwCluster(ctx).Body(body).Execute()
 	if err != nil {
 		return err
 	}
