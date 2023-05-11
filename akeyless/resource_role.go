@@ -343,9 +343,16 @@ func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 
-	_, _, err := client.DeleteRole(ctx).Body(deleteRole).Execute()
+	var apiErr akeyless.GenericOpenAPIError
+	_, res, err := client.DeleteRole(ctx).Body(deleteRole).Execute()
 	if err != nil {
-		return err
+		if errors.As(err, &apiErr) {
+			if res.StatusCode != http.StatusNotFound {
+				return fmt.Errorf("can't delete role: %v", string(apiErr.Body()))
+			}
+		} else {
+			return fmt.Errorf("can't delete role: %v", err)
+		}
 	}
 
 	return nil

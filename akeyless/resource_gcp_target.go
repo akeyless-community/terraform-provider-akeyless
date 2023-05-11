@@ -37,7 +37,7 @@ func resourceGcpTarget() *schema.Resource {
 			},
 			"gcp_key": {
 				Type:        schema.TypeString,
-				Required:    false,
+				Sensitive:   true,
 				Optional:    true,
 				Description: "Base64-encoded service account private key text",
 			},
