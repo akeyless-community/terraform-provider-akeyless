@@ -12,6 +12,9 @@ import (
 func resourceGatewayCluster() *schema.Resource {
 	return &schema.Resource{
 		Description: "Gateway cluster",
+		Create:      resourceGatewayClusterCreate,
+		Read:        resourceGatewayClusterRead,
+		Update:      resourceGatewayClusterUpdate,
 		Delete:      resourceGatewayClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayClusterImport,
@@ -32,12 +35,14 @@ func resourceGatewayCluster() *schema.Resource {
 	}
 }
 
+func resourceGatewayClusterCreate(d *schema.ResourceData, m interface{}) error { return nil }
+func resourceGatewayClusterRead(d *schema.ResourceData, m interface{}) error   { return nil }
+func resourceGatewayClusterUpdate(d *schema.ResourceData, m interface{}) error { return nil }
+
 func resourceGatewayClusterDelete(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
-
-	// path := d.Id()
 
 	clusterName := d.Get("cluster_name").(string)
 	forceDeletion := d.Get("force_deletion").(bool)
@@ -60,9 +65,9 @@ func resourceGatewayClusterDelete(d *schema.ResourceData, m interface{}) error {
 
 func resourceGatewayClusterImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	path := d.Id()
+	clusterName := d.Id()
 
-	err := d.Set("name", path)
+	err := d.Set("cluster_name", clusterName)
 	if err != nil {
 		return nil, err
 	}
