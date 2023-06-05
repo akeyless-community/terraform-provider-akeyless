@@ -13,9 +13,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	PUBLIC_KEY  = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	PRIVATE_KEY = "XXXXXXXX"
+)
+
 func TestDfcKeyRsaResource(t *testing.T) {
+	t.Parallel()
+
 	name := "test_rsa_key"
-	itemPath := testPath("path_rsa_key1ss")
+	itemPath := testPath(name)
+	deleteItem(t, itemPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"
@@ -37,8 +46,12 @@ func TestDfcKeyRsaResource(t *testing.T) {
 }
 
 func TestRsaPublicResource(t *testing.T) {
+	t.Parallel()
+
 	name := "test_rsa_pub_key"
-	itemPath := testPath("path_rsa_pub_key")
+	itemPath := testPath(name)
+	deleteItem(t, itemPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"
@@ -55,6 +68,8 @@ func TestRsaPublicResource(t *testing.T) {
 }
 
 func TestDfcKeyResource(t *testing.T) {
+	t.Parallel()
+
 	name := "test_dfc_key"
 	itemPath := testPath("path_dfc_key12")
 	config := fmt.Sprintf(`
@@ -74,10 +89,40 @@ func TestDfcKeyResource(t *testing.T) {
 	`, name, itemPath)
 
 	tesItemResource(t, config, configUpdate, itemPath)
+}
 
+func TestClassicKey(t *testing.T) {
+
+	t.Skip("not authorized to create producer on public gateway")
+	t.Parallel()
+
+	name := "test_classic_key"
+	itemPath := testPath(name)
+	deleteItem(t, itemPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"
+			alg 		= "RSA2048"
+			tags 		= ["aaaa", "bbbb"]
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"	
+			alg 		= "RSA2048"
+			tags 		= ["cccc", "dddd"]
+			metadata 	= "abcd"
+		}
+	`, name, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
 }
 
 func TestPkiResource(t *testing.T) {
+	t.Parallel()
+
 	name := "test_pki"
 	itemPath := testPath("path_pki")
 	deleteItem(t, "terraform-tests/test_pki_key")
@@ -124,7 +169,46 @@ func TestPkiResource(t *testing.T) {
 	tesItemResource(t, config, configUpdate, itemPath)
 }
 
+func TestPkiDataSource(t *testing.T) {
+	t.Parallel()
+	t.Skip("for now the requested values are fictive")
+
+	keyName := "test_pki_key"
+	keyPath := testPath(keyName)
+	certName := "test_pki_cert"
+	certPath := testPath(certName)
+	config := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "key" {
+			name 				= "%v"
+			alg 				= "RSA1024"
+		}
+		resource "akeyless_pki_cert_issuer" "%v" {
+			name 				= "%v"
+			signer_key_name 	= "/%v"
+			ttl 				= "390"
+			allowed_domains 	= "aaaa"
+			depends_on = [
+				akeyless_dfc_key.key,
+			]
+		}
+		data "akeyless_pki_certificate" "pki_cert" {
+			cert_issuer_name  	= "%v"
+			key_data_base64   	= "%v"
+			common_name       	= "aaaa"
+			depends_on = [
+				akeyless_pki_cert_issuer.%v,
+			]
+		}
+	`, keyPath, certName, certPath, keyPath, certPath, PRIVATE_KEY, certName)
+
+	configUpdate := config
+
+	tesItemResource(t, config, configUpdate, certPath)
+}
+
 func TestSshCertResource(t *testing.T) {
+	t.Parallel()
+
 	name := "test_ssh"
 	itemPath := testPath("path_ssh")
 	deleteItem(t, "/terraform-tests/test_ssh_key")
@@ -150,7 +234,15 @@ func TestSshCertResource(t *testing.T) {
     			akeyless_dfc_key.key_ssh,
   			]
 		}
-	`, name, itemPath)
+		data "akeyless_ssh_certificate" "ssh_cert" {
+			cert_username     = "aaaa"
+			cert_issuer_name  = "%v"
+			public_key_data   = "%v"
+			depends_on = [
+				akeyless_ssh_cert_issuer.%v,
+			]
+		}
+	`, name, itemPath, itemPath, PUBLIC_KEY, name)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "key_ssh" {
@@ -175,7 +267,15 @@ func TestSshCertResource(t *testing.T) {
     			akeyless_dfc_key.key_ssh,
   			]
 		}
-	`, name, itemPath)
+		data "akeyless_ssh_certificate" "ssh_cert" {
+			cert_username     = "aaaa2"
+			cert_issuer_name  = "%v"
+			public_key_data   = "%v"
+			depends_on = [
+				akeyless_ssh_cert_issuer.%v,
+			]
+		}
+	`, name, itemPath, itemPath, PUBLIC_KEY, name)
 
 	tesItemResource(t, config, configUpdate, itemPath)
 }
