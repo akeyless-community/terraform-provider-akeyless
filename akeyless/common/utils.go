@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -347,6 +347,13 @@ func GetSra(d *schema.ResourceData, sra *akeyless.SecureRemoteAccess, itemType s
 		}
 	}
 
+	if s, ok := sra.GetWebProxyOk(); ok && *s {
+		err = d.Set("secure_access_web_proxy", s)
+		if err != nil {
+			return err
+		}
+	}
+
 	if s, ok := sra.GetIsolatedOk(); ok && *s {
 		err = d.Set("secure_access_web_browsing", s)
 		if err != nil {
@@ -445,4 +452,25 @@ func GetFieldjsonTagName(tag string, s interface{}) (fieldname string) {
 		}
 	}
 	return ""
+}
+
+func GetErrorOnUpdateParam(d *schema.ResourceData, paramNames []string) error {
+	changed := []string{}
+
+	for _, paramName := range paramNames {
+		if d.HasChange(paramName) {
+			// need to explicit rollback param due to unresolved bug in terraform:
+			// https://github.com/hashicorp/terraform-provider-helm/issues/472
+			old, _ := d.GetChange(paramName)
+			d.Set(paramName, old)
+
+			changed = append(changed, paramName)
+		}
+	}
+
+	if len(changed) > 0 {
+		changedParams := "\"" + strings.Join(changed, "\", \"") + "\""
+		return fmt.Errorf("update of %s is not allowed", changedParams)
+	}
+	return nil
 }

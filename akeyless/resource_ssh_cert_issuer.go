@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -42,70 +43,71 @@ func resourceSSHCertIssuer() *schema.Resource {
 			"ttl": {
 				Type:        schema.TypeInt,
 				Required:    true,
-				Description: "he requested Time To Live for the certificate, in seconds",
+				Description: "The requested Time To Live for the certificate, in seconds",
 			},
 			"principals": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Signed certificates with principal, e.g example_role1,example_role2",
 			},
 			"extensions": {
 				Type:        schema.TypeMap,
-				Required:    false,
 				Optional:    true,
 				Description: "Signed certificates with extensions (key/val), e.g permit-port-forwarding=",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"metadata": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
-				Description: "A metadata about the issuer",
+				Deprecated:  "Deprecated: Use description instead",
+				Description: "[Deprecated: Use description instead]",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this key. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_bastion_api": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Bastion's SSH control API endpoint. E.g. https://my.bastion:9900",
 			},
 			"secure_access_bastion_ssh": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
-				Description: "Bastion's SSH server. E.g. my.bastion:22 ",
+				Description: "Bastion's SSH server. E.g. my.bastion:22",
 			},
 			"secure_access_ssh_creds_user": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "SSH username to connect to target server, must be in 'Allowed Users' list",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
-				Description: "Target servers for connections., For multiple values repeat this flag.",
+				Description: "Target servers for connections. (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_use_internal_bastion": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Use internal SSH Bastion",
+			},
+			"delete_protection": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this item, [true/false]",
 			},
 		},
 	}
@@ -124,7 +126,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	metadata := d.Get("metadata").(string)
+	description := common.GetItemDescription(d)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -134,6 +136,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessUseInternalBastion := d.Get("secure_access_use_internal_bastion").(bool)
+	deleteProtection := d.Get("delete_protection").(bool)
 
 	body := akeyless.CreateSSHCertIssuer{
 		Name:          name,
@@ -144,7 +147,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionApi, secureAccessBastionApi)
@@ -152,13 +155,14 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessSshCredsUser, secureAccessSshCredsUser)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessUseInternalBastion, secureAccessUseInternalBastion)
+	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
 	_, _, err := client.CreateSSHCertIssuer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to create ssh cert issuer: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return fmt.Errorf("failed to create ssh cert issuer: %w", err)
 	}
 
 	d.SetId(name)
@@ -189,9 +193,15 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to get value: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		return fmt.Errorf("failed to get value: %w", err)
+	}
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", *rOut.DeleteProtection)
+		if err != nil {
+			return err
+		}
 	}
 	if rOut.CertificateIssueDetails != nil {
 		if rOut.CertificateIssueDetails.MaxTtl != nil {
@@ -200,17 +210,6 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
-
-		/*
-				AllowedDomains *[]string `json:"allowed_domains,omitempty"`
-			AllowedUserKeyLengths *map[string]int64 `json:"allowed_user_key_lengths,omitempty"`
-			// Relevant for user certificate
-			CertType *int32 `json:"cert_type,omitempty"`
-			CriticalOptions *map[string]string `json:"critical_options,omitempty"`
-			Extensions *map[string]string `json:"extensions,omitempty"`
-			// In case it is empty, the key ID will be combination of user identifiers and a random string
-			StaticKeyId *string `json:"static_key_id,omitempty"`
-		*/
 		if rOut.CertificateIssueDetails.SshCertIssuerDetails != nil {
 			ssh := rOut.CertificateIssueDetails.SshCertIssuerDetails
 			if ssh.AllowedUsers != nil {
@@ -241,7 +240,7 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemMetadata != nil {
-		err = d.Set("metadata", *rOut.ItemMetadata)
+		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -272,7 +271,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	metadata := d.Get("metadata").(string)
+	description := common.GetItemDescription(d)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessBastionApi := d.Get("secure_access_bastion_api").(string)
 	secureAccessBastionSsh := d.Get("secure_access_bastion_ssh").(string)
@@ -280,6 +279,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessUseInternalBastion := d.Get("secure_access_use_internal_bastion").(bool)
+	deleteProtection := d.Get("delete_protection").(bool)
 
 	tagSet := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tagSet.List())
@@ -302,20 +302,21 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionApi, secureAccessBastionApi)
 	common.GetAkeylessPtr(&body.SecureAccessBastionSsh, secureAccessBastionSsh)
 	common.GetAkeylessPtr(&body.SecureAccessSshCredsUser, secureAccessSshCredsUser)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessUseInternalBastion, secureAccessUseInternalBastion)
+	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
 	_, _, err = client.UpdateSSHCertIssuer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't update : %v", err)
+		return fmt.Errorf("failed to update : %w", err)
 	}
 
 	d.SetId(name)

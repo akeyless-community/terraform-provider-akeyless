@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -52,10 +52,14 @@ func resourceRabbitmqTarget() *schema.Resource {
 				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used",
 			},
 			"comment": {
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
+			},
+			"description": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
-				Description: "Comment about the target",
+				Description: "Description of the object",
 			},
 		},
 	}
@@ -74,6 +78,7 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.CreateRabbitMQTarget{
 		Name:  name,
@@ -84,6 +89,7 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RabbitmqServerPassword, rabbitmqServerPassword)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateRabbitMQTarget(ctx).Body(body).Execute()
 	if err != nil {
@@ -151,7 +157,7 @@ func resourceRabbitmqTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err = d.Set("comment", *rOut.Target.Comment)
+		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -175,6 +181,7 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 
 	body := akeyless.UpdateRabbitMQTarget{
 		Name:  name,
@@ -185,6 +192,7 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateRabbitMQTarget(ctx).Body(body).Execute()
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -177,6 +177,7 @@ func Provider() *schema.Provider {
 			"akeyless_target_ssh":                     resourceSSHTarget(),
 			"akeyless_k8s_auth_config":                resourceK8sAuthConfig(),
 			"akeyless_associate_role_auth_method":     resourceAssocRoleAm(),
+			"akeyless_tokenizer":                      resourceTokenizer(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_static_secret":      dataSourceStaticSecret(),
@@ -189,9 +190,13 @@ func Provider() *schema.Provider {
 			"akeyless_producer_tmp_creds": dataSourceGatewayGetProducerTmpCreds(),
 			"akeyless_rotated_secret":     dataSourceGetRotatedSecretValue(),
 			"akeyless_rsa_pub":            dataSourceGetRSAPublic(),
+			"akeyless_pki_certificate":    dataSourceGetPKICertificate(),
+			"akeyless_ssh_certificate":    dataSourceGetSSHCertificate(),
 			"akeyless_tags":               dataSourceGetTags(),
 			"akeyless_target_details":     dataSourceGetTargetDetails(),
 			"akeyless_target":             dataSourceGetTarget(),
+			"akeyless_tokenize":           dataSourceTokenize(),
+			"akeyless_detokenize":         dataSourceDetokenize(),
 		},
 	}
 }

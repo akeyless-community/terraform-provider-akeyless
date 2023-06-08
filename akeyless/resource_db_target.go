@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -125,10 +125,14 @@ func resourceDbTarget() *schema.Resource {
 				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used",
 			},
 			"comment": {
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Deprecated: Use description instead",
+			},
+			"description": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
-				Description: "Comment about the target",
+				Description: "Description of the object",
 			},
 			"oracle_service_name": {
 				Type:        schema.TypeString,
@@ -165,6 +169,7 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	mongodbAtlasApiPrivateKey := d.Get("mongodb_atlas_api_private_key").(string)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 
 	body := akeyless.CreateDBTarget{
@@ -188,6 +193,7 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.OracleServiceName, oracleServiceName)
 
 	_, _, err := client.CreateDBTarget(ctx).Body(body).Execute()
@@ -322,7 +328,7 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.Target.Comment != nil {
-		err = d.Set("comment", *rOut.Target.Comment)
+		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -364,6 +370,7 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	mongodbAtlasApiPrivateKey := d.Get("mongodb_atlas_api_private_key").(string)
 	key := d.Get("key").(string)
 	comment := d.Get("comment").(string)
+	description := d.Get("description").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 
 	body := akeyless.UpdateDBTarget{
@@ -387,6 +394,7 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Comment, comment)
+	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.OracleServiceName, oracleServiceName)
 
 	_, _, err := client.UpdateDBTarget(ctx).Body(body).Execute()

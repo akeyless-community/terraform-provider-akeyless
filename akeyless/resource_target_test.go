@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGithubTargetResource(t *testing.T) {
@@ -21,6 +22,7 @@ func TestGithubTargetResource(t *testing.T) {
 			name 					= "%v"
 			github_app_id 			= "1234"
 			github_app_private_key 	= "abcd"
+			comment 				= "aaaa"
 		}
 	`, secretName, secretPath)
 
@@ -29,7 +31,7 @@ func TestGithubTargetResource(t *testing.T) {
 			name 					= "%v"
 			github_app_id 			= "5678"
 			github_app_private_key 	= "efgh"
-			comment 				= "bla bla "
+			description				= "bbbb"
 		}
 	`, secretName, secretPath)
 
@@ -104,7 +106,7 @@ func TestAzureTargetResource(t *testing.T) {
 			client_id     = "dcdcddfrfc"
 			tenant_id = "rgergetgheergerg" 
 			client_secret = "dmkdcnkdc"
-			comment = "fkfmkfm"
+			description 	= "fkfmkfm"
 		}
 	`, secretName, secretPath)
 
@@ -118,17 +120,17 @@ func TestWebTargetResource(t *testing.T) {
 	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_web" "%v" {
-			name = "%v"
-			url     = "dfcefkmk"
-  			comment = "rgergetghergerg"
+			name 		= "%v"
+			url     	= "dfcefkmk"
+			description = "rgergetghergerg"
 		}
 	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_web" "%v" {
-			name = "%v"
-			url     = "YYYYYYY"
-  			comment = "0I/sdgfvfsgs/sdfrgrfv"
+			name 		= "%v"
+			url     	= "YYYYYYY"
+			description = "0I/sdgfvfsgs/sdfrgrfv"
 		}
 	`, secretName, secretPath)
 
@@ -275,11 +277,12 @@ func TestDbTargetResource(t *testing.T) {
 		resource "akeyless_target_db" "%v" {
 			name = "%v"
 			db_type     = "mysql"
-			  user_name = "rgergetghergerg"
-			  host = "ssss"
-			  port = "1231"
-			  db_name = "mddd"
-			  pwd = "ddkdkd"
+			user_name = "rgergetghergerg"
+			host = "ssss"
+			port = "1231"
+			db_name = "mddd"
+			pwd = "ddkdkd"
+			description = "aaa"
 		}
 	`, secretName, secretPath)
 
@@ -287,11 +290,11 @@ func TestDbTargetResource(t *testing.T) {
 		resource "akeyless_target_db" "%v" {
 			name = "%v"
 			db_type     = "mysql"
-			  user_name = "dddd"
-			  host = "dddd"
-			  port = "1231"
-			  db_name = "mdddddd"
-			  pwd = "ddkdkd"
+			user_name = "dddd"
+			host = "dddd"
+			port = "1231"
+			db_name = "mdddddd"
+			pwd = "ddkdkd"
 		}
 	`, secretName, secretPath)
 
@@ -366,26 +369,18 @@ func checkTargetExistsRemotelyprod(path string) resource.TestCheckFunc {
 	}
 }
 
-func deleteTarget(path string) error {
+func deleteTarget(t *testing.T, name string) {
 
 	p, err := getProviderMeta()
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
 	client := p.client
 	token := *p.token
 
 	gsvBody := akeyless.DeleteTarget{
-		Name:  path,
+		Name:  name,
 		Token: &token,
 	}
 
-	_, _, err = client.DeleteTarget(context.Background()).Body(gsvBody).Execute()
-	if err != nil {
-		fmt.Println("error delete target:", err)
-		return err
-	}
-	fmt.Println("deleted", path)
-	return nil
+	client.DeleteTarget(context.Background()).Body(gsvBody).Execute()
 }

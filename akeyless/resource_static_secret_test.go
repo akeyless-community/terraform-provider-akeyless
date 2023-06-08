@@ -5,21 +5,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestStaticResource(t *testing.T) {
+
+	t.Parallel()
+
 	secretName := "test_secret"
-	secretPath := testPath("path_secret")
-	deleteKey(secretPath)
+	secretPath := testPath(secretName)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
 			path = "%v"
 			value = "secretpassword"
 			tags     = ["t1", "t2"]
+			metadata = "aaaa"
 		}
 	`, secretName, secretPath)
 
@@ -31,6 +34,7 @@ func TestStaticResource(t *testing.T) {
 			secure_access_web_browsing = "true"
 			secure_access_url    = "http://google.com"
 			tags     = ["t1", "t3"]
+			metadata = "bbbb"
 		}
 	`, secretName, secretPath)
 

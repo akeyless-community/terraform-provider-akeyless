@@ -5,11 +5,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+const (
+	ErrFormatMsg = "resource-id should be one of the following: <role_name>:<am_name> or <role_name>:<association_id>"
 )
 
 func resourceAssocRoleAm() *schema.Resource {
@@ -149,6 +154,12 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
+
+	err := validateAssocRoleAmUpdateParams(d)
+	if err != nil {
+		return fmt.Errorf("can't update association: %v", err)
+	}
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -171,12 +182,12 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 	body.SubClaims = &sc
 	common.GetAkeylessPtr(&body.CaseSensitive, caseSensitive)
 
-	_, _, err := client.UpdateAssoc(ctx).Body(body).Execute()
+	_, _, err = client.UpdateAssoc(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+			return fmt.Errorf("can't update association: %s", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't update : %v", err)
+		return fmt.Errorf("can't update association: %w", err)
 	}
 
 	d.SetId(id)
@@ -197,20 +208,36 @@ func resourceAssocRoleAmDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteRoleAssociation(ctx).Body(deleteItem).Execute()
+	var apiErr akeyless.GenericOpenAPIError
+
+	_, res, err := client.DeleteRoleAssociation(ctx).Body(deleteItem).Execute()
 	if err != nil {
-		return err
+		if errors.As(err, &apiErr) {
+			if res.StatusCode != http.StatusNotFound {
+				return fmt.Errorf("can't delete role association: %v", string(apiErr.Body()))
+			}
+		} else {
+			return fmt.Errorf("can't delete role association: %v", err)
+		}
 	}
 
 	return nil
 }
 
+type AssocParams struct {
+	RoleName string
+	AmName   string
+	AssocId  string
+}
+
 func resourceAssocRoleAmImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	roleName := d.Get("role_name").(string)
+	assocParams, err := getAssocImportParams(d)
+	if err != nil {
+		return nil, err
+	}
 
-	id := d.Id()
-
+	roleName := assocParams.RoleName
 	role, err := getRole(d, roleName, m)
 	if err != nil {
 		return nil, err
@@ -224,42 +251,139 @@ func resourceAssocRoleAmImport(d *schema.ResourceData, m interface{}) ([]*schema
 	}
 
 	if role.RoleAuthMethodsAssoc != nil {
-		for _, acc := range *role.RoleAuthMethodsAssoc {
-			if acc.AssocId != nil && *acc.AssocId == id {
-				if acc.AuthMethodName != nil {
-					err = d.Set("am_name", *acc.AuthMethodName)
-					if err != nil {
-						return nil, err
-					}
-				}
-				if acc.AuthMethodSubClaims != nil {
-					sc := make(map[string]string, len(*acc.AuthMethodSubClaims))
-					for k, v := range *acc.AuthMethodSubClaims {
-						sc[k] = strings.Join(v, ",")
-					}
-					err = d.Set("sub_claims", sc)
-					if err != nil {
-						return nil, err
-					}
-				}
-				if acc.SubClaimsCaseSensitive != nil {
-					cs := "true"
-					if !*acc.SubClaimsCaseSensitive {
-						cs = "false"
-					}
-					err = d.Set("case_sensitive", cs)
-					if err != nil {
-						return nil, err
-					}
-				}
+		if assocParams.AmName != "" {
+			return importByAuthMethod(d, role, assocParams.AmName)
+		}
+		return importByAssocId(d, role, assocParams.AssocId)
+	}
 
-				d.SetId(id)
-				return []*schema.ResourceData{d}, nil
+	id := d.Id()
+	d.SetId("")
+	return nil, fmt.Errorf("association %v was not found", id)
+
+}
+
+func importByAuthMethod(d *schema.ResourceData, role akeyless.Role, amName string) ([]*schema.ResourceData, error) {
+	id := d.Id()
+
+	assocs := *role.RoleAuthMethodsAssoc
+	count := countRoleAmAssocs(assocs, amName)
+	if count == 0 {
+		return nil, fmt.Errorf("association %v was not found", id)
+	}
+	if count > 1 {
+		return nil, fmt.Errorf("found more than one result for %s. please import by association id: <role_name>:<association_id>", id)
+	}
+
+	for _, acc := range assocs {
+		if acc.AuthMethodName != nil && *acc.AuthMethodName == amName {
+			err := fillAssocFields(d, acc)
+			if err != nil {
+				return nil, err
 			}
+
+			if acc.AssocId != nil {
+				d.SetId(*acc.AssocId)
+			}
+			return []*schema.ResourceData{d}, nil
 		}
 	}
 
 	d.SetId("")
-	return nil, fmt.Errorf("association id: %v was not found", id)
+	return nil, fmt.Errorf("association %v was not found", id)
+}
 
+func importByAssocId(d *schema.ResourceData, role akeyless.Role, assocId string) ([]*schema.ResourceData, error) {
+	id := d.Id()
+
+	for _, acc := range *role.RoleAuthMethodsAssoc {
+		if acc.AssocId != nil && *acc.AssocId == assocId {
+			err := fillAssocFields(d, acc)
+			if err != nil {
+				return nil, err
+			}
+
+			d.SetId(assocId)
+			return []*schema.ResourceData{d}, nil
+		}
+	}
+
+	d.SetId("")
+	return nil, fmt.Errorf("association %v was not found", id)
+}
+
+func fillAssocFields(d *schema.ResourceData, acc akeyless.RoleAuthMethodAssociation) error {
+	if acc.AuthMethodName != nil {
+		err := d.Set("am_name", *acc.AuthMethodName)
+		if err != nil {
+			return err
+		}
+	}
+	if acc.AuthMethodSubClaims != nil {
+		sc := make(map[string]string, len(*acc.AuthMethodSubClaims))
+		for k, v := range *acc.AuthMethodSubClaims {
+			sc[k] = strings.Join(v, ",")
+		}
+		err := d.Set("sub_claims", sc)
+		if err != nil {
+			return err
+		}
+	}
+	if acc.SubClaimsCaseSensitive != nil {
+		cs := "true"
+		if !*acc.SubClaimsCaseSensitive {
+			cs = "false"
+		}
+		err := d.Set("case_sensitive", cs)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func countRoleAmAssocs(assocs []akeyless.RoleAuthMethodAssociation, amName string) int {
+	count := 0
+	for _, acc := range assocs {
+		if acc.AuthMethodName != nil && *acc.AuthMethodName == amName {
+			count++
+		}
+	}
+	return count
+}
+
+func getAssocImportParams(d *schema.ResourceData) (*AssocParams, error) {
+
+	attr := strings.Split(d.Id(), ":")
+	if len(attr) != 2 {
+		return nil, fmt.Errorf(ErrFormatMsg)
+	}
+
+	assocParams := AssocParams{
+		RoleName: attr[0],
+		AmName:   "",
+		AssocId:  "",
+	}
+
+	if isAssocId(attr[1]) {
+		assocParams.AssocId = attr[1]
+	} else {
+		assocParams.AmName = attr[1]
+	}
+
+	return &assocParams, nil
+}
+
+func isAssocId(s string) bool {
+	// e.g. ass-abcdef123456fedcba
+	return strings.HasPrefix(s, "ass-") && len(s) == 24
+}
+
+// every resource_associate_role_auth_method can relate to exactly 1 assoc.
+// updating its role_name or am_name meaning destroy and re-create the resource.
+// therefore only sub_claims and case_sensitive are able to update.
+// if you wish to update role_name or am_name, destroy the resource first.
+func validateAssocRoleAmUpdateParams(d *schema.ResourceData) error {
+	paramsMustNotUpdate := []string{"role_name", "am_name"}
+	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }

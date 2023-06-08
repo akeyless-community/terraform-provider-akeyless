@@ -3,9 +3,10 @@ package akeyless
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
@@ -22,6 +23,7 @@ const (
 	MYSQL_HOST             = "127.0.0.1"
 	MYSQL_PORT             = "3306"
 	MYSQL_DBNAME           = "XXXXXXXX"
+	K8S_HOST               = "https://kubernetes.docker.internal:6443"
 	GITHUB_INSTALL_ID      = 1234
 	GITHUB_INSTALL_REPO    = "XXXXXXXX"
 	GITHUB_APP_ID          = 1234
@@ -37,8 +39,12 @@ const (
 	LDAP_CERT              = "XXXXXXXX="
 )
 
-var GITHUB_TOKEN_PERM = `["contents=read", "issues=write", "actions=read"]`
-var GITHUB_TOKEN_REPO = `["github-producer-test1", "github-producer-test2"]`
+var (
+	GITHUB_TOKEN_PERM = `["contents=read", "issues=write", "actions=read"]`
+	GITHUB_TOKEN_REPO = `["github-producer-test1", "github-producer-test2"]`
+	K8S_CERT          = os.Getenv("K8S_CA_CERT")
+	K8S_TOKEN         = os.Getenv("K8S_TOKEN")
+)
 
 var mysql_attr = fmt.Sprintf(`
 	mysql_username	= "%v"
@@ -220,6 +226,44 @@ func TestHanadbProducerResource(t *testing.T) {
 			tags                 	= ["aaa", "bbb"]
 		}
 	`, name, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+func TestK8sProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "k8s_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_k8s" "%v" {
+			name                      = "%v"
+			k8s_cluster_endpoint      = "%v"
+			k8s_cluster_ca_cert       = "%v"
+			k8s_cluster_token         = "%v"
+			k8s_service_account_type  = "dynamic"
+			k8s_namespace             = "default"
+			k8s_allowed_namespaces    = "default,test"
+			k8s_predefined_role_name  = "tokenrequest-admin"
+			k8s_predefined_role_type  = "ClusterRole"
+			user_ttl                  = "30m"
+			secure_access_web_proxy	  = "true"
+		}
+	`, name, itemPath, K8S_HOST, K8S_CERT, K8S_TOKEN)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_k8s" "%v" {
+			name                      = "%v"
+			k8s_cluster_endpoint      = "%v"
+			k8s_cluster_ca_cert       = "%v"
+			k8s_cluster_token         = "%v"
+			k8s_service_account_type  = "fixed"
+			k8s_namespace             = "default"
+			k8s_service_account       = "token-request-sa-admin"
+			user_ttl                  = "60m"
+			secure_access_web_proxy	  = "false"
+		}
+	`, name, itemPath, K8S_HOST, K8S_CERT, K8S_TOKEN)
 
 	tesItemResource(t, config, configUpdate, itemPath)
 }
