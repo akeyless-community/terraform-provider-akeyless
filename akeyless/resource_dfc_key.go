@@ -164,9 +164,9 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	_, _, err = client.CreateDFCKey(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create key: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to create key: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't create key: %v", err)
+		return fmt.Errorf("failed to create key: %w", err)
 	}
 
 	d.SetId(name)
@@ -285,7 +285,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 
 	err := validateDfcKeyUpdateParams(d)
 	if err != nil {
-		return fmt.Errorf("can't update: %v", err)
+		return fmt.Errorf("failed to update: %w", err)
 	}
 
 	provider := m.(providerMeta)
@@ -323,9 +323,9 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update key: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to update key: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't update key: %v", err)
+		return fmt.Errorf("failed to update key: %w", err)
 	}
 
 	d.SetId(name)
@@ -408,9 +408,9 @@ func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
 				d.SetId("")
 				return nil, nil
 			}
-			return nil, fmt.Errorf("can't get key: %v", string(apiErr.Body()))
+			return nil, fmt.Errorf("failed to get key: %v", string(apiErr.Body()))
 		}
-		return nil, fmt.Errorf("can't get key: %v", err)
+		return nil, fmt.Errorf("failed to get key: %w", err)
 	}
 
 	return &rOut, nil

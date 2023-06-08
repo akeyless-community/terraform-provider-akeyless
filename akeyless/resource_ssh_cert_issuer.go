@@ -160,9 +160,9 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	_, _, err := client.CreateSSHCertIssuer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create ssh cert issuer: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to create ssh cert issuer: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("cant create ssh cert issuer: %v", err)
+		return fmt.Errorf("failed to create ssh cert issuer: %w", err)
 	}
 
 	d.SetId(name)
@@ -193,9 +193,9 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to get value: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		return fmt.Errorf("failed to get value: %w", err)
 	}
 	if rOut.DeleteProtection != nil {
 		err = d.Set("delete_protection", *rOut.DeleteProtection)
@@ -314,9 +314,9 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	_, _, err = client.UpdateSSHCertIssuer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't update : %v", err)
+		return fmt.Errorf("failed to update : %w", err)
 	}
 
 	d.SetId(name)

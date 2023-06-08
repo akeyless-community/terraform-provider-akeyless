@@ -253,9 +253,9 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	_, _, err := client.CreatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create pki cert issuer: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to create pki cert issuer: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("cant create pki cert issuer: %v", err)
+		return fmt.Errorf("failed to create pki cert issuer: %w", err)
 	}
 
 	d.SetId(name)
@@ -286,9 +286,9 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't get item: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to get item: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("cant get item: %v", err)
+		return fmt.Errorf("failed to get item: %w", err)
 	}
 
 	if rOut.CertIssuerSignerKeyName != nil {
@@ -567,9 +567,9 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	_, _, err = client.UpdatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't update : %v", err)
+		return fmt.Errorf("failed to update : %w", err)
 	}
 
 	d.SetId(name)

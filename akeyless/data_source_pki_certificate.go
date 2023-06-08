@@ -117,9 +117,9 @@ func dataSourceGetPKICertificateRead(d *schema.ResourceData, m interface{}) erro
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't get pki certificate: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to get pki certificate: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("cant get pki certificate: %v", err)
+		return fmt.Errorf("failed to get pki certificate: %w", err)
 	}
 
 	if rOut.Data != nil {

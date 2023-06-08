@@ -82,9 +82,9 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't get ssh certificate: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to get ssh certificate: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("cant get ssh certificate: %v", err)
+		return fmt.Errorf("failed to get ssh certificate: %w", err)
 	}
 
 	if rOut.Data != nil {
