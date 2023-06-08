@@ -21,7 +21,6 @@ func TestTokenizerCreateUpdate(t *testing.T) {
 
 	name := "test_tokenizer"
 	itemPath := testPath(name)
-	defer deleteItem(t, itemPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_tokenizer" "%v" {

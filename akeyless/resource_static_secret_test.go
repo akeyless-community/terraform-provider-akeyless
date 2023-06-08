@@ -11,9 +11,11 @@ import (
 )
 
 func TestStaticResource(t *testing.T) {
+
+	t.Parallel()
+
 	secretName := "test_secret"
-	secretPath := testPath("path_secret")
-	deleteItem(t, secretPath)
+	secretPath := testPath(secretName)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {

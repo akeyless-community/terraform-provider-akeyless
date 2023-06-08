@@ -16,32 +16,36 @@ func dataSourceGetSSHCertificate() *schema.Resource {
 		Description: "Generates SSH certificate data source",
 		Read:        dataSourceGetSSHCertificateRead,
 		Schema: map[string]*schema.Schema{
-			"cert_username": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The username to sign in the SSH certificate (use a comma-separated list for more than one username)",
-			},
 			"cert_issuer_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The name of the SSH certificate issuer",
 			},
+			"cert_username": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The username to sign in the SSH certificate (use a comma-separated list for more than one username)",
+			},
 			"public_key_data": {
 				Type:        schema.TypeString,
-				Required:    false,
+				Required:    true,
+				Description: "SSH public key file contents",
+			},
+			"ttl": {
+				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: "SSH public key file contents. If this option is used, the certificate will be printed to stdout",
+				Description: "Updated certificate lifetime in seconds (must be less than the Certificate Issuer default TTL)",
+			},
+			"legacy_signing_alg_name": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Set this option to output legacy ('ssh-rsa-cert-v01@openssh.com') signing algorithm name in the certificate.",
 			},
 			"data": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Required:    false,
-				Description: "",
-			},
-			"path": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Required:    false,
+				Sensitive:   true,
 				Description: "",
 			},
 		},
@@ -58,6 +62,8 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 	certUsername := d.Get("cert_username").(string)
 	certIssuerName := d.Get("cert_issuer_name").(string)
 	publicKeyData := d.Get("public_key_data").(string)
+	ttl := d.Get("ttl").(int)
+	legacySigningAlgName := d.Get("legacy_signing_alg_name").(bool)
 
 	body := akeyless.GetSSHCertificate{
 		CertUsername:   certUsername,
@@ -65,6 +71,8 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 		Token:          &token,
 	}
 	common.GetAkeylessPtr(&body.PublicKeyData, publicKeyData)
+	common.GetAkeylessPtr(&body.Ttl, ttl)
+	common.GetAkeylessPtr(&body.LegacySigningAlgName, legacySigningAlgName)
 
 	rOut, res, err := client.GetSSHCertificate(ctx).Body(body).Execute()
 	if err != nil {
@@ -74,19 +82,13 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't get ssh certificate: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		return fmt.Errorf("cant get ssh certificate: %v", err)
 	}
 
 	if rOut.Data != nil {
 		err = d.Set("data", *rOut.Data)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Path != nil {
-		err = d.Set("path", *rOut.Path)
 		if err != nil {
 			return err
 		}
