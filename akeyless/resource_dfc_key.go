@@ -417,6 +417,10 @@ func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
 }
 
 func encodeCertificate(cert string) (string, error) {
+	if cert == "" {
+		return "", nil
+	}
+
 	decoded, err := base64.StdEncoding.DecodeString(cert)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode certificate: %w", err)
