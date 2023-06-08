@@ -90,9 +90,9 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	rOut, _, err := client.CreateAuthMethod(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to create Secret: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return fmt.Errorf("failed to create Secret: %w", err)
 	}
 
 	if rOut.AccessId != nil {
@@ -136,9 +136,9 @@ func resourceAuthMethodApiKeyRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to value: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		return fmt.Errorf("failed to get value: %w", err)
 	}
 
 	if rOut.AuthMethodAccessId != nil {
@@ -197,9 +197,9 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	_, _, err := client.UpdateAuthMethod(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't update : %v", err)
+		return fmt.Errorf("failed to update : %w", err)
 	}
 
 	d.SetId(name)

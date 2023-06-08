@@ -195,7 +195,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't create auth method cert: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to create auth method cert: %v", string(apiErr.Body()))
 		}
 	}
 
@@ -235,9 +235,9 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to get value: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		return fmt.Errorf("failed to get value: %w", err)
 	}
 
 	if rOut.AccessInfo != nil {
@@ -265,9 +265,9 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 					d.SetId("")
 					return nil
 				}
-				return fmt.Errorf("can't get account settings: %v", string(apiErr.Body()))
+				return fmt.Errorf("failed to get account settings: %v", string(apiErr.Body()))
 			}
-			return fmt.Errorf("can't get account settings: %v", err)
+			return fmt.Errorf("failed to get account settings: %w", err)
 		}
 		jwtDefault := *rOutAcc.SystemAccessCredsSettings.JwtTtlDefault
 		if accessInfo.JwtTtl != nil {
@@ -420,9 +420,9 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	_, _, err := client.UpdateAuthMethodCert(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't update : %v", err)
+		return fmt.Errorf("failed to update : %w", err)
 	}
 
 	d.SetId(name)
