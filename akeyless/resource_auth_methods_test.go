@@ -21,6 +21,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const PUB_KEY = `MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXwIDAQAB`
+
+func TestAuthMethodLDAPResource(t *testing.T) {
+	t.Parallel()
+	name := "test_auth_method_ldap"
+	path := testPath(name)
+	deleteAuthMethod(path)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_ldap" "%v" {
+			name 				= "%v"
+			public_key_data 	= "%v"
+		}
+	`, name, path, PUB_KEY)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_ldap" "%v" {
+			name 				= "%v"
+			public_key_data 	= "%v"
+			unique_identifier 	= "email"
+			bound_ips 			= ["1.1.1.0/32"]
+		}
+	`, name, path, PUB_KEY)
+
+	testAuthMethodResource(t, config, configUpdate, path)
+}
+
 func TestAuthMethodCertResource(t *testing.T) {
 	t.Parallel()
 	name := "test_auth_method_cert"
@@ -50,8 +77,9 @@ func TestAuthMethodCertResource(t *testing.T) {
 }
 
 func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method"
-	path := testPath("path_auth_method")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "%v" {
 			name = "%v"
@@ -64,28 +92,13 @@ func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_aws_iam"
-	path := testPath("path_auth_method_aws_iam")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_aws_iam" "%v" {
 			name = "%v"
@@ -100,26 +113,11 @@ func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_saml2"
 	path := testPath(name)
 	deleteAuthMethod(path)
@@ -141,23 +139,7 @@ func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodSAMLWithXmlResourceCreateNew(t *testing.T) {
@@ -202,8 +184,9 @@ func TestAuthMethodSAMLWithXmlResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_azure_ad"
-	path := testPath("path_auth_method_azure_ad")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_azure_ad" "%v" {
 			name = "%v"
@@ -220,23 +203,7 @@ func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
@@ -244,8 +211,9 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 		return
 	}
 
+	t.Parallel()
 	name := "test_auth_method_gcp"
-	path := testPath("path_auth_method_gcp")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_gcp" "%v" {
 			name = "%v"
@@ -265,28 +233,13 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 		}
 	`, name, path, os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT"), os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC"))
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
-func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
+func TestAuthMethodUIDResource(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_universal_identity"
-	path := testPath("auth_method_universal_identity")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_universal_identity" "%v" {
 			name = "%v"
@@ -302,28 +255,15 @@ func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func TestAuthMethodOidcResourceCreateNew(t *testing.T) {
+
+	t.Parallel()
+
 	name := "test_auth_method_oidc"
-	path := testPath("auth_method_oidc")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_oidc" "%v" {
 			name = "%v"
@@ -349,28 +289,13 @@ func TestAuthMethodOidcResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
-func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
+func TestAuthMethodOauth2Resource(t *testing.T) {
+	t.Parallel()
 	name := "tes_akeyless_auth_method_oauth2"
-	path := testPath("auth_method_oauth2")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_oauth2" "%v" {
 			name = "%v"
@@ -389,28 +314,13 @@ func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
-func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
+func TestAuthMethodK8sResource(t *testing.T) {
+	t.Parallel()
 	name := "test_auth_method_K8s_3"
-	path := testPath("auth_method_K8s_test")
+	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_k8s" "%v" {
 			name = "%v"
@@ -428,23 +338,7 @@ func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
 		}
 	`, name, path)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
+	testAuthMethodResource(t, config, configUpdate, path)
 }
 
 func checkMethodExistsRemotelyNew(path string) resource.TestCheckFunc {

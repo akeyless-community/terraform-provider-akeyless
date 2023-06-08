@@ -301,7 +301,6 @@ func TestSshCertResource(t *testing.T) {
 			alg = "RSA1024"
 			tags     = ["t1", "t2"]
 		}
-
 		resource "akeyless_ssh_cert_issuer" "%v" {
 			name = "%v"
 			ttl = "290"

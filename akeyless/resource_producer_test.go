@@ -7,24 +7,36 @@ import (
 	"testing"
 
 	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
-	GITHUB_INSTALL_ID   = 1234
-	GITHUB_INSTALL_REPO = "XXXXXXXX"
-	GITHUB_APP_ID       = 1234
-	GITHUB_APP_KEY      = "XXXXXXXX"
-	GCP_KEY             = "XXXXXXXX"
-	GCP_SA_EMAIL        = "XXXXXXXX"
-	GCP_TOKEN_SCOPES    = "XXXXXXXX"
-	KEY                 = "XXXXXXXX"
-	PRODUCER_NAME       = "terraform-tests/mysql_for_rs_test"
-	MYSQL_USERNAME      = "XXXXXXXX"
-	MYSQL_PASSWORD      = "XXXXXXXX"
-	MYSQL_HOST          = "127.0.0.1"
-	MYSQL_PORT          = "3306"
-	MYSQL_DBNAME        = "XXXXXXXX"
-	K8S_HOST            = "https://kubernetes.docker.internal:6443"
+	GCP_KEY                = "XXXXXXXX"
+	GCP_SA_EMAIL           = "XXXXXXXX"
+	GCP_TOKEN_SCOPES       = "XXXXXXXX"
+	KEY                    = "XXXXXXXX"
+	PRODUCER_NAME          = "terraform-tests/mysql_for_rs_test"
+	MYSQL_USERNAME         = "XXXXXXXX"
+	MYSQL_PASSWORD         = "XXXXXXXX"
+	MYSQL_HOST             = "127.0.0.1"
+	MYSQL_PORT             = "3306"
+	MYSQL_DBNAME           = "XXXXXXXX"
+	K8S_HOST               = "https://kubernetes.docker.internal:6443"
+	GITHUB_INSTALL_ID      = 1234
+	GITHUB_INSTALL_REPO    = "XXXXXXXX"
+	GITHUB_APP_ID          = 1234
+	GITHUB_APP_KEY         = "XXXXXXXX"
+	DOCKERHUB_USERNAME     = "XXXXXXXX"
+	DOCKERHUB_PASSWORD     = "XXXXXXXX"
+	DOCKERHUB_TOKEN_SCOPES = `"repo:read , repo:write"`
+	SF_ACCOUNT             = "xx11111.us-east-2.aws"
+	SF_USERNAME            = "xxxxxxxx"
+	SF_PASSWORD            = "yyyyyyyy"
+	SF_DBNAME              = "XXXXXXXX"
+	LDAP_PASS              = "XXXXXXXX"
+	LDAP_CERT              = "XXXXXXXX="
 )
 
 var (
@@ -49,6 +61,174 @@ var db_attr = fmt.Sprintf(`
 	db_name   		= "%v"
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
 
+func TestLdapProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "ldap_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_ldap" "%v" {
+			name              = "%v"
+			ldap_url          = "ldap://127.0.0.1:10389"
+			bind_dn           = "cn=admin,dc=planetexpress,dc=com"
+			bind_dn_password  = "%v"
+			ldap_ca_cert      = "%v"
+			user_dn           = "ou=people,dc=planetexpress,dc=com"
+		}
+		data "akeyless_dynamic_secret" "secret" {
+			path 		= "%v"
+			depends_on 	= [
+				akeyless_producer_ldap.%v,
+			]
+		}
+	`, name, itemPath, LDAP_PASS, LDAP_CERT, itemPath, name)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_ldap" "%v" {
+			name              	= "%v"
+			ldap_url          	= "ldap://127.0.0.1:10389"
+			bind_dn           	= "cn=admin,dc=planetexpress,dc=com"
+			bind_dn_password  	= "%v"
+			ldap_ca_cert      	= "%v"
+			user_dn           	= "ou=people,dc=planetexpress,dc=com"
+			user_attribute 		= "uid"
+			token_expiration 	= "10"
+			user_ttl 			= "10m"
+			tags 				= ["abc", "def"]
+		}
+		data "akeyless_dynamic_secret" "secret" {
+			path 		= "%v"
+			depends_on 	= [
+				akeyless_producer_ldap.%v,
+			]
+		}
+	`, name, itemPath, LDAP_PASS, LDAP_CERT, itemPath, name)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
+func TestSnowflakeProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "snowflake_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_snowflake" "%v" {
+			name 				= "%v"
+			account 			= "%v"
+			account_username 	= "%v"
+			account_password 	= "%v"
+			db_name 			= "%v"
+			warehouse 			= "aaaa"
+			role 				= "bbbb"
+		}
+		data "akeyless_dynamic_secret" "secret" {
+			path 		= "%v"
+			depends_on 	= [
+				akeyless_producer_snowflake.%v,
+			]
+		}
+	`, name, itemPath, SF_ACCOUNT, SF_USERNAME, SF_PASSWORD, SF_DBNAME, itemPath, name)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_snowflake" "%v" {
+			name 				= "%v"
+			account 			= "%v"
+			account_username 	= "%v"
+			account_password 	= "%v"
+			db_name 			= "%v"
+			warehouse 			= "aaaaaa"
+			role 				= "bbbbbb"
+			user_ttl 			= "12h"
+			tags 				= ["aaa" , "bbb"]
+		}
+		data "akeyless_dynamic_secret" "secret" {
+			path 		= "%v"
+			depends_on 	= [
+				akeyless_producer_snowflake.%v,
+			]
+		}
+	`, name, itemPath, SF_ACCOUNT, SF_USERNAME, SF_PASSWORD, SF_DBNAME, itemPath, name)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
+func TestRabbitMQProducerResource(t *testing.T) {
+
+	t.Skip("not authorized to create producer on public gateway")
+
+	name := "rabbitmq_test"
+	itemPath := testPath(name)
+	serverUrl := "http://127.0.0.1:15672"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_rabbitmq" "%v" {
+			name                            = "%v"
+			rabbitmq_server_uri             = "%v"
+			rabbitmq_user_conf_permission   = ".*"
+			rabbitmq_user_write_permission  = ".*"
+			rabbitmq_user_read_permission   = ".*"
+			rabbitmq_admin_user             = "guest"
+			rabbitmq_admin_pwd              = "guest"
+		}
+	`, name, itemPath, serverUrl)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_rabbitmq" "%v" {
+			name                            = "%v"
+			rabbitmq_server_uri             = "%v"
+			rabbitmq_user_conf_permission   = ".*"
+			rabbitmq_user_write_permission  = ".*"
+			rabbitmq_user_read_permission   = ".*"
+			rabbitmq_admin_user             = "guest"
+			rabbitmq_admin_pwd              = "guest"
+			tags                 			= ["abc", "def"]
+			user_ttl 						= 80
+			secure_access_enable 			= "true"
+			secure_access_web_browsing    	= "true"
+			secure_access_url   			= "http://blabla.com"
+		}
+	`, name, itemPath, serverUrl)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
+func TestHanadbProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "hanadb_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_hanadb" "%v" {
+			name			= "%v"
+			hana_dbname     = "XXXXXX"
+			hanadb_username = "YYYYYY"
+			hanadb_password = "12345678"
+			hanadb_host     = "127.0.0.1"
+			hanadb_port     = "30013"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_hanadb" "%v" {
+			name 			= "%v"
+			hana_dbname     = "XXXXXX"
+			hanadb_username = "YYYYYY"
+			hanadb_password = "12345678"
+			hanadb_host     = "127.0.0.1"
+			hanadb_port     = "30013"
+			secure_access_enable 	= "true"
+			secure_access_web    	= "true"
+			secure_access_host   	= ["http://abcdef.com"]
+			tags                 	= ["aaa", "bbb"]
+		}
+	`, name, itemPath)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
 func TestK8sProducerResource(t *testing.T) {
 
 	t.Skip("for now the requested values are fictive")
@@ -113,6 +293,33 @@ func TestGithubProducerResource(t *testing.T) {
 			github_app_private_key 	= "%v"
 		}
 	`, name, itemPath, GITHUB_INSTALL_REPO, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
+
+	tesItemResource(t, config, configUpdate, itemPath)
+}
+
+func TestDockerhubProducerResource(t *testing.T) {
+
+	t.Skip("for now the requested values are fictive")
+
+	name := "dockerhub_test"
+	itemPath := testPath(name)
+	config := fmt.Sprintf(`
+		resource "akeyless_producer_dockerhub" "%v" {
+			name            		= "%v"
+			dockerhub_username 		= "%v"
+			dockerhub_password 		= "%v"
+		}
+	`, name, itemPath, DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_producer_dockerhub" "%v" {
+			name            		= "%v"
+			dockerhub_username 		= "%v"
+			dockerhub_password 		= "%v"
+			tags 					= ["abc", "def"]
+			dockerhub_token_scopes 	= %v
+		}
+	`, name, itemPath, DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD, DOCKERHUB_TOKEN_SCOPES)
 
 	tesItemResource(t, config, configUpdate, itemPath)
 }
@@ -318,5 +525,28 @@ func deleteProducer(client *akeyless.V2ApiService, token string) {
 		fmt.Println("failed to delete producer:", err)
 	} else {
 		fmt.Println("deleted", PRODUCER_NAME)
+	}
+}
+
+func checkActiveStatusRemotely(t *testing.T, path string, isActive bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := *testAccProvider.Meta().(providerMeta).client
+		token := *testAccProvider.Meta().(providerMeta).token
+
+		gsvBody := akeyless.GatewayGetProducer{
+			Name:  path,
+			Token: &token,
+		}
+
+		res, _, err := client.GatewayGetProducer(context.Background()).Body(gsvBody).Execute()
+		if err != nil {
+			return err
+		}
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res, "producer details must not be nil")
+		assert.NotNil(t, res.Active, "producer Active details must not be nil")
+		assert.Equal(t, isActive, *res.Active)
+		return nil
 	}
 }

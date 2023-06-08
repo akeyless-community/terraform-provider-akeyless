@@ -12,8 +12,11 @@ import (
 )
 
 func TestGithubTargetResource(t *testing.T) {
-	secretName := "github_test"
-	secretPath := testPath("terraform_tests")
+	t.Parallel()
+	secretName := "github_target_test"
+	secretPath := testPath(secretName)
+	deleteTarget(t, secretPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_github" "%v" {
 			name 					= "%v"
@@ -35,9 +38,36 @@ func TestGithubTargetResource(t *testing.T) {
 	tesTargetResource(t, config, configUpdate, secretPath)
 }
 
+func TestDockerhubTargetResource(t *testing.T) {
+	t.Parallel()
+	secretName := "dockerhub_target_test"
+	secretPath := testPath(secretName)
+	deleteTarget(t, secretPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_dockerhub" "%v" {
+			name 				= "%v"
+			dockerhub_username 	= "1234"
+			dockerhub_password 	= "abcd"
+		}
+		`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_dockerhub" "%v" {
+			name 				= "%v"
+			dockerhub_username 	= "5678"
+			dockerhub_password 	= "efgh"
+			comment 			= "bla bla"
+		}
+		`, secretName, secretPath)
+
+	tesTargetResource(t, config, configUpdate, secretPath)
+}
+
 func TestAwsTargetResource(t *testing.T) {
-	secretName := "aws123"
-	secretPath := testPath("aws_target1")
+	t.Parallel()
+	secretName := "aws_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_aws" "%v" {
 			name = "%v"
@@ -58,8 +88,9 @@ func TestAwsTargetResource(t *testing.T) {
 }
 
 func TestAzureTargetResource(t *testing.T) {
-	secretName := "Azure123"
-	secretPath := testPath("Azure_target1")
+	t.Parallel()
+	secretName := "azure_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_azure" "%v" {
 			name = "%v"
@@ -84,8 +115,9 @@ func TestAzureTargetResource(t *testing.T) {
 }
 
 func TestWebTargetResource(t *testing.T) {
-	secretName := "web123"
-	secretPath := testPath("web_target1")
+	t.Parallel()
+	secretName := "web_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_web" "%v" {
 			name 		= "%v"
@@ -106,8 +138,9 @@ func TestWebTargetResource(t *testing.T) {
 }
 
 func TestSSHTargetResource(t *testing.T) {
-	secretName := "ssh123"
-	secretPath := testPath("ssh_target1")
+	t.Parallel()
+	secretName := "ssh_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_ssh" "%v" {
 			name = "%v"
@@ -132,8 +165,9 @@ func TestSSHTargetResource(t *testing.T) {
 }
 
 func TestArtifactoryTargetResource(t *testing.T) {
-	secretName := "artifactory123"
-	secretPath := testPath("artifactory_target1")
+	t.Parallel()
+	secretName := "artifactory_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_artifactory" "%v" {
 			name = "%v"
@@ -157,13 +191,14 @@ func TestArtifactoryTargetResource(t *testing.T) {
 }
 
 func TestGcpTargetResource(t *testing.T) {
-	secretName := "gcp123"
-	secretPath := testPath("gcp_target1")
+	t.Parallel()
+	secretName := "gcp_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gcp" "%v" {
 			name = "%v"
 			gcp_sa_email     = "XXXXXXX"
-			gcp_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gcp_key = "XXXXXXXX"
 		}
 	`, secretName, secretPath)
 
@@ -171,7 +206,7 @@ func TestGcpTargetResource(t *testing.T) {
 		resource "akeyless_target_gcp" "%v" {
 			name = "%v"
 			gcp_sa_email     = "YYYYYYY"
-			gcp_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gcp_key = "XXXXXXXX"
 		}
 	`, secretName, secretPath)
 
@@ -180,14 +215,15 @@ func TestGcpTargetResource(t *testing.T) {
 }
 
 func TestGkeTargetResource(t *testing.T) {
-	secretName := "gke123"
-	secretPath := testPath("gke_target1")
+	t.Parallel()
+	secretName := "gke_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gke" "%v" {
 			name = "%v"
 			gke_service_account_email     = "XXXXXXX"
 			gke_cluster_endpoint = "https://akaka.com"
-			gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gke_cluster_cert = "XXXXXXXX"
 			gke_account_key = "qwdwd"
 			gke_cluster_name = "dddd"
 		}
@@ -198,7 +234,7 @@ func TestGkeTargetResource(t *testing.T) {
 			name = "%v"
 			gke_service_account_email     = "XXXXXXX2"
 			gke_cluster_endpoint = "https://akakad.com"
-			gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			gke_cluster_cert = "XXXXXXXX"
 			gke_account_key = "qwdwd"
 			gke_cluster_name = "dddd"
 		}
@@ -208,13 +244,14 @@ func TestGkeTargetResource(t *testing.T) {
 }
 
 func TestK8sTargetResource(t *testing.T) {
-	secretName := "k8s123"
-	secretPath := testPath("k8s_target1")
+	t.Parallel()
+	secretName := "k8s_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_k8s" "%v" {
 			name = "%v"
 			k8s_cluster_endpoint     = "https://akakad.com"
-			k8s_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			k8s_cluster_ca_cert = "XXXXXXXX"
 			  k8s_cluster_token = "djsdkjdkjdhcj"
 		}
 	`, secretName, secretPath)
@@ -223,7 +260,7 @@ func TestK8sTargetResource(t *testing.T) {
 		resource "akeyless_target_k8s" "%v" {
 			name = "%v"
 			k8s_cluster_endpoint     = "https://akakad.com"
-			k8s_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			k8s_cluster_ca_cert = "XXXXXXXX"
 			  k8s_cluster_token = "djsdkjdkjdhcjs"
 		}
 	`, secretName, secretPath)
@@ -233,8 +270,9 @@ func TestK8sTargetResource(t *testing.T) {
 }
 
 func TestDbTargetResource(t *testing.T) {
-	secretName := "Db123"
-	secretPath := testPath("db_target1")
+	t.Parallel()
+	secretName := "mysql_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name = "%v"
@@ -264,14 +302,15 @@ func TestDbTargetResource(t *testing.T) {
 }
 
 func TestEksTargetResource(t *testing.T) {
-	secretName := "eks123"
-	secretPath := testPath("eks_target1")
+	t.Parallel()
+	secretName := "eks_target_test"
+	secretPath := testPath(secretName)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_eks" "%v" {
 			name = "%v"
 			eks_cluster_name     = "XXXXXXX"
 			eks_cluster_endpoint = "https://jjjj.com"
-			eks_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			eks_cluster_ca_cert = "XXXXXXXX"
 			eks_access_key_id = "eks_access_key_id"
 			eks_secret_access_key = "ddjdjdj"
 		}
@@ -282,7 +321,7 @@ func TestEksTargetResource(t *testing.T) {
 			name = "%v"
 			eks_cluster_name     = "XXXXXXX"
 			eks_cluster_endpoint = "https://jjjj.com"
-			eks_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			eks_cluster_ca_cert = "XXXXXXXX"
 			eks_access_key_id = "eks_access_key_id"
 			eks_secret_access_key = "ddjdjdj"
 		}
