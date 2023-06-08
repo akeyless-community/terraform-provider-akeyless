@@ -9,8 +9,13 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"encoding/pem"
+	"errors"
+	"fmt"
+	"math/big"
+	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -20,6 +25,38 @@ import (
 var (
 	oidEmailAddress = asn1.ObjectIdentifier{1, 2, 3, 4, 5, 6, 7}
 )
+
+func generateCertForTest(t *testing.T, size int) string {
+	ca := &x509.Certificate{
+		SerialNumber: big.NewInt(2023),
+		Subject: pkix.Name{
+			Country:      []string{"coun1"},
+			Province:     []string{"prov1"},
+			Locality:     []string{"loca1"},
+			Organization: []string{"org1"},
+		},
+		NotBefore:   time.Now(),
+		NotAfter:    time.Now().Add(time.Minute),
+		IsCA:        true,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+	}
+
+	caPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
+	require.NoError(t, err)
+
+	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
+	require.NoError(t, err)
+
+	block := pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: caBytes,
+	}
+
+	certBytes := pem.EncodeToMemory(&block)
+
+	return base64.StdEncoding.EncodeToString(certBytes)
+}
 
 func generateKeyAndCsrForTest(size int) (string, string) {
 	key, _ := rsa.GenerateKey(rand.Reader, size)
@@ -84,8 +121,8 @@ func createDfcKey(t *testing.T, name string) {
 	common.GetAkeylessPtr(&body.GenerateSelfSignedCertificate, true)
 	common.GetAkeylessPtr(&body.CertificateTtl, 60)
 
-	_, _, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
-	require.NoError(t, err, "failed to create key for test")
+	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(res, err), "failed to create key for test")
 }
 
 func getRsaPublicKey(t *testing.T, name string) akeyless.GetRSAPublicOutput {
@@ -96,8 +133,8 @@ func getRsaPublicKey(t *testing.T, name string) akeyless.GetRSAPublicOutput {
 		Token: &token,
 	}
 
-	rOut, _, err := client.GetRSAPublic(context.Background()).Body(body).Execute()
-	require.NoError(t, err, "failed to get rsa public key for test")
+	rOut, res, err := client.GetRSAPublic(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(res, err), "failed to get rsa public key for test")
 	require.NotNil(t, rOut.Ssh)
 
 	return rOut
@@ -118,8 +155,8 @@ func createPkiCertIssuer(t *testing.T, keyName, issuerName, destPath, cn, uriSan
 	common.GetAkeylessPtr(&body.AllowedDomains, cn)
 	common.GetAkeylessPtr(&body.AllowedUriSans, uriSan)
 
-	_, _, err := client.CreatePKICertIssuer(context.Background()).Body(body).Execute()
-	require.NoError(t, err, "failed to create pki cert issuer for test")
+	_, res, err := client.CreatePKICertIssuer(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(res, err), "failed to create pki cert issuer for test")
 }
 
 func createSshCertIssuer(t *testing.T, keyName, issuerName, users string) {
@@ -134,8 +171,8 @@ func createSshCertIssuer(t *testing.T, keyName, issuerName, users string) {
 	}
 	common.GetAkeylessPtr(&body.AllowedUsers, users)
 
-	_, _, err := client.CreateSSHCertIssuer(context.Background()).Body(body).Execute()
-	require.NoError(t, err, "failed to create ssh cert issuer for test")
+	_, res, err := client.CreateSSHCertIssuer(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(res, err), "failed to create ssh cert issuer for test")
 }
 
 func deleteItem(t *testing.T, path string) {
@@ -205,4 +242,21 @@ func prepareClient(t *testing.T) (*akeyless.V2ApiService, string) {
 	token := *p.token
 
 	return client, token
+}
+
+func handleError(resp *http.Response, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	var apiErr akeyless.GenericOpenAPIError
+	if !errors.As(err, &apiErr) {
+		return err
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("not found: %w", err)
+	}
+
+	return errors.New(string(apiErr.Body()))
 }
