@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v2"
+	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -66,25 +66,6 @@ func resourceClassicKey() *schema.Resource {
 				Optional:    true,
 				Description: "The name of the key that protects the classic key value (if empty, the account default key will be used)",
 			},
-			"target_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "The target name to associate with this classic key",
-			},
-			"vault_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Name of the vault used (required for azure targets)",
-			},
-			"key_operations": {
-				Type:        schema.TypeSet,
-				Required:    false,
-				Optional:    true,
-				Description: "A list of allowed operations for the key (required for azure targets)",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
 		},
 	}
 }
@@ -104,10 +85,6 @@ func resourceClassicKeyCreate(d *schema.ResourceData, m interface{}) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	protectionKeyName := d.Get("protection_key_name").(string)
-	targetName := d.Get("target_name").(string)
-	vaultName := d.Get("vault_name").(string)
-	keyOperationsSet := d.Get("key_operations").(*schema.Set)
-	keyOperations := common.ExpandStringList(keyOperationsSet.List())
 
 	body := akeyless.CreateClassicKey{
 		Name:  name,
@@ -119,9 +96,6 @@ func resourceClassicKeyCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Metadata, metadata)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProtectionKeyName, protectionKeyName)
-	common.GetAkeylessPtr(&body.TargetName, targetName)
-	common.GetAkeylessPtr(&body.VaultName, vaultName)
-	common.GetAkeylessPtr(&body.KeyOperations, keyOperations)
 
 	_, _, err := client.CreateClassicKey(ctx).Body(body).Execute()
 	if err != nil {

@@ -15,7 +15,7 @@ func TestGithubTargetResource(t *testing.T) {
 	t.Parallel()
 	secretName := "github_target_test"
 	secretPath := testPath(secretName)
-	deleteTarget(secretPath)
+	deleteTarget(t, secretPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_target_github" "%v" {
@@ -42,7 +42,7 @@ func TestDockerhubTargetResource(t *testing.T) {
 	t.Parallel()
 	secretName := "dockerhub_target_test"
 	secretPath := testPath(secretName)
-	deleteTarget(secretPath)
+	deleteTarget(t, secretPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_target_dockerhub" "%v" {

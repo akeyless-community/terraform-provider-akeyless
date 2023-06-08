@@ -341,27 +341,6 @@ func TestAuthMethodK8sResource(t *testing.T) {
 	testAuthMethodResource(t, config, configUpdate, path)
 }
 
-func testAuthMethodResource(t *testing.T, config, configUpdate, path string) {
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				//PreConfig: deleteFunc,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkMethodExistsRemotelyNew(path),
-				),
-			},
-		},
-	})
-}
-
 func checkMethodExistsRemotelyNew(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
