@@ -291,6 +291,74 @@ func TestEksTargetResource(t *testing.T) {
 	tesTargetResource(t, config, configUpdate, secretPath)
 }
 
+func TestZeroSslTargetResource(t *testing.T) {
+	targetName := "zerossl_target1"
+	targetPath := testPath(targetName)
+	config := fmt.Sprintf(`
+		resource "akeyless_target_zerossl" "%v" {
+			name              	= "%v"
+			api_key           	= "api_key1"
+			timeout           	= "1m"
+			imap_username     	= "user1"
+			imap_password     	= "pass1"
+			imap_fqdn         	= "fqdn1"
+			imap_target_email	= "ku@ku1.io"
+			description       	= "desc1"
+		}
+	`, targetName, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_zerossl" "%v" {
+			name              	= "%v"
+			api_key           	= "api_key2"
+			timeout           	= "1m"
+			imap_username     	= "user2"
+			imap_password     	= "pass2"
+			imap_fqdn         	= "fqdn2"
+			imap_target_email	= "ku@ku2.io"
+			description       	= "desc2"
+		}
+	`, targetName, targetPath)
+
+	tesTargetResource(t, config, configUpdate, targetPath)
+}
+
+func TestGlobalSignTargetResource(t *testing.T) {
+	targetName := "globalsign_target1"
+	targetPath := testPath(targetName)
+	config := fmt.Sprintf(`
+		resource "akeyless_target_globalsign" "%v" {
+			name              	= "%v"
+			timeout             = "1m"
+			username            = "user1"
+			password            = "pass1"
+			profile_id          = "id1"
+			contact_first_name  = "first1"
+			contact_last_name   = "last1"
+			contact_phone       = "phone1"
+			contact_email		= "ku@ku1.io"
+			description       	= "desc1"
+		}
+	`, targetName, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_globalsign" "%v" {
+			name              	= "%v"
+			timeout             = "2m"
+			username            = "user2"
+			password            = "pass2"
+			profile_id          = "id2"
+			contact_first_name  = "first2"
+			contact_last_name   = "last2"
+			contact_phone       = "phone2"
+			contact_email		= "ku@ku2.io"
+			description       	= "desc2"
+		}
+	`, targetName, targetPath)
+
+	tesTargetResource(t, config, configUpdate, targetPath)
+}
+
 func tesTargetResource(t *testing.T, config, configUpdate, secretPath string) {
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,

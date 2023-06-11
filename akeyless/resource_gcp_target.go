@@ -132,34 +132,39 @@ func resourceGcpTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.GcpServiceAccountEmail != nil {
-		err = d.Set("gcp_sa_email", *rOut.Value.GcpServiceAccountEmail)
-		if err != nil {
-			return err
+	if rOut.Value != nil {
+		if rOut.Value.GcpServiceAccountEmail != nil {
+			err = d.Set("gcp_sa_email", *rOut.Value.GcpServiceAccountEmail)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.Value.GcpServiceAccountKey != nil {
+			err = d.Set("gcp_key", *rOut.Value.GcpServiceAccountKey)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.Value.UseGwCloudIdentity != nil {
+			err = d.Set("use_gw_cloud_identity", *rOut.Value.UseGwCloudIdentity)
+			if err != nil {
+				return err
+			}
 		}
 	}
-	if rOut.Value.GcpServiceAccountKey != nil {
-		err = d.Set("gcp_key", *rOut.Value.GcpServiceAccountKey)
-		if err != nil {
-			return err
+
+	if rOut.Target != nil {
+		if rOut.Target.ProtectionKeyName != nil {
+			err = d.Set("key", *rOut.Target.ProtectionKeyName)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	if rOut.Value.UseGwCloudIdentity != nil {
-		err = d.Set("use_gw_cloud_identity", *rOut.Value.UseGwCloudIdentity)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Target.ProtectionKeyName != nil {
-		err = d.Set("key", *rOut.Target.ProtectionKeyName)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Target.Comment != nil {
-		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
-		if err != nil {
-			return err
+		if rOut.Target.Comment != nil {
+			err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

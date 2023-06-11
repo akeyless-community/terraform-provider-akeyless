@@ -153,29 +153,6 @@ func resourceZerosslTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to get target details: %v", err)
 	}
 
-	if rOut.Target != nil {
-		target := *rOut.Target
-
-		if target.TargetName != nil {
-			err := d.Set("name", *target.TargetName)
-			if err != nil {
-				return err
-			}
-		}
-		if target.Comment != nil {
-			err := d.Set("description", *target.Comment)
-			if err != nil {
-				return err
-			}
-		}
-		if target.ProtectionKeyName != nil {
-			err = d.Set("key", *target.ProtectionKeyName)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	if rOut.Value != nil {
 		targetDetails := *rOut.Value
 
@@ -217,6 +194,23 @@ func resourceZerosslTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 		if targetDetails.ImapPort != nil {
 			err := d.Set("imap_port", *targetDetails.ImapPort)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if rOut.Target != nil {
+		target := *rOut.Target
+
+		if target.Comment != nil {
+			err := d.Set("description", *target.Comment)
+			if err != nil {
+				return err
+			}
+		}
+		if target.ProtectionKeyName != nil {
+			err = d.Set("key", *target.ProtectionKeyName)
 			if err != nil {
 				return err
 			}
