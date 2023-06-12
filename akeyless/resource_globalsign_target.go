@@ -37,6 +37,7 @@ func resourceGlobalsignTarget() *schema.Resource {
 			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				Description: "Password of the GlobalSign GCC account",
 			},
 			"profile_id": {

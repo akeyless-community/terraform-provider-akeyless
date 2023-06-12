@@ -32,6 +32,7 @@ func resourceZerosslTarget() *schema.Resource {
 			"api_key": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				Description: "API Key of the ZeroSSLTarget account",
 			},
 			"imap_username": {
@@ -42,6 +43,7 @@ func resourceZerosslTarget() *schema.Resource {
 			"imap_password": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				Description: "Password to access the IMAP service",
 			},
 			"imap_fqdn": {
