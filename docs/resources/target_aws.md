@@ -17,17 +17,21 @@ AWS Target resource
 
 ### Required
 
-- **access_key_id** (String) AWS access key ID
-- **name** (String) Target name
+- `access_key_id` (String) AWS access key ID
+- `name` (String) Target name
 
 ### Optional
 
-- **access_key** (String) AWS secret access key
-- **comment** (String) Comment about the target
-- **id** (String) The ID of this resource.
-- **key** (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
-- **region** (String) AWS region
-- **session_token** (String) Required only for temporary security credentials retrieved using STS
-- **use_gw_cloud_identity** (Boolean) Use the GW's Cloud IAM
+- `access_key` (String) AWS secret access key
+- `comment` (String, Deprecated)
+- `description` (String) Description of the object
+- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `region` (String) AWS region
+- `session_token` (String) Required only for temporary security credentials retrieved using STS
+- `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

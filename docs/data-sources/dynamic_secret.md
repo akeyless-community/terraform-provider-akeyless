@@ -23,14 +23,11 @@ data "akeyless_dynamic_secret" "secret" {
 
 ### Required
 
-- **path** (String) The path where the secret is stored. Defaults to the latest version.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `path` (String) The path where the secret is stored. Defaults to the latest version.
 
 ### Read-Only
 
-- **value** (String, Sensitive) The secret contents.
+- `id` (String) The ID of this resource.
+- `value` (String, Sensitive) The secret contents.
 
 

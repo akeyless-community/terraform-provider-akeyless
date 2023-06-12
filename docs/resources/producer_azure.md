@@ -17,27 +17,30 @@ Azure AD producer resource
 
 ### Required
 
-- **name** (String) Producer name
+- `name` (String) Producer name
 
 ### Optional
 
-- **app_obj_id** (String) Azure App Object ID (required if selected programmatic access)
-- **azure_client_id** (String) Azure Client ID (Application ID)
-- **azure_client_secret** (String) Azure AD Client Secret
-- **azure_tenant_id** (String) Azure Tenant ID
-- **id** (String) The ID of this resource.
-- **producer_encryption_key_name** (String) Encrypt producer with following key
-- **secure_access_enable** (String) Enable/Disable secure remote access, [true/false]
-- **secure_access_url** (String)
-- **secure_access_web** (Boolean) Enable Web Secure Remote Access
-- **secure_access_web_browsing** (Boolean) Secure browser via Akeyless Web Access Bastion
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
-- **target_name** (String) Name of existing target to use in producer creation
-- **user_group_obj_id** (String) Azure AD User Group Object ID (required if selected Portal access)
-- **user_portal_access** (Boolean) Enable Azure AD user portal access
-- **user_principal_name** (String) Azure AD User Principal Name (required if selected Portal access)
-- **user_programmatic_access** (Boolean) Enable Azure AD user programmatic access
-- **user_role_template_id** (String) Azure AD User Role Template ID (required if selected Portal access)
-- **user_ttl** (String) User TTL
+- `app_obj_id` (String) Azure App Object ID (required if selected programmatic access)
+- `azure_client_id` (String) Azure Client ID (Application ID)
+- `azure_client_secret` (String, Sensitive) Azure AD Client Secret
+- `azure_tenant_id` (String) Azure Tenant ID
+- `producer_encryption_key_name` (String) Encrypt producer with following key
+- `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_url` (String)
+- `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
+- `target_name` (String) Name of existing target to use in producer creation
+- `user_group_obj_id` (String) Azure AD User Group Object ID (required if selected Portal access)
+- `user_portal_access` (Boolean) Enable Azure AD user portal access
+- `user_principal_name` (String) Azure AD User Principal Name (required if selected Portal access)
+- `user_programmatic_access` (Boolean) Enable Azure AD user programmatic access
+- `user_role_template_id` (String) Azure AD User Role Template ID (required if selected Portal access)
+- `user_ttl` (String) User TTL
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

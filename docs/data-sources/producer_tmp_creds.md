@@ -17,14 +17,11 @@ Get producer temporary credentials list data source
 
 ### Required
 
-- **name** (String) Producer Name
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `name` (String) Producer Name
 
 ### Read-Only
 
-- **value** (String)
+- `id` (String) The ID of this resource.
+- `value` (String)
 
 

@@ -17,18 +17,22 @@ GKE Target resource
 
 ### Required
 
-- **name** (String) Target name
+- `name` (String) Target name
 
 ### Optional
 
-- **comment** (String) Comment about the target
-- **gke_account_key** (String) GKE service account key
-- **gke_cluster_cert** (String) GKE Base-64 encoded cluster certificate
-- **gke_cluster_endpoint** (String) GKE cluster endpoint, i.e., cluster URI https://<DNS/IP>.
-- **gke_cluster_name** (String) GKE cluster name
-- **gke_service_account_email** (String) GKE service account email
-- **id** (String) The ID of this resource.
-- **key** (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
-- **use_gw_cloud_identity** (Boolean) Use the GW's Cloud IAM
+- `comment` (String, Deprecated)
+- `description` (String) Description of the object
+- `gke_account_key` (String) GKE service account key
+- `gke_cluster_cert` (String) GKE Base-64 encoded cluster certificate
+- `gke_cluster_endpoint` (String) GKE cluster endpoint, i.e., cluster URI https://<DNS/IP>.
+- `gke_cluster_name` (String) GKE cluster name
+- `gke_service_account_email` (String) GKE service account email
+- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

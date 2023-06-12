@@ -17,27 +17,31 @@ Rotated secret resource
 
 ### Required
 
-- **name** (String) Secret name
-- **rotator_type** (String) The rotator type password/target/api-key/ldap/custom
-- **target_name** (String) The target name to associate
+- `name` (String) Secret name
+- `rotator_type` (String) The rotator type password/target/api-key/ldap/custom
+- `target_name` (String) The target name to associate
 
 ### Optional
 
-- **api_id** (String) API ID to rotate (relevant only for rotator-type=api-key)
-- **api_key** (String) API key to rotate (relevant only for rotator-type=api-key)
-- **authentication_credentials** (String) The credentials to connect with use-user-creds/use-target-creds
-- **auto_rotate** (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation
-- **custom_payload** (String) Secret payload to be sent with rotation request (relevant only for rotator-type=custom)
-- **id** (String) The ID of this resource.
-- **key** (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
-- **metadata** (String) Metadata about the secret
-- **rotated_password** (String) rotated-username password (relevant only for rotator-type=password)
-- **rotated_username** (String) username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password)
-- **rotation_hour** (Number) The Hour of the rotation in UTC
-- **rotation_interval** (String) The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes
-- **rotator_custom_cmd** (String) Custom rotation command (relevant only for ssh target)
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- **user_attribute** (String) LDAP User Attribute
-- **user_dn** (String) Base DN to Perform User Search
+- `api_id` (String) API ID to rotate (relevant only for rotator-type=api-key)
+- `api_key` (String) API key to rotate (relevant only for rotator-type=api-key)
+- `authentication_credentials` (String) The credentials to connect with use-user-creds/use-target-creds
+- `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation
+- `custom_payload` (String) Secret payload to be sent with rotation request (relevant only for rotator-type=custom)
+- `description` (String) Description of the object
+- `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `metadata` (String, Deprecated)
+- `rotated_password` (String) rotated-username password (relevant only for rotator-type=password)
+- `rotated_username` (String) username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password)
+- `rotation_hour` (Number) The Hour of the rotation in UTC
+- `rotation_interval` (String) The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes
+- `rotator_custom_cmd` (String) Custom rotation command (relevant only for ssh target)
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `user_attribute` (String) LDAP User Attribute
+- `user_dn` (String) Base DN to Perform User Search
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

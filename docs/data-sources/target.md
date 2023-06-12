@@ -17,24 +17,25 @@ Get target data source
 
 ### Required
 
-- **name** (String) Target name
+- `name` (String) Target name
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **show_versions** (Boolean) Include all target versions in reply
+- `show_versions` (Boolean) Include all target versions in reply
 
 ### Read-Only
 
-- **client_permissions** (Set of String)
-- **comment** (String)
-- **last_version** (Number)
-- **protection_key_name** (String)
-- **target_id** (Number)
-- **target_items_assoc** (String)
-- **target_name** (String)
-- **target_type** (String)
-- **target_versions** (String)
-- **with_customer_fragment** (Boolean)
+- `client_permissions` (Set of String)
+- `comment` (String, Deprecated)
+- `description` (String)
+- `id` (String) The ID of this resource.
+- `last_version` (Number)
+- `protection_key_name` (String)
+- `target_id` (Number)
+- `target_items_assoc` (String)
+- `target_name` (String)
+- `target_type` (String)
+- `target_versions` (String)
+- `with_customer_fragment` (Boolean)
 
 
