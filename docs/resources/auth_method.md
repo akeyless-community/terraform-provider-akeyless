@@ -59,40 +59,44 @@ output "api_key" {
 
 ### Required
 
-- **path** (String) The path where the Auth Method will be stored
+- `path` (String) The path where the Auth Method will be stored
 
 ### Optional
 
-- **access_expires** (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- **aws_iam** (Block List) A configuration block, described below, using AWS-IAM Auth Method (see [below for nested schema](#nestedblock--aws_iam))
-- **azure_ad** (Block List) A configuration block, described below, using Azure AD Auth Method (see [below for nested schema](#nestedblock--azure_ad))
-- **bound_ips** (String) A CIDR whitelist with the IPs that the access is restricted to
-- **gcp** (Block List) A configuration block, described below, using Auth Method API-Key (see [below for nested schema](#nestedblock--gcp))
-- **id** (String) The ID of this resource.
-- **saml** (Block List) A configuration block, described below, using SAML Auth Method (see [below for nested schema](#nestedblock--saml))
+- `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
+- `api_key` (Block List) A configuration block, described below, using API-Key Auth Method (see [below for nested schema](#nestedblock--api_key))
+- `aws_iam` (Block List) A configuration block, described below, using AWS-IAM Auth Method (see [below for nested schema](#nestedblock--aws_iam))
+- `azure_ad` (Block List) A configuration block, described below, using Azure AD Auth Method (see [below for nested schema](#nestedblock--azure_ad))
+- `bound_ips` (String) A CIDR whitelist with the IPs that the access is restricted to
+- `gcp` (Block List) A configuration block, described below, using Auth Method API-Key (see [below for nested schema](#nestedblock--gcp))
+- `saml` (Block List) A configuration block, described below, using SAML Auth Method (see [below for nested schema](#nestedblock--saml))
 
 ### Read-Only
 
-- **access_id** (String) Auth Method access ID
-- **access_key** (String, Sensitive) Auth Method access key
-- **api_key** (Block List) A configuration block, described below, using API-Key Auth Method (see [below for nested schema](#nestedblock--api_key))
+- `access_id` (String) Auth Method access ID
+- `access_key` (String, Sensitive) Auth Method access key
+- `id` (String) The ID of this resource.
+
+<a id="nestedblock--api_key"></a>
+### Nested Schema for `api_key`
+
 
 <a id="nestedblock--aws_iam"></a>
 ### Nested Schema for `aws_iam`
 
 Required:
 
-- **bound_aws_account_id** (Set of String) A list of AWS account-IDs that the access is restricted to
+- `bound_aws_account_id` (Set of String) A list of AWS account-IDs that the access is restricted to
 
 Optional:
 
-- **bound_arn** (Set of String) A list of full arns that the access is restricted to
-- **bound_resource_id** (Set of String) A list of full resource ids that the access is restricted to
-- **bound_role_id** (Set of String) A list of full role ids that the access is restricted to
-- **bound_role_name** (Set of String) A list of full role-name that the access is restricted to
-- **bound_user_id** (Set of String) A list of full user ids that the access is restricted to
-- **bound_user_name** (Set of String) A list of full user-name that the access is restricted to
-- **sts_url** (String) STS URL (default: https://sts.amazonaws.com)
+- `bound_arn` (Set of String) A list of full arns that the access is restricted to
+- `bound_resource_id` (Set of String) A list of full resource ids that the access is restricted to
+- `bound_role_id` (Set of String) A list of full role ids that the access is restricted to
+- `bound_role_name` (Set of String) A list of full role-name that the access is restricted to
+- `bound_user_id` (Set of String) A list of full user ids that the access is restricted to
+- `bound_user_name` (Set of String) A list of full user-name that the access is restricted to
+- `sts_url` (String) STS URL (default: https://sts.amazonaws.com)
 
 
 <a id="nestedblock--azure_ad"></a>
@@ -100,21 +104,21 @@ Optional:
 
 Required:
 
-- **bound_tenant_id** (String) The Azure tenant id that the access is restricted to
+- `bound_tenant_id` (String) The Azure tenant id that the access is restricted to
 
 Optional:
 
-- **bound_group_id** (Set of String) A list of group ids that the access is restricted to
-- **bound_providers** (Set of String) A list of resource providers that the access is restricted to (e.g, Microsoft.Compute, Microsoft.ManagedIdentity, etc)
-- **bound_resource_id** (Set of String) A list of full resource ids that the access is restricted to
-- **bound_resource_names** (Set of String) A list of resource names that the access is restricted to (e.g, a virtual machine name, scale set name, etc)
-- **bound_resource_types** (Set of String) A list of resource types that the access is restricted to (e.g, virtualMachines, userAssignedIdentities, etc)
-- **bound_rg_id** (Set of String) A list of resource groups that the access is restricted to
-- **bound_spid** (Set of String) A list of service principal IDs that the access is restricted to
-- **bound_sub_id** (Set of String) A list of subscription ids that the access is restricted to
-- **custom_audience** (String) The audience in the JWT
-- **custom_issuer** (String) Issuer URL
-- **jwks_uri** (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server
+- `bound_group_id` (Set of String) A list of group ids that the access is restricted to
+- `bound_providers` (Set of String) A list of resource providers that the access is restricted to (e.g, Microsoft.Compute, Microsoft.ManagedIdentity, etc)
+- `bound_resource_id` (Set of String) A list of full resource ids that the access is restricted to
+- `bound_resource_names` (Set of String) A list of resource names that the access is restricted to (e.g, a virtual machine name, scale set name, etc)
+- `bound_resource_types` (Set of String) A list of resource types that the access is restricted to (e.g, virtualMachines, userAssignedIdentities, etc)
+- `bound_rg_id` (Set of String) A list of resource groups that the access is restricted to
+- `bound_spid` (Set of String) A list of service principal IDs that the access is restricted to
+- `bound_sub_id` (Set of String) A list of subscription ids that the access is restricted to
+- `custom_audience` (String) The audience in the JWT
+- `custom_issuer` (String) Issuer URL
+- `jwks_uri` (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server
 
 
 <a id="nestedblock--gcp"></a>
@@ -122,22 +126,22 @@ Optional:
 
 Required:
 
-- **service_account_creds_data** (String) Service Account creds data, base64 encoded
+- `service_account_creds_data` (String) Service Account creds data, base64 encoded
 
 Optional:
 
-- **audience** (String) The audience to verify in the JWT received by the client
-- **gce** (Block List) IAM GCE Auth Method (see [below for nested schema](#nestedblock--gcp--gce))
-- **iam** (Block List) IAM GCP Auth Method (see [below for nested schema](#nestedblock--gcp--iam))
+- `audience` (String) The audience to verify in the JWT received by the client
+- `gce` (Block List) IAM GCE Auth Method (see [below for nested schema](#nestedblock--gcp--gce))
+- `iam` (Block List) IAM GCP Auth Method (see [below for nested schema](#nestedblock--gcp--iam))
 
 <a id="nestedblock--gcp--gce"></a>
 ### Nested Schema for `gcp.gce`
 
 Optional:
 
-- **bound_labels** (Set of String) GCE only. A list of GCP labels formatted as "key:value" pairs that must be set on instances in order to authenticate
-- **bound_regions** (Set of String) GCE only. A list of regions. GCE instances must belong to any of the provided regions in order to authenticate
-- **bound_zones** (Set of String) GCE only. A list of zones. GCE instances must belong to any of the provided zones in order to authenticate
+- `bound_labels` (Set of String) GCE only. A list of GCP labels formatted as "key:value" pairs that must be set on instances in order to authenticate
+- `bound_regions` (Set of String) GCE only. A list of regions. GCE instances must belong to any of the provided regions in order to authenticate
+- `bound_zones` (Set of String) GCE only. A list of zones. GCE instances must belong to any of the provided zones in order to authenticate
 
 
 <a id="nestedblock--gcp--iam"></a>
@@ -145,7 +149,7 @@ Optional:
 
 Optional:
 
-- **bound_service_accounts** (Set of String) IAM only. A list of Service Accounts. Clients must belong to any of the provided service accounts in order to authenticate
+- `bound_service_accounts` (Set of String) IAM only. A list of Service Accounts. Clients must belong to any of the provided service accounts in order to authenticate
 
 
 
@@ -154,15 +158,11 @@ Optional:
 
 Required:
 
-- **unique_identifier** (String) A unique identifier (ID) value should be configured for OAuth2, LDAP and SAML authentication method types and is usually a value such as the email, username, or upn for example
+- `unique_identifier` (String) A unique identifier (ID) value should be configured for OAuth2, LDAP and SAML authentication method types and is usually a value such as the email, username, or upn for example
 
 Optional:
 
-- **idp_metadata_url** (String) IDP metadata url
-- **idp_metadata_xml_data** (String) IDP metadata xml data
-
-
-<a id="nestedblock--api_key"></a>
-### Nested Schema for `api_key`
+- `idp_metadata_url` (String) IDP metadata url
+- `idp_metadata_xml_data` (String) IDP metadata xml data
 
 

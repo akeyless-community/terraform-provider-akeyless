@@ -71,30 +71,39 @@ output "demo-role" {
 
 ### Required
 
-- **name** (String) Role name
+- `name` (String) Role name
 
 ### Optional
 
-- **analytics_access** (String) Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
-- **assoc_auth_method** (Block List) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
-- **audit_access** (String) Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.
-- **comment** (String) Comment about the role
-- **gw_analytics_access** (String) Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
-- **id** (String) The ID of this resource.
-- **rules** (Block List) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
-- **sra_reports_access** (String) Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.
+- `analytics_access` (String) Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
+- `assoc_auth_method` (Block List) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
+- `audit_access` (String) Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.
+- `comment` (String, Deprecated)
+- `description` (String) Description of the object
+- `gw_analytics_access` (String) Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
+- `rules` (Block List) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
+- `sra_reports_access` (String) Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--assoc_auth_method"></a>
 ### Nested Schema for `assoc_auth_method`
 
 Required:
 
-- **am_name** (String) The auth method to associate
+- `am_name` (String) The auth method to associate
 
 Optional:
 
-- **case_sensitive** (String) Treat sub claims as case-sensitive
-- **sub_claims** (Map of String) key/val of sub claims, e.g group=admins,developers
+- `case_sensitive` (String) Treat sub claims as case-sensitive
+- `sub_claims` (Map of String) key/val of sub claims, e.g group=admins,developers
+
+Read-Only:
+
+- `access_id` (String) The access ID of the auth method
+- `assoc_id` (String) The association ID
 
 
 <a id="nestedblock--rules"></a>
@@ -102,11 +111,11 @@ Optional:
 
 Required:
 
-- **capability** (Set of String) List of the approved/denied capabilities in the path options: [read, create, update, delete, list, deny]
-- **path** (String) The path the rule refers to
+- `capability` (Set of String) List of the approved/denied capabilities in the path options: [read, create, update, delete, list, deny]
+- `path` (String) The path the rule refers to
 
 Optional:
 
-- **rule_type** (String) item-rule, target-rule, role-rule, auth-method-rule
+- `rule_type` (String) item-rule, target-rule, role-rule, auth-method-rule
 
 

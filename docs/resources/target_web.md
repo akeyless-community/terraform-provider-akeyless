@@ -17,13 +17,17 @@ Web Target resource
 
 ### Required
 
-- **name** (String) Target name
-- **url** (String) Web target URL
+- `name` (String) Target name
+- `url` (String) Web target URL
 
 ### Optional
 
-- **comment** (String) Comment about the target
-- **id** (String) The ID of this resource.
-- **key** (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `comment` (String, Deprecated)
+- `description` (String) Description of the object
+- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

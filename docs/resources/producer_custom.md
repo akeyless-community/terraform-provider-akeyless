@@ -17,20 +17,23 @@ Custom producer resource
 
 ### Required
 
-- **create_sync_url** (String) URL of an endpoint that implements /sync/create method
-- **name** (String) Producer name
-- **revoke_sync_url** (String) URL of an endpoint that implements /sync/revoke method
+- `create_sync_url` (String) URL of an endpoint that implements /sync/create method
+- `name` (String) Producer name
+- `revoke_sync_url` (String) URL of an endpoint that implements /sync/revoke method
 
 ### Optional
 
-- **admin_rotation_interval_days** (Number) Rotation period in days
-- **enable_admin_rotation** (Boolean) Enable automatic admin credentials rotation
-- **id** (String) The ID of this resource.
-- **payload** (String) Secret payload to be sent with each create/revoke webhook request
-- **producer_encryption_key_name** (String) Encrypt producer with following key
-- **rotate_sync_url** (String) URL of an endpoint that implements /sync/rotate method
-- **tags** (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- **timeout_sec** (Number) Maximum allowed time in seconds for the webhook to return the results
-- **user_ttl** (String) User TTL
+- `admin_rotation_interval_days` (Number) Rotation period in days
+- `enable_admin_rotation` (Boolean) Enable automatic admin credentials rotation
+- `payload` (String) Secret payload to be sent with each create/revoke webhook request
+- `producer_encryption_key_name` (String) Encrypt producer with following key
+- `rotate_sync_url` (String) URL of an endpoint that implements /sync/rotate method
+- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `timeout_sec` (Number) Maximum allowed time in seconds for the webhook to return the results
+- `user_ttl` (String) User TTL
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

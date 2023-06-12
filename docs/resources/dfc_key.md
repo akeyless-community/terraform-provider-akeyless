@@ -17,14 +17,28 @@ DFC Key resource
 
 ### Required
 
-- **alg** (String) DFCKey type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, RSA1024, RSA2048, RSA3072, RSA4096]
-- **name** (String) DFCKey name
+- `alg` (String) DFCKey type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, AES128CBC, AES256CBC, RSA1024, RSA2048, RSA3072, RSA4096]
+- `name` (String) DFCKey name
 
 ### Optional
 
-- **customer_frg_id** (String) The customer fragment ID that will be used to create the DFC key (if empty, the key will be created independently of a customer fragment)
-- **id** (String) The ID of this resource.
-- **metadata** (String) Metadata about the DFC key
-- **tags** (Set of String) List of the tags attached to this DFC key. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `cert_data_base64` (String) PEM Certificate in a Base64 format. Used for updating RSA keys' certificates
+- `certificate_common_name` (String) Common name for the generated certificate. Relevant only for generate-self-signed-certificate.
+- `certificate_country` (String) Country name for the generated certificate. Relevant only for generate-self-signed-certificate.
+- `certificate_locality` (String) Locality for the generated certificate. Relevant only for generate-self-signed-certificate.
+- `certificate_organization` (String) Organization name for the generated certificate. Relevant only for generate-self-signed-certificate.
+- `certificate_province` (String) Province name for the generated certificate. Relevant only for generate-self-signed-certificate.
+- `certificate_ttl` (Number) TTL in days for the generated certificate. Required only for generate-self-signed-certificate.
+- `customer_frg_id` (String) The customer fragment ID that will be used to create the DFC key (if empty, the key will be created independently of a customer fragment)
+- `delete_protection` (Boolean) Protection from accidental deletion of this item, [true/false]
+- `description` (String) Description of the object
+- `generate_self_signed_certificate` (Boolean) Whether to generate a self signed certificate with the key. If set, certificate-ttl must be provided.
+- `metadata` (String, Deprecated)
+- `split_level` (Number) The number of fragments that the item will be split into (not includes customer fragment)
+- `tags` (Set of String) List of the tags attached to this DFC key
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

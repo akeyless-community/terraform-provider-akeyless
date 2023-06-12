@@ -17,31 +17,41 @@ PKI Cert Issuer  resource
 
 ### Required
 
-- **name** (String) PKI certificate issuer name
-- **signer_key_name** (String) A key to sign the certificate with
-- **ttl** (Number) he requested Time To Live for the certificate, in seconds
+- `name` (String) PKI certificate issuer name
+- `signer_key_name` (String) A key to sign the certificate with
+- `ttl` (Number) The maximum requested Time To Live for issued certificates, in seconds. In case of Public CA, this is based on the CA target's supported maximum TTLs
 
 ### Optional
 
-- **allow_any_name** (Boolean) If set, clients can request certificates for any CN
-- **allow_subdomains** (Boolean) If set, clients can request certificates for subdomains and wildcard subdomains of the allowed domains
-- **allowed_domains** (String) A list of the allowed domains that clients can request to be included in the certificate (in a comma-delimited list)
-- **allowed_uri_sans** (String) A list of the allowed URIs that clients can request to be included in the certificate as part of the URI Subject Alternative Names (in a comma-delimited list)
-- **client_flag** (Boolean) If set, certificates will be flagged for client auth use
-- **code_signing_flag** (Boolean) If set, certificates will be flagged for code signing use
-- **country** (String) A comma-separated list of the country that will be set in the issued certificate
-- **id** (String) The ID of this resource.
-- **key_usage** (String) A comma-separated string or list of key usages
-- **locality** (String) A comma-separated list of the locality that will be set in the issued certificate
-- **metadata** (String) A metadata about the issuer
-- **not_enforce_hostnames** (Boolean) If set, any names are allowed for CN and SANs in the certificate and not only a valid host name
-- **not_require_cn** (Boolean) If set, clients can request certificates without a CN
-- **organizational_units** (String) A comma-separated list of organizational units (OU) that will be set in the issued certificate
-- **organizations** (String) A comma-separated list of organizations (O) that will be set in the issued certificate
-- **postal_code** (String) A comma-separated list of the postal code that will be set in the issued certificate
-- **province** (String) A comma-separated list of the province that will be set in the issued certificate
-- **server_flag** (Boolean) If set, certificates will be flagged for server auth use
-- **street_address** (String) A comma-separated list of the street address that will be set in the issued certificate
-- **tags** (Set of String) List of the tags attached to this key. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
+- `allow_any_name` (Boolean) If set, clients can request certificates for any CN
+- `allow_subdomains` (Boolean) If set, clients can request certificates for subdomains and wildcard subdomains of the allowed domains
+- `allowed_domains` (String) A list of the allowed domains that clients can request to be included in the certificate (in a comma-delimited list)
+- `allowed_uri_sans` (String) A list of the allowed URIs that clients can request to be included in the certificate as part of the URI Subject Alternative Names (in a comma-delimited list)
+- `ca_target` (String) The name of an existing CA target to attach this PKI Certificate Issuer to, required in Public CA mode
+- `client_flag` (Boolean) If set, certificates will be flagged for client auth use
+- `code_signing_flag` (Boolean) If set, certificates will be flagged for code signing use
+- `country` (String) A comma-separated list of countries that will be set in the issued certificate
+- `delete_protection` (Boolean) Protection from accidental deletion of this item, [true/false]
+- `description` (String) Description of the object
+- `destination_path` (String) A path in Akeyless which to save generated certificates
+- `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified
+- `gw_cluster_url` (String) The GW cluster URL to issue the certificate from, required in Public CA mode
+- `key_usage` (String) A comma-separated string or list of key usages
+- `locality` (String) A comma-separated list of localities that will be set in the issued certificate
+- `metadata` (String, Deprecated) [Deprecated: Use description instead]
+- `not_enforce_hostnames` (Boolean) If set, any names are allowed for CN and SANs in the certificate and not only a valid host name
+- `not_require_cn` (Boolean) If set, clients can request certificates without a CN
+- `organizational_units` (String) A comma-separated list of organizational units (OU) that will be set in the issued certificate
+- `organizations` (String) A comma-separated list of organizations (O) that will be set in the issued certificate
+- `postal_code` (String) A comma-separated list of postal codes that will be set in the issued certificate
+- `protect_certificates` (Boolean) Whether to protect generated certificates from deletion
+- `province` (String) A comma-separated list of provinces that will be set in the issued certificate
+- `server_flag` (Boolean) If set, certificates will be flagged for server auth use
+- `street_address` (String) A comma-separated list of street addresses that will be set in the issued certificate
+- `tags` (Set of String) List of the tags attached to this key
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

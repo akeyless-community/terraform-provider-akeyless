@@ -17,14 +17,11 @@ Get Auth Method details data source
 
 ### Required
 
-- **name** (String) The item name
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `name` (String) The item name
 
 ### Read-Only
 
-- **tags** (Set of String)
+- `id` (String) The ID of this resource.
+- `tags` (Set of String)
 
 

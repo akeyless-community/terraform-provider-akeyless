@@ -17,18 +17,21 @@ Github producer resource.
 
 ### Required
 
-- **name** (String) Producer name
+- `name` (String) Producer name
 
 ### Optional
 
-- **github_app_id** (Number) Github application id
-- **github_app_private_key** (String) Github application private key (base64 encoded key)
-- **github_base_url** (String) Github base url
-- **id** (String) The ID of this resource.
-- **installation_id** (Number) Github application installation id
-- **installation_repository** (String) Optional, instead of installation id, set a GitHub repository '<owner>/<repo-name>'
-- **target_name** (String) Name of existing target to use in producer creation
-- **token_permissions** (Set of String) Tokens' allowed permissions. By default use installation allowed permissions. Input format: key=value pairs or JSON strings, e.g - -p contents=read -p issues=write or -p '{content:read}'
-- **token_repositories** (Set of String) Tokens' allowed repositories. By default use installation allowed repositories. To specify multiple repositories use argument multiple times: -r RepoName1 -r RepoName2
+- `github_app_id` (Number) Github application id
+- `github_app_private_key` (String) Github application private key (base64 encoded key)
+- `github_base_url` (String) Github base url
+- `installation_id` (Number) Github application installation id
+- `installation_repository` (String) Optional, instead of installation id, set a GitHub repository '<owner>/<repo-name>'
+- `target_name` (String) Name of existing target to use in producer creation
+- `token_permissions` (Set of String) Tokens' allowed permissions. By default use installation allowed permissions. Input format: key=value pairs or JSON strings, e.g - -p contents=read -p issues=write or -p '{content:read}'
+- `token_repositories` (Set of String) Tokens' allowed repositories. By default use installation allowed repositories. To specify multiple repositories use argument multiple times: -r RepoName1 -r RepoName2
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

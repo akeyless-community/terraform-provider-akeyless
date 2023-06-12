@@ -23,14 +23,11 @@ data "akeyless_role" "demo-role" {
 
 ### Required
 
-- **name** (String) The Role name
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `name` (String) The Role name
 
 ### Read-Only
 
-- **assoc_auth_method_with_rules** (String)
+- `assoc_auth_method_with_rules` (String)
+- `id` (String) The ID of this resource.
 
 
