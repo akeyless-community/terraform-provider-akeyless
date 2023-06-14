@@ -22,7 +22,7 @@ GlobalSign Target resource
 - `contact_last_name` (String) Last name of the GlobalSign GCC account contact
 - `contact_phone` (String) Telephone of the GlobalSign GCC account contact
 - `name` (String) Target name
-- `password` (String) Password of the GlobalSign GCC account
+- `password` (String, Sensitive) Password of the GlobalSign GCC account
 - `profile_id` (String) Profile ID of the GlobalSign GCC account
 - `username` (String) Username of the GlobalSign GCC account
 
