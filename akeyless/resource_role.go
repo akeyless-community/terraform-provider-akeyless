@@ -45,7 +45,7 @@ func resourceRole() *schema.Resource {
 				Description: "Description of the object",
 			},
 			"assoc_auth_method": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "Create an association between role and auth method",
 				Elem: &schema.Resource{
@@ -182,8 +182,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
 
-	assocAuthMethodSet := d.Get("assoc_auth_method").(*schema.Set)
-	assocAuthMethod := assocAuthMethodSet.List()
+	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
 	err, ok = assocRoleAuthMethodAdd(ctx, name, assocAuthMethod, m)
 	if !ok {
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
@@ -249,8 +248,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if role.RoleAuthMethodsAssoc != nil {
-		assocAuthMethodSet := d.Get("assoc_auth_method").(*schema.Set)
-		if len(assocAuthMethodSet.List()) != 0 {
+		if len(d.Get("assoc_auth_method").([]interface{})) != 0 {
 			err = readAuthMethodsAssoc(d, role.RoleAuthMethodsAssoc)
 			if err != nil {
 				return err
@@ -272,8 +270,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 		return err
 	}
 
-	assocAuthMethodSet := d.Get("assoc_auth_method").(*schema.Set)
-	assocAuthMethodNewValues := assocAuthMethodSet.List()
+	assocAuthMethodNewValues := d.Get("assoc_auth_method").([]interface{})
 	if len(assocAuthMethodNewValues) > 0 {
 		assocAuthMethodOldValues := saveAssocAuthMethodValues(role.RoleAuthMethodsAssoc)
 
