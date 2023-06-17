@@ -160,25 +160,25 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 4),
+					checkAddRoleRemotely(t, rolePath, 5),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 4),
+					checkUpdateRoleRemotely(t, rolePath, 5),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 3),
+					checkRemoveRoleRemotely(t, rolePath, 4),
 				),
 			},
 		},
@@ -248,7 +248,6 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
-			sra_reports_access    = "own"
 			  
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -273,7 +272,6 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 
 			audit_access 		= "all"
 			analytics_access 	= "own"
-			sra_reports_access    = "all"
 
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -292,7 +290,6 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			name = "%v"
 			audit_access 		= "all"
 			analytics_access 	= "own"
-			sra_reports_access    = "none"
 
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -306,7 +303,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
 				),
 			},
 			{
@@ -324,7 +321,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 3),
+					checkRemoveRoleRemotely(t, rolePath, 4),
 				),
 			},
 		},
@@ -398,19 +395,19 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath1, 2),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath1, 3),
 				),
 			},
 			{
 				Config: configAddAssoc,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 2),
+					checkAddRoleRemotely(t, rolePath, 3),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 2),
+					checkRemoveRoleRemotely(t, rolePath, 3),
 				),
 			},
 		},
