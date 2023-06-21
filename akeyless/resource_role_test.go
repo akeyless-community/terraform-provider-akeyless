@@ -76,7 +76,7 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				rule_type 	= "auth-method-rule"
 			}
 			audit_access 		= "all"
-			analytics_access 	= "none"
+			analytics_access 	= "own"
 			
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -104,14 +104,19 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				path 		= "%v"
 				rule_type 	= "auth-method-rule"
 			}
+			rules {
+				capability 	= ["read", "list"]
+				path 		= "%v"
+				rule_type 	= "item-rule"
+			}
 			audit_access 		= "all"
-			analytics_access 	= "own"
+			analytics_access 	= "all"
 			  
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
   			]
 		}
-	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH, RULE_PATH)
 
 	configUpdateRole := fmt.Sprintf(`
 		resource "akeyless_auth_method" "test_auth_method" {
@@ -133,6 +138,11 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				path 		= "%v"
 				rule_type 	= "auth-method-rule"
 			}
+			rules {
+				capability 	= ["read", "create"]
+				path 		= "%v"
+				rule_type 	= "item-rule"
+			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
 
@@ -140,7 +150,7 @@ func TestRoleResourceUpdateRules(t *testing.T) {
     			akeyless_auth_method.test_auth_method,
   			]
 		}
-	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH, RULE_PATH)
 
 	configRemoveRole := config
 
@@ -150,25 +160,25 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 4),
+					checkAddRoleRemotely(t, rolePath, 5),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 4),
+					checkUpdateRoleRemotely(t, rolePath, 5),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 3),
+					checkRemoveRoleRemotely(t, rolePath, 4),
 				),
 			},
 		},
@@ -231,6 +241,11 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 				path 		= "%v"
 				rule_type 	= "auth-method-rule"
 			}
+			rules {
+				capability 	= ["read" , "list"]
+				path 		= "%v"
+				rule_type 	= "item-rule"
+			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
 			  
@@ -238,7 +253,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
     			akeyless_auth_method.test_auth_method,
   			]
 		}
-	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
+	`, authMethodPath, rolePath, authMethodPath, RULE_PATH, RULE_PATH)
 
 	configUpdateRole := fmt.Sprintf(`
 		resource "akeyless_auth_method" "test_auth_method" {
@@ -264,7 +279,23 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 		}
 	`, authMethodPath, rolePath, RULE_PATH)
 
-	configRemoveRole := config
+	configRemoveRole := fmt.Sprintf(`
+		resource "akeyless_auth_method" "test_auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+
+		resource "akeyless_role" "test_role" {
+			name = "%v"
+			audit_access 		= "all"
+			analytics_access 	= "own"
+
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
+		}
+	`, authMethodPath, rolePath)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
@@ -278,7 +309,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 4),
+					checkAddRoleRemotely(t, rolePath, 5),
 				),
 			},
 			{
@@ -576,6 +607,7 @@ func checkAddRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
+
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
 
 		return nil

@@ -17,9 +17,9 @@ ZeroSSL Target resource
 
 ### Required
 
-- `api_key` (String) API Key of the ZeroSSLTarget account
+- `api_key` (String, Sensitive) API Key of the ZeroSSLTarget account
 - `imap_fqdn` (String) FQDN of the IMAP service
-- `imap_password` (String) Password to access the IMAP service
+- `imap_password` (String, Sensitive) Password to access the IMAP service
 - `imap_username` (String) Username to access the IMAP service
 - `name` (String) Target name
 
