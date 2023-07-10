@@ -114,9 +114,9 @@ func resourceAllowedAccessRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't get gateway allowed access: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		return fmt.Errorf("can't get gateway allowed access: %v", err)
 	}
 	if rOut.Name != nil {
 		err = d.Set("name", *rOut.Name)
