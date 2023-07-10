@@ -395,6 +395,27 @@ func tesItemResource(t *testing.T, config, configUpdate, itemPath string) {
 	})
 }
 
+func testGatewayAllowedAccessResource(t *testing.T, config, configUpdate, itemPath string) {
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				//PreConfig: deleteFunc,
+				Check: resource.ComposeTestCheckFunc(
+					checkGatewayAllowedAccessExists(itemPath),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkGatewayAllowedAccessExists(itemPath),
+				),
+			},
+		},
+	})
+}
+
 func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
@@ -407,6 +428,26 @@ func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 		}
 
 		_, _, err := client.DescribeItem(context.Background()).Body(gsvBody).Execute()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func checkGatewayAllowedAccessExists(path string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := *testAccProvider.Meta().(providerMeta).client
+		token := *testAccProvider.Meta().(providerMeta).token
+
+		ctx := context.Background()
+
+		body := akeyless.GatewayGetAllowedAccess{
+			Name:  path,
+			Token: &token,
+		}
+
+		_, _, err := client.GatewayGetAllowedAccess(ctx).Body(body).Execute()
 		if err != nil {
 			return err
 		}
