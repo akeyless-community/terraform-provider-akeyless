@@ -6,6 +6,7 @@ import (
 )
 
 func TestGatewayAllowedAccess(t *testing.T) {
+	t.Skip("for now the requested values are fictive")
 	t.Parallel()
 
 	name := "test_gw_allowed_access"
