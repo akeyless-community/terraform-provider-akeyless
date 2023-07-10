@@ -138,6 +138,7 @@ func Provider() *schema.Provider {
 			"akeyless_auth_method_universal_identity": resourceAuthMethodUniversalIdentity(),
 			"akeyless_role":                           resourceRole(),
 			"akeyless_producer_aws":                   resourceProducerAws(),
+			"akeyless_allowed_access":                 resourceAllowedAccess(),
 			"akeyless_producer_custom":                resourceProducerCustom(),
 			"akeyless_producer_rdp":                   resourceProducerRdp(),
 			"akeyless_producer_mongo":                 resourceProducerMongo(),
