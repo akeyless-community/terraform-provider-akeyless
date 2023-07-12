@@ -65,8 +65,12 @@ func resourceAllowedAccessCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	accessId := d.Get("access_id").(string)
-	permissions := d.Get("permissions").(string)
 	subClaims := readSubClaims(d)
+	permissions := d.Get("permissions").(string)
+
+	if err := validatePermissions(permissions); err != nil {
+		return err
+	}
 
 	body := akeyless.GatewayCreateAllowedAccess{
 		Name:      name,
@@ -168,8 +172,12 @@ func resourceAllowedAccessUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	accessId := d.Get("access_id").(string)
-	permissions := d.Get("permissions").(string)
 	subClaims := readSubClaims(d)
+	permissions := d.Get("permissions").(string)
+
+	if err := validatePermissions(permissions); err != nil {
+		return err
+	}
 
 	body := akeyless.GatewayUpdateAllowedAccess{
 		Name:      name,
@@ -239,6 +247,67 @@ func resourceAllowedAccessImport(d *schema.ResourceData, m interface{}) ([]*sche
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+type AccessPermission string
+
+type Permissions []AccessPermission
+
+const (
+	AccessPermissionAny                     AccessPermission = "any" // internal permission, not used for the clients
+	AccessPermissionDefaults                AccessPermission = "defaults"
+	AccessPermissionTargets                 AccessPermission = "targets"
+	AccessPermissionClassicKeys             AccessPermission = "classic_keys"
+	AccessPermissionAutomaticMigration      AccessPermission = "automatic_migration"
+	AccessPermissionLdapAuth                AccessPermission = "ldap_auth"
+	AccessPermissionDynamicSecret           AccessPermission = "dynamic_secret"
+	AccessPermissionK8sAuth                 AccessPermission = "k8s_auth"
+	AccessPermissionLogForwarding           AccessPermission = "log_forwarding"
+	AccessPermissionZeroKnowledgeEncryption AccessPermission = "zero_knowledge_encryption"
+	AccessPermissionRotatedSecret           AccessPermission = "rotated_secret"
+	AccessPermissionCaching                 AccessPermission = "caching"
+	AccessPermissionEventForwarding         AccessPermission = "event_forwarding"
+	AccessPermissionAdmin                   AccessPermission = "admin"
+	AccessPermissionKmip                    AccessPermission = "kmip"
+	AccessPermissionGeneral                 AccessPermission = "general"
+)
+
+var validAccessPermission = []AccessPermission{
+	AccessPermissionAny,
+	AccessPermissionDefaults,
+	AccessPermissionTargets,
+	AccessPermissionClassicKeys,
+	AccessPermissionAutomaticMigration,
+	AccessPermissionLdapAuth,
+	AccessPermissionDynamicSecret,
+	AccessPermissionK8sAuth,
+	AccessPermissionLogForwarding,
+	AccessPermissionZeroKnowledgeEncryption,
+	AccessPermissionRotatedSecret,
+	AccessPermissionCaching,
+	AccessPermissionEventForwarding,
+	AccessPermissionAdmin,
+	AccessPermissionKmip,
+	AccessPermissionGeneral,
+}
+
+func IsValidPermission(p string) bool {
+	return common.SliceContains[AccessPermission](validAccessPermission, AccessPermission(p))
+}
+
+func validatePermissions(permissions string) error {
+	if permissions != "" {
+		perms := strings.Split(permissions, ",")
+		permissionsList := make([]AccessPermission, len(perms))
+		for i, p := range perms {
+			p = strings.TrimSpace(p)
+			if !IsValidPermission(p) {
+				return fmt.Errorf("invalid permission value: %q", p)
+			}
+			permissionsList[i] = AccessPermission(p)
+		}
+	}
+	return nil
 }
 
 func readSubClaims(d *schema.ResourceData) map[string]string {

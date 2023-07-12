@@ -11,6 +11,8 @@ func TestGatewayAllowedAccess(t *testing.T) {
 
 	name := "test_gw_allowed_access"
 	itemPath := testPath(name)
+	permissionsOnCreate := "defaults,automatic_migration,dynamic_secret,k8s_auth,event_forwarding,general"
+	emailSubClaimsOnCreate := "test.a@email.com,test.b@email.com"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_allowed_access" "%v" {
@@ -18,11 +20,14 @@ func TestGatewayAllowedAccess(t *testing.T) {
 			description = "description one"
   			access_id   = "p-1rs0cnnmjocu"
   			sub_claims  = {
-    			"email" = "test.a@email.com,test.b@email.com"
+    			"email" = "%v"
   			}
-  			permissions = "defaults,automatic_migration,dynamic_secret,k8s_auth,event_forwarding,general"
+  			permissions = "%v"
 		}
-	`, name, itemPath)
+	`, name, itemPath, emailSubClaimsOnCreate, permissionsOnCreate)
+
+	permissionsOnUpdate := "defaults,automatic_migration,dynamic_secret,k8s_auth,log_forwarding,zero_knowledge_encryption,rotated_secret,caching,event_forwarding,general"
+	emailSubClaimsOnUpdate := "test.a@email.com,test.b@email.com,test.b@email.com"
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_allowed_access" "%v" {
@@ -30,11 +35,21 @@ func TestGatewayAllowedAccess(t *testing.T) {
 			description = "description two"
   			access_id   = "p-1rs0cnnmjocu"
   			sub_claims  = {
-    			"email" = "test.a@email.com,test.b@email.com,,test.b@email.com"
+    			"email" = "%v"
   			}
-  			permissions = "defaults,automatic_migration,dynamic_secret,k8s_auth,log_forwarding,zero_knowledge_encryption,rotated_secret,caching,event_forwarding,general"
+  			permissions = "%v"
 		}
-	`, name, itemPath)
+	`, name, itemPath, emailSubClaimsOnUpdate, permissionsOnUpdate)
 
-	testGatewayAllowedAccessResource(t, config, configUpdate, itemPath)
+	inputParams := &TestGatewayAllowedAccessResource{
+		Config:                 config,
+		ConfigUpdate:           configUpdate,
+		ItemPath:               itemPath,
+		PermissionsOnCreate:    permissionsOnCreate,
+		PermissionsOnUpdate:    permissionsOnUpdate,
+		EmailSubClaimsOnCreate: emailSubClaimsOnCreate,
+		emailSubClaimsOnUpdate: emailSubClaimsOnUpdate,
+	}
+
+	testGatewayAllowedAccessResource(t, inputParams)
 }
