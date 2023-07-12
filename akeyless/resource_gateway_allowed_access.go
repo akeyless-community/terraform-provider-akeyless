@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAllowedAccess() *schema.Resource {
+func resourceGatewayAllowedAccess() *schema.Resource {
 	return &schema.Resource{
-		Description: "Create allowed access",
+		Description: "Create gateway allowed access",
 		Create:      resourceAllowedAccessCreate,
 		Read:        resourceAllowedAccessRead,
 		Update:      resourceAllowedAccessUpdate,

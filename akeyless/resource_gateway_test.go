@@ -13,7 +13,7 @@ func TestGatewayAllowedAccess(t *testing.T) {
 	itemPath := testPath(name)
 
 	config := fmt.Sprintf(`
-		resource "akeyless_allowed_access" "%v" {
+		resource "akeyless_gateway_allowed_access" "%v" {
  			name        = "%v"
 			description = "description one"
   			access_id   = "p-1rs0cnnmjocu"
@@ -25,7 +25,7 @@ func TestGatewayAllowedAccess(t *testing.T) {
 	`, name, itemPath)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_allowed_access" "%v" {
+		resource "akeyless_gateway_allowed_access" "%v" {
  			name        = "%v"
 			description = "description two"
   			access_id   = "p-1rs0cnnmjocu"
