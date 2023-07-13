@@ -254,7 +254,6 @@ type AccessPermission string
 type Permissions []AccessPermission
 
 const (
-	AccessPermissionAny                     AccessPermission = "any" // internal permission, not used for the clients
 	AccessPermissionDefaults                AccessPermission = "defaults"
 	AccessPermissionTargets                 AccessPermission = "targets"
 	AccessPermissionClassicKeys             AccessPermission = "classic_keys"
@@ -272,32 +271,27 @@ const (
 	AccessPermissionGeneral                 AccessPermission = "general"
 )
 
-var validAccessPermission = []AccessPermission{
-	AccessPermissionAny,
-	AccessPermissionDefaults,
-	AccessPermissionTargets,
-	AccessPermissionClassicKeys,
-	AccessPermissionAutomaticMigration,
-	AccessPermissionLdapAuth,
-	AccessPermissionDynamicSecret,
-	AccessPermissionK8sAuth,
-	AccessPermissionLogForwarding,
-	AccessPermissionZeroKnowledgeEncryption,
-	AccessPermissionRotatedSecret,
-	AccessPermissionCaching,
-	AccessPermissionEventForwarding,
-	AccessPermissionAdmin,
-	AccessPermissionKmip,
-	AccessPermissionGeneral,
+var validAccessPermission = map[AccessPermission]bool{
+	AccessPermissionDefaults:                true,
+	AccessPermissionTargets:                 true,
+	AccessPermissionClassicKeys:             true,
+	AccessPermissionAutomaticMigration:      true,
+	AccessPermissionLdapAuth:                true,
+	AccessPermissionDynamicSecret:           true,
+	AccessPermissionK8sAuth:                 true,
+	AccessPermissionLogForwarding:           true,
+	AccessPermissionZeroKnowledgeEncryption: true,
+	AccessPermissionRotatedSecret:           true,
+	AccessPermissionCaching:                 true,
+	AccessPermissionEventForwarding:         true,
+	AccessPermissionAdmin:                   true,
+	AccessPermissionKmip:                    true,
+	AccessPermissionGeneral:                 true,
 }
 
-func IsValidPermission(p string) bool {
-	for _, x := range validAccessPermission {
-		if string(x) == p {
-			return true
-		}
-	}
-	return false
+func isValidPermission(p string) bool {
+	_, ok := validAccessPermission[AccessPermission(p)]
+	return ok
 }
 
 func validatePermissions(permissions string) error {
@@ -306,7 +300,7 @@ func validatePermissions(permissions string) error {
 		permissionsList := make([]AccessPermission, len(perms))
 		for i, p := range perms {
 			p = strings.TrimSpace(p)
-			if !IsValidPermission(p) {
+			if !isValidPermission(p) {
 				return fmt.Errorf("invalid permission value: %q", p)
 			}
 			permissionsList[i] = AccessPermission(p)

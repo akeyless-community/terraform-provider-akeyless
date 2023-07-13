@@ -402,22 +402,19 @@ type TestGatewayAllowedAccessResource struct {
 }
 
 func testGatewayAllowedAccessResource(t *testing.T, input *TestGatewayAllowedAccessResource) {
-	require.NotEmpty(t, input, "got invalid TestGatewayAllowedAccessResource input")
-
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: input.Config,
-				//PreConfig: deleteFunc,
 				Check: resource.ComposeTestCheckFunc(
-					checkGatewayAllowedAccessExists(t, input.ItemPath, input.PermissionsOnCreate, input.EmailSubClaimsOnCreate),
+					checkGatewayAllowedAccessExistsAndValidateDetails(t, input.ItemPath, input.PermissionsOnCreate, input.EmailSubClaimsOnCreate),
 				),
 			},
 			{
 				Config: input.ConfigUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					checkGatewayAllowedAccessExists(t, input.ItemPath, input.PermissionsOnUpdate, input.emailSubClaimsOnUpdate),
+					checkGatewayAllowedAccessExistsAndValidateDetails(t, input.ItemPath, input.PermissionsOnUpdate, input.emailSubClaimsOnUpdate),
 				),
 			},
 		},
@@ -443,7 +440,7 @@ func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 	}
 }
 
-func checkGatewayAllowedAccessExists(t *testing.T, allowedAccessName, permissions, emailSubClaims string) resource.TestCheckFunc {
+func checkGatewayAllowedAccessExistsAndValidateDetails(t *testing.T, allowedAccessName, permissions, emailSubClaims string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
@@ -459,12 +456,12 @@ func checkGatewayAllowedAccessExists(t *testing.T, allowedAccessName, permission
 		require.NoError(t, err)
 
 		// Validate Gateway allowed access Permissions
-		require.Equal(t, strings.Join(*output.Permissions, ","), permissions, "permissions value is not as expected")
+		require.ElementsMatch(t, *output.Permissions, strings.Split(permissions, ","), "permissions is not as expected")
 
-		// Validate Gateway allowed access Sub Claims
+		// Validate Gateway allowed access Sub-Claims
 		emailSubClaimsString, ok := (*output.SubClaims)["email"]
 		require.True(t, ok, "Sub-Claims value is not as expected")
-		require.Equal(t, strings.Join(emailSubClaimsString, ","), emailSubClaims, "permissions value is not as expected")
+		require.ElementsMatch(t, emailSubClaimsString, strings.Split(emailSubClaims, ","), "sub-claims value is not as expected")
 
 		return nil
 	}
