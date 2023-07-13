@@ -292,7 +292,12 @@ var validAccessPermission = []AccessPermission{
 }
 
 func IsValidPermission(p string) bool {
-	return common.SliceContains[AccessPermission](validAccessPermission, AccessPermission(p))
+	for _, x := range validAccessPermission {
+		if string(x) == p {
+			return true
+		}
+	}
+	return false
 }
 
 func validatePermissions(permissions string) error {

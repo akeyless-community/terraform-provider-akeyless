@@ -474,12 +474,3 @@ func GetErrorOnUpdateParam(d *schema.ResourceData, paramNames []string) error {
 	}
 	return nil
 }
-
-func SliceContains[T comparable](s []T, v T) bool {
-	for _, x := range s {
-		if x == v {
-			return true
-		}
-	}
-	return false
-}
