@@ -3,6 +3,8 @@ package akeyless
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/require"
+	"strings"
 	"testing"
 
 	"github.com/akeylesslabs/akeyless-go/v3"
@@ -395,6 +397,30 @@ func tesItemResource(t *testing.T, config, configUpdate, itemPath string) {
 	})
 }
 
+type TestGatewayAllowedAccessResource struct {
+	Config, ConfigUpdate, ItemPath, PermissionsOnCreate, PermissionsOnUpdate, EmailSubClaimsOnCreate, emailSubClaimsOnUpdate string
+}
+
+func testGatewayAllowedAccessResource(t *testing.T, input *TestGatewayAllowedAccessResource) {
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: input.Config,
+				Check: resource.ComposeTestCheckFunc(
+					checkGatewayAllowedAccessExistsAndValidateDetails(t, input.ItemPath, input.PermissionsOnCreate, input.EmailSubClaimsOnCreate),
+				),
+			},
+			{
+				Config: input.ConfigUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkGatewayAllowedAccessExistsAndValidateDetails(t, input.ItemPath, input.PermissionsOnUpdate, input.emailSubClaimsOnUpdate),
+				),
+			},
+		},
+	})
+}
+
 func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
@@ -410,6 +436,33 @@ func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 		if err != nil {
 			return err
 		}
+		return nil
+	}
+}
+
+func checkGatewayAllowedAccessExistsAndValidateDetails(t *testing.T, allowedAccessName, permissions, emailSubClaims string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := *testAccProvider.Meta().(providerMeta).client
+		token := *testAccProvider.Meta().(providerMeta).token
+
+		ctx := context.Background()
+
+		body := akeyless.GatewayGetAllowedAccess{
+			Name:  allowedAccessName,
+			Token: &token,
+		}
+
+		output, _, err := client.GatewayGetAllowedAccess(ctx).Body(body).Execute()
+		require.NoError(t, err)
+
+		// Validate Gateway allowed access Permissions
+		require.ElementsMatch(t, *output.Permissions, strings.Split(permissions, ","), "permissions is not as expected")
+
+		// Validate Gateway allowed access Sub-Claims
+		emailSubClaimsString, ok := (*output.SubClaims)["email"]
+		require.True(t, ok, "Sub-Claims value is not as expected")
+		require.ElementsMatch(t, emailSubClaimsString, strings.Split(emailSubClaims, ","), "sub-claims value is not as expected")
+
 		return nil
 	}
 }
