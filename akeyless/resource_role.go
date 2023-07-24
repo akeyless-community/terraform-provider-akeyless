@@ -48,6 +48,7 @@ func resourceRole() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Create an association between role and auth method",
+				Deprecated:  "please use resource 'akeyless_associate_role_auth_method'",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"am_name": {
