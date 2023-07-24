@@ -119,7 +119,7 @@ output "auth_method" {
 <a id="nestedblock--api_key_login"></a>
 ### Nested Schema for `api_key_login`
 
-Required:
+Optional:
 
 - `access_id` (String)
 - `access_key` (String, Sensitive)
