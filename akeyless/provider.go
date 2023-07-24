@@ -17,11 +17,13 @@ import (
 // default: public API Gateway
 const publicApi = "https://api.akeyless.io"
 
-var apiKeyLogin []interface{}
-var emailLogin []interface{}
-var awsIAMLogin []interface{}
-var azureADLogin []interface{}
-var jwtLogin []interface{}
+var (
+	apiKeyLogin  []interface{}
+	emailLogin   []interface{}
+	awsIAMLogin  []interface{}
+	azureADLogin []interface{}
+	jwtLogin     []interface{}
+)
 
 // Provider returns Akeyless Terraform provider
 func Provider() *schema.Provider {

@@ -503,6 +503,68 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 	})
 }
 
+func TestRoleResourceWithFewAssocs(t *testing.T) {
+	resourceName := "test_role_few_assocs"
+	rolePath := testPath(resourceName)
+
+	amPath1 := testPath("test_am1")
+	createTestAuthMethod(amPath1)
+	defer deleteAuthMethod(amPath1)
+
+	amPath2 := testPath("test_am2")
+	createTestAuthMethod(amPath2)
+	defer deleteAuthMethod(amPath2)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_role" "%v" {
+			name = "%v"
+			assoc_auth_method {
+				am_name     = "%v"
+				sub_claims  = {
+					"groups"  = "admins1"  
+				}
+			}
+			assoc_auth_method {
+				am_name     = "%v"
+				sub_claims  = {
+					"groups"  = "admins2"  
+				}
+			}
+	  	}
+	  `, resourceName, rolePath, amPath1, amPath2)
+
+	// switch assocs order
+	config2 := fmt.Sprintf(`
+	  	resource "akeyless_role" "%v" {
+			name = "%v"
+			assoc_auth_method {
+				am_name     = "%v"
+				sub_claims  = {
+					"groups"  = "admins2"  
+				}
+			}
+			assoc_auth_method {
+				am_name     = "%v"
+				sub_claims  = {
+					"groups"  = "admins1"  
+				}
+			}
+		}
+	`, resourceName, rolePath, amPath2, amPath1)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				Config: config2,
+			},
+		},
+	})
+}
+
 func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rulesNum int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := *testAccProvider.Meta().(providerMeta).client
@@ -691,6 +753,29 @@ func deleteRole(path string) error {
 	return nil
 }
 
+func createTestAuthMethod(path string) error {
+	p, err := getProviderMeta()
+	if err != nil {
+		panic(err)
+	}
+
+	client := p.client
+	token := *p.token
+
+	gsvBody := akeyless.CreateAuthMethod{
+		Name:  path,
+		Token: &token,
+	}
+
+	_, _, err = client.CreateAuthMethod(context.Background()).Body(gsvBody).Execute()
+	if err != nil {
+		fmt.Println("error create auth method:", err)
+		return err
+	}
+	fmt.Println("created auth method:", path)
+	return nil
+}
+
 func deleteAuthMethod(path string) error {
 	p, err := getProviderMeta()
 	if err != nil {
@@ -710,6 +795,6 @@ func deleteAuthMethod(path string) error {
 		fmt.Println("error delete auth method:", err)
 		return err
 	}
-	fmt.Println("deleted", path)
+	fmt.Println("deleted auth method:", path)
 	return nil
 }
