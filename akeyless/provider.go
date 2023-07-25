@@ -185,6 +185,7 @@ func Provider() *schema.Provider {
 			"akeyless_producer_tmp_creds": dataSourceGatewayGetProducerTmpCreds(),
 			"akeyless_rotated_secret":     dataSourceGetRotatedSecretValue(),
 			"akeyless_rsa_pub":            dataSourceGetRSAPublic(),
+			"akeyless_csr":                dataSourceGenerateCsr(),
 			"akeyless_pki_certificate":    dataSourceGetPKICertificate(),
 			"akeyless_ssh_certificate":    dataSourceGetSSHCertificate(),
 			"akeyless_tags":               dataSourceGetTags(),
