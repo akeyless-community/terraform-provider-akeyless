@@ -3,9 +3,10 @@ package akeyless
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -374,6 +375,41 @@ func TestSshDataSource(t *testing.T) {
 	`, itemPath, allowedUser, sshPublicKey)
 
 	tesItemDataSource(t, config2, "ssh", []string{"data"})
+}
+
+func TestCsrDataSource(t *testing.T) {
+	t.Parallel()
+
+	// classic key that will be generated
+	keyName := "test-classic-key-for-csr"
+	keyPath := testPath(keyName)
+	defer deleteItem(t, keyPath)
+
+	config := fmt.Sprintf(`
+		data "akeyless_csr" "test_csr" {
+			name              = "%v"
+			common_name       = "test"
+			generate_key      = true
+			alg               = "RSA2048"
+			certificate_type  = "ssl-client"
+			critical          = true
+			org               = "org1"
+			dep               = "dep1"
+			city              = "city1"
+			state             = "state1"
+			country           = "country1"
+			alt_names         = "test1.com,test2.com"
+			email_addresses   = "test1@gmail.com, test2@gmail.com"
+			ip_addresses      = "192.168.0.1,192.168.0.2"
+			uri_sans          = "uri1.com,uri2.com"
+		}
+
+		output "csr" {
+			value     = data.akeyless_csr.test_csr
+		}
+	`, keyPath)
+
+	tesItemDataSource(t, config, "csr", []string{"data"})
 }
 
 func tesItemResource(t *testing.T, config, configUpdate, itemPath string) {
