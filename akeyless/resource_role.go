@@ -45,9 +45,10 @@ func resourceRole() *schema.Resource {
 				Description: "Description of the object",
 			},
 			"assoc_auth_method": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Create an association between role and auth method",
+				Deprecated:  "please use resource 'akeyless_associate_role_auth_method'",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"am_name": {
@@ -182,8 +183,9 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
 
-	assocAuthMethod := d.Get("assoc_auth_method").([]interface{})
-	err, ok = assocRoleAuthMethodAdd(ctx, name, assocAuthMethod, m)
+	assocsSet := d.Get("assoc_auth_method").(*schema.Set)
+	assocAuthMethod := assocsSet.List()
+	err, ok = addRoleAssocs(ctx, name, assocAuthMethod, m)
 	if !ok {
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
@@ -248,7 +250,8 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if role.RoleAuthMethodsAssoc != nil {
-		if len(d.Get("assoc_auth_method").([]interface{})) != 0 {
+		assocsSet := d.Get("assoc_auth_method").(*schema.Set)
+		if len(assocsSet.List()) != 0 {
 			err = readAuthMethodsAssoc(d, role.RoleAuthMethodsAssoc)
 			if err != nil {
 				return err
@@ -260,6 +263,9 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
+
+	cleanEmptyAssocs(d)
+
 	ok := true
 
 	name := d.Get("name").(string)
@@ -270,9 +276,10 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 		return err
 	}
 
-	assocAuthMethodNewValues := d.Get("assoc_auth_method").([]interface{})
+	assocsSet := d.Get("assoc_auth_method").(*schema.Set)
+	assocAuthMethodNewValues := assocsSet.List()
 	if len(assocAuthMethodNewValues) > 0 {
-		assocAuthMethodOldValues := saveAssocAuthMethodValues(role.RoleAuthMethodsAssoc)
+		assocAuthMethodOldValues := extractAssocValues(role.RoleAuthMethodsAssoc)
 
 		assocsToAdd, assosToUpdateNew := extractAssocsToCreateAndUpdate(assocAuthMethodNewValues, assocAuthMethodOldValues)
 		assocsToDelete, assocToRewrite := extractAssocsToCreateAndUpdate(assocAuthMethodOldValues, assocAuthMethodNewValues)
@@ -299,7 +306,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	rulesSet := d.Get("rules").(*schema.Set)
 	roleRulesNewValues := rulesSet.List()
 	if len(roleRulesNewValues) > 0 {
-		roleRulesOldValues := saveRoleRuleOldValues(rules.PathRules)
+		roleRulesOldValues := extractRoleRuleOldValues(rules.PathRules)
 
 		rulesToAdd := extractRulesToSet(roleRulesNewValues, roleRulesOldValues)
 		rulesToDelete := extractRulesToSet(roleRulesOldValues, roleRulesNewValues)
@@ -420,7 +427,7 @@ func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless.Role,
 
 func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc *[]akeyless.RoleAuthMethodAssociation) error {
 
-	roleAuthMethodsAssoc := saveAssocAuthMethodValues(authMethodsAssoc)
+	roleAuthMethodsAssoc := extractAssocValues(authMethodsAssoc)
 
 	err := d.Set("assoc_auth_method", roleAuthMethodsAssoc)
 	if err != nil {
@@ -531,17 +538,17 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDele
 	var err error
 	var ok bool
 
-	err, ok = deleteRoleAuthMethods(ctx, name, assocAuthMethodToDelete, m)
+	err, ok = deleteRoleAssocs(ctx, name, assocAuthMethodToDelete, m)
 	if !ok {
 		return err, ok
 	}
 
-	err, ok = assocRoleAuthMethodAdd(ctx, name, assocAuthMethodToAdd, m)
+	err, ok = addRoleAssocs(ctx, name, assocAuthMethodToAdd, m)
 	if !ok {
 		return err, ok
 	}
 
-	err, ok = assocRoleAuthMethodUpdate(ctx, name, assocAuthMethodToUpdate, m)
+	err, ok = updateRoleAssocs(ctx, name, assocAuthMethodToUpdate, m)
 	if !ok {
 		return err, ok
 	}
@@ -549,13 +556,13 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDele
 	return nil, true
 }
 
-func deleteRoleAuthMethods(ctx context.Context, name string, assocAuthMethodOldValues []interface{}, m interface{}) (error, bool) {
+func deleteRoleAssocs(ctx context.Context, name string, assocs []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
 
-	for _, v := range assocAuthMethodOldValues {
+	for _, v := range assocs {
 		var apiErr akeyless.GenericOpenAPIError
 		association := akeyless.DeleteRoleAssociation{
 			AssocId: v.(map[string]interface{})["assoc_id"].(string),
@@ -576,7 +583,7 @@ func deleteRoleAuthMethods(ctx context.Context, name string, assocAuthMethodOldV
 	return nil, true
 }
 
-func assocRoleAuthMethodAdd(ctx context.Context, name string, assocAuthMethod []interface{}, m interface{}) (error, bool) {
+func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(providerMeta)
 	client := *provider.client
@@ -617,7 +624,7 @@ func assocRoleAuthMethodAdd(ctx context.Context, name string, assocAuthMethod []
 	return nil, true
 }
 
-func assocRoleAuthMethodUpdate(ctx context.Context, name string, assocAuthMethods []interface{}, m interface{}) (error, bool) {
+func updateRoleAssocs(ctx context.Context, name string, assocAuthMethods []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(providerMeta)
 	client := *provider.client
@@ -645,11 +652,11 @@ func assocRoleAuthMethodUpdate(ctx context.Context, name string, assocAuthMethod
 		if err != nil {
 			if errors.As(err, &apiErr) {
 				if res.StatusCode != http.StatusConflict {
-					err = fmt.Errorf("can't create association: %v", string(apiErr.Body()))
+					err = fmt.Errorf("can't update association: %v", string(apiErr.Body()))
 					return err, false
 				}
 			} else {
-				err = fmt.Errorf("can't create association: %v", err)
+				err = fmt.Errorf("can't update association: %v", err)
 				return err, false
 			}
 		}
@@ -825,8 +832,8 @@ func updateRoleAccessRules(ctx context.Context, name, description string,
 	return nil, true
 }
 
-func saveAssocAuthMethodValues(assocs *[]akeyless.RoleAuthMethodAssociation) []interface{} {
-	var assocAuthMethodValues []interface{}
+func extractAssocValues(assocs *[]akeyless.RoleAuthMethodAssociation) []interface{} {
+	var assocValues []interface{}
 
 	if assocs != nil {
 		for _, assoc := range *assocs {
@@ -843,14 +850,36 @@ func saveAssocAuthMethodValues(assocs *[]akeyless.RoleAuthMethodAssociation) []i
 			}
 			assocMap["sub_claims"] = subClaims
 
-			assocAuthMethodValues = append(assocAuthMethodValues, assocMap)
+			assocValues = append(assocValues, assocMap)
 		}
 	}
 
-	return assocAuthMethodValues
+	return assocValues
 }
 
-func saveRoleRuleOldValues(roleRules *[]akeyless.PathRule) []interface{} {
+// assocs are of type set, therefore it includes removed assocs
+// that should not be part of the plan and we must cleanup them.
+func cleanEmptyAssocs(d *schema.ResourceData) error {
+	assocsSet := d.Get("assoc_auth_method").(*schema.Set)
+	assocs := assocsSet.List()
+
+	var assocsTotal []interface{}
+
+	for _, assocInterface := range assocs {
+		assoc := assocInterface.(map[string]interface{})
+		if assoc["am_name"] != "" {
+			assocsTotal = append(assocsTotal, assoc)
+		}
+	}
+
+	err := d.Set("assoc_auth_method", assocsTotal)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func extractRoleRuleOldValues(roleRules *[]akeyless.PathRule) []interface{} {
 	var roleRulesOldValues []interface{}
 
 	if roleRules != nil {
