@@ -158,32 +158,32 @@ func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.GkeServiceAccountName != nil {
-		err = d.Set("gke_service_account_email", *rOut.Value.GkeServiceAccountName)
+	if rOut.Value.GkeTargetDetails.GkeServiceAccountName != nil {
+		err = d.Set("gke_service_account_email", *rOut.Value.GkeTargetDetails.GkeServiceAccountName)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.GkeClusterEndpoint != nil {
-		err = d.Set("gke_cluster_endpoint", *rOut.Value.GkeClusterEndpoint)
+	if rOut.Value.GkeTargetDetails.GkeClusterEndpoint != nil {
+		err = d.Set("gke_cluster_endpoint", *rOut.Value.GkeTargetDetails.GkeClusterEndpoint)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.GkeClusterCaCertificate != nil {
-		err = d.Set("gke_cluster_cert", *rOut.Value.GkeClusterCaCertificate)
+	if rOut.Value.GkeTargetDetails.GkeClusterCaCertificate != nil {
+		err = d.Set("gke_cluster_cert", *rOut.Value.GkeTargetDetails.GkeClusterCaCertificate)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.GkeServiceAccountKey != nil {
-		err = d.Set("gke_account_key", *rOut.Value.GkeServiceAccountKey)
+	if rOut.Value.GkeTargetDetails.GkeServiceAccountKey != nil {
+		err = d.Set("gke_account_key", *rOut.Value.GkeTargetDetails.GkeServiceAccountKey)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.GkeClusterName != nil {
-		err = d.Set("gke_cluster_name", *rOut.Value.GkeClusterName)
+	if rOut.Value.GkeTargetDetails.GkeClusterName != nil {
+		err = d.Set("gke_cluster_name", *rOut.Value.GkeTargetDetails.GkeClusterName)
 		if err != nil {
 			return err
 		}
@@ -194,8 +194,8 @@ func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.Value.UseGwCloudIdentity != nil {
-		err = d.Set("use_gw_cloud_identity", *rOut.Value.UseGwCloudIdentity)
+	if rOut.Value.GkeTargetDetails.UseGwCloudIdentity != nil {
+		err = d.Set("use_gw_cloud_identity", *rOut.Value.GkeTargetDetails.UseGwCloudIdentity)
 		if err != nil {
 			return err
 		}

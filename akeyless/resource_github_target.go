@@ -135,20 +135,20 @@ func resourceGithubTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.GithubAppId != nil {
-		err = d.Set("github_app_id", *rOut.Value.GithubAppId)
+	if rOut.Value.GithubTargetDetails.GithubAppId != nil {
+		err = d.Set("github_app_id", *rOut.Value.GithubTargetDetails.GithubAppId)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.GithubAppPrivateKey != nil {
-		err = d.Set("github_app_private_key", *rOut.Value.GithubAppPrivateKey)
+	if rOut.Value.GithubTargetDetails.GithubAppPrivateKey != nil {
+		err = d.Set("github_app_private_key", *rOut.Value.GithubTargetDetails.GithubAppPrivateKey)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.GithubBaseUrl != nil {
-		err = d.Set("github_base_url", *rOut.Value.GithubBaseUrl)
+	if rOut.Value.GithubTargetDetails.GithubBaseUrl != nil {
+		err = d.Set("github_base_url", *rOut.Value.GithubTargetDetails.GithubBaseUrl)
 		if err != nil {
 			return err
 		}

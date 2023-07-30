@@ -142,26 +142,26 @@ func resourceAzureTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.AzureClientId != nil {
-		err = d.Set("client_id", *rOut.Value.AzureClientId)
+	if rOut.Value.AzureTargetDetails.AzureClientId != nil {
+		err = d.Set("client_id", *rOut.Value.AzureTargetDetails.AzureClientId)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.AzureTenantId != nil {
-		err = d.Set("tenant_id", *rOut.Value.AzureTenantId)
+	if rOut.Value.AzureTargetDetails.AzureTenantId != nil {
+		err = d.Set("tenant_id", *rOut.Value.AzureTargetDetails.AzureTenantId)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.AzureClientSecret != nil {
-		err = d.Set("client_secret", *rOut.Value.AzureClientSecret)
+	if rOut.Value.AzureTargetDetails.AzureClientSecret != nil {
+		err = d.Set("client_secret", *rOut.Value.AzureTargetDetails.AzureClientSecret)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.UseGwCloudIdentity != nil {
-		err = d.Set("use_gw_cloud_identity", *rOut.Value.UseGwCloudIdentity)
+	if rOut.Value.AzureTargetDetails.UseGwCloudIdentity != nil {
+		err = d.Set("use_gw_cloud_identity", *rOut.Value.AzureTargetDetails.UseGwCloudIdentity)
 		if err != nil {
 			return err
 		}

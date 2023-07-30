@@ -129,20 +129,20 @@ func resourceArtifactoryTargetRead(d *schema.ResourceData, m interface{}) error 
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	if rOut.Value.ArtifactoryBaseUrl != nil {
-		err = d.Set("base_url", *rOut.Value.ArtifactoryBaseUrl)
+	if rOut.Value.ArtifactoryTargetDetails.ArtifactoryBaseUrl != nil {
+		err = d.Set("base_url", *rOut.Value.ArtifactoryTargetDetails.ArtifactoryBaseUrl)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.ArtifactoryAdminUsername != nil {
-		err = d.Set("artifactory_admin_name", *rOut.Value.ArtifactoryAdminUsername)
+	if rOut.Value.ArtifactoryTargetDetails.ArtifactoryAdminUsername != nil {
+		err = d.Set("artifactory_admin_name", *rOut.Value.ArtifactoryTargetDetails.ArtifactoryAdminUsername)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.ArtifactoryAdminApikey != nil {
-		err = d.Set("artifactory_admin_pwd", *rOut.Value.ArtifactoryAdminApikey)
+	if rOut.Value.ArtifactoryTargetDetails.ArtifactoryAdminApikey != nil {
+		err = d.Set("artifactory_admin_pwd", *rOut.Value.ArtifactoryTargetDetails.ArtifactoryAdminApikey)
 		if err != nil {
 			return err
 		}

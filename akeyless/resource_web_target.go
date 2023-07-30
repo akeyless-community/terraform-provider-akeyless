@@ -117,8 +117,8 @@ func resourceWebTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.Url != nil {
-		err = d.Set("url", *rOut.Value.Url)
+	if rOut.Value.WebTargetDetails.Url != nil {
+		err = d.Set("url", *rOut.Value.WebTargetDetails.Url)
 		if err != nil {
 			return err
 		}
