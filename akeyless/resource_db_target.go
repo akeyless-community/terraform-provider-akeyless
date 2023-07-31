@@ -236,88 +236,92 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	if rOut.Value.DbTargetDetails.DbHostName != nil {
-		err = d.Set("host", *rOut.Value.DbTargetDetails.DbHostName)
-		if err != nil {
-			return err
+	if rOut.Value.DbTargetDetails != nil {
+		if rOut.Value.DbTargetDetails.DbHostName != nil {
+			err = d.Set("host", *rOut.Value.DbTargetDetails.DbHostName)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.Value.DbTargetDetails.DbPort != nil {
+			err = d.Set("port", *rOut.Value.DbTargetDetails.DbPort)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.Value.DbTargetDetails.DbUserName != nil {
+			err = d.Set("user_name", *rOut.Value.DbTargetDetails.DbUserName)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.Value.DbTargetDetails.DbPwd != nil {
+			err = d.Set("pwd", *rOut.Value.DbTargetDetails.DbPwd)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.Value.DbTargetDetails.DbName != nil {
+			err = d.Set("db_name", *rOut.Value.DbTargetDetails.DbName)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.Value.DbTargetDetails.DbServerCertificates != nil {
+			err = d.Set("db_server_certificates", *rOut.Value.DbTargetDetails.DbServerCertificates)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.Value.DbTargetDetails.DbServerName != nil {
+			err = d.Set("db_server_name", *rOut.Value.DbTargetDetails.DbServerName)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.Value.DbTargetDetails.SfAccount != nil {
+			err = d.Set("snowflake_account", *rOut.Value.DbTargetDetails.SfAccount)
+			if err != nil {
+				return err
+			}
 		}
 	}
-	if rOut.Value.DbTargetDetails.DbPort != nil {
-		err = d.Set("port", *rOut.Value.DbTargetDetails.DbPort)
-		if err != nil {
-			return err
+	if rOut.Value.MongoDbTargetDetails != nil {
+		if rOut.Value.MongoDbTargetDetails.MongodbIsAtlas != nil {
+			err = d.Set("mongodb_atlas", *rOut.Value.MongoDbTargetDetails.MongodbIsAtlas)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	if rOut.Value.DbTargetDetails.DbUserName != nil {
-		err = d.Set("user_name", *rOut.Value.DbTargetDetails.DbUserName)
-		if err != nil {
-			return err
+		if rOut.Value.MongoDbTargetDetails.MongodbDefaultAuthDb != nil {
+			err = d.Set("mongodb_default_auth_db", *rOut.Value.MongoDbTargetDetails.MongodbDefaultAuthDb)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	if rOut.Value.DbTargetDetails.DbPwd != nil {
-		err = d.Set("pwd", *rOut.Value.DbTargetDetails.DbPwd)
-		if err != nil {
-			return err
+		if rOut.Value.MongoDbTargetDetails.MongodbUriOptions != nil {
+			err = d.Set("mongodb_uri_options", *rOut.Value.MongoDbTargetDetails.MongodbUriOptions)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	if rOut.Value.DbTargetDetails.DbName != nil {
-		err = d.Set("db_name", *rOut.Value.DbTargetDetails.DbName)
-		if err != nil {
-			return err
+		if rOut.Value.MongoDbTargetDetails.MongodbAtlasProjectId != nil {
+			err = d.Set("mongodb_atlas_project_id", *rOut.Value.MongoDbTargetDetails.MongodbAtlasProjectId)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	if rOut.Value.DbTargetDetails.DbServerCertificates != nil {
-		err = d.Set("db_server_certificates", *rOut.Value.DbTargetDetails.DbServerCertificates)
-		if err != nil {
-			return err
+		if rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPublicKey != nil {
+			err = d.Set("mongodb_atlas_api_public_key", *rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPublicKey)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	if rOut.Value.DbTargetDetails.DbServerName != nil {
-		err = d.Set("db_server_name", *rOut.Value.DbTargetDetails.DbServerName)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Value.DbTargetDetails.SfAccount != nil {
-		err = d.Set("snowflake_account", *rOut.Value.DbTargetDetails.SfAccount)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Value.MongoDbTargetDetails.MongodbIsAtlas != nil {
-		err = d.Set("mongodb_atlas", *rOut.Value.MongoDbTargetDetails.MongodbIsAtlas)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Value.MongoDbTargetDetails.MongodbDefaultAuthDb != nil {
-		err = d.Set("mongodb_default_auth_db", *rOut.Value.MongoDbTargetDetails.MongodbDefaultAuthDb)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Value.MongoDbTargetDetails.MongodbUriOptions != nil {
-		err = d.Set("mongodb_uri_options", *rOut.Value.MongoDbTargetDetails.MongodbUriOptions)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Value.MongoDbTargetDetails.MongodbAtlasProjectId != nil {
-		err = d.Set("mongodb_atlas_project_id", *rOut.Value.MongoDbTargetDetails.MongodbAtlasProjectId)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPublicKey != nil {
-		err = d.Set("mongodb_atlas_api_public_key", *rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPublicKey)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPrivateKey != nil {
-		err = d.Set("mongodb_atlas_api_private_key", *rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPrivateKey)
-		if err != nil {
-			return err
+		if rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPrivateKey != nil {
+			err = d.Set("mongodb_atlas_api_private_key", *rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPrivateKey)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if rOut.Target.ProtectionKeyName != nil {
