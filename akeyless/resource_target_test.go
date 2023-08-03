@@ -233,30 +233,32 @@ func TestK8sTargetResource(t *testing.T) {
 }
 
 func TestDbTargetResource(t *testing.T) {
-	secretName := "Db123"
-	secretPath := testPath("db_target1")
+	secretName := "db_target1"
+	secretPath := testPath(secretName)
+	deleteTarget(t, secretPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
-			name = "%v"
+			name 		= "%v"
 			db_type     = "mysql"
-			user_name = "rgergetghergerg"
-			host = "ssss"
-			port = "1231"
-			db_name = "mddd"
-			pwd = "ddkdkd"
+			user_name 	= "user1"
+			pwd 		= "pwd1"
+			host 		= "host1"
+			port 		= "1231"
+			db_name 	= "db1"
 			description = "aaa"
 		}
 	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
-			name = "%v"
+			name 		= "%v"
 			db_type     = "mysql"
-			user_name = "dddd"
-			host = "dddd"
-			port = "1231"
-			db_name = "mdddddd"
-			pwd = "ddkdkd"
+			user_name 	= "user2"
+			pwd 		= "pwd2"
+			host		= "host2"
+			port 		= "1231"
+			db_name 	= "db2"
 		}
 	`, secretName, secretPath)
 
@@ -294,6 +296,8 @@ func TestEksTargetResource(t *testing.T) {
 func TestZeroSslTargetResource(t *testing.T) {
 	targetName := "zerossl_target1"
 	targetPath := testPath(targetName)
+	deleteTarget(t, targetPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_zerossl" "%v" {
 			name              	= "%v"
