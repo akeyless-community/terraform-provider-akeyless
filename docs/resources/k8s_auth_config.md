@@ -22,11 +22,14 @@ K8S Auth config
 
 ### Optional
 
+- `cluster_api_type` (String) Cluster access type. options: [native_k8s, rancher]
 - `config_encryption_key_name` (String) Encrypt K8S Auth config with following key
 - `disable_issuer_validation` (String) Disable issuer validation [true/false]
-- `k8s_ca_cert` (String) Base-64 encoded certificate to use to call into the kubernetes API
+- `k8s_ca_cert` (String) The CA Certificate (base64 encoded) to use to call into the kubernetes API server
 - `k8s_host` (String) The URL of the kubernetes API server
-- `k8s_issuer` (String) The Kubernetes JWT issuer name. If not set, kubernetes/serviceaccount will be used as an issuer.
+- `k8s_issuer` (String) The Kubernetes JWT issuer name. If not set, this <kubernetes/serviceaccount> will be used by default.
+- `rancher_api_key` (String) The api key used to access the TokenReview API to validate other JWTs (relevant for rancher only)
+- `rancher_cluster_id` (String) The cluster id as define in rancher (relevant for rancher only)
 - `signing_key` (String) The private key (in base64 encoded of the PEM format) associated with the public key defined in the Kubernetes auth
 - `token_exp` (Number) Time in seconds of expiration of the Akeyless Kube Auth Method token
 - `token_reviewer_jwt` (String) A Kubernetes service account JWT used to access the TokenReview API to validate other JWTs. If not set, the JWT submitted in the authentication process will be used to access the Kubernetes TokenReview API.
