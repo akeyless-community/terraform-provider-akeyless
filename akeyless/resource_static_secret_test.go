@@ -16,7 +16,6 @@ func TestStaticResource(t *testing.T) {
 
 	secretName := "test_secret"
 	secretPath := testPath(secretName)
-	deleteItem(t, secretPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
