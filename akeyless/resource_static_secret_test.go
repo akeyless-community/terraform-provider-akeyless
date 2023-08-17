@@ -19,22 +19,22 @@ func TestStaticResource(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
-			path = "%v"
-			value = "secretpassword"
-			tags     = ["t1", "t2"]
-			metadata = "aaaa"
+			path 		= "%v"
+			value 		= "value1"
+			tags 		= ["t1", "t2"]
+			description = "aaaa"
 		}
 	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
-			path = "%v"
-			value = "update-secret"
-			secure_access_enable = "false"
-			secure_access_web_browsing = "true"
-			secure_access_url    = "http://google.com"
-			tags     = ["t1", "t3"]
-			metadata = "bbbb"
+			path 						= "%v"
+			value 						= "value2"
+			secure_access_enable 		= "false"
+			secure_access_web_browsing 	= "true"
+			secure_access_url 			= "http://abc.com"
+			tags 						= ["t1", "t3"]
+			description 				= "bbbb"
 		}
 	`, secretName, secretPath)
 

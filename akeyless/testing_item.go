@@ -14,6 +14,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -122,7 +123,9 @@ func createDfcKey(t *testing.T, name string) {
 	common.GetAkeylessPtr(&body.CertificateTtl, 60)
 
 	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(res, err), "failed to create key for test")
+	if err != nil && !isAlreadyExistError(err) {
+		require.Fail(t, handleError(res, err).Error(), "failed to create key for test")
+	}
 }
 
 func getRsaPublicKey(t *testing.T, name string) akeyless.GetRSAPublicOutput {
@@ -259,4 +262,22 @@ func handleError(resp *http.Response, err error) error {
 	}
 
 	return errors.New(string(apiErr.Body()))
+}
+
+func isAlreadyExistError(err error) bool {
+	if err != nil {
+		if containsAlreadyExist(err.Error()) {
+			return true
+		}
+
+		var apiErr akeyless.GenericOpenAPIError
+		if errors.As(err, &apiErr) && containsAlreadyExist(string(apiErr.Body())) {
+			return true
+		}
+	}
+	return false
+}
+
+func containsAlreadyExist(msg string) bool {
+	return strings.Contains(msg, "AlreadyExists")
 }

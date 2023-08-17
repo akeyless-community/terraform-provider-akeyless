@@ -59,7 +59,7 @@ func resourceK8sAuthConfig() *schema.Resource {
 			"k8s_ca_cert": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Base-64 encoded certificate to use to call into the kubernetes API",
+				Description: "The CA Certificate (base64 encoded) to use to call into the kubernetes API server",
 			},
 			"token_reviewer_jwt": {
 				Type:        schema.TypeString,
@@ -69,7 +69,7 @@ func resourceK8sAuthConfig() *schema.Resource {
 			"k8s_issuer": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The Kubernetes JWT issuer name. If not set, kubernetes/serviceaccount will be used as an issuer.",
+				Description: "The Kubernetes JWT issuer name. If not set, this <kubernetes/serviceaccount> will be used by default.",
 				Default:     "kubernetes/serviceaccount",
 			},
 			"disable_issuer_validation": {
@@ -77,6 +77,22 @@ func resourceK8sAuthConfig() *schema.Resource {
 				Optional:    true,
 				Default:     "false",
 				Description: "Disable issuer validation [true/false]",
+			},
+			"cluster_api_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Cluster access type. options: [native_k8s, rancher]",
+				Default:     "native_k8s",
+			},
+			"rancher_api_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The api key used to access the TokenReview API to validate other JWTs (relevant for rancher only)",
+			},
+			"rancher_cluster_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The cluster id as define in rancher (relevant for rancher only)",
 			},
 		},
 	}
@@ -100,6 +116,10 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	k8sIssuer := d.Get("k8s_issuer").(string)
 	disableIssValidation := d.Get("disable_issuer_validation").(string)
 
+	clusterApiType := d.Get("cluster_api_type").(string)
+	rancherApiKey := d.Get("rancher_api_key").(string)
+	rancherClusterId := d.Get("rancher_cluster_id").(string)
+
 	body := akeyless.GatewayCreateK8SAuthConfig{
 		Name:     name,
 		AccessId: accessId,
@@ -113,6 +133,10 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.TokenReviewerJwt, tokenReviewerJwt)
 	common.GetAkeylessPtr(&body.K8sIssuer, k8sIssuer)
 	common.GetAkeylessPtr(&body.DisableIssuerValidation, disableIssValidation)
+
+	common.GetAkeylessPtr(&body.ClusterApiType, clusterApiType)
+	common.GetAkeylessPtr(&body.RancherApiKey, rancherApiKey)
+	common.GetAkeylessPtr(&body.RancherClusterId, rancherClusterId)
 
 	_, _, err := client.GatewayCreateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
@@ -216,6 +240,25 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.ClusterApiType != nil {
+		err = d.Set("cluster_api_type", *rOut.ClusterApiType)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.RancherApiKey != nil {
+		err = d.Set("rancher_api_key", *rOut.RancherApiKey)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.RancherClusterId != nil {
+		err = d.Set("rancher_cluster_id", *rOut.RancherClusterId)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -239,6 +282,10 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	k8sIssuer := d.Get("k8s_issuer").(string)
 	disableIssValidation := d.Get("disable_issuer_validation").(string)
 
+	clusterApiType := d.Get("cluster_api_type").(string)
+	rancherApiKey := d.Get("rancher_api_key").(string)
+	rancherClusterId := d.Get("rancher_cluster_id").(string)
+
 	body := akeyless.GatewayUpdateK8SAuthConfig{
 		Name:     name,
 		AccessId: accessId,
@@ -252,6 +299,10 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.TokenReviewerJwt, tokenReviewerJwt)
 	common.GetAkeylessPtr(&body.K8sIssuer, k8sIssuer)
 	common.GetAkeylessPtr(&body.DisableIssuerValidation, disableIssValidation)
+
+	common.GetAkeylessPtr(&body.ClusterApiType, clusterApiType)
+	common.GetAkeylessPtr(&body.RancherApiKey, rancherApiKey)
+	common.GetAkeylessPtr(&body.RancherClusterId, rancherClusterId)
 
 	_, _, err := client.GatewayUpdateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
