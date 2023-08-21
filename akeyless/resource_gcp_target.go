@@ -140,7 +140,7 @@ func resourceGcpTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if rOut.Value.GcpTargetDetails.GcpServiceAccountKey != nil {
-			err = d.Set("gcp_key", *rOut.Value.GcpTargetDetails.GcpServiceAccountKey)
+			err = d.Set("gcp_key", *rOut.Value.GcpTargetDetails.GcpServiceAccountKeyBase64)
 			if err != nil {
 				return err
 			}

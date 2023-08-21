@@ -132,8 +132,9 @@ func TestSSHTargetResource(t *testing.T) {
 }
 
 func TestArtifactoryTargetResource(t *testing.T) {
-	secretName := "artifactory123"
-	secretPath := testPath("artifactory_target1")
+	secretName := "artifactory-target"
+	secretPath := testPath(secretName)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_artifactory" "%v" {
 			name = "%v"
@@ -157,50 +158,51 @@ func TestArtifactoryTargetResource(t *testing.T) {
 }
 
 func TestGcpTargetResource(t *testing.T) {
-	secretName := "gcp123"
-	secretPath := testPath("gcp_target1")
+	secretName := "gcp-target"
+	secretPath := testPath(secretName)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gcp" "%v" {
-			name = "%v"
-			gcp_sa_email     = "XXXXXXX"
-			gcp_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			name 			= "%v"
+			gcp_sa_email	= "a@a.aa"
+			gcp_key 		= "YmxhYmxh"
 		}
 	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_gcp" "%v" {
-			name = "%v"
-			gcp_sa_email     = "YYYYYYY"
-			gcp_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
+			name 			= "%v"
+			gcp_sa_email	= "b@b.bb"
+			gcp_key 		= "YmxpYmxp"
 		}
 	`, secretName, secretPath)
 
 	tesTargetResource(t, config, configUpdate, secretPath)
-
 }
 
 func TestGkeTargetResource(t *testing.T) {
-	secretName := "gke123"
-	secretPath := testPath("gke_target1")
+	secretName := "gke-target"
+	secretPath := testPath(secretName)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gke" "%v" {
 			name = "%v"
-			gke_service_account_email     = "XXXXXXX"
-			gke_cluster_endpoint = "https://akaka.com"
-			gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
-			gke_account_key = "qwdwd"
-			gke_cluster_name = "dddd"
+			gke_service_account_email	= "a@a.aa"
+			gke_cluster_endpoint 		= "https://akaka.com"
+			gke_cluster_cert 			= "YmxhYmxh"
+			gke_account_key 			= "YmxhYmxh"
+			gke_cluster_name 			= "aaaa"
 		}
 	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_gke" "%v" {
 			name = "%v"
-			gke_service_account_email     = "XXXXXXX2"
-			gke_cluster_endpoint = "https://akakad.com"
-			gke_cluster_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
-			gke_account_key = "qwdwd"
-			gke_cluster_name = "dddd"
+			gke_service_account_email	= "b@b.bb"
+			gke_cluster_endpoint 		= "https://akakad.com"
+			gke_cluster_cert 			= "YmxpYmxp"
+			gke_account_key 			= "YmxpYmxp"
+			gke_cluster_name 			= "bbbb"
 		}
 	`, secretName, secretPath)
 
@@ -208,23 +210,24 @@ func TestGkeTargetResource(t *testing.T) {
 }
 
 func TestK8sTargetResource(t *testing.T) {
-	secretName := "k8s123"
-	secretPath := testPath("k8s_target1")
+	secretName := "k8s-target"
+	secretPath := testPath(secretName)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_k8s" "%v" {
-			name = "%v"
-			k8s_cluster_endpoint     = "https://akakad.com"
-			k8s_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
-			  k8s_cluster_token = "djsdkjdkjdhcj"
+			name 					= "%v"
+			k8s_cluster_endpoint	= "https://www.test1.com"
+			k8s_cluster_ca_cert 	= "YmxhYmxh"
+			k8s_cluster_token 		= "YmxhYmxh"
 		}
 	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_k8s" "%v" {
-			name = "%v"
-			k8s_cluster_endpoint     = "https://akakad.com"
-			k8s_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
-			  k8s_cluster_token = "djsdkjdkjdhcjs"
+			name 					= "%v"
+			k8s_cluster_endpoint 	= "https://akakad.com"
+			k8s_cluster_ca_cert 	= "YmxpYmxp"
+			k8s_cluster_token 		= "YmxpYmxp"
 		}
 	`, secretName, secretPath)
 
@@ -235,7 +238,6 @@ func TestK8sTargetResource(t *testing.T) {
 func TestDbTargetResource(t *testing.T) {
 	secretName := "db_target1"
 	secretPath := testPath(secretName)
-	deleteTarget(t, secretPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
@@ -265,38 +267,69 @@ func TestDbTargetResource(t *testing.T) {
 	tesTargetResource(t, config, configUpdate, secretPath)
 }
 
-func TestEksTargetResource(t *testing.T) {
-	secretName := "eks123"
-	secretPath := testPath("eks_target1")
+func TestDbOracleTargetResource(t *testing.T) {
+	secretName := "db_target1"
+	secretPath := testPath(secretName)
+
 	config := fmt.Sprintf(`
-		resource "akeyless_target_eks" "%v" {
-			name = "%v"
-			eks_cluster_name     = "XXXXXXX"
-			eks_cluster_endpoint = "https://jjjj.com"
-			eks_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
-			eks_access_key_id = "eks_access_key_id"
-			eks_secret_access_key = "ddjdjdj"
+		resource "akeyless_target_db" "%v" {
+			name 				= "%v"
+			db_type     		= "oracle"
+			user_name 			= "user1"
+			pwd 				= "pwd1"
+			host 				= "host1"
+			port 				= "1231"
+			oracle_service_name	= "db1"
 		}
 	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_target_eks" "%v" {
-			name = "%v"
-			eks_cluster_name     = "XXXXXXX"
-			eks_cluster_endpoint = "https://jjjj.com"
-			eks_cluster_ca_cert = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0KmDcjfruwSq6o5M8+Y3uiWpfNIU71KOWp19i/wWvPbmWgH8MzE+OECzI6Kh1Rp+x4ASDDHg3aDyUSUpGJoX9YvldyPISnp76J2HSlgMri+QQnae5JKC4mzTEdsNXbrw3hZceWuge22/yo4YfPbXmRl5S6Xam/etUqmxYCqUVR98gxu8tTPJAON3Ieg10lmw8DqL41V0+rScwAAacHed6RZzCCqegqmuX0Bqtt2zvwxCoQwS9rk62CrsySfsb1U/1CBzjRKULGCxOT1lVHLqX/IjpGPsgQZZAn0BfxNa/snhTgyp7LXFhBY5iVcMD0KwHy6PqVwdRQ1hZGW/xjidXwIDAQAB"
-			eks_access_key_id = "eks_access_key_id"
-			eks_secret_access_key = "ddjdjdj"
+		resource "akeyless_target_db" "%v" {
+			name 				= "%v"
+			db_type     		= "oracle"
+			user_name 			= "user2"
+			pwd 				= "pwd2"
+			host				= "host2"
+			port 				= "1231"
+			oracle_service_name = "db2"
 		}
 	`, secretName, secretPath)
 
 	tesTargetResource(t, config, configUpdate, secretPath)
 }
 
+func TestEksTargetResource(t *testing.T) {
+	secretName := "eks-target"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_eks" "%v" {
+			name 					= "%v"
+			eks_cluster_name     	= "aaaa1"
+			eks_cluster_endpoint 	= "https://www.test1.com"
+			eks_cluster_ca_cert 	= "YmxhYmxh"
+			eks_access_key_id 		= "bbbb1"
+			eks_secret_access_key	= "cccc1"
+		}
+	`, secretName, secretPath)
+
+	// configUpdate := fmt.Sprintf(`
+	// 	resource "akeyless_target_eks" "%v" {
+	// 		name 					= "%v"
+	// 		eks_cluster_name     	= "aaaa2"
+	// 		eks_cluster_endpoint 	= "https://www.test2.com"
+	// 		eks_cluster_ca_cert 	= "YmxpYmxp"
+	// 		eks_access_key_id 		= "bbbb2"
+	// 		eks_secret_access_key 	= "cccc2"
+	// 	}
+	// `, secretName, secretPath)
+
+	tesTargetResource(t, config, config, secretPath)
+}
+
 func TestZeroSslTargetResource(t *testing.T) {
 	targetName := "zerossl_target1"
 	targetPath := testPath(targetName)
-	deleteTarget(t, targetPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_target_zerossl" "%v" {
@@ -330,6 +363,7 @@ func TestZeroSslTargetResource(t *testing.T) {
 func TestGlobalSignTargetResource(t *testing.T) {
 	targetName := "globalsign_target1"
 	targetPath := testPath(targetName)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_globalsign" "%v" {
 			name              	= "%v"

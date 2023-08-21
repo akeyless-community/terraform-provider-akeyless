@@ -112,10 +112,10 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 		EksClusterName:     eksClusterName,
 		EksClusterEndpoint: eksClusterEndpoint,
 		EksClusterCaCert:   eksClusterCaCert,
+		EksAccessKeyId:     eksAccessKeyId,
+		EksSecretAccessKey: eksSecretAccessKey,
 		Token:              &token,
 	}
-	common.GetAkeylessPtr(&body.EksAccessKeyId, eksAccessKeyId)
-	common.GetAkeylessPtr(&body.EksSecretAccessKey, eksSecretAccessKey)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
 	common.GetAkeylessPtr(&body.Key, key)
