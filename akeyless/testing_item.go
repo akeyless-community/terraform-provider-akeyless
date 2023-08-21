@@ -59,6 +59,11 @@ func generateCertForTest(t *testing.T, size int) string {
 	return base64.StdEncoding.EncodeToString(certBytes)
 }
 
+func generateKey(size int) string {
+	key, _ := rsa.GenerateKey(rand.Reader, size)
+	return createPrivateKeyBase64(key)
+}
+
 func generateKeyAndCsrForTest(size int) (string, string) {
 	key, _ := rsa.GenerateKey(rand.Reader, size)
 

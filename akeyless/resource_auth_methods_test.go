@@ -26,8 +26,7 @@ func TestAuthMethodCertResource(t *testing.T) {
 	name := "test_auth_method_cert"
 	path := testPath(name)
 
-	certBytes := generateCert(t)
-	certData := base64.StdEncoding.EncodeToString(certBytes)
+	cert := generateCert(t)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_cert" "%v" {
@@ -35,7 +34,7 @@ func TestAuthMethodCertResource(t *testing.T) {
 			certificate_data 	= "%v"
 			unique_identifier 	= "email"
 		}
-	`, name, path, certData)
+	`, name, path, cert)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_cert" "%v" {
@@ -44,7 +43,7 @@ func TestAuthMethodCertResource(t *testing.T) {
 			unique_identifier 	= "uid"
 			bound_ips 			= ["1.1.1.0/32"]
 		}
-	`, name, path, certData)
+	`, name, path, cert)
 
 	testAuthMethodResource(t, config, configUpdate, path)
 }
@@ -487,7 +486,7 @@ func testAuthMethodResource(t *testing.T, config, configUpdate, path string) {
 	})
 }
 
-func generateCert(t *testing.T) []byte {
+func generateCert(t *testing.T) string {
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(20202),
 		Subject: pkix.Name{
@@ -519,5 +518,7 @@ func generateCert(t *testing.T) []byte {
 		Bytes: x509.MarshalPKCS1PrivateKey(caPrivKey),
 	})
 
-	return caPEM.Bytes()
+	certBytes := caPEM.Bytes()
+	cert := base64.StdEncoding.EncodeToString(certBytes)
+	return cert
 }
