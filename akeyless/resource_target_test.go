@@ -302,7 +302,7 @@ func TestZeroSslTargetResource(t *testing.T) {
 		resource "akeyless_target_zerossl" "%v" {
 			name              	= "%v"
 			api_key           	= "api_key1"
-			timeout           	= "1m"
+			timeout           	= "1m0s"
 			imap_username     	= "user1"
 			imap_password     	= "pass1"
 			imap_fqdn         	= "fqdn1"
@@ -315,7 +315,7 @@ func TestZeroSslTargetResource(t *testing.T) {
 		resource "akeyless_target_zerossl" "%v" {
 			name              	= "%v"
 			api_key           	= "api_key2"
-			timeout           	= "1m"
+			timeout           	= "2m30s"
 			imap_username     	= "user2"
 			imap_password     	= "pass2"
 			imap_fqdn         	= "fqdn2"
@@ -333,7 +333,7 @@ func TestGlobalSignTargetResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_globalsign" "%v" {
 			name              	= "%v"
-			timeout             = "1m"
+			timeout             = "1m0s"
 			username            = "user1"
 			password            = "pass1"
 			profile_id          = "id1"
@@ -348,7 +348,7 @@ func TestGlobalSignTargetResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_globalsign" "%v" {
 			name              	= "%v"
-			timeout             = "2m"
+			timeout             = "2m30s"
 			username            = "user2"
 			password            = "pass2"
 			profile_id          = "id2"

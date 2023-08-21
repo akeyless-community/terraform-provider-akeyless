@@ -206,7 +206,10 @@ func resourceGlobalsignTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if targetDetails.GlobalsignTargetDetails.Timeout != nil {
-			err := d.Set("timeout", *targetDetails.GlobalsignTargetDetails.Timeout)
+			timeout := *targetDetails.GlobalsignTargetDetails.Timeout
+			duration := common.ConvertNanoSecondsIntoDurationString(timeout)
+
+			err := d.Set("timeout", duration)
 			if err != nil {
 				return err
 			}

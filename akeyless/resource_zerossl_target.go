@@ -165,7 +165,10 @@ func resourceZerosslTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if targetDetails.ZerosslTargetDetails.Timeout != nil {
-			err := d.Set("timeout", *targetDetails.ZerosslTargetDetails.Timeout)
+			timeout := *targetDetails.ZerosslTargetDetails.Timeout
+			duration := common.ConvertNanoSecondsIntoDurationString(timeout)
+
+			err := d.Set("timeout", duration)
 			if err != nil {
 				return err
 			}
