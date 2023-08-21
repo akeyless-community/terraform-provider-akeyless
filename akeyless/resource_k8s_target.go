@@ -132,20 +132,20 @@ func resourceK8sTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.K8sClusterEndpoint != nil {
-		err = d.Set("k8s_cluster_endpoint", *rOut.Value.K8sClusterEndpoint)
+	if rOut.Value.NativeK8sTargetDetails.K8sClusterEndpoint != nil {
+		err = d.Set("k8s_cluster_endpoint", *rOut.Value.NativeK8sTargetDetails.K8sClusterEndpoint)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.K8sClusterCaCertificate != nil {
-		err = d.Set("k8s_cluster_ca_cert", *rOut.Value.K8sClusterCaCertificate)
+	if rOut.Value.NativeK8sTargetDetails.K8sClusterCaCertificate != nil {
+		err = d.Set("k8s_cluster_ca_cert", *rOut.Value.NativeK8sTargetDetails.K8sClusterCaCertificate)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.K8sBearerToken != nil {
-		err = d.Set("k8s_cluster_token", *rOut.Value.K8sBearerToken)
+	if rOut.Value.NativeK8sTargetDetails.K8sBearerToken != nil {
+		err = d.Set("k8s_cluster_token", *rOut.Value.NativeK8sTargetDetails.K8sBearerToken)
 		if err != nil {
 			return err
 		}

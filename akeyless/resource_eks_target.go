@@ -112,10 +112,10 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 		EksClusterName:     eksClusterName,
 		EksClusterEndpoint: eksClusterEndpoint,
 		EksClusterCaCert:   eksClusterCaCert,
+		EksAccessKeyId:     eksAccessKeyId,
+		EksSecretAccessKey: eksSecretAccessKey,
 		Token:              &token,
 	}
-	common.GetAkeylessPtr(&body.EksAccessKeyId, eksAccessKeyId)
-	common.GetAkeylessPtr(&body.EksSecretAccessKey, eksSecretAccessKey)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
 	common.GetAkeylessPtr(&body.Key, key)
@@ -163,44 +163,44 @@ func resourceEksTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.EksClusterName != nil {
-		err = d.Set("eks_cluster_name", *rOut.Value.EksClusterName)
+	if rOut.Value.EksTargetDetails.EksClusterName != nil {
+		err = d.Set("eks_cluster_name", *rOut.Value.EksTargetDetails.EksClusterName)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.EksClusterEndpoint != nil {
-		err = d.Set("eks_cluster_endpoint", *rOut.Value.EksClusterEndpoint)
+	if rOut.Value.EksTargetDetails.EksClusterEndpoint != nil {
+		err = d.Set("eks_cluster_endpoint", *rOut.Value.EksTargetDetails.EksClusterEndpoint)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.EksClusterCaCertificate != nil {
-		err = d.Set("eks_cluster_ca_cert", *rOut.Value.EksClusterCaCertificate)
+	if rOut.Value.EksTargetDetails.EksClusterCaCertificate != nil {
+		err = d.Set("eks_cluster_ca_cert", *rOut.Value.EksTargetDetails.EksClusterCaCertificate)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.EksAccessKeyId != nil {
-		err = d.Set("eks_access_key_id", *rOut.Value.EksAccessKeyId)
+	if rOut.Value.EksTargetDetails.EksAccessKeyId != nil {
+		err = d.Set("eks_access_key_id", *rOut.Value.EksTargetDetails.EksAccessKeyId)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.EksSecretAccessKey != nil {
-		err = d.Set("eks_secret_access_key", *rOut.Value.EksSecretAccessKey)
+	if rOut.Value.EksTargetDetails.EksSecretAccessKey != nil {
+		err = d.Set("eks_secret_access_key", *rOut.Value.EksTargetDetails.EksSecretAccessKey)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.UseGwCloudIdentity != nil {
-		err = d.Set("use_gw_cloud_identity", *rOut.Value.UseGwCloudIdentity)
+	if rOut.Value.EksTargetDetails.UseGwCloudIdentity != nil {
+		err = d.Set("use_gw_cloud_identity", *rOut.Value.EksTargetDetails.UseGwCloudIdentity)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.EksRegion != nil {
-		err = d.Set("eks_region", *rOut.Value.EksRegion)
+	if rOut.Value.EksTargetDetails.EksRegion != nil {
+		err = d.Set("eks_region", *rOut.Value.EksTargetDetails.EksRegion)
 		if err != nil {
 			return err
 		}

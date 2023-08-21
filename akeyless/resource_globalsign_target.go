@@ -163,50 +163,53 @@ func resourceGlobalsignTargetRead(d *schema.ResourceData, m interface{}) error {
 	if rOut.Value != nil {
 		targetDetails := *rOut.Value
 
-		if targetDetails.Username != nil {
-			err := d.Set("username", *targetDetails.Username)
+		if targetDetails.GlobalsignTargetDetails.Username != nil {
+			err := d.Set("username", *targetDetails.GlobalsignTargetDetails.Username)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.Password != nil {
-			err := d.Set("password", *targetDetails.Password)
+		if targetDetails.GlobalsignTargetDetails.Password != nil {
+			err := d.Set("password", *targetDetails.GlobalsignTargetDetails.Password)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.ProfileId != nil {
-			err := d.Set("profile_id", *targetDetails.ProfileId)
+		if targetDetails.GlobalsignTargetDetails.ProfileId != nil {
+			err := d.Set("profile_id", *targetDetails.GlobalsignTargetDetails.ProfileId)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.FirstName != nil {
-			err := d.Set("contact_first_name", *targetDetails.FirstName)
+		if targetDetails.GlobalsignTargetDetails.FirstName != nil {
+			err := d.Set("contact_first_name", *targetDetails.GlobalsignTargetDetails.FirstName)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.LastName != nil {
-			err := d.Set("contact_last_name", *targetDetails.LastName)
+		if targetDetails.GlobalsignTargetDetails.LastName != nil {
+			err := d.Set("contact_last_name", *targetDetails.GlobalsignTargetDetails.LastName)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.Phone != nil {
-			err := d.Set("contact_phone", *targetDetails.Phone)
+		if targetDetails.GlobalsignTargetDetails.Phone != nil {
+			err := d.Set("contact_phone", *targetDetails.GlobalsignTargetDetails.Phone)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.Email != nil {
-			err := d.Set("contact_email", *targetDetails.Email)
+		if targetDetails.GlobalsignTargetDetails.Email != nil {
+			err := d.Set("contact_email", *targetDetails.GlobalsignTargetDetails.Email)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.Timeout != nil {
-			err := d.Set("timeout", *targetDetails.Timeout)
+		if targetDetails.GlobalsignTargetDetails.Timeout != nil {
+			timeout := *targetDetails.GlobalsignTargetDetails.Timeout
+			duration := common.ConvertNanoSecondsIntoDurationString(timeout)
+
+			err := d.Set("timeout", duration)
 			if err != nil {
 				return err
 			}

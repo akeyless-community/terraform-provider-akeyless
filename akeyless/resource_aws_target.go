@@ -151,8 +151,8 @@ func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value")
 	}
 
-	if rOut.Value.AwsAccessKeyId != nil {
-		err = d.Set("access_key_id", *rOut.Value.AwsAccessKeyId)
+	if rOut.Value.AwsTargetDetails.AwsAccessKeyId != nil {
+		err = d.Set("access_key_id", *rOut.Value.AwsTargetDetails.AwsAccessKeyId)
 		if err != nil {
 			return err
 		}
@@ -170,26 +170,26 @@ func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if rOut.Value.AwsSecretAccessKey != nil {
-		err = d.Set("access_key", *rOut.Value.AwsSecretAccessKey)
+	if rOut.Value.AwsTargetDetails.AwsSecretAccessKey != nil {
+		err = d.Set("access_key", *rOut.Value.AwsTargetDetails.AwsSecretAccessKey)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.AwsSessionToken != nil {
-		err = d.Set("session_token", *rOut.Value.AwsSessionToken)
+	if rOut.Value.AwsTargetDetails.AwsSessionToken != nil {
+		err = d.Set("session_token", *rOut.Value.AwsTargetDetails.AwsSessionToken)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.AwsRegion != nil {
-		err = d.Set("region", *rOut.Value.AwsRegion)
+	if rOut.Value.AwsTargetDetails.AwsRegion != nil {
+		err = d.Set("region", *rOut.Value.AwsTargetDetails.AwsRegion)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.UseGwCloudIdentity != nil {
-		err = d.Set("use_gw_cloud_identity", *rOut.Value.UseGwCloudIdentity)
+	if rOut.Value.AwsTargetDetails.UseGwCloudIdentity != nil {
+		err = d.Set("use_gw_cloud_identity", *rOut.Value.AwsTargetDetails.UseGwCloudIdentity)
 		if err != nil {
 			return err
 		}

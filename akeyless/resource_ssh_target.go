@@ -158,39 +158,39 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
-	if rOut.Value.Host != nil {
-		err = d.Set("host", *rOut.Value.Host)
+	if rOut.Value.SshTargetDetails.Host != nil {
+		err = d.Set("host", *rOut.Value.SshTargetDetails.Host)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.Port != nil {
-		err = d.Set("port", *rOut.Value.Port)
+	if rOut.Value.SshTargetDetails.Port != nil {
+		err = d.Set("port", *rOut.Value.SshTargetDetails.Port)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.PrivateKey != nil {
-		err = d.Set("private_key", *rOut.Value.PrivateKey)
+	if rOut.Value.SshTargetDetails.PrivateKey != nil {
+		err = d.Set("private_key", *rOut.Value.SshTargetDetails.PrivateKey)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.PrivateKeyPassword != nil {
-		err = d.Set("private_key_password", *rOut.Value.PrivateKeyPassword)
+	if rOut.Value.SshTargetDetails.PrivateKeyPassword != nil {
+		err = d.Set("private_key_password", *rOut.Value.SshTargetDetails.PrivateKeyPassword)
 		if err != nil {
 			return err
 		}
 	}
 
-	if rOut.Value.Username != nil {
-		err = d.Set("ssh_username", *rOut.Value.Username)
+	if rOut.Value.SshTargetDetails.Username != nil {
+		err = d.Set("ssh_username", *rOut.Value.SshTargetDetails.Username)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.Password != nil {
-		err = d.Set("ssh_password", *rOut.Value.Password)
+	if rOut.Value.SshTargetDetails.Password != nil {
+		err = d.Set("ssh_password", *rOut.Value.SshTargetDetails.Password)
 		if err != nil {
 			return err
 		}

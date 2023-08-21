@@ -133,20 +133,20 @@ func resourceGcpTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.Value != nil {
-		if rOut.Value.GcpServiceAccountEmail != nil {
-			err = d.Set("gcp_sa_email", *rOut.Value.GcpServiceAccountEmail)
+		if rOut.Value.GcpTargetDetails.GcpServiceAccountEmail != nil {
+			err = d.Set("gcp_sa_email", *rOut.Value.GcpTargetDetails.GcpServiceAccountEmail)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.GcpServiceAccountKey != nil {
-			err = d.Set("gcp_key", *rOut.Value.GcpServiceAccountKey)
+		if rOut.Value.GcpTargetDetails.GcpServiceAccountKey != nil {
+			err = d.Set("gcp_key", *rOut.Value.GcpTargetDetails.GcpServiceAccountKeyBase64)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.UseGwCloudIdentity != nil {
-			err = d.Set("use_gw_cloud_identity", *rOut.Value.UseGwCloudIdentity)
+		if rOut.Value.GcpTargetDetails.UseGwCloudIdentity != nil {
+			err = d.Set("use_gw_cloud_identity", *rOut.Value.GcpTargetDetails.UseGwCloudIdentity)
 			if err != nil {
 				return err
 			}

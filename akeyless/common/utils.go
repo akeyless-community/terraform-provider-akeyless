@@ -474,3 +474,9 @@ func GetErrorOnUpdateParam(d *schema.ResourceData, paramNames []string) error {
 	}
 	return nil
 }
+
+func ConvertNanoSecondsIntoDurationString(nano int64) string {
+	nanoUnix := time.Unix(0, nano)
+	duration := nanoUnix.Sub(time.Unix(0, 0))
+	return duration.String()
+}

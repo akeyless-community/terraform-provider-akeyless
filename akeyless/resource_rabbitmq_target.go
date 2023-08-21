@@ -132,20 +132,20 @@ func resourceRabbitmqTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.RabbitmqServerUser != nil {
-		err = d.Set("rabbitmq_server_user", *rOut.Value.RabbitmqServerUser)
+	if rOut.Value.RabbitMqTargetDetails.RabbitmqServerUser != nil {
+		err = d.Set("rabbitmq_server_user", *rOut.Value.RabbitMqTargetDetails.RabbitmqServerUser)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.RabbitmqServerPassword != nil {
-		err = d.Set("rabbitmq_server_password", *rOut.Value.RabbitmqServerPassword)
+	if rOut.Value.RabbitMqTargetDetails.RabbitmqServerPassword != nil {
+		err = d.Set("rabbitmq_server_password", *rOut.Value.RabbitMqTargetDetails.RabbitmqServerPassword)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.RabbitmqServerUri != nil {
-		err = d.Set("rabbitmq_server_uri", *rOut.Value.RabbitmqServerUri)
+	if rOut.Value.RabbitMqTargetDetails.RabbitmqServerUri != nil {
+		err = d.Set("rabbitmq_server_uri", *rOut.Value.RabbitMqTargetDetails.RabbitmqServerUri)
 		if err != nil {
 			return err
 		}

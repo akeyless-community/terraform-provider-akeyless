@@ -158,44 +158,47 @@ func resourceZerosslTargetRead(d *schema.ResourceData, m interface{}) error {
 	if rOut.Value != nil {
 		targetDetails := *rOut.Value
 
-		if targetDetails.ApiKey != nil {
-			err := d.Set("api_key", *targetDetails.ApiKey)
+		if targetDetails.ZerosslTargetDetails.ApiKey != nil {
+			err := d.Set("api_key", *targetDetails.ZerosslTargetDetails.ApiKey)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.Timeout != nil {
-			err := d.Set("timeout", *targetDetails.Timeout)
+		if targetDetails.ZerosslTargetDetails.Timeout != nil {
+			timeout := *targetDetails.ZerosslTargetDetails.Timeout
+			duration := common.ConvertNanoSecondsIntoDurationString(timeout)
+
+			err := d.Set("timeout", duration)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.ImapUser != nil {
-			err := d.Set("imap_username", *targetDetails.ImapUser)
+		if targetDetails.ZerosslTargetDetails.ImapUser != nil {
+			err := d.Set("imap_username", *targetDetails.ZerosslTargetDetails.ImapUser)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.ImapPassword != nil {
-			err := d.Set("imap_password", *targetDetails.ImapPassword)
+		if targetDetails.ZerosslTargetDetails.ImapPassword != nil {
+			err := d.Set("imap_password", *targetDetails.ZerosslTargetDetails.ImapPassword)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.ImapFqdn != nil {
-			err := d.Set("imap_fqdn", *targetDetails.ImapFqdn)
+		if targetDetails.ZerosslTargetDetails.ImapFqdn != nil {
+			err := d.Set("imap_fqdn", *targetDetails.ZerosslTargetDetails.ImapFqdn)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.Email != nil {
-			err := d.Set("imap_target_email", *targetDetails.Email)
+		if targetDetails.ZerosslTargetDetails.ValidationEmail != nil {
+			err := d.Set("imap_target_email", *targetDetails.ZerosslTargetDetails.ValidationEmail)
 			if err != nil {
 				return err
 			}
 		}
-		if targetDetails.ImapPort != nil {
-			err := d.Set("imap_port", *targetDetails.ImapPort)
+		if targetDetails.ZerosslTargetDetails.ImapPort != nil {
+			err := d.Set("imap_port", *targetDetails.ZerosslTargetDetails.ImapPort)
 			if err != nil {
 				return err
 			}
