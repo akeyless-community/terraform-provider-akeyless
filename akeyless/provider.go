@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
@@ -362,7 +363,7 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 		authBody.AccessType = akeyless.PtrString(common.Cert)
 		return nil
 	default:
-		return fmt.Errorf("please support login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login/uid_login/cert_login")
+		return fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login/uid_login/cert_login")
 	}
 }
 
@@ -429,5 +430,14 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 		return certLogin[0], CertLogin, nil
 	}
 
-	return nil, "", fmt.Errorf("please support login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login/uid_login/cert_login")
+	// if login details not provided, use api-key authentication with id+key from env vars
+	if os.Getenv("AKEYLESS_ACCESS_ID") != "" && os.Getenv("AKEYLESS_ACCESS_KEY") != "" {
+		login := make(map[string]interface{})
+		login["access_id"] = os.Getenv("AKEYLESS_ACCESS_ID")
+		login["access_key"] = os.Getenv("AKEYLESS_ACCESS_KEY")
+
+		return login, ApiKeyLogin, nil
+	}
+
+	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login/uid_login/cert_login")
 }
