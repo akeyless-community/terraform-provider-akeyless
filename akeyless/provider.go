@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
@@ -14,15 +13,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type loginType string
+
 // default: public API Gateway
 const publicApi = "https://api.akeyless.io"
 
-var (
-	apiKeyLogin  []interface{}
-	emailLogin   []interface{}
-	awsIAMLogin  []interface{}
-	azureADLogin []interface{}
-	jwtLogin     []interface{}
+const (
+	ApiKeyLogin  loginType = "api_key_login"
+	AwsIAMLogin  loginType = "aws_iam_login"
+	AzureADLogin loginType = "azure_ad_login"
+	JwtLogin     loginType = "jwt_login"
+	EmailLogin   loginType = "email_login"
+	UidLogin     loginType = "uid_login"
+	CertLogin    loginType = "cert_login"
 )
 
 // Provider returns Akeyless Terraform provider
@@ -119,6 +122,50 @@ func Provider() *schema.Provider {
 					},
 				},
 			},
+			"uid_login": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A configuration block, described below, that attempts to authenticate using Universal Identity authentication.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uid_token": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Sensitive:   true,
+							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_UID", nil),
+						},
+					},
+				},
+			},
+			"cert_login": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A configuration block, described below, that attempts to authenticate using Certificate authentication.  The Certificate and the Private key can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_CERT and AKEYLESS_AUTH_KEY.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"cert_data": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Sensitive:   true,
+							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_CERT", nil),
+						},
+						"key_data": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Sensitive:   true,
+							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_KEY", nil),
+						},
+					},
+				},
+			},
 		},
 		//ConfigureFunc: configureProvider,
 		ConfigureContextFunc: configureProvider,
@@ -203,7 +250,8 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	apiGwAddress := d.Get("api_gateway_address").(string)
 
 	diagnostic := diag.Diagnostics{{Severity: diag.Error, Summary: ""}}
-	err := inputValidation(d)
+
+	authBody, err := getAuthInfo(d)
 	if err != nil {
 		diagnostic[0].Summary = err.Error()
 		return "", diagnostic
@@ -216,13 +264,6 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 			},
 		},
 	}).V2Api
-
-	authBody := akeyless.NewAuthWithDefaults()
-	err = setAuthBody(authBody)
-	if err != nil {
-		diagnostic[0].Summary = err.Error()
-		return "", diagnostic
-	}
 
 	var apiErr akeyless.GenericOpenAPIError
 
@@ -240,36 +281,44 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	return providerMeta{client, &token}, nil
 }
 
-func setAuthBody(authBody *akeyless.Auth) error {
-	if apiKeyLogin != nil && len(apiKeyLogin) == 1 {
-		login, ok := apiKeyLogin[0].(map[string]interface{})
-		if ok {
-			accessID := login["access_id"].(string)
-			accessKey := login["access_key"].(string)
-			authBody.AccessId = akeyless.PtrString(accessID)
-			authBody.AccessKey = akeyless.PtrString(accessKey)
-			authBody.AccessType = akeyless.PtrString(common.ApiKey)
-
-			return nil
-		}
+func getAuthInfo(d *schema.ResourceData) (*akeyless.Auth, error) {
+	login, authType, err := getLoginWithValidation(d)
+	if err != nil {
+		return nil, err
 	}
 
-	if os.Getenv("AKEYLESS_ACCESS_ID") != "" && os.Getenv("AKEYLESS_ACCESS_KEY") != "" {
-		authBody.AccessId = akeyless.PtrString(os.Getenv("AKEYLESS_ACCESS_ID"))
-		authBody.AccessKey = akeyless.PtrString(os.Getenv("AKEYLESS_ACCESS_KEY"))
+	authBody := akeyless.NewAuthWithDefaults()
+	err = setAuthBody(authBody, login, authType)
+	if err != nil {
+		return nil, err
+	}
+
+	return authBody, nil
+}
+
+func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginType) error {
+
+	login, ok := loginObj.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("wrong login detais")
+	}
+
+	switch authType {
+	case ApiKeyLogin:
+		accessID := login["access_id"].(string)
+		accessKey := login["access_key"].(string)
+		authBody.AccessId = akeyless.PtrString(accessID)
+		authBody.AccessKey = akeyless.PtrString(accessKey)
 		authBody.AccessType = akeyless.PtrString(common.ApiKey)
 		return nil
-	}
-
-	if emailLogin != nil && len(emailLogin) == 1 {
-		login := emailLogin[0].(map[string]interface{})
+	case EmailLogin:
 		adminEmail := login["admin_email"].(string)
 		adminPassword := login["admin_password"].(string)
 		authBody.AdminEmail = akeyless.PtrString(adminEmail)
 		authBody.AdminPassword = akeyless.PtrString(adminPassword)
 		authBody.AccessType = akeyless.PtrString(common.Password)
-	} else if awsIAMLogin != nil && len(awsIAMLogin) == 1 {
-		login := awsIAMLogin[0].(map[string]interface{})
+		return nil
+	case AwsIAMLogin:
 		accessID := login["access_id"].(string)
 		authBody.AccessId = akeyless.PtrString(accessID)
 		cloudId, err := aws.GetCloudId()
@@ -278,8 +327,8 @@ func setAuthBody(authBody *akeyless.Auth) error {
 		}
 		authBody.CloudId = akeyless.PtrString(cloudId)
 		authBody.AccessType = akeyless.PtrString(common.AwsIAM)
-	} else if azureADLogin != nil && len(azureADLogin) == 1 {
-		login := azureADLogin[0].(map[string]interface{})
+		return nil
+	case AzureADLogin:
 		accessID := login["access_id"].(string)
 		authBody.AccessId = akeyless.PtrString(accessID)
 		cloudId, err := azure.GetCloudId("")
@@ -288,18 +337,33 @@ func setAuthBody(authBody *akeyless.Auth) error {
 		}
 		authBody.CloudId = akeyless.PtrString(cloudId)
 		authBody.AccessType = akeyless.PtrString(common.AzureAD)
-	} else if jwtLogin != nil && len(jwtLogin) == 1 {
-		login := jwtLogin[0].(map[string]interface{})
+		return nil
+	case JwtLogin:
 		accessID := login["access_id"].(string)
 		jwt := login["jwt"].(string)
 		authBody.AccessId = akeyless.PtrString(accessID)
 		authBody.Jwt = akeyless.PtrString(jwt)
 		authBody.AccessType = akeyless.PtrString(common.Jwt)
-	} else {
-		return fmt.Errorf("please support login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login")
+		return nil
+	case UidLogin:
+		accessID := login["access_id"].(string)
+		uidToken := login["uid_token"].(string)
+		authBody.AccessId = akeyless.PtrString(accessID)
+		authBody.UidToken = akeyless.PtrString(uidToken)
+		authBody.AccessType = akeyless.PtrString(common.Uid)
+		return nil
+	case CertLogin:
+		accessID := login["access_id"].(string)
+		certData := login["cert_data"].(string)
+		keyData := login["key_data"].(string)
+		authBody.AccessId = akeyless.PtrString(accessID)
+		authBody.CertData = akeyless.PtrString(certData)
+		authBody.KeyData = akeyless.PtrString(keyData)
+		authBody.AccessType = akeyless.PtrString(common.Cert)
+		return nil
+	default:
+		return fmt.Errorf("please support login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login/uid_login/cert_login")
 	}
-
-	return nil
 }
 
 type providerMeta struct {
@@ -307,26 +371,63 @@ type providerMeta struct {
 	token  *string
 }
 
-func inputValidation(d *schema.ResourceData) error {
-	apiKeyLogin = d.Get("api_key_login").([]interface{})
+func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, error) {
+
+	apiKeyLogin := d.Get("api_key_login").([]interface{})
 	if len(apiKeyLogin) > 1 {
-		return fmt.Errorf("api_key_login block may appear only once")
+		return nil, "", fmt.Errorf("api_key_login block may appear only once")
 	}
-	emailLogin = d.Get("email_login").([]interface{})
+	if len(apiKeyLogin) == 1 {
+		return apiKeyLogin[0], ApiKeyLogin, nil
+	}
+
+	emailLogin := d.Get("email_login").([]interface{})
 	if len(emailLogin) > 1 {
-		return fmt.Errorf("emailLogin block may appear only once")
+		return nil, "", fmt.Errorf("email_login block may appear only once")
 	}
-	awsIAMLogin = d.Get("aws_iam_login").([]interface{})
+	if len(emailLogin) == 1 {
+		return emailLogin[0], EmailLogin, nil
+	}
+
+	awsIAMLogin := d.Get("aws_iam_login").([]interface{})
 	if len(awsIAMLogin) > 1 {
-		return fmt.Errorf("aws_iam_login block may appear only once")
+		return nil, "", fmt.Errorf("aws_iam_login block may appear only once")
 	}
-	azureADLogin = d.Get("azure_ad_login").([]interface{})
+	if len(awsIAMLogin) == 1 {
+		return awsIAMLogin[0], AwsIAMLogin, nil
+	}
+
+	azureADLogin := d.Get("azure_ad_login").([]interface{})
 	if len(azureADLogin) > 1 {
-		return fmt.Errorf("azure_ad_login block may appear only once")
+		return nil, "", fmt.Errorf("azure_ad_login block may appear only once")
 	}
-	jwtLogin = d.Get("jwt_login").([]interface{})
+	if len(azureADLogin) == 1 {
+		return azureADLogin[0], AzureADLogin, nil
+	}
+
+	jwtLogin := d.Get("jwt_login").([]interface{})
 	if len(jwtLogin) > 1 {
-		return fmt.Errorf("jwt_login block may appear only once")
+		return nil, "", fmt.Errorf("jwt_login block may appear only once")
 	}
-	return nil
+	if len(jwtLogin) == 1 {
+		return jwtLogin[0], JwtLogin, nil
+	}
+
+	uidLogin := d.Get("uid_login").([]interface{})
+	if len(uidLogin) > 1 {
+		return nil, "", fmt.Errorf("uid_login block may appear only once")
+	}
+	if len(uidLogin) == 1 {
+		return uidLogin[0], UidLogin, nil
+	}
+
+	certLogin := d.Get("cert_login").([]interface{})
+	if len(certLogin) > 1 {
+		return nil, "", fmt.Errorf("cert_login block may appear only once")
+	}
+	if len(certLogin) == 1 {
+		return certLogin[0], CertLogin, nil
+	}
+
+	return nil, "", fmt.Errorf("please support login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login/uid_login/cert_login")
 }
