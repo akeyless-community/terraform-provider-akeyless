@@ -152,15 +152,23 @@ func Provider() *schema.Provider {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"cert_file_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"cert_data": {
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 							Sensitive:   true,
 							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_CERT", nil),
 						},
+						"key_file_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"key_data": {
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 							Sensitive:   true,
 							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_KEY", nil),
 						},
@@ -354,9 +362,35 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 		authBody.AccessType = akeyless.PtrString(common.Uid)
 		return nil
 	case CertLogin:
-		accessID := login["access_id"].(string)
+		certFile := login["cert_file_name"].(string)
+		keyFile := login["key_file_name"].(string)
 		certData := login["cert_data"].(string)
 		keyData := login["key_data"].(string)
+
+		if certFile == "" && certData == "" {
+			return fmt.Errorf("must provide cert_file_name or cert_data")
+		}
+		if keyFile == "" && keyData == "" {
+			return fmt.Errorf("must provide key_file_name or key_data")
+		}
+
+		if certFile != "" {
+			data, err := common.ReadAndEncodeFile(certFile)
+			if err != nil {
+				return fmt.Errorf("failed to read certificate: %v", err)
+			}
+			certData = data
+		}
+
+		if keyFile != "" {
+			data, err := common.ReadAndEncodeFile(keyFile)
+			if err != nil {
+				return fmt.Errorf("failed to read private key: %v", err)
+			}
+			keyData = data
+		}
+
+		accessID := login["access_id"].(string)
 		authBody.AccessId = akeyless.PtrString(accessID)
 		authBody.CertData = akeyless.PtrString(certData)
 		authBody.KeyData = akeyless.PtrString(keyData)

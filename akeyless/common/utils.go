@@ -2,7 +2,10 @@ package common
 
 import (
 	"context"
+	"encoding/base64"
+	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -479,4 +482,16 @@ func ConvertNanoSecondsIntoDurationString(nano int64) string {
 	nanoUnix := time.Unix(0, nano)
 	duration := nanoUnix.Sub(time.Unix(0, 0))
 	return duration.String()
+}
+
+func ReadAndEncodeFile(fileName string) (string, error) {
+	bytes, err := os.ReadFile(fileName)
+	if err != nil {
+		return "", err
+	}
+	data := base64.StdEncoding.EncodeToString(bytes)
+	if len(data) == 0 {
+		return "", errors.New("")
+	}
+	return data, nil
 }
