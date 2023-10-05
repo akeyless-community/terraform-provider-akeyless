@@ -26,12 +26,7 @@ Get target details data source
 
 ### Read-Only
 
-- `host` (String)
 - `id` (String) The ID of this resource.
-- `password` (String, Sensitive)
-- `port` (String)
-- `private_key` (String)
-- `private_key_password` (String)
-- `username` (String)
+- `value` (Map of String)
 
 
