@@ -302,7 +302,7 @@ func generateDynamicSecret(client *akeyless.V2ApiService, token string) (string,
 		panic(err)
 	}
 
-	return value["user"], value["password"]
+	return value["user"].(string), value["password"].(string)
 }
 
 func deleteProducer(client *akeyless.V2ApiService, token string) {
