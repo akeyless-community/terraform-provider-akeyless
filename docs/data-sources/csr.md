@@ -32,6 +32,7 @@ Generate a new CSR data source
 - `email_addresses` (String) A comma-separated list of email addresses alternative names
 - `generate_key` (Boolean) Generate a new classic key for the csr
 - `ip_addresses` (String) A comma-separated list of ip addresses alternative names
+- `key_type` (String) The type of the key to generate (classic-key/dfc)
 - `org` (String) The organization to be included in the CSR
 - `state` (String) The state to be included in the CSR
 - `uri_sans` (String) A comma-separated list of uri alternative names

@@ -60,7 +60,7 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 	var marshal []byte
 
 	if gsvOutIntr != nil {
-		gsvOut = make(map[string]string)
+		gsvOut = make(map[string]interface{})
 		for k, val := range gsvOutIntr {
 			if v, ok := val.(string); ok {
 				gsvOut[k] = v

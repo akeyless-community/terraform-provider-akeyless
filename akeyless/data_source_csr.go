@@ -27,6 +27,11 @@ func dataSourceGenerateCsr() *schema.Resource {
 				Optional:    true,
 				Description: "Generate a new classic key for the csr",
 			},
+			"key_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The type of the key to generate (classic-key/dfc)",
+			},
 			"alg": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -111,6 +116,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	commonName := d.Get("common_name").(string)
 	generateKey := d.Get("generate_key").(bool)
+	keyType := d.Get("key_type").(string)
 	alg := d.Get("alg").(string)
 	certificateType := d.Get("certificate_type").(string)
 	critical := d.Get("critical").(bool)
@@ -130,6 +136,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 		Token:      &token,
 	}
 	common.GetAkeylessPtr(&body.GenerateKey, generateKey)
+	common.GetAkeylessPtr(&body.KeyType, keyType)
 	common.GetAkeylessPtr(&body.Alg, alg)
 	common.GetAkeylessPtr(&body.CertificateType, certificateType)
 	common.GetAkeylessPtr(&body.Critical, critical)

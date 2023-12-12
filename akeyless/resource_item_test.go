@@ -390,7 +390,7 @@ func TestCsrDataSource(t *testing.T) {
 			name              = "%v"
 			common_name       = "test"
 			generate_key      = true
-			key-type          = "dfc"
+			key_type          = "dfc"
 			alg               = "RSA2048"
 			certificate_type  = "ssl-client"
 			critical          = true
