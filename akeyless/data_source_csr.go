@@ -97,6 +97,11 @@ func dataSourceGenerateCsr() *schema.Resource {
 				Optional:    true,
 				Description: "A comma-separated list of uri alternative names",
 			},
+			"split_level": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The number of fragments that the item will be split into (not includes customer fragment, relevant only for dfc keys)",
+			},
 			"data": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -129,6 +134,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	emailAddresses := d.Get("email_addresses").(string)
 	ipAddresses := d.Get("ip_addresses").(string)
 	uriSans := d.Get("uri_sans").(string)
+	splitLevel := d.Get("split_level").(int)
 
 	body := akeyless.GenerateCsr{
 		Name:       name,
@@ -149,6 +155,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.EmailAddresses, emailAddresses)
 	common.GetAkeylessPtr(&body.IpAddresses, ipAddresses)
 	common.GetAkeylessPtr(&body.UriSans, uriSans)
+	common.GetAkeylessPtr(&body.SplitLevel, splitLevel)
 
 	rOut, res, err := client.GenerateCsr(ctx).Body(body).Execute()
 	if err != nil {

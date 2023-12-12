@@ -34,6 +34,7 @@ Generate a new CSR data source
 - `ip_addresses` (String) A comma-separated list of ip addresses alternative names
 - `key_type` (String) The type of the key to generate (classic-key/dfc)
 - `org` (String) The organization to be included in the CSR
+- `split_level` (Number) The number of fragments that the item will be split into (not includes customer fragment, relevant only for dfc keys)
 - `state` (String) The state to be included in the CSR
 - `uri_sans` (String) A comma-separated list of uri alternative names
 
