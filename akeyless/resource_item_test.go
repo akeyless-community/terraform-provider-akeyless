@@ -390,6 +390,7 @@ func TestCsrDataSource(t *testing.T) {
 			name              = "%v"
 			common_name       = "test"
 			generate_key      = true
+			key_type          = "dfc"
 			alg               = "RSA2048"
 			certificate_type  = "ssl-client"
 			critical          = true
@@ -402,6 +403,7 @@ func TestCsrDataSource(t *testing.T) {
 			email_addresses   = "test1@gmail.com, test2@gmail.com"
 			ip_addresses      = "192.168.0.1,192.168.0.2"
 			uri_sans          = "uri1.com,uri2.com"
+			split_level       = 2
 		}
 
 		output "csr" {

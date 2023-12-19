@@ -42,7 +42,6 @@ resource "akeyless_static_secret" "secret" {
 ### Required
 
 - `path` (String) The path where the secret will be stored.
-- `value` (String, Sensitive) The secret content.
 
 ### Optional
 
@@ -60,6 +59,7 @@ resource "akeyless_static_secret" "secret" {
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `value` (String, Sensitive) The secret content.
 
 ### Read-Only
 

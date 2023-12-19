@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/akeylesslabs/akeyless-go-cloud-id v0.3.1
-	github.com/akeylesslabs/akeyless-go/v3 v3.3.16
+	github.com/akeylesslabs/akeyless-go/v3 v3.5.3
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.27.0
 	github.com/stretchr/testify v1.8.1

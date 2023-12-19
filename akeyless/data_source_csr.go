@@ -27,6 +27,11 @@ func dataSourceGenerateCsr() *schema.Resource {
 				Optional:    true,
 				Description: "Generate a new classic key for the csr",
 			},
+			"key_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The type of the key to generate (classic-key/dfc)",
+			},
 			"alg": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -92,6 +97,11 @@ func dataSourceGenerateCsr() *schema.Resource {
 				Optional:    true,
 				Description: "A comma-separated list of uri alternative names",
 			},
+			"split_level": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The number of fragments that the item will be split into (not includes customer fragment, relevant only for dfc keys)",
+			},
 			"data": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -111,6 +121,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	commonName := d.Get("common_name").(string)
 	generateKey := d.Get("generate_key").(bool)
+	keyType := d.Get("key_type").(string)
 	alg := d.Get("alg").(string)
 	certificateType := d.Get("certificate_type").(string)
 	critical := d.Get("critical").(bool)
@@ -123,6 +134,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	emailAddresses := d.Get("email_addresses").(string)
 	ipAddresses := d.Get("ip_addresses").(string)
 	uriSans := d.Get("uri_sans").(string)
+	splitLevel := d.Get("split_level").(int)
 
 	body := akeyless.GenerateCsr{
 		Name:       name,
@@ -130,6 +142,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 		Token:      &token,
 	}
 	common.GetAkeylessPtr(&body.GenerateKey, generateKey)
+	common.GetAkeylessPtr(&body.KeyType, keyType)
 	common.GetAkeylessPtr(&body.Alg, alg)
 	common.GetAkeylessPtr(&body.CertificateType, certificateType)
 	common.GetAkeylessPtr(&body.Critical, critical)
@@ -142,6 +155,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.EmailAddresses, emailAddresses)
 	common.GetAkeylessPtr(&body.IpAddresses, ipAddresses)
 	common.GetAkeylessPtr(&body.UriSans, uriSans)
+	common.GetAkeylessPtr(&body.SplitLevel, splitLevel)
 
 	rOut, res, err := client.GenerateCsr(ctx).Body(body).Execute()
 	if err != nil {

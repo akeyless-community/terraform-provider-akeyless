@@ -30,7 +30,8 @@ func resourceStaticSecret() *schema.Resource {
 			},
 			"value": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Required:    false,
+				Optional:    true,
 				Sensitive:   true,
 				Description: "The secret content.",
 			},
