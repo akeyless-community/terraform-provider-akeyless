@@ -118,4 +118,10 @@ Optional:
 
 - `rule_type` (String) item-rule, target-rule, role-rule, auth-method-rule
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import akeyless_role.example /full-role-path/and-name-in-akeyless
+```

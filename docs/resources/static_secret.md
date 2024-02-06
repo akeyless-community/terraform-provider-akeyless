@@ -66,4 +66,10 @@ resource "akeyless_static_secret" "secret" {
 - `id` (String) The ID of this resource.
 - `version` (Number) The version of the secret.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import akeyless_static_secret.example /full-secret-path/and-name-in-akeyless
+```
