@@ -5,6 +5,7 @@ const (
 	Password = "password"
 	AzureAD  = "azure_ad"
 	AwsIAM   = "aws_iam"
+	Gcp      = "gcp"
 	Jwt      = "jwt"
 	Uid      = "universal_identity"
 	Cert     = "cert"
