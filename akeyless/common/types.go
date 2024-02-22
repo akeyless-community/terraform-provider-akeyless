@@ -15,4 +15,7 @@ const (
 	RotatedSecretType       = "ROTATED_SECRET"
 
 	AlgRsa1024 = "RSA1024"
+
+	ClientTypeHeader    = "akeylessclienttype"
+	TerraformClientType = "terraform"
 )

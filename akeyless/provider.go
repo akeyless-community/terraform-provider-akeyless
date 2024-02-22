@@ -291,6 +291,7 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 				URL: apiGwAddress,
 			},
 		},
+		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
 	}).V2Api
 
 	var apiErr akeyless.GenericOpenAPIError
