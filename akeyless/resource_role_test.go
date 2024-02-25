@@ -321,7 +321,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 4),
+					checkRemoveRoleRemotely(t, rolePath, 3),
 				),
 			},
 		},
@@ -401,13 +401,13 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 			{
 				Config: configAddAssoc,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 3),
+					checkAddRoleRemotely(t, rolePath, 2),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 3),
+					checkRemoveRoleRemotely(t, rolePath, 2),
 				),
 			},
 		},
