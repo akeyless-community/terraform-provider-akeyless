@@ -407,7 +407,7 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 2),
+					checkRemoveRoleRemotely(t, rolePath, 3),
 				),
 			},
 		},
