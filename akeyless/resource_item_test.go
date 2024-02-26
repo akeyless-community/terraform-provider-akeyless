@@ -228,8 +228,8 @@ func TestPkiDataSource(t *testing.T) {
 	defer deleteItem(t, itemPath)
 
 	// pki certificates must be deleted before deleting the pki issuer on cleanup
-	certsPath := fmt.Sprintf("/%s/%s", destPath, cn)
-	defer deleteItems(t, certsPath)
+	certPath := fmt.Sprintf("/%s/%s", destPath, cn)
+	defer deleteItem(t, certPath)
 
 	// with key
 	config1 := fmt.Sprintf(`

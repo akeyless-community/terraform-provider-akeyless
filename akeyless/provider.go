@@ -8,6 +8,7 @@ import (
 
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
+	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/gcp"
 	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,6 +23,7 @@ const publicApi = "https://api.akeyless.io"
 const (
 	ApiKeyLogin  loginType = "api_key_login"
 	AwsIAMLogin  loginType = "aws_iam_login"
+	GcpIAMLogin  loginType = "gcp_login"
 	AzureADLogin loginType = "azure_ad_login"
 	JwtLogin     loginType = "jwt_login"
 	EmailLogin   loginType = "email_login"
@@ -68,6 +70,23 @@ func Provider() *schema.Provider {
 						"access_id": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+					},
+				},
+			},
+			"gcp_login": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"audience": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -272,6 +291,7 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 				URL: apiGwAddress,
 			},
 		},
+		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
 	}).V2Api
 
 	var apiErr akeyless.GenericOpenAPIError
@@ -337,6 +357,18 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 		authBody.CloudId = akeyless.PtrString(cloudId)
 		authBody.AccessType = akeyless.PtrString(common.AwsIAM)
 		return nil
+	case GcpIAMLogin:
+		accessID := login["access_id"].(string)
+		audience := login["audience"].(string)
+		authBody.AccessId = akeyless.PtrString(accessID)
+		authBody.GcpAudience = akeyless.PtrString(audience)
+		cloudId, err := gcp.GetCloudID(audience)
+		if err != nil {
+			return fmt.Errorf("require Cloud ID: %v", err.Error())
+		}
+		authBody.CloudId = akeyless.PtrString(cloudId)
+		authBody.AccessType = akeyless.PtrString(common.Gcp)
+		return nil
 	case AzureADLogin:
 		accessID := login["access_id"].(string)
 		authBody.AccessId = akeyless.PtrString(accessID)
@@ -397,7 +429,7 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 		authBody.AccessType = akeyless.PtrString(common.Cert)
 		return nil
 	default:
-		return fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login/uid_login/cert_login")
+		return fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login")
 	}
 }
 
@@ -430,6 +462,14 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 	}
 	if len(awsIAMLogin) == 1 {
 		return awsIAMLogin[0], AwsIAMLogin, nil
+	}
+
+	gcpIAMLogin := d.Get("gcp_login").([]interface{})
+	if len(gcpIAMLogin) > 1 {
+		return nil, "", fmt.Errorf("gcp_login block may appear only once")
+	}
+	if len(gcpIAMLogin) == 1 {
+		return gcpIAMLogin[0], GcpIAMLogin, nil
 	}
 
 	azureADLogin := d.Get("azure_ad_login").([]interface{})
@@ -473,5 +513,5 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 		return login, ApiKeyLogin, nil
 	}
 
-	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/azure_ad_login/jwt_login/uid_login/cert_login")
+	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login")
 }
