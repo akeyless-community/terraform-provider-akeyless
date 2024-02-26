@@ -115,6 +115,7 @@ output "auth_method" {
 - `azure_ad_login` (Block List) A configuration block, described below, that attempts to authenticate using Azure Active Directory authentication. (see [below for nested schema](#nestedblock--azure_ad_login))
 - `cert_login` (Block List) A configuration block, described below, that attempts to authenticate using Certificate authentication.  The Certificate and the Private key can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_CERT and AKEYLESS_AUTH_KEY. (see [below for nested schema](#nestedblock--cert_login))
 - `email_login` (Block List) A configuration block, described below, that attempts to authenticate using email and password. (see [below for nested schema](#nestedblock--email_login))
+- `gcp_login` (Block List) A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials. (see [below for nested schema](#nestedblock--gcp_login))
 - `jwt_login` (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT. (see [below for nested schema](#nestedblock--jwt_login))
 - `uid_login` (Block List) A configuration block, described below, that attempts to authenticate using Universal Identity authentication. (see [below for nested schema](#nestedblock--uid_login))
 
@@ -165,6 +166,18 @@ Required:
 
 - `admin_email` (String)
 - `admin_password` (String)
+
+
+<a id="nestedblock--gcp_login"></a>
+### Nested Schema for `gcp_login`
+
+Required:
+
+- `access_id` (String)
+
+Optional:
+
+- `audience` (String)
 
 
 <a id="nestedblock--jwt_login"></a>

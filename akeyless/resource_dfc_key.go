@@ -210,12 +210,7 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Certificates != nil {
-
-		cert, err := encodeCertificate(*rOut.Certificates)
-		if err != nil {
-			return fmt.Errorf("failed to encode certificate: %w", err)
-		}
-
+		cert := base64.StdEncoding.EncodeToString([]byte(*rOut.Certificates))
 		err = d.Set("cert_data_base64", cert)
 		if err != nil {
 			return err
