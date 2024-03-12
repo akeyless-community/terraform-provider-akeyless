@@ -495,3 +495,10 @@ func ReadAndEncodeFile(fileName string) (string, error) {
 	}
 	return data, nil
 }
+
+func SetDataByPrefixSlash(d *schema.ResourceData, key, returnedValue, existValue string) error {
+	if "/"+returnedValue == existValue {
+		return d.Set(key, existValue)
+	}
+	return d.Set(key, returnedValue)
+}

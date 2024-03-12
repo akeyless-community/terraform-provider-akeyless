@@ -317,7 +317,7 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.ProtectionKeyName != nil {
-		err := d.Set("key", *rOut.Target.ProtectionKeyName)
+		err := common.SetDataByPrefixSlash(d, "key", *rOut.Target.ProtectionKeyName, d.Get("key").(string))
 		if err != nil {
 			return err
 		}
