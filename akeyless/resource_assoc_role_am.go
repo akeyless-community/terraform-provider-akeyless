@@ -105,9 +105,8 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	if role.RoleName != nil {
-		err = d.Set("role_name", *role.RoleName)
+		err = common.SetDataByPrefixSlash(d, "role_name", *role.RoleName, roleName)
 		if err != nil {
 			return err
 		}
@@ -116,7 +115,7 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 		for _, acc := range *role.RoleAuthMethodsAssoc {
 			if acc.AssocId != nil && *acc.AssocId == id {
 				if acc.AuthMethodName != nil {
-					err = d.Set("am_name", *acc.AuthMethodName)
+					err = common.SetDataByPrefixSlash(d, "am_name", *acc.AuthMethodName, d.Get("am_name").(string))
 					if err != nil {
 						return err
 					}

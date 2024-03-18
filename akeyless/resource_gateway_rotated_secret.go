@@ -237,7 +237,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	if itemOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(itemOut.ItemTargetsAssoc)
-		err = d.Set("target_name", targetName)
+		err = common.SetDataByPrefixSlash(d, "target_name", targetName, d.Get("target_name").(string))
 		if err != nil {
 			return err
 		}
