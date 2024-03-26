@@ -165,4 +165,10 @@ Optional:
 - `idp_metadata_url` (String) IDP metadata url
 - `idp_metadata_xml_data` (String) IDP metadata xml data
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import akeyless_auth_method.example /full-auth-method-path/and-name-in-akeyless
+```

@@ -1,0 +1,1 @@
+terraform import akeyless_auth_method.example /full-auth-method-path/and-name-in-akeyless
