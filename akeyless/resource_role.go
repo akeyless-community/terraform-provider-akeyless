@@ -455,7 +455,13 @@ func readRules(d *schema.ResourceData, rules []akeyless.PathRule) error {
 			}
 			if !isRestrictedRule {
 				rolesDst := make(map[string]interface{})
-				rolesDst["capability"] = *ruleSrc.Capabilities
+
+				capabilities := *ruleSrc.Capabilities
+				if *ruleSrc.Type == "sra-rule" {
+					capabilities = convertSraCapabilities(capabilities)
+				}
+
+				rolesDst["capability"] = capabilities
 				rolesDst["path"] = *ruleSrc.Path
 				rolesDst["rule_type"] = *ruleSrc.Type
 				roleRules = append(roleRules, rolesDst)
@@ -469,6 +475,23 @@ func readRules(d *schema.ResourceData, rules []akeyless.PathRule) error {
 	}
 
 	return nil
+}
+
+func convertSraCapabilities(capabilities []string) []string {
+	newCapabilities := make([]string, len(capabilities))
+	for i, capability := range capabilities {
+		switch capability {
+		case "sra_transparently_connect":
+			newCapabilities[i] = "allow_access"
+		case "sra_request_for_access":
+			newCapabilities[i] = "request_access"
+		case "sra_require_justification":
+			newCapabilities[i] = "justify_access_only"
+		case "sra_approval_authority":
+			newCapabilities[i] = "approval_authority"
+		}
+	}
+	return newCapabilities
 }
 
 func extractAssocsToCreateAndUpdate(newAssocs, oldAssocs []interface{}) ([]interface{}, []interface{}) {
@@ -725,7 +748,7 @@ func addRoleRules(ctx context.Context, name string, roleRules []interface{}, m i
 		if ruleType == "search-rule" || ruleType == "reports-rule" || ruleType == "gw-reports-rule" || ruleType == "sra_reports_access" {
 			warnMsgToAppend := "Deprecated: rule types 'search-rule and reports-rule' are deprecated and will be removed, please use 'audit_access' or 'analytics_access' instead"
 			warn = fmt.Errorf("%v. %v", warn, warnMsgToAppend)
-		} else if ruleType != "item-rule" && ruleType != "role-rule" && ruleType != "target-rule" && ruleType != "auth-method-rule" {
+		} else if ruleType != "item-rule" && ruleType != "role-rule" && ruleType != "target-rule" && ruleType != "auth-method-rule" && ruleType != "sra-rule" {
 			return fmt.Errorf("wrong rule types"), false
 		}
 
