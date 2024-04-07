@@ -148,7 +148,6 @@ func TestPkiResource(t *testing.T) {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
 			ttl                   	= 60
-			gw_cluster_url        	= "https://api.akeyless.io"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domains"
 			allowed_uri_sans      	= "uri_sans"
@@ -179,7 +178,6 @@ func TestPkiResource(t *testing.T) {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
 			ttl                   	= 90
-			gw_cluster_url        	= "http://localhost:8000"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domain1,domain2"
 			allowed_uri_sans      	= "uri_san1,uri_san2"
