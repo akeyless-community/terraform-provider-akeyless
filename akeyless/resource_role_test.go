@@ -503,6 +503,51 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 	})
 }
 
+func TestRoleResourceWithSraRule(t *testing.T) {
+	//todo need to fix this test
+	t.Skip()
+	rolePath := testPath("test_role_resource_sra_rule")
+	deleteRole(rolePath)
+
+	config := fmt.Sprintf(
+		`resource "akeyless_role" "test_role1" {
+	name = "%v"
+	rules {
+		capability 	= ["allow_access"]
+		path 		= "%v"
+		rule_type 	= "sra-rule"
+	}
+	audit_access 		= "all"
+	analytics_access 	= "all"
+}`, rolePath, rolePath)
+
+	configUpdateRole := fmt.Sprintf(`
+		resource "akeyless_role" "test_role1" {
+		  name = "%v"
+		  rules {
+			capability  = ["allow_access", "request_access"]
+			path        = "/*"
+			rule_type   = "sra-rule"
+		  }
+		  audit_access        = "all"
+		  analytics_access    = "none"
+		  gw_analytics_access = "all"
+		  sra_reports_access  = "own"
+		}`, rolePath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				Config: configUpdateRole,
+			},
+		},
+	})
+}
+
 func TestRoleResourceWithFewAssocs(t *testing.T) {
 	resourceName := "test_role_few_assocs"
 	rolePath := testPath(resourceName)
