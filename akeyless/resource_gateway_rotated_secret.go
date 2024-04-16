@@ -522,6 +522,10 @@ func setRotatorType(d *schema.ResourceData, rsdType string) error {
 		return d.Set("rotator_type", "custom")
 	case "ldap-rotator":
 		return d.Set("rotator_type", "ldap")
+	case "azure-storage-account-rotator":
+		return d.Set("rotator_type", "azure-storage-account")
+	case "service-account-rotator":
+		return d.Set("rotator_type", "service-account-rotator")
 	case "target-rotator":
 		return d.Set("rotator_type", "target")
 	default:
