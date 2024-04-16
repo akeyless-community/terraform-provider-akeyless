@@ -31,111 +31,99 @@ func resourceDynamicSecretMssql() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"mssql_dbname": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MSSQL Server DB Name",
 			},
 			"mssql_username": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MS SQL Server user",
 			},
 			"mssql_password": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MS SQL Server password",
 			},
 			"mssql_host": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MS SQL Server host name",
 				Default:     "127.0.0.1",
 			},
 			"mssql_port": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MS SQL Server port",
 				Default:     "1433",
 			},
 			"mssql_create_statements": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MSSQL Server Creation Statements",
 				Default:     "CREATE LOGIN [{{name}}] WITH PASSWORD = '{{password}}';",
 			},
 			"mssql_revocation_statements": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MSSQL Server Revocation Statements",
 				Default:     "DROP LOGIN [{{name}}];",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_bastion_issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "Target DB servers for connections., For multiple values repeat this flag.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_db_schema": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The db schema",
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "false",
 			},
 			"secure_access_db_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
@@ -160,7 +148,8 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	mssqlPort := d.Get("mssql_port").(string)
 	mssqlCreateStatements := d.Get("mssql_create_statements").(string)
 	mssqlRevocationStatements := d.Get("mssql_revocation_statements").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -183,6 +172,7 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MssqlPort, mssqlPort)
 	common.GetAkeylessPtr(&body.MssqlCreateStatements, mssqlCreateStatements)
 	common.GetAkeylessPtr(&body.MssqlRevocationStatements, mssqlRevocationStatements)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
@@ -295,7 +285,7 @@ func resourceDynamicSecretMssqlRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -324,7 +314,8 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	mssqlPort := d.Get("mssql_port").(string)
 	mssqlCreateStatements := d.Get("mssql_create_statements").(string)
 	mssqlRevocationStatements := d.Get("mssql_revocation_statements").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -347,6 +338,7 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MssqlPort, mssqlPort)
 	common.GetAkeylessPtr(&body.MssqlCreateStatements, mssqlCreateStatements)
 	common.GetAkeylessPtr(&body.MssqlRevocationStatements, mssqlRevocationStatements)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)

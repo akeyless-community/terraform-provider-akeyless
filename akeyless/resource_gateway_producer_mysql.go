@@ -14,11 +14,12 @@ import (
 
 func resourceProducerMysql() *schema.Resource {
 	return &schema.Resource{
-		Description: "MySQL producer resource",
-		Create:      resourceProducerMysqlCreate,
-		Read:        resourceProducerMysqlRead,
-		Update:      resourceProducerMysqlUpdate,
-		Delete:      resourceProducerMysqlDelete,
+		Description:        "MySQL producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_mysql",
+		Create:             resourceProducerMysqlCreate,
+		Read:               resourceProducerMysqlRead,
+		Update:             resourceProducerMysqlUpdate,
+		Delete:             resourceProducerMysqlDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerMysqlImport,
 		},

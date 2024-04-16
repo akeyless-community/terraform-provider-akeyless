@@ -82,6 +82,11 @@ func resourceRotatedSecretGcp() *schema.Resource {
 				Optional:    true,
 				Description: "The Hour of the rotation in UTC",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -109,6 +114,7 @@ func resourceRotatedSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -135,6 +141,7 @@ func resourceRotatedSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.GcpServiceAccountEmail, gcpServiceAccountEmail)
 	common.GetAkeylessPtr(&body.GcpServiceAccountKeyId, gcpServiceAccountKeyId)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err := client.RotatedSecretCreateGcp(ctx).Body(body).Execute()
 	if err != nil {
@@ -298,6 +305,7 @@ func resourceRotatedSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -333,6 +341,7 @@ func resourceRotatedSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GcpServiceAccountEmail, gcpServiceAccountEmail)
 	common.GetAkeylessPtr(&body.GcpServiceAccountKeyId, gcpServiceAccountKeyId)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err = client.RotatedSecretUpdateGcp(ctx).Body(body).Execute()
 	if err != nil {

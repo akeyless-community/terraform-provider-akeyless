@@ -15,11 +15,12 @@ import (
 
 func resourceRotatedSecret() *schema.Resource {
 	return &schema.Resource{
-		Description: "Rotated secret resource",
-		Create:      resourceRotatedSecretCreate,
-		Read:        resourceRotatedSecretRead,
-		Update:      resourceRotatedSecretUpdate,
-		Delete:      resourceRotatedSecretDelete,
+		Description:        "Rotated secret resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_rotated_secret_<TYPE>",
+		Create:             resourceRotatedSecretCreate,
+		Read:               resourceRotatedSecretRead,
+		Update:             resourceRotatedSecretUpdate,
+		Delete:             resourceRotatedSecretDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRotatedSecretImport,
 		},

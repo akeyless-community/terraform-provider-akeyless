@@ -78,6 +78,11 @@ func resourceRotatedSecretHanaDb() *schema.Resource {
 				Optional:    true,
 				Description: "The Hour of the rotation in UTC",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -105,6 +110,7 @@ func resourceRotatedSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -129,6 +135,7 @@ func resourceRotatedSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err := client.RotatedSecretCreateHanadb(ctx).Body(body).Execute()
 	if err != nil {
@@ -300,6 +307,7 @@ func resourceRotatedSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -333,6 +341,7 @@ func resourceRotatedSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err = client.RotatedSecretUpdateHanadb(ctx).Body(body).Execute()
 	if err != nil {

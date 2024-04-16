@@ -31,19 +31,16 @@ func resourceDynamicSecretAzure() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"azure_tenant_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Azure Tenant ID",
 			},
 			"azure_client_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Azure Client ID (Application ID)",
 			},
@@ -55,77 +52,70 @@ func resourceDynamicSecretAzure() *schema.Resource {
 			},
 			"user_portal_access": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Azure AD user portal access",
 				Default:     "false",
 			},
 			"user_programmatic_access": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Azure AD user programmatic access",
 				Default:     "true",
 			},
 			"app_obj_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Azure App Object ID (required if selected programmatic access)",
 			},
 			"user_principal_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Azure AD User Principal Name (required if selected Portal access)",
 			},
 			"user_group_obj_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Azure AD User Group Object ID (required if selected Portal access)",
 			},
 			"user_role_template_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Azure AD User Role Template ID (required if selected Portal access)",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_web_browsing": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Secure browser via Akeyless Web Access Bastion",
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "true",
@@ -158,7 +148,8 @@ func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	userPrincipalName := d.Get("user_principal_name").(string)
 	userGroupObjId := d.Get("user_group_obj_id").(string)
 	userRoleTemplateId := d.Get("user_role_template_id").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -180,6 +171,7 @@ func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.UserPrincipalName, userPrincipalName)
 	common.GetAkeylessPtr(&body.UserGroupObjId, userGroupObjId)
 	common.GetAkeylessPtr(&body.UserRoleTemplateId, userRoleTemplateId)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
@@ -303,7 +295,7 @@ func resourceDynamicSecretAzureRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -334,7 +326,8 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	userPrincipalName := d.Get("user_principal_name").(string)
 	userGroupObjId := d.Get("user_group_obj_id").(string)
 	userRoleTemplateId := d.Get("user_role_template_id").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -356,6 +349,7 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.UserPrincipalName, userPrincipalName)
 	common.GetAkeylessPtr(&body.UserGroupObjId, userGroupObjId)
 	common.GetAkeylessPtr(&body.UserRoleTemplateId, userRoleTemplateId)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)

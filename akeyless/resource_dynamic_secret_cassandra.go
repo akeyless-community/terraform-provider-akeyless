@@ -31,61 +31,57 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Target name",
 			},
 			"cassandra_hosts": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Cassandra hosts names or IP addresses, comma separated",
 			},
 			"cassandra_username": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Cassandra superuser user name",
 			},
 			"cassandra_password": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Cassandra superuser password",
 			},
 			"cassandra_port": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Cassandra port",
 				Default:     "9042",
 			},
 			"cassandra_creation_statements": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Cassandra Creation Statements",
 				Default:     "CREATE ROLE '{{username}}' WITH PASSWORD = '{{password}}' AND LOGIN = true; GRANT SELECT ON ALL KEYSPACES TO '{{username}}';",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL (<=60m for access token)",
 				Default:     "60m",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Dynamic producer encryption key",
 			},
 		},
 	}
@@ -108,7 +104,8 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 
 	body := akeyless.DynamicSecretCreateCassandra{
 		Name:  name,
@@ -121,8 +118,9 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.CassandraPort, cassandraPort)
 	common.GetAkeylessPtr(&body.CassandraCreationStatements, cassandraCreationStatements)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
-	common.GetAkeylessPtr(&body.Tags, tags)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
+	common.GetAkeylessPtr(&body.Tags, tags)
 
 	_, _, err := client.DynamicSecretCreateCassandra(ctx).Body(body).Execute()
 	if err != nil {
@@ -215,7 +213,7 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -243,10 +241,8 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
-
-	/*
-	 */
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 
 	body := akeyless.DynamicSecretUpdateCassandra{
 		Name:  name,
@@ -259,8 +255,9 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.CassandraPort, cassandraPort)
 	common.GetAkeylessPtr(&body.CassandraCreationStatements, cassandraCreationStatements)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
-	common.GetAkeylessPtr(&body.Tags, tags)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
+	common.GetAkeylessPtr(&body.Tags, tags)
 
 	_, _, err := client.DynamicSecretUpdateCassandra(ctx).Body(body).Execute()
 	if err != nil {

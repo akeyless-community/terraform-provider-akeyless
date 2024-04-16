@@ -32,87 +32,73 @@ func resourceDynamicSecretGke() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"gke_service_account_email": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "GKE service account email",
 			},
 			"gke_cluster_endpoint": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "GKE cluster endpoint, i.e., cluster URI https://<DNS/IP>.",
 			},
 			"gke_cluster_cert": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "GKE Base-64 encoded cluster certificate",
 			},
 			"gke_account_key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "GKE service account key",
 			},
 			"gke_cluster_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "GKE cluster name",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_cluster_endpoint": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The K8s cluster endpoint URL",
 			},
 			"secure_access_allow_port_forwading": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Port forwarding while using CLI access.",
 			},
 			"secure_access_bastion_issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "false",
@@ -135,7 +121,7 @@ func resourceDynamicSecretGkeCreate(d *schema.ResourceData, m interface{}) error
 	gkeClusterCert := d.Get("gke_cluster_cert").(string)
 	gkeAccountKey := d.Get("gke_account_key").(string)
 	gkeClusterName := d.Get("gke_cluster_name").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -229,7 +215,7 @@ func resourceDynamicSecretGkeRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -284,7 +270,7 @@ func resourceDynamicSecretGkeUpdate(d *schema.ResourceData, m interface{}) error
 	gkeClusterCert := d.Get("gke_cluster_cert").(string)
 	gkeAccountKey := d.Get("gke_account_key").(string)
 	gkeClusterName := d.Get("gke_cluster_name").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())

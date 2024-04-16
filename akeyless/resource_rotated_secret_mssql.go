@@ -78,6 +78,11 @@ func resourceRotatedSecretMsSql() *schema.Resource {
 				Optional:    true,
 				Description: "The Hour of the rotation in UTC",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -105,6 +110,7 @@ func resourceRotatedSecretMsSqlCreate(d *schema.ResourceData, m interface{}) err
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -129,6 +135,7 @@ func resourceRotatedSecretMsSqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err := client.RotatedSecretCreateMssql(ctx).Body(body).Execute()
 	if err != nil {
@@ -280,40 +287,6 @@ func resourceRotatedSecretMsSqlRead(d *schema.ResourceData, m interface{}) error
 		// 		if err != nil {
 		// 			return err
 		// 		}
-		// 	case "api-key-rotator":
-		// 		err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		err = d.Set("api_key", fmt.Sprintf("%v", val["password"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	case "custom-rotator":
-		// 		err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	case "ldap-rotator":
-		// 		ldapPayloadInBytes, err := json.Marshal(val["ldap_payload"])
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		var ldapPayload map[string]interface{}
-		// 		err = json.Unmarshal(ldapPayloadInBytes, &ldapPayload)
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		err = d.Set("user_attribute", fmt.Sprintf("%v", ldapPayload["ldap_user_attr"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		err = d.Set("user_dn", fmt.Sprintf("%v", ldapPayload["ldap_user_dn"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	case "azure-storage-account-rotator":
-		// 	case "service-account-rotator":
 		// 	default:
 		// 	}
 		// }
@@ -334,6 +307,7 @@ func resourceRotatedSecretMsSqlUpdate(d *schema.ResourceData, m interface{}) err
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -367,6 +341,7 @@ func resourceRotatedSecretMsSqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err = client.RotatedSecretUpdateMssql(ctx).Body(body).Execute()
 	if err != nil {

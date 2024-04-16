@@ -14,11 +14,12 @@ import (
 
 func resourceProducerMongo() *schema.Resource {
 	return &schema.Resource{
-		Description: "Mongo DB Producer resource",
-		Create:      resourceProducerMongoCreate,
-		Read:        resourceProducerMongoRead,
-		Update:      resourceProducerMongoUpdate,
-		Delete:      resourceProducerMongoDelete,
+		Description:        "Mongo DB Producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_mongodb",
+		Create:             resourceProducerMongoCreate,
+		Read:               resourceProducerMongoRead,
+		Update:             resourceProducerMongoUpdate,
+		Delete:             resourceProducerMongoDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerMongoImport,
 		},

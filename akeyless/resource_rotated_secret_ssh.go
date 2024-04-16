@@ -83,6 +83,11 @@ func resourceRotatedSecretSsh() *schema.Resource {
 				Optional:    true,
 				Description: "The Hour of the rotation in UTC",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -110,6 +115,7 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -136,6 +142,7 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err := client.RotatedSecretCreateSsh(ctx).Body(body).Execute()
 	if err != nil {
@@ -307,6 +314,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -342,6 +350,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err = client.RotatedSecretUpdateSsh(ctx).Body(body).Execute()
 	if err != nil {

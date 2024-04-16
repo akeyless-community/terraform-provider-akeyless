@@ -14,11 +14,12 @@ import (
 
 func resourceProducerK8s() *schema.Resource {
 	return &schema.Resource{
-		Description: "Native Kubernetes Service producer resource",
-		Create:      resourceProducerK8sCreate,
-		Read:        resourceProducerK8sRead,
-		Update:      resourceProducerK8sUpdate,
-		Delete:      resourceProducerK8sDelete,
+		Description:        "Native Kubernetes Service producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_k8s",
+		Create:             resourceProducerK8sCreate,
+		Read:               resourceProducerK8sRead,
+		Update:             resourceProducerK8sUpdate,
+		Delete:             resourceProducerK8sDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerK8sImport,
 		},

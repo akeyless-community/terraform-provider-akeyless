@@ -14,11 +14,12 @@ import (
 
 func resourceProducerCassandra() *schema.Resource {
 	return &schema.Resource{
-		Description: "Cassandra producer resource",
-		Create:      resourceProducerCassandraCreate,
-		Read:        resourceProducerCassandraRead,
-		Update:      resourceProducerCassandraUpdate,
-		Delete:      resourceProducerCassandraDelete,
+		Description:        "Cassandra producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_cassandra",
+		Create:             resourceProducerCassandraCreate,
+		Read:               resourceProducerCassandraRead,
+		Update:             resourceProducerCassandraUpdate,
+		Delete:             resourceProducerCassandraDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerCassandraImport,
 		},

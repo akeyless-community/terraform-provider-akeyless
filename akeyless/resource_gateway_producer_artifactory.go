@@ -14,11 +14,12 @@ import (
 
 func resourceProducerArtifactory() *schema.Resource {
 	return &schema.Resource{
-		Description: "Artifactory producer resource",
-		Create:      resourceProducerArtifactoryCreate,
-		Read:        resourceProducerArtifactoryRead,
-		Update:      resourceProducerArtifactoryUpdate,
-		Delete:      resourceProducerArtifactoryDelete,
+		Description:        "Artifactory producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_artifactory",
+		Create:             resourceProducerArtifactoryCreate,
+		Read:               resourceProducerArtifactoryRead,
+		Update:             resourceProducerArtifactoryUpdate,
+		Delete:             resourceProducerArtifactoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerArtifactoryImport,
 		},

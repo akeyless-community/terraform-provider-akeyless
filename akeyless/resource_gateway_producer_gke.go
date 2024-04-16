@@ -15,11 +15,12 @@ import (
 
 func resourceProducerGke() *schema.Resource {
 	return &schema.Resource{
-		Description: "Google Kubernetes Engine (GKE) producer resource",
-		Create:      resourceProducerGkeCreate,
-		Read:        resourceProducerGkeRead,
-		Update:      resourceProducerGkeUpdate,
-		Delete:      resourceProducerGkeDelete,
+		Description:        "Google Kubernetes Engine (GKE) producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_gke",
+		Create:             resourceProducerGkeCreate,
+		Read:               resourceProducerGkeRead,
+		Update:             resourceProducerGkeUpdate,
+		Delete:             resourceProducerGkeDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerGkeImport,
 		},

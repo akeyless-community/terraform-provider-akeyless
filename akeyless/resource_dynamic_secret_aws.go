@@ -31,135 +31,119 @@ func resourceDynamicSecretAws() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"aws_access_key_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Access Key ID",
 			},
 			"aws_access_secret_key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Access Secret Key",
 			},
 			"access_mode": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Default:     "iam_user",
 				Description: "The types of credentials to retrieve from AWS. Options:[iam_user,assume_role]",
 			},
 			"region": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Region",
 				Default:     "us-east-2",
 			},
 			"aws_user_policies": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Policy ARN(s). Multiple values should be separated by comma",
 			},
 			"aws_user_groups": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "UserGroup name(s). Multiple values should be separated by comma",
 			},
 			"aws_role_arns": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "AWS Role ARNs to be use in the Assume Role operation. Multiple values should be separated by comma",
 			},
 			"aws_user_console_access": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable AWS User console access",
 				Default:     "false",
 			},
 			"aws_user_programmatic_access": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable AWS User programmatic access",
 				Default:     "true",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_aws_account_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The aws account id",
 			},
 			"secure_access_aws_native_cli": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "The aws native cli",
 			},
 			"secure_access_web_browsing": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Secure browser via Akeyless Web Access Bastion",
 			},
 			"secure_access_bastion_issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "true",
 			},
 			"secure_access_url": {
 				Type:     schema.TypeString,
-				Required: false,
 				Optional: true,
 				Computed: true,
 			},
 			"secure_access_aws_region": {
 				Type:     schema.TypeString,
-				Required: false,
 				Optional: true,
 				Computed: true,
 			},
@@ -185,7 +169,8 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	awsRoleArns := d.Get("aws_role_arns").(string)
 	awsUserConsoleAccess := d.Get("aws_user_console_access").(bool)
 	awsUserProgrammaticAccess := d.Get("aws_user_programmatic_access").(bool)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -210,6 +195,7 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AwsRoleArns, awsRoleArns)
 	common.GetAkeylessPtr(&body.AwsUserConsoleAccess, awsUserConsoleAccess)
 	common.GetAkeylessPtr(&body.AwsUserProgrammaticAccess, awsUserProgrammaticAccess)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
@@ -303,7 +289,7 @@ func resourceDynamicSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -377,7 +363,8 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	awsRoleArns := d.Get("aws_role_arns").(string)
 	awsUserConsoleAccess := d.Get("aws_user_console_access").(bool)
 	awsUserProgrammaticAccess := d.Get("aws_user_programmatic_access").(bool)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -402,6 +389,7 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AwsRoleArns, awsRoleArns)
 	common.GetAkeylessPtr(&body.AwsUserConsoleAccess, awsUserConsoleAccess)
 	common.GetAkeylessPtr(&body.AwsUserProgrammaticAccess, awsUserProgrammaticAccess)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)

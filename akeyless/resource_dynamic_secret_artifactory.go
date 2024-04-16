@@ -41,44 +41,37 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"base_url": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Artifactory REST URL, must end with artifactory postfix",
 			},
 			"artifactory_admin_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Admin name",
 			},
 			"artifactory_admin_pwd": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Admin API Key/Password",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -101,7 +94,7 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	baseUrl := d.Get("base_url").(string)
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -213,7 +206,7 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 	}
 
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -238,7 +231,7 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	baseUrl := d.Get("base_url").(string)
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())

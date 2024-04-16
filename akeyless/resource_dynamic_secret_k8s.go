@@ -83,16 +83,16 @@ func resourceDynamicSecretK8s() *schema.Resource {
 				Optional:    true,
 				Description: "Specifies the type of the pre-existing K8S role [Role, ClusterRole] (relevant only for k8s-service-account-type=dynamic).",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -169,7 +169,7 @@ func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error
 	k8sAllowedNamespaces := d.Get("k8s_allowed_namespaces").(string)
 	k8sPredefinedRoleName := d.Get("k8s_predefined_role_name").(string)
 	k8sPredefinedRoleType := d.Get("k8s_predefined_role_type").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -332,7 +332,7 @@ func resourceDynamicSecretK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -363,7 +363,7 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	k8sAllowedNamespaces := d.Get("k8s_allowed_namespaces").(string)
 	k8sPredefinedRoleName := d.Get("k8s_predefined_role_name").(string)
 	k8sPredefinedRoleType := d.Get("k8s_predefined_role_type").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())

@@ -63,23 +63,6 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Optional:    true,
 				Description: "Service account key algorithm, e.g. KEY_ALG_RSA_1024",
 			},
-			"user_ttl": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "User TTL (<=60m for access token)",
-				Default:     "60m",
-			},
-			"tags": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Dynamic producer encryption key",
-			},
 			"service_account_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -90,6 +73,23 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Role binding definitions in json format",
+			},
+			"user_ttl": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "User TTL (<=60m for access token)",
+				Default:     "60m",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
+			"tags": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"delete_protection": {
 				Type:        schema.TypeString,
@@ -117,7 +117,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	serviceAccountType := d.Get("service_account_type").(string)
 	roleBinding := d.Get("role_binding").(string)
 	deleteProtection := d.Get("delete_protection").(string)
@@ -231,7 +231,7 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -282,7 +282,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	serviceAccountType := d.Get("service_account_type").(string)
 	roleBinding := d.Get("role_binding").(string)
 	deleteProtection := d.Get("delete_protection").(string)

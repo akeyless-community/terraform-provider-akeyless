@@ -14,11 +14,12 @@ import (
 
 func resourceProducerAzure() *schema.Resource {
 	return &schema.Resource{
-		Description: "Azure AD producer resource",
-		Create:      resourceProducerAzureCreate,
-		Read:        resourceProducerAzureRead,
-		Update:      resourceProducerAzureUpdate,
-		Delete:      resourceProducerAzureDelete,
+		Description:        "Azure AD producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_azure",
+		Create:             resourceProducerAzureCreate,
+		Read:               resourceProducerAzureRead,
+		Update:             resourceProducerAzureUpdate,
+		Delete:             resourceProducerAzureDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerAzureImport,
 		},

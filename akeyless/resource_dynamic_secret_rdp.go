@@ -31,103 +31,92 @@ func resourceDynamicSecretRdp() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"rdp_user_groups": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "RDP UserGroup name(s). Multiple values should be separated by comma",
 			},
 			"rdp_host_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "RDP Host name",
 			},
 			"rdp_admin_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "RDP Admin name",
 			},
 			"rdp_admin_pwd": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "RDP Admin Password",
 			},
 			"rdp_host_port": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "RDP Host port",
 				Default:     "22",
 			},
 			"fixed_user_only": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable fixed user only",
 				Default:     "false",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_rdp_domain": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Required when the Dynamic Secret is used for a domain user",
 			},
 			"secure_access_rdp_user": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Override the RDP Domain username",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "Target servers for connections., For multiple values repeat this flag.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_allow_external_user": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Allow providing external user for a domain users",
 				Default:     "false",
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
@@ -151,7 +140,8 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 	rdpAdminPwd := d.Get("rdp_admin_pwd").(string)
 	rdpHostPort := d.Get("rdp_host_port").(string)
 	fixedUserOnly := d.Get("fixed_user_only").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -173,6 +163,7 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RdpAdminPwd, rdpAdminPwd)
 	common.GetAkeylessPtr(&body.RdpHostPort, rdpHostPort)
 	common.GetAkeylessPtr(&body.FixedUserOnly, fixedUserOnly)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
@@ -278,7 +269,7 @@ func resourceDynamicSecretRdpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -306,7 +297,8 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	rdpAdminPwd := d.Get("rdp_admin_pwd").(string)
 	rdpHostPort := d.Get("rdp_host_port").(string)
 	fixedUserOnly := d.Get("fixed_user_only").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -328,6 +320,7 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RdpAdminPwd, rdpAdminPwd)
 	common.GetAkeylessPtr(&body.RdpHostPort, rdpHostPort)
 	common.GetAkeylessPtr(&body.FixedUserOnly, fixedUserOnly)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)

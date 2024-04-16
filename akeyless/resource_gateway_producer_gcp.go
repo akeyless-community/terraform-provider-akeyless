@@ -17,11 +17,12 @@ import (
 
 func resourceProducerGcp() *schema.Resource {
 	return &schema.Resource{
-		Description: "Google Cloud Provider (GCP)  producer resource",
-		Create:      resourceProducerGcpCreate,
-		Read:        resourceProducerGcpRead,
-		Update:      resourceProducerGcpUpdate,
-		Delete:      resourceProducerGcpDelete,
+		Description:        "Google Cloud Provider (GCP)  producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_gcp",
+		Create:             resourceProducerGcpCreate,
+		Read:               resourceProducerGcpRead,
+		Update:             resourceProducerGcpUpdate,
+		Delete:             resourceProducerGcpDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerGcpImport,
 		},

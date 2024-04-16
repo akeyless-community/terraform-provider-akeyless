@@ -14,11 +14,12 @@ import (
 
 func resourceProducerGithub() *schema.Resource {
 	return &schema.Resource{
-		Description: "Github producer resource.",
-		Create:      resourceProducerGithubCreate,
-		Read:        resourceProducerGithubRead,
-		Update:      resourceProducerGithubUpdate,
-		Delete:      resourceProducerGithubDelete,
+		Description:        "Github producer resource.",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_github",
+		Create:             resourceProducerGithubCreate,
+		Read:               resourceProducerGithubRead,
+		Update:             resourceProducerGithubUpdate,
+		Delete:             resourceProducerGithubDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerGithubImport,
 		},

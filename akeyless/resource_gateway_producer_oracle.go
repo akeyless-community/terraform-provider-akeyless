@@ -14,11 +14,12 @@ import (
 
 func resourceProducerOracle() *schema.Resource {
 	return &schema.Resource{
-		Description: "Oracle DB producer resource",
-		Create:      resourceProducerOracleCreate,
-		Read:        resourceProducerOracleRead,
-		Update:      resourceProducerOracleUpdate,
-		Delete:      resourceProducerOracleDelete,
+		Description:        "Oracle DB producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_oracle",
+		Create:             resourceProducerOracleCreate,
+		Read:               resourceProducerOracleRead,
+		Update:             resourceProducerOracleUpdate,
+		Delete:             resourceProducerOracleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerOracleImport,
 		},

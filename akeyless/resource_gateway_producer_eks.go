@@ -14,11 +14,12 @@ import (
 
 func resourceProducerEks() *schema.Resource {
 	return &schema.Resource{
-		Description: "Amazon Elastic Kubernetes Service (Amazon EKS) producer",
-		Create:      resourceProducerEksCreate,
-		Read:        resourceProducerEksRead,
-		Update:      resourceProducerEksUpdate,
-		Delete:      resourceProducerEksDelete,
+		Description:        "Amazon Elastic Kubernetes Service (Amazon EKS) producer",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_eks",
+		Create:             resourceProducerEksCreate,
+		Read:               resourceProducerEksRead,
+		Update:             resourceProducerEksUpdate,
+		Delete:             resourceProducerEksDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerEksImport,
 		},

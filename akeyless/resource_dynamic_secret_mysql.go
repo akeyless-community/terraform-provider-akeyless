@@ -31,111 +31,99 @@ func resourceDynamicSecretMysql() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"mysql_dbname": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MySQL DB name",
 			},
 			"mysql_username": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MySQL user",
 			},
 			"mysql_password": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "MySQL password",
 			},
 			"mysql_host": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MySQL host name",
 				Default:     "127.0.0.1",
 			},
 			"mysql_port": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MySQL port",
 				Default:     "3306",
 			},
 			"mysql_screation_statements": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Computed:    true,
 				Description: "MySQL Creation Statements",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
-			"user_ttl": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "User TTL",
-				Default:     "60m",
-			},
-			"tags": {
-				Type:        schema.TypeSet,
-				Required:    false,
-				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
 			"db_server_certificates": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "the set of root certificate authorities in base64 encoding that clients use when verifying server certificates",
 			},
 			"db_server_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is given. It is also included in the client's handshake to support virtual hosting unless it is an IP address",
 			},
+			"user_ttl": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "User TTL",
+				Default:     "60m",
+			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
+			"tags": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_bastion_issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "Target DB servers for connections., For multiple values repeat this flag.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "false",
 			},
 			"secure_access_db_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
@@ -159,7 +147,8 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
 	mysqlScreationStatements := d.Get("mysql_screation_statements").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -182,6 +171,7 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MysqlHost, mysqlHost)
 	common.GetAkeylessPtr(&body.MysqlPort, mysqlPort)
 	common.GetAkeylessPtr(&body.MysqlScreationStatements, mysqlScreationStatements)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
@@ -301,7 +291,7 @@ func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -329,7 +319,8 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
 	mysqlScreationStatements := d.Get("mysql_screation_statements").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -352,6 +343,7 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MysqlHost, mysqlHost)
 	common.GetAkeylessPtr(&body.MysqlPort, mysqlPort)
 	common.GetAkeylessPtr(&body.MysqlScreationStatements, mysqlScreationStatements)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)

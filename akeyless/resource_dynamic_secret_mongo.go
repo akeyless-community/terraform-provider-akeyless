@@ -31,126 +31,111 @@ func resourceDynamicSecretMongo() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"mongodb_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB name",
 			},
 			"mongodb_roles": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB roles (e.g. MongoDB:[{role:readWrite, db: sales}], MongoDB Atlas:[{roleName : readWrite, databaseName: sales}])",
 				Default:     "[]",
 			},
 			"mongodb_server_uri": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB server URI (e.g. mongodb://user:password@my.mongo.db:27017/admin?replicaSet=mySet)",
 			},
 			"mongodb_username": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB server username",
 			},
 			"mongodb_password": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB server password",
 			},
 			"mongodb_host_port": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "host:port (e.g. my.mongo.db:27017)",
 			},
 			"mongodb_default_auth_db": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB server default authentication database",
 			},
 			"mongodb_uri_options": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB server URI options (e.g. replicaSet=mySet&authSource=authDB)",
 			},
 			"mongodb_atlas_project_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB Atlas project ID",
 			},
 			"mongodb_atlas_api_public_key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB Atlas public key",
 			},
 			"mongodb_atlas_api_private_key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "MongoDB Atlas private key",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL (e.g. 60s, 60m, 60h)",
 				Default:     "60m",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_bastion_issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "Target DB servers for connections., For multiple values repeat this flag.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "false",
 			},
 			"secure_access_db_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
@@ -179,7 +164,8 @@ func resourceDynamicSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	mongodbAtlasProjectId := d.Get("mongodb_atlas_project_id").(string)
 	mongodbAtlasApiPublicKey := d.Get("mongodb_atlas_api_public_key").(string)
 	mongodbAtlasApiPrivateKey := d.Get("mongodb_atlas_api_private_key").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -205,6 +191,7 @@ func resourceDynamicSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MongodbAtlasProjectId, mongodbAtlasProjectId)
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPublicKey, mongodbAtlasApiPublicKey)
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
@@ -340,7 +327,7 @@ func resourceDynamicSecretMongoRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -373,7 +360,8 @@ func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	mongodbAtlasProjectId := d.Get("mongodb_atlas_project_id").(string)
 	mongodbAtlasApiPublicKey := d.Get("mongodb_atlas_api_public_key").(string)
 	mongodbAtlasApiPrivateKey := d.Get("mongodb_atlas_api_private_key").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -399,6 +387,7 @@ func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MongodbAtlasProjectId, mongodbAtlasProjectId)
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPublicKey, mongodbAtlasApiPublicKey)
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)

@@ -31,77 +31,70 @@ func resourceDynamicSecretOracle() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"oracle_service_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Oracle service name",
 			},
 			"oracle_username": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Oracle user",
 			},
 			"oracle_password": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Oracle password",
 			},
 			"oracle_host": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Oracle host name",
 				Default:     "127.0.0.1",
 			},
 			"oracle_port": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Oracle port",
 				Default:     "1521",
 			},
 			"oracle_screation_statements": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Oracle Creation Statements",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"db_server_certificates": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "the set of root certificate authorities in base64 encoding that clients use when verifying server certificates",
 			},
 			"db_server_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is given. It is also included in the client's handshake to support virtual hosting unless it is an IP address",
 			},
@@ -124,7 +117,8 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	oracleHost := d.Get("oracle_host").(string)
 	oraclePort := d.Get("oracle_port").(string)
 	oracleScreationStatements := d.Get("oracle_screation_statements").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -142,6 +136,7 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.OracleHost, oracleHost)
 	common.GetAkeylessPtr(&body.OraclePort, oraclePort)
 	common.GetAkeylessPtr(&body.OracleScreationStatements, oracleScreationStatements)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
@@ -257,7 +252,7 @@ func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -283,7 +278,8 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	oracleHost := d.Get("oracle_host").(string)
 	oraclePort := d.Get("oracle_port").(string)
 	oracleScreationStatements := d.Get("oracle_screation_statements").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -301,6 +297,7 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.OracleHost, oracleHost)
 	common.GetAkeylessPtr(&body.OraclePort, oraclePort)
 	common.GetAkeylessPtr(&body.OracleScreationStatements, oracleScreationStatements)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)

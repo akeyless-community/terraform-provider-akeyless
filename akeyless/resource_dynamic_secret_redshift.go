@@ -31,92 +31,83 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"redshift_db_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Redshift DB name",
 			},
 			"redshift_username": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "redshiftL user",
 			},
 			"redshift_password": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Redshift password",
 			},
 			"redshift_host": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Redshift host name",
 				Default:     "127.0.0.1",
 			},
 			"redshift_port": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Redshift port",
 				Default:     "5439",
 			},
 			"creation_statements": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Redshift Creation Statements",
 				Default:     "CREATE USER \"{{username}}\" WITH PASSWORD '{{password}}'; GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{username}}\";",
 			},
-			"producer_encryption_key": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
+			"tags": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "Target DB servers for connections., For multiple values repeat this flag.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": {
-				Type:        schema.TypeSet,
-				Required:    false,
-				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
 			},
 			"secure_access_db_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
@@ -140,7 +131,8 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	redshiftHost := d.Get("redshift_host").(string)
 	redshiftPort := d.Get("redshift_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
-	producerEncryptionKey := d.Get("producer_encryption_key").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
@@ -161,6 +153,7 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.Tags, tags)
@@ -262,7 +255,7 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -290,7 +283,8 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	redshiftHost := d.Get("redshift_host").(string)
 	redshiftPort := d.Get("redshift_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
-	producerEncryptionKey := d.Get("producer_encryption_key").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
@@ -311,6 +305,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.Tags, tags)

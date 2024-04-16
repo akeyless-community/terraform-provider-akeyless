@@ -90,6 +90,11 @@ func resourceRotatedSecretLdap() *schema.Resource {
 				Optional:    true,
 				Description: "The Hour of the rotation in UTC",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -117,6 +122,7 @@ func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -145,6 +151,7 @@ func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.UserDn, userDn)
 	common.GetAkeylessPtr(&body.UserAttribute, userAttribute)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err := client.RotatedSecretCreateLdap(ctx).Body(body).Execute()
 	if err != nil {
@@ -350,6 +357,7 @@ func resourceRotatedSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
+	passwordLength := d.Get("password_length").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -387,6 +395,7 @@ func resourceRotatedSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.UserDn, userDn)
 	common.GetAkeylessPtr(&body.UserAttribute, userAttribute)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
 	_, _, err = client.RotatedSecretUpdateLdap(ctx).Body(body).Execute()
 	if err != nil {

@@ -14,11 +14,12 @@ import (
 
 func resourceProducerRdp() *schema.Resource {
 	return &schema.Resource{
-		Description: "RDP Producer resource",
-		Create:      resourceProducerRdpCreate,
-		Read:        resourceProducerRdpRead,
-		Update:      resourceProducerRdpUpdate,
-		Delete:      resourceProducerRdpDelete,
+		Description:        "RDP Producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_rdp",
+		Create:             resourceProducerRdpCreate,
+		Read:               resourceProducerRdpRead,
+		Update:             resourceProducerRdpUpdate,
+		Delete:             resourceProducerRdpDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerRdpImport,
 		},

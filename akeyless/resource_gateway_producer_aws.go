@@ -14,11 +14,12 @@ import (
 
 func resourceProducerAws() *schema.Resource {
 	return &schema.Resource{
-		Description: "AWS producer resource",
-		Create:      resourceProducerAwsCreate,
-		Read:        resourceProducerAwsRead,
-		Update:      resourceProducerAwsUpdate,
-		Delete:      resourceProducerAwsDelete,
+		Description:        "AWS producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_aws",
+		Create:             resourceProducerAwsCreate,
+		Read:               resourceProducerAwsRead,
+		Update:             resourceProducerAwsUpdate,
+		Delete:             resourceProducerAwsDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerAwsImport,
 		},

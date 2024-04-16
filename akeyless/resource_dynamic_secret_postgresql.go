@@ -30,104 +30,93 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"postgresql_db_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "PostgreSQL DB name",
 			},
 			"postgresql_username": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "PostgreSQL user",
 			},
 			"postgresql_password": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "PostgreSQL password",
 			},
 			"postgresql_host": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "PostgreSQL host name",
 				Default:     "127.0.0.1",
 			},
 			"postgresql_port": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "PostgreSQL port",
 				Default:     "5432",
 			},
 			"creation_statements": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "PostgreSQL Creation Statements",
 				Default:     "CREATE USER \"{{name}}\" WITH PASSWORD '{{password}}';GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";GRANT CONNECT ON DATABASE postgres TO \"{{name}}\";GRANT USAGE ON SCHEMA public TO \"{{name}}\";",
 			},
-			"producer_encryption_key": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"password_length": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The length of the password to be generated",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_bastion_issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "Target DB servers for connections., For multiple values repeat this flag.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_db_schema": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The db schema",
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "false",
 			},
 			"secure_access_db_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
@@ -151,7 +140,8 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	postgresqlHost := d.Get("postgresql_host").(string)
 	postgresqlPort := d.Get("postgresql_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
-	producerEncryptionKey := d.Get("producer_encryption_key").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -175,6 +165,7 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
@@ -279,7 +270,7 @@ func resourceDynamicSecretPostgresqlRead(d *schema.ResourceData, m interface{}) 
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -307,7 +298,8 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	postgresqlHost := d.Get("postgresql_host").(string)
 	postgresqlPort := d.Get("postgresql_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
-	producerEncryptionKey := d.Get("producer_encryption_key").(string)
+	passwordLength := d.Get("password_length").(string)
+	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -331,6 +323,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)

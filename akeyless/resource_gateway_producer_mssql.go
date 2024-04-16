@@ -14,11 +14,12 @@ import (
 
 func resourceProducerMssql() *schema.Resource {
 	return &schema.Resource{
-		Description: "Microsoft SQL Server producer resource",
-		Create:      resourceProducerMssqlCreate,
-		Read:        resourceProducerMssqlRead,
-		Update:      resourceProducerMssqlUpdate,
-		Delete:      resourceProducerMssqlDelete,
+		Description:        "Microsoft SQL Server producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_mssql",
+		Create:             resourceProducerMssqlCreate,
+		Read:               resourceProducerMssqlRead,
+		Update:             resourceProducerMssqlUpdate,
+		Delete:             resourceProducerMssqlDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerMssqlImport,
 		},

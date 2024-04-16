@@ -13,11 +13,12 @@ import (
 
 func resourceProducerPostgresql() *schema.Resource {
 	return &schema.Resource{
-		Description: "PostgreSQLproducer resource",
-		Create:      resourceProducerPostgresqlCreate,
-		Read:        resourceProducerPostgresqlRead,
-		Update:      resourceProducerPostgresqlUpdate,
-		Delete:      resourceProducerPostgresqlDelete,
+		Description:        "PostgreSQLproducer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_postgresql",
+		Create:             resourceProducerPostgresqlCreate,
+		Read:               resourceProducerPostgresqlRead,
+		Update:             resourceProducerPostgresqlUpdate,
+		Delete:             resourceProducerPostgresqlDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerPostgresqlImport,
 		},

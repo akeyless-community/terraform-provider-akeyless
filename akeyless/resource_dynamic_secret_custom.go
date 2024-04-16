@@ -38,57 +38,49 @@ func resourceDynamicSecretCustom() *schema.Resource {
 				Required:    true,
 				Description: "URL of an endpoint that implements /sync/revoke method",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
-			"tags": {
-				Type:        schema.TypeSet,
-				Required:    false,
-				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
 			"rotate_sync_url": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "URL of an endpoint that implements /sync/rotate method",
 			},
 			"payload": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Secret payload to be sent with each create/revoke webhook request",
 			},
 			"timeout_sec": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Maximum allowed time in seconds for the webhook to return the results",
 				Default:     "60",
 			},
 			"enable_admin_rotation": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable automatic admin credentials rotation",
 				Default:     "false",
 			},
 			"admin_rotation_interval_days": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Rotation period in days",
+			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
+			"tags": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -104,7 +96,7 @@ func resourceDynamicSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
 	revokeSyncUrl := d.Get("revoke_sync_url").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -218,7 +210,7 @@ func resourceDynamicSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -245,7 +237,7 @@ func resourceDynamicSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
 	revokeSyncUrl := d.Get("revoke_sync_url").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())

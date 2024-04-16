@@ -13,11 +13,12 @@ import (
 
 func resourceProducerCustom() *schema.Resource {
 	return &schema.Resource{
-		Description: "Custom producer resource",
-		Create:      resourceProducerCustomCreate,
-		Read:        resourceProducerCustomRead,
-		Update:      resourceProducerCustomUpdate,
-		Delete:      resourceProducerCustomDelete,
+		Description:        "Custom producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_custom",
+		Create:             resourceProducerCustomCreate,
+		Read:               resourceProducerCustomRead,
+		Update:             resourceProducerCustomUpdate,
+		Delete:             resourceProducerCustomDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerCustomImport,
 		},

@@ -14,11 +14,12 @@ import (
 
 func resourceProducerRedshift() *schema.Resource {
 	return &schema.Resource{
-		Description: "Redshift producer resource",
-		Create:      resourceProducerRedshiftCreate,
-		Read:        resourceProducerRedshiftRead,
-		Update:      resourceProducerRedshiftUpdate,
-		Delete:      resourceProducerRedshiftDelete,
+		Description:        "Redshift producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_redshift",
+		Create:             resourceProducerRedshiftCreate,
+		Read:               resourceProducerRedshiftRead,
+		Update:             resourceProducerRedshiftUpdate,
+		Delete:             resourceProducerRedshiftDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerRedshiftImport,
 		},

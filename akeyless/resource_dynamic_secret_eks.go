@@ -31,102 +31,86 @@ func resourceDynamicSecretEks() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of existing target to use in producer creation",
 			},
 			"eks_cluster_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "EKS cluster name. Must match the EKS cluster name you want to connect to.",
 			},
 			"eks_cluster_endpoint": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "EKS Cluster endpoint. https:// , <DNS / IP> of the cluster.",
 			},
 			"eks_cluster_ca_cert": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "EKS Cluster certificate. Base 64 encoded certificate.",
 			},
 			"eks_access_key_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "EKS Access Key ID",
 			},
 			"eks_secret_access_key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "EKS Secret Access Key",
 			},
 			"eks_region": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "EKS Region",
 				Default:     "us-east-2",
 			},
 			"eks_assume_role": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Role ARN. Role to assume when connecting to the EKS cluster",
 			},
-			"producer_encryption_key_name": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Encrypt producer with following key",
-			},
 			"user_ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "User TTL",
 				Default:     "60m",
 			},
+			"encryption_key_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Encrypt dynamic secret details with following key",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
 			"secure_access_cluster_endpoint": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The K8s cluster endpoint URL",
 			},
 			"secure_access_allow_port_forwading": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Port forwarding while using CLI access.",
 			},
 			"secure_access_bastion_issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
 				Default:     "false",
@@ -151,7 +135,7 @@ func resourceDynamicSecretEksCreate(d *schema.ResourceData, m interface{}) error
 	eksSecretAccessKey := d.Get("eks_secret_access_key").(string)
 	eksRegion := d.Get("eks_region").(string)
 	eksAssumeRole := d.Get("eks_assume_role").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -272,7 +256,7 @@ func resourceDynamicSecretEksRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("producer_encryption_key_name", *rOut.DynamicSecretKey)
+		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
 			return err
 		}
@@ -316,7 +300,7 @@ func resourceDynamicSecretEksUpdate(d *schema.ResourceData, m interface{}) error
 	eksSecretAccessKey := d.Get("eks_secret_access_key").(string)
 	eksRegion := d.Get("eks_region").(string)
 	eksAssumeRole := d.Get("eks_assume_role").(string)
-	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
+	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
