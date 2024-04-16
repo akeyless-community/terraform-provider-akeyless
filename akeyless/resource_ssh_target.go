@@ -29,11 +29,6 @@ func resourceSSHTarget() *schema.Resource {
 				Description: "Target name",
 				ForceNew:    true,
 			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -94,7 +89,6 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
@@ -108,7 +102,6 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Port, port)
@@ -221,7 +214,6 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
@@ -235,7 +227,6 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Port, port)
