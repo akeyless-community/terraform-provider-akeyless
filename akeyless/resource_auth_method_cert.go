@@ -64,9 +64,9 @@ func resourceAuthMethodCert() *schema.Resource {
 			},
 			"jwt_ttl": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
-				Description: "creds expiration time in minutes. If not set, use default according to account settings (see get-account-settings)",
+				Description: "Creds expiration time in minutes",
+				Default:     0,
 			},
 			"certificate_data": {
 				Type:        schema.TypeString,
@@ -177,6 +177,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.CertificateData, certificateData)
 	common.GetAkeylessPtr(&body.BoundCommonNames, boundCommonNames)
@@ -407,6 +408,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.CertificateData, certificateData)
 	common.GetAkeylessPtr(&body.BoundCommonNames, boundCommonNames)

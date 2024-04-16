@@ -636,3 +636,28 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 
 	return nil
 }
+
+func getAccountSettings(m interface{}) (*akeyless.GetAccountSettingsCommandOutput, error) {
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	ctx := context.Background()
+	bodyAcc := akeyless.GetAccountSettings{
+		Token: &token,
+	}
+	rOut, _, err := client.GetAccountSettings(ctx).Body(bodyAcc).Execute()
+	if err != nil {
+		var apiErr akeyless.GenericOpenAPIError
+		if errors.As(err, &apiErr) {
+			return nil, fmt.Errorf("failed to get account settings: %v", string(apiErr.Body()))
+		}
+		return nil, fmt.Errorf("failed to get account settings: %w", err)
+	}
+
+	return &rOut, nil
+}
+
+func extractAccountJwtTtlDefault(acc *akeyless.GetAccountSettingsCommandOutput) int64 {
+	return *acc.SystemAccessCredsSettings.JwtTtlDefault
+}

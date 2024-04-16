@@ -49,6 +49,12 @@ func resourceAuthMethodAwsIam() *schema.Resource {
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
+			"jwt_ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Creds expiration time in minutes",
+				Default:     0,
+			},
 			"bound_aws_account_id": {
 				Type:        schema.TypeSet,
 				Required:    true,
@@ -126,6 +132,7 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	boundAwsAccountIdSet := d.Get("bound_aws_account_id").(*schema.Set)
 	boundAwsAccountId := common.ExpandStringList(boundAwsAccountIdSet.List())
 	stsUrl := d.Get("sts_url").(string)
@@ -150,6 +157,7 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.StsUrl, stsUrl)
 	common.GetAkeylessPtr(&body.BoundArn, boundArn)
 	common.GetAkeylessPtr(&body.BoundRoleName, boundRoleName)
@@ -231,6 +239,21 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	rOutAcc, err := getAccountSettings(m)
+	if err != nil {
+		return err
+	}
+	jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
+	if rOut.AccessInfo.JwtTtl != nil {
+		if *rOut.AccessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+			err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	if rOut.AccessInfo.AwsIamAccessRules.AccountId != nil {
 		err = d.Set("bound_aws_account_id", *rOut.AccessInfo.AwsIamAccessRules.AccountId)
 		if err != nil {
@@ -297,6 +320,7 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	boundAwsAccountIdSet := d.Get("bound_aws_account_id").(*schema.Set)
 	boundAwsAccountId := common.ExpandStringList(boundAwsAccountIdSet.List())
 	stsUrl := d.Get("sts_url").(string)
@@ -321,6 +345,7 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.StsUrl, stsUrl)
 	common.GetAkeylessPtr(&body.BoundArn, boundArn)
 	common.GetAkeylessPtr(&body.BoundRoleName, boundRoleName)

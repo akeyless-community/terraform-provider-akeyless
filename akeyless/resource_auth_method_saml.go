@@ -49,6 +49,12 @@ func resourceAuthMethodSaml() *schema.Resource {
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
+			"jwt_ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Creds expiration time in minutes",
+				Default:     0,
+			},
 			"unique_identifier": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -95,6 +101,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	idpMetadataUrl := d.Get("idp_metadata_url").(string)
 	idpMetadataXmlData := d.Get("idp_metadata_xml_data").(string)
@@ -109,6 +116,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.IdpMetadataUrl, idpMetadataUrl)
 	common.GetAkeylessPtr(&body.IdpMetadataXmlData, idpMetadataXmlData)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
@@ -186,6 +194,21 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	rOutAcc, err := getAccountSettings(m)
+	if err != nil {
+		return err
+	}
+	jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
+	if rOut.AccessInfo.JwtTtl != nil {
+		if *rOut.AccessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+			err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	if rOut.AccessInfo.SamlAccessRules.UniqueIdentifier != nil {
 		err = d.Set("unique_identifier", *rOut.AccessInfo.SamlAccessRules.UniqueIdentifier)
 		if err != nil {
@@ -231,6 +254,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	idpMetadataUrl := d.Get("idp_metadata_url").(string)
 	idpMetadataXmlData := d.Get("idp_metadata_xml_data").(string)
@@ -245,6 +269,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.IdpMetadataUrl, idpMetadataUrl)
 	common.GetAkeylessPtr(&body.IdpMetadataXmlData, idpMetadataXmlData)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)

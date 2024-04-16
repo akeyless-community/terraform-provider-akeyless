@@ -49,6 +49,12 @@ func resourceAuthMethodGcp() *schema.Resource {
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
+			"jwt_ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Creds expiration time in minutes",
+				Default:     0,
+			},
 			"type": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -124,6 +130,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	gcptype := d.Get("type").(string)
 	audience := d.Get("audience").(string)
 	serviceAccountCredsData := d.Get("service_account_creds_data").(string)
@@ -147,6 +154,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.ServiceAccountCredsData, serviceAccountCredsData)
 	common.GetAkeylessPtr(&body.BoundProjects, boundProjects)
 	common.GetAkeylessPtr(&body.BoundServiceAccounts, boundServiceAccounts)
@@ -227,6 +235,21 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	rOutAcc, err := getAccountSettings(m)
+	if err != nil {
+		return err
+	}
+	jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
+	if rOut.AccessInfo.JwtTtl != nil {
+		if *rOut.AccessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+			err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	if rOut.AccessInfo.GcpAccessRules.Type != nil {
 		err = d.Set("type", *rOut.AccessInfo.GcpAccessRules.Type)
 		if err != nil {
@@ -303,6 +326,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	gcptype := d.Get("type").(string)
 	audience := d.Get("audience").(string)
 	serviceAccountCredsData := d.Get("service_account_creds_data").(string)
@@ -326,6 +350,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.ServiceAccountCredsData, serviceAccountCredsData)
 	common.GetAkeylessPtr(&body.BoundProjects, boundProjects)
 	common.GetAkeylessPtr(&body.BoundServiceAccounts, boundServiceAccounts)

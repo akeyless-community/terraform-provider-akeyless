@@ -49,6 +49,12 @@ func resourceAuthMethodAzureAd() *schema.Resource {
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
+			"jwt_ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Creds expiration time in minutes",
+				Default:     0,
+			},
 			"bound_tenant_id": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -153,6 +159,7 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	boundTenantId := d.Get("bound_tenant_id").(string)
 	issuer := d.Get("issuer").(string)
 	jwksUri := d.Get("jwks_uri").(string)
@@ -182,6 +189,7 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.Issuer, issuer)
 	common.GetAkeylessPtr(&body.JwksUri, jwksUri)
 	common.GetAkeylessPtr(&body.Audience, audience)
@@ -264,6 +272,21 @@ func resourceAuthMethodAzureAdRead(d *schema.ResourceData, m interface{}) error 
 		err = d.Set("bound_ips", strings.Split(*rOut.AccessInfo.CidrWhitelist, ","))
 		if err != nil {
 			return err
+		}
+	}
+
+	rOutAcc, err := getAccountSettings(m)
+	if err != nil {
+		return err
+	}
+	jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
+	if rOut.AccessInfo.JwtTtl != nil {
+		if *rOut.AccessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+			err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -359,6 +382,7 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	boundTenantId := d.Get("bound_tenant_id").(string)
 	issuer := d.Get("issuer").(string)
 	jwksUri := d.Get("jwks_uri").(string)
@@ -388,6 +412,7 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.Issuer, issuer)
 	common.GetAkeylessPtr(&body.JwksUri, jwksUri)
 	common.GetAkeylessPtr(&body.Audience, audience)
