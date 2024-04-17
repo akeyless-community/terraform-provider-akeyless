@@ -61,10 +61,15 @@ func resourceDynamicSecretOracle() *schema.Resource {
 				Description: "Oracle port",
 				Default:     "1521",
 			},
-			"oracle_screation_statements": {
+			"oracle_creation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Oracle Creation Statements",
+			},
+			"oracle_revocation_statements": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Oracle Revocation Statements",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
@@ -116,7 +121,8 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	oraclePassword := d.Get("oracle_password").(string)
 	oracleHost := d.Get("oracle_host").(string)
 	oraclePort := d.Get("oracle_port").(string)
-	oracleScreationStatements := d.Get("oracle_screation_statements").(string)
+	oracleScreationStatements := d.Get("oracle_creation_statements").(string)
+	oracleRevocationStatements := d.Get("oracle_revocation_statements").(string)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -136,6 +142,7 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.OracleHost, oracleHost)
 	common.GetAkeylessPtr(&body.OraclePort, oraclePort)
 	common.GetAkeylessPtr(&body.OracleScreationStatements, oracleScreationStatements)
+	common.GetAkeylessPtr(&body.OracleRevocationStatements, oracleRevocationStatements)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
@@ -246,7 +253,13 @@ func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.OracleCreationStatements != nil {
-		err = d.Set("oracle_screation_statements", *rOut.OracleCreationStatements)
+		err = d.Set("oracle_creation_statements", *rOut.OracleCreationStatements)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.OracleRevocationStatements != nil {
+		err = d.Set("oracle_revocation_statements", *rOut.OracleRevocationStatements)
 		if err != nil {
 			return err
 		}
@@ -277,7 +290,8 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	oraclePassword := d.Get("oracle_password").(string)
 	oracleHost := d.Get("oracle_host").(string)
 	oraclePort := d.Get("oracle_port").(string)
-	oracleScreationStatements := d.Get("oracle_screation_statements").(string)
+	oracleScreationStatements := d.Get("oracle_creation_statements").(string)
+	oracleRevocationStatements := d.Get("oracle_revocation_statements").(string)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -297,6 +311,7 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.OracleHost, oracleHost)
 	common.GetAkeylessPtr(&body.OraclePort, oraclePort)
 	common.GetAkeylessPtr(&body.OracleScreationStatements, oracleScreationStatements)
+	common.GetAkeylessPtr(&body.OracleRevocationStatements, oracleRevocationStatements)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)

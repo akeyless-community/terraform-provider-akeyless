@@ -62,11 +62,15 @@ func resourceDynamicSecretMysql() *schema.Resource {
 				Description: "MySQL port",
 				Default:     "3306",
 			},
-			"mysql_screation_statements": {
+			"mysql_creation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 				Description: "MySQL Creation Statements",
+			},
+			"mysql_revocation_statements": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "MySQL Revocation Statements",
 			},
 			"db_server_certificates": {
 				Type:        schema.TypeString,
@@ -146,7 +150,8 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	mysqlPassword := d.Get("mysql_password").(string)
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
-	mysqlScreationStatements := d.Get("mysql_screation_statements").(string)
+	mysqlCreationStatements := d.Get("mysql_creation_statements").(string)
+	mysqlRevocationStatements := d.Get("mysql_revocation_statements").(string)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -170,7 +175,8 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MysqlPassword, mysqlPassword)
 	common.GetAkeylessPtr(&body.MysqlHost, mysqlHost)
 	common.GetAkeylessPtr(&body.MysqlPort, mysqlPort)
-	common.GetAkeylessPtr(&body.MysqlScreationStatements, mysqlScreationStatements)
+	common.GetAkeylessPtr(&body.MysqlScreationStatements, mysqlCreationStatements)
+	common.GetAkeylessPtr(&body.MysqlRevocationStatements, mysqlRevocationStatements)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
@@ -285,7 +291,13 @@ func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.MysqlCreationStatements != nil {
-		err = d.Set("mysql_screation_statements", *rOut.MysqlCreationStatements)
+		err = d.Set("mysql_creation_statements", *rOut.MysqlCreationStatements)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.MysqlRevocationStatements != nil {
+		err = d.Set("mysql_revocation_statements", *rOut.MysqlRevocationStatements)
 		if err != nil {
 			return err
 		}
@@ -318,7 +330,8 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	mysqlPassword := d.Get("mysql_password").(string)
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
-	mysqlScreationStatements := d.Get("mysql_screation_statements").(string)
+	mysqlCreationStatements := d.Get("mysql_creation_statements").(string)
+	mysqlRevocationStatements := d.Get("mysql_revocation_statements").(string)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -342,7 +355,8 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MysqlPassword, mysqlPassword)
 	common.GetAkeylessPtr(&body.MysqlHost, mysqlHost)
 	common.GetAkeylessPtr(&body.MysqlPort, mysqlPort)
-	common.GetAkeylessPtr(&body.MysqlScreationStatements, mysqlScreationStatements)
+	common.GetAkeylessPtr(&body.MysqlScreationStatements, mysqlCreationStatements)
+	common.GetAkeylessPtr(&body.MysqlRevocationStatements, mysqlRevocationStatements)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)

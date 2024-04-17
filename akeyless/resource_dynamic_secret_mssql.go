@@ -65,13 +65,13 @@ func resourceDynamicSecretMssql() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "MSSQL Server Creation Statements",
-				Default:     "CREATE LOGIN [{{name}}] WITH PASSWORD = '{{password}}';",
+				Default:     `CREATE LOGIN [{{name}}] WITH PASSWORD = '{{password}}';`,
 			},
 			"mssql_revocation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "MSSQL Server Revocation Statements",
-				Default:     "DROP LOGIN [{{name}}];",
+				Default:     `DROP LOGIN [{{name}}];`,
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
