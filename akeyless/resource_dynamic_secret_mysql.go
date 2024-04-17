@@ -82,6 +82,17 @@ func resourceDynamicSecretMysql() *schema.Resource {
 				Optional:    true,
 				Description: "Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is given. It is also included in the client's handshake to support virtual hosting unless it is an IP address",
 			},
+			"ssl": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable/Disable SSL [true/false]",
+				Default:     "false",
+			},
+			"ssl_certificate": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)",
+			},
 			"user_ttl": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -150,8 +161,10 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	mysqlPassword := d.Get("mysql_password").(string)
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
-	mysqlCreationStatements := d.Get("mysql_creation_statements").(string)
-	mysqlRevocationStatements := d.Get("mysql_revocation_statements").(string)
+	creationStatements := d.Get("mysql_creation_statements").(string)
+	revocationStatements := d.Get("mysql_revocation_statements").(string)
+	ssl := d.Get("ssl").(bool)
+	sslCertificate := d.Get("ssl_certificate").(string)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -175,8 +188,10 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MysqlPassword, mysqlPassword)
 	common.GetAkeylessPtr(&body.MysqlHost, mysqlHost)
 	common.GetAkeylessPtr(&body.MysqlPort, mysqlPort)
-	common.GetAkeylessPtr(&body.MysqlScreationStatements, mysqlCreationStatements)
-	common.GetAkeylessPtr(&body.MysqlRevocationStatements, mysqlRevocationStatements)
+	common.GetAkeylessPtr(&body.MysqlScreationStatements, creationStatements)
+	common.GetAkeylessPtr(&body.MysqlRevocationStatements, revocationStatements)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
+	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
@@ -302,6 +317,18 @@ func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error
 			return err
 		}
 	}
+	if rOut.SslConnectionMode != nil {
+		err = d.Set("ssl", *rOut.SslConnectionMode)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.SslConnectionCertificate != nil {
+		err = d.Set("ssl_certificate", *rOut.SslConnectionCertificate)
+		if err != nil {
+			return err
+		}
+	}
 	if rOut.DynamicSecretKey != nil {
 		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
@@ -330,8 +357,10 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	mysqlPassword := d.Get("mysql_password").(string)
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
-	mysqlCreationStatements := d.Get("mysql_creation_statements").(string)
-	mysqlRevocationStatements := d.Get("mysql_revocation_statements").(string)
+	creationStatements := d.Get("mysql_creation_statements").(string)
+	revocationStatements := d.Get("mysql_revocation_statements").(string)
+	ssl := d.Get("ssl").(bool)
+	sslCertificate := d.Get("ssl_certificate").(string)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -355,8 +384,10 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MysqlPassword, mysqlPassword)
 	common.GetAkeylessPtr(&body.MysqlHost, mysqlHost)
 	common.GetAkeylessPtr(&body.MysqlPort, mysqlPort)
-	common.GetAkeylessPtr(&body.MysqlScreationStatements, mysqlCreationStatements)
-	common.GetAkeylessPtr(&body.MysqlRevocationStatements, mysqlRevocationStatements)
+	common.GetAkeylessPtr(&body.MysqlScreationStatements, creationStatements)
+	common.GetAkeylessPtr(&body.MysqlRevocationStatements, revocationStatements)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
+	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)

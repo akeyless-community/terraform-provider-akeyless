@@ -67,6 +67,12 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 				Description: "Redshift Creation Statements",
 				Default:     "CREATE USER \"{{username}}\" WITH PASSWORD '{{password}}'; GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{username}}\";",
 			},
+			"ssl": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable/Disable SSL [true/false]",
+				Default:     "false",
+			},
 			"user_ttl": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -131,6 +137,7 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	redshiftHost := d.Get("redshift_host").(string)
 	redshiftPort := d.Get("redshift_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
+	ssl := d.Get("ssl").(bool)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -151,6 +158,7 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.RedshiftHost, redshiftHost)
 	common.GetAkeylessPtr(&body.RedshiftPort, redshiftPort)
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
@@ -254,6 +262,12 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 			return err
 		}
 	}
+	if rOut.SslConnectionMode != nil {
+		err = d.Set("ssl", *rOut.SslConnectionMode)
+		if err != nil {
+			return err
+		}
+	}
 	if rOut.DynamicSecretKey != nil {
 		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
@@ -283,6 +297,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	redshiftHost := d.Get("redshift_host").(string)
 	redshiftPort := d.Get("redshift_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
+	ssl := d.Get("ssl").(bool)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -303,6 +318,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.RedshiftHost, redshiftHost)
 	common.GetAkeylessPtr(&body.RedshiftPort, redshiftPort)
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)

@@ -61,6 +61,17 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 				Description: "Cassandra Creation Statements",
 				Default:     "CREATE ROLE '{{username}}' WITH PASSWORD = '{{password}}' AND LOGIN = true; GRANT SELECT ON ALL KEYSPACES TO '{{username}}';",
 			},
+			"ssl": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable/Disable SSL [true/false]",
+				Default:     "false",
+			},
+			"ssl_certificate": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)",
+			},
 			"user_ttl": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -100,7 +111,9 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	cassandraUsername := d.Get("cassandra_username").(string)
 	cassandraPassword := d.Get("cassandra_password").(string)
 	cassandraPort := d.Get("cassandra_port").(string)
-	cassandraCreationStatements := d.Get("cassandra_creation_statements").(string)
+	creationStatements := d.Get("cassandra_creation_statements").(string)
+	ssl := d.Get("ssl").(bool)
+	sslCertificate := d.Get("ssl_certificate").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -116,7 +129,9 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.CassandraUsername, cassandraUsername)
 	common.GetAkeylessPtr(&body.CassandraPassword, cassandraPassword)
 	common.GetAkeylessPtr(&body.CassandraPort, cassandraPort)
-	common.GetAkeylessPtr(&body.CassandraCreationStatements, cassandraCreationStatements)
+	common.GetAkeylessPtr(&body.CassandraCreationStatements, creationStatements)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
+	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
@@ -164,6 +179,18 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 	}
 	if rOut.CassandraCreationStatements != nil {
 		err = d.Set("cassandra_creation_statements", *rOut.CassandraCreationStatements)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.SslConnectionMode != nil {
+		err = d.Set("ssl", *rOut.SslConnectionMode)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.SslConnectionCertificate != nil {
+		err = d.Set("ssl_certificate", *rOut.SslConnectionCertificate)
 		if err != nil {
 			return err
 		}
@@ -237,7 +264,9 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	cassandraUsername := d.Get("cassandra_username").(string)
 	cassandraPassword := d.Get("cassandra_password").(string)
 	cassandraPort := d.Get("cassandra_port").(string)
-	cassandraCreationStatements := d.Get("cassandra_creation_statements").(string)
+	creationStatements := d.Get("cassandra_creation_statements").(string)
+	ssl := d.Get("ssl").(bool)
+	sslCertificate := d.Get("ssl_certificate").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -253,7 +282,9 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.CassandraUsername, cassandraUsername)
 	common.GetAkeylessPtr(&body.CassandraPassword, cassandraPassword)
 	common.GetAkeylessPtr(&body.CassandraPort, cassandraPort)
-	common.GetAkeylessPtr(&body.CassandraCreationStatements, cassandraCreationStatements)
+	common.GetAkeylessPtr(&body.CassandraCreationStatements, creationStatements)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
+	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)

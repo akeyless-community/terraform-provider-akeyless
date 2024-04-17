@@ -72,6 +72,12 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 				Description: "PostgreSQL Revocation Statement",
 				Default:     `REASSIGN OWNED BY "{{name}}" TO {{userHost}}; DROP OWNED BY "{{name}}"; select pg_terminate_backend(pid) from pg_stat_activity where usename = '{{name}}'; DROP USER "{{name}}";`,
 			},
+			"ssl": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable/Disable SSL [true/false]",
+				Default:     "false",
+			},
 			"user_ttl": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -147,6 +153,7 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	postgresqlPort := d.Get("postgresql_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
 	revocationStatements := d.Get("revocation_statements").(string)
+	ssl := d.Get("ssl").(bool)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -171,6 +178,7 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.PostgresqlPort, postgresqlPort)
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)
 	common.GetAkeylessPtr(&body.RevocationStatement, revocationStatements)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
@@ -283,6 +291,12 @@ func resourceDynamicSecretPostgresqlRead(d *schema.ResourceData, m interface{}) 
 			return err
 		}
 	}
+	if rOut.SslConnectionMode != nil {
+		err = d.Set("ssl", *rOut.SslConnectionMode)
+		if err != nil {
+			return err
+		}
+	}
 	if rOut.DynamicSecretKey != nil {
 		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
 		if err != nil {
@@ -313,6 +327,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	postgresqlPort := d.Get("postgresql_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
 	revocationStatements := d.Get("revocation_statements").(string)
+	ssl := d.Get("ssl").(bool)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -337,6 +352,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.PostgresqlPort, postgresqlPort)
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)
 	common.GetAkeylessPtr(&body.RevocationStatement, revocationStatements)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
