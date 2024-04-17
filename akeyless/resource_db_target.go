@@ -69,6 +69,17 @@ func resourceDbTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is provided. It is also included in the client's handshake to support virtual hosting unless it is an IP address",
 			},
+			"ssl": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable/Disable SSL [true/false]",
+				Default:     "false",
+			},
+			"ssl_certificate": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)",
+			},
 			"snowflake_account": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -144,6 +155,8 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	dbName := d.Get("db_name").(string)
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
+	ssl := d.Get("ssl").(bool)
+	sslCertificate := d.Get("ssl_certificate").(string)
 	snowflakeAccount := d.Get("snowflake_account").(string)
 	mongodbAtlas := d.Get("mongodb_atlas").(bool)
 	mongodbDefaultAuthDb := d.Get("mongodb_default_auth_db").(string)
@@ -168,6 +181,8 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DbName, dbName)
 	common.GetAkeylessPtr(&body.DbServerCertificates, dbServerCertificates)
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
+	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
 	common.GetAkeylessPtr(&body.SnowflakeAccount, snowflakeAccount)
 	common.GetAkeylessPtr(&body.MongodbAtlas, mongodbAtlas)
 	common.GetAkeylessPtr(&body.MongodbDefaultAuthDb, mongodbDefaultAuthDb)
@@ -221,96 +236,110 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 	if rOut.Value.DbTargetDetails != nil {
-		if rOut.Value.DbTargetDetails.DbHostName != nil {
-			err := d.Set("host", *rOut.Value.DbTargetDetails.DbHostName)
+		dbTargetDetails := *rOut.Value.DbTargetDetails
+		if dbTargetDetails.DbHostName != nil {
+			err := d.Set("host", *dbTargetDetails.DbHostName)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.DbTargetDetails.DbPort != nil {
-			err := d.Set("port", *rOut.Value.DbTargetDetails.DbPort)
+		if dbTargetDetails.DbPort != nil {
+			err := d.Set("port", *dbTargetDetails.DbPort)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.DbTargetDetails.DbUserName != nil {
-			err := d.Set("user_name", *rOut.Value.DbTargetDetails.DbUserName)
+		if dbTargetDetails.DbUserName != nil {
+			err := d.Set("user_name", *dbTargetDetails.DbUserName)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.DbTargetDetails.DbPwd != nil {
-			err := d.Set("pwd", *rOut.Value.DbTargetDetails.DbPwd)
+		if dbTargetDetails.DbPwd != nil {
+			err := d.Set("pwd", *dbTargetDetails.DbPwd)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.DbTargetDetails.DbName != nil {
+		if dbTargetDetails.DbName != nil {
 			// oracle_service_name can be extracted from DbName in the result
 			if d.Get("db_type") == "oracle" {
-				err := d.Set("oracle_service_name", *rOut.Value.DbTargetDetails.DbName)
+				err := d.Set("oracle_service_name", *dbTargetDetails.DbName)
 				if err != nil {
 					return err
 				}
 			} else {
-				err := d.Set("db_name", *rOut.Value.DbTargetDetails.DbName)
+				err := d.Set("db_name", *dbTargetDetails.DbName)
 				if err != nil {
 					return err
 				}
 			}
 		}
-		if rOut.Value.DbTargetDetails.DbServerCertificates != nil {
-			err := d.Set("db_server_certificates", *rOut.Value.DbTargetDetails.DbServerCertificates)
+		if dbTargetDetails.DbServerCertificates != nil {
+			err := d.Set("db_server_certificates", *dbTargetDetails.DbServerCertificates)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.DbTargetDetails.DbServerName != nil {
-			err := d.Set("db_server_name", *rOut.Value.DbTargetDetails.DbServerName)
+		if dbTargetDetails.DbServerName != nil {
+			err := d.Set("db_server_name", *dbTargetDetails.DbServerName)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.DbTargetDetails.SfAccount != nil {
-			err := d.Set("snowflake_account", *rOut.Value.DbTargetDetails.SfAccount)
+		if dbTargetDetails.SslConnectionMode != nil {
+			err = d.Set("ssl", *dbTargetDetails.SslConnectionMode)
+			if err != nil {
+				return err
+			}
+		}
+		if dbTargetDetails.SslConnectionCertificate != nil {
+			err = d.Set("ssl_certificate", *dbTargetDetails.SslConnectionCertificate)
+			if err != nil {
+				return err
+			}
+		}
+		if dbTargetDetails.SfAccount != nil {
+			err := d.Set("snowflake_account", *dbTargetDetails.SfAccount)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	if rOut.Value.MongoDbTargetDetails != nil {
-		if rOut.Value.MongoDbTargetDetails.MongodbIsAtlas != nil {
-			err := d.Set("mongodb_atlas", *rOut.Value.MongoDbTargetDetails.MongodbIsAtlas)
+		mongoDetails := *rOut.Value.MongoDbTargetDetails
+		if mongoDetails.MongodbIsAtlas != nil {
+			err := d.Set("mongodb_atlas", *mongoDetails.MongodbIsAtlas)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.MongoDbTargetDetails.MongodbDefaultAuthDb != nil {
-			err := d.Set("mongodb_default_auth_db", *rOut.Value.MongoDbTargetDetails.MongodbDefaultAuthDb)
+		if mongoDetails.MongodbDefaultAuthDb != nil {
+			err := d.Set("mongodb_default_auth_db", *mongoDetails.MongodbDefaultAuthDb)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.MongoDbTargetDetails.MongodbUriOptions != nil {
-			err := d.Set("mongodb_uri_options", *rOut.Value.MongoDbTargetDetails.MongodbUriOptions)
+		if mongoDetails.MongodbUriOptions != nil {
+			err := d.Set("mongodb_uri_options", *mongoDetails.MongodbUriOptions)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.MongoDbTargetDetails.MongodbAtlasProjectId != nil {
-			err := d.Set("mongodb_atlas_project_id", *rOut.Value.MongoDbTargetDetails.MongodbAtlasProjectId)
+		if mongoDetails.MongodbAtlasProjectId != nil {
+			err := d.Set("mongodb_atlas_project_id", *mongoDetails.MongodbAtlasProjectId)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPublicKey != nil {
-			err := d.Set("mongodb_atlas_api_public_key", *rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPublicKey)
+		if mongoDetails.MongodbAtlasApiPublicKey != nil {
+			err := d.Set("mongodb_atlas_api_public_key", *mongoDetails.MongodbAtlasApiPublicKey)
 			if err != nil {
 				return err
 			}
 		}
-		if rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPrivateKey != nil {
-			err := d.Set("mongodb_atlas_api_private_key", *rOut.Value.MongoDbTargetDetails.MongodbAtlasApiPrivateKey)
+		if mongoDetails.MongodbAtlasApiPrivateKey != nil {
+			err := d.Set("mongodb_atlas_api_private_key", *mongoDetails.MongodbAtlasApiPrivateKey)
 			if err != nil {
 				return err
 			}
@@ -351,6 +380,8 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	dbName := d.Get("db_name").(string)
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
+	ssl := d.Get("ssl").(bool)
+	sslCertificate := d.Get("ssl_certificate").(string)
 	snowflakeAccount := d.Get("snowflake_account").(string)
 	mongodbAtlas := d.Get("mongodb_atlas").(bool)
 	mongodbDefaultAuthDb := d.Get("mongodb_default_auth_db").(string)
@@ -375,6 +406,8 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DbName, dbName)
 	common.GetAkeylessPtr(&body.DbServerCertificates, dbServerCertificates)
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
+	common.GetAkeylessPtr(&body.Ssl, ssl)
+	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
 	common.GetAkeylessPtr(&body.SnowflakeAccount, snowflakeAccount)
 	common.GetAkeylessPtr(&body.MongodbAtlas, mongodbAtlas)
 	common.GetAkeylessPtr(&body.MongodbDefaultAuthDb, mongodbDefaultAuthDb)
