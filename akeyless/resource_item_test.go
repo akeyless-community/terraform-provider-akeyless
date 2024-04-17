@@ -16,7 +16,7 @@ import (
 func TestDfcKeyRsaResource(t *testing.T) {
 	t.Parallel()
 
-	cert := generateCertForTest(t, 1024)
+	_, cert := generateCertForTest(t, 1024)
 
 	name := "test_rsa_key"
 	itemPath := testPath(name)
@@ -412,6 +412,30 @@ func TestCsrDataSource(t *testing.T) {
 	tesItemDataSource(t, config, "csr", []string{"data"})
 }
 
+func TestCertificateDataSource(t *testing.T) {
+
+	// create certificate
+	key, cert := generateCertForTest(t, 512)
+
+	certificateName := "test-certificate-data"
+	certificatePath := testPath(certificateName)
+	createCertificate(t, certificatePath, cert, key)
+	defer deleteItem(t, certificatePath)
+
+	config := fmt.Sprintf(`
+		data "akeyless_certificate" "test_certificate" {
+			name	= "%v"
+		}
+
+		output "certificate" {
+			value     = data.akeyless_certificate.test_certificate
+			sensitive = true
+		}
+	`, certificatePath)
+
+	tesItemDataSource(t, config, "certificate", []string{"certificate_pem", "private_key_pem"})
+}
+
 func tesItemResource(t *testing.T, config, configUpdate, itemPath string) {
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
@@ -510,13 +534,13 @@ func tesItemDataSource(t *testing.T, config, outputName string, params []string)
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  checkOutputNotEmpty(t, outputName, params),
+				Check:  checkOutputNotEmpty(outputName, params),
 			},
 		},
 	})
 }
 
-func checkOutputNotEmpty(t *testing.T, name string, params []string) resource.TestCheckFunc {
+func checkOutputNotEmpty(name string, params []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ms := s.RootModule()
 		outputs, ok := ms.Outputs[name]
