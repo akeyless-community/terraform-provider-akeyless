@@ -133,14 +133,14 @@ func resourceDynamicSecretK8s() *schema.Resource {
 			"secure_access_web": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Enable Web Secure Remote Access",
 				Default:     "false",
+				Description: "Enable Web Secure Remote Access",
 			},
 			"secure_access_web_proxy": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Web-Proxy via Akeyless Web Access Bastion",
 				Default:     "false",
+				Description: "Web-Proxy via Akeyless Web Access Bastion",
 			},
 			"delete_protection": {
 				Type:        schema.TypeString,

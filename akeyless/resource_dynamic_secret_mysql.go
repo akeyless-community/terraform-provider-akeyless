@@ -65,11 +65,13 @@ func resourceDynamicSecretMysql() *schema.Resource {
 			"mysql_creation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     `CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}' PASSWORD EXPIRE INTERVAL 30 DAY;GRANT SELECT ON *.* TO '{{name}}'@'%';`,
 				Description: "MySQL Creation Statements",
 			},
 			"mysql_revocation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     `REVOKE ALL PRIVILEGES, GRANT OPTION FROM '{{name}}'@'%'; DROP USER '{{name}}'@'%';`,
 				Description: "MySQL Revocation Statements",
 			},
 			"db_server_certificates": {
@@ -134,14 +136,14 @@ func resourceDynamicSecretMysql() *schema.Resource {
 			"secure_access_web": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Enable Web Secure Remote Access ",
 				Default:     "false",
+				Description: "Enable Web Secure Remote Access",
 			},
 			"secure_access_db_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
+				Description: "Enable Web Secure Remote Access",
 			},
 		},
 	}

@@ -117,12 +117,11 @@ func resourceDynamicSecretAzure() *schema.Resource {
 			"secure_access_web": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Enable Web Secure Remote Access ",
 				Default:     "true",
+				Description: "Enable Web Secure Remote Access",
 			},
 			"secure_access_url": {
 				Type:     schema.TypeString,
-				Required: false,
 				Optional: true,
 				Computed: true,
 			},

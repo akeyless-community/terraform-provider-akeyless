@@ -48,8 +48,8 @@ func resourceRotatedSecretMySql() *schema.Resource {
 			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The credentials to connect with use-user-creds/use-target-creds",
-				Default:     "use-user-creds",
+				Description: "The credentials to connect with [use-self-creds/use-target-creds]",
+				Default:     "use-self-creds",
 			},
 			"rotated_username": {
 				Type:        schema.TypeString,
@@ -66,7 +66,7 @@ func resourceRotatedSecretMySql() *schema.Resource {
 			"auto_rotate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation",
+				Description: "Whether to automatically rotate every rotation_interval days, or disable existing automatic rotation",
 			},
 			"rotation_interval": {
 				Type:        schema.TypeString,

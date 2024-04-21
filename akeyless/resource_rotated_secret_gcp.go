@@ -48,8 +48,8 @@ func resourceRotatedSecretGcp() *schema.Resource {
 			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The credentials to connect with use-user-creds/use-target-creds",
-				Default:     "use-user-creds",
+				Description: "The credentials to connect with [use-self-creds/use-target-creds]",
+				Default:     "use-self-creds",
 			},
 			"gcp_key": {
 				Type:        schema.TypeString,

@@ -64,11 +64,13 @@ func resourceDynamicSecretOracle() *schema.Resource {
 			"oracle_creation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     `CREATE USER {{username}} IDENTIFIED BY "{{password}}"; GRANT CONNECT TO {{username}}; GRANT CREATE SESSION TO {{username}};`,
 				Description: "Oracle Creation Statements",
 			},
 			"oracle_revocation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     `REVOKE CONNECT FROM {{name}};REVOKE CREATE SESSION FROM {{name}};DROP USER {{name}};`,
 				Description: "Oracle Revocation Statements",
 			},
 			"user_ttl": {

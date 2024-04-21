@@ -124,14 +124,14 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 			"secure_access_web": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Enable Web Secure Remote Access ",
 				Default:     "false",
+				Description: "Enable Web Secure Remote Access",
 			},
 			"secure_access_db_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
+				Description: "The DB Name",
 			},
 		},
 	}
