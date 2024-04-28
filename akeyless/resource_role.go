@@ -321,7 +321,6 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 
 	accessRulesNewValues := getNewAccessRules(d)
 	accessRulesOldValues := saveRoleAccessRuleOldValues(rules.PathRules)
-
 	description := d.Get("description").(string)
 
 	err, ok = updateRoleAccessRules(ctx, name, description, accessRulesNewValues, m)

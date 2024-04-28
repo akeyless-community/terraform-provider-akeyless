@@ -160,7 +160,6 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	mongodbAtlasApiPublicKey := d.Get("mongodb_atlas_api_public_key").(string)
 	mongodbAtlasApiPrivateKey := d.Get("mongodb_atlas_api_private_key").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 
@@ -186,7 +185,6 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPublicKey, mongodbAtlasApiPublicKey)
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.OracleServiceName, oracleServiceName)
 
@@ -385,7 +383,6 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	mongodbAtlasApiPublicKey := d.Get("mongodb_atlas_api_public_key").(string)
 	mongodbAtlasApiPrivateKey := d.Get("mongodb_atlas_api_private_key").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 
@@ -411,7 +408,6 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPublicKey, mongodbAtlasApiPublicKey)
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.OracleServiceName, oracleServiceName)
 

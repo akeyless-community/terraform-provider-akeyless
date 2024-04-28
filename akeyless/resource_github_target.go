@@ -73,7 +73,6 @@ func resourceGithubTargetCreate(d *schema.ResourceData, m interface{}) error {
 	githubAppId := d.Get("github_app_id").(int)
 	githubAppPrivateKey := d.Get("github_app_private_key").(string)
 	githubBaseUrl := d.Get("github_base_url").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 
@@ -85,7 +84,6 @@ func resourceGithubTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
 	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 
@@ -177,7 +175,6 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	githubAppId := d.Get("github_app_id").(int)
 	githubAppPrivateKey := d.Get("github_app_private_key").(string)
 	githubBaseUrl := d.Get("github_base_url").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 
@@ -189,7 +186,6 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
 	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 

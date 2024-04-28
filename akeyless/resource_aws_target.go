@@ -82,7 +82,6 @@ func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	region := d.Get("region").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.CreateAWSTarget{
@@ -95,7 +94,6 @@ func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Region, region)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateAWSTarget(ctx).Body(body).Execute()
@@ -198,7 +196,6 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	accessKeyId := d.Get("access_key_id").(string)
 	accessKey := d.Get("access_key").(string)
@@ -211,7 +208,6 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.AccessKeyId, accessKeyId)
 	common.GetAkeylessPtr(&body.AccessKey, accessKey)

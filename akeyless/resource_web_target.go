@@ -59,7 +59,6 @@ func resourceWebTargetCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	url := d.Get("url").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.CreateWebTarget{
@@ -68,7 +67,6 @@ func resourceWebTargetCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Url, url)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateWebTarget(ctx).Body(body).Execute()
@@ -146,7 +144,6 @@ func resourceWebTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	url := d.Get("url").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.UpdateWebTarget{
@@ -155,7 +152,6 @@ func resourceWebTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Url, url)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateWebTarget(ctx).Body(body).Execute()

@@ -72,7 +72,6 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	rabbitmqServerPassword := d.Get("rabbitmq_server_password").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.CreateRabbitMQTarget{
@@ -83,7 +82,6 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.RabbitmqServerPassword, rabbitmqServerPassword)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateRabbitMQTarget(ctx).Body(body).Execute()
@@ -175,7 +173,6 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	rabbitmqServerPassword := d.Get("rabbitmq_server_password").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.UpdateRabbitMQTarget{
@@ -186,7 +183,6 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RabbitmqServerPassword, rabbitmqServerPassword)
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateRabbitMQTarget(ctx).Body(body).Execute()

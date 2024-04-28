@@ -72,7 +72,6 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
 	k8sClusterToken := d.Get("k8s_cluster_token").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.CreateNativeK8STarget{
@@ -83,7 +82,6 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 		Token:              &token,
 	}
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateNativeK8STarget(ctx).Body(body).Execute()
@@ -175,7 +173,6 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
 	k8sClusterToken := d.Get("k8s_cluster_token").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.UpdateNativeK8STarget{
@@ -186,7 +183,6 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Token:              &token,
 	}
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateNativeK8STarget(ctx).Body(body).Execute()

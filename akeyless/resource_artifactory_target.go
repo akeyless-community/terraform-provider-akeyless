@@ -70,7 +70,6 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.CreateArtifactoryTarget{
@@ -81,7 +80,6 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 		Token:                &token,
 	}
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateArtifactoryTarget(ctx).Body(body).Execute()
@@ -172,7 +170,6 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.UpdateArtifactoryTarget{
@@ -183,7 +180,6 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 		Token:                &token,
 	}
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateArtifactoryTarget(ctx).Body(body).Execute()

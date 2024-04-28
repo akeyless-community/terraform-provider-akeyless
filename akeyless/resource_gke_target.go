@@ -95,7 +95,6 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	gkeClusterName := d.Get("gke_cluster_name").(string)
 	key := d.Get("key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.CreateGKETarget{
@@ -109,7 +108,6 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GkeClusterName, gkeClusterName)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateGKETarget(ctx).Body(body).Execute()
@@ -222,7 +220,6 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	gkeClusterName := d.Get("gke_cluster_name").(string)
 	key := d.Get("key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.UpdateGKETarget{
@@ -236,7 +233,6 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GkeClusterName, gkeClusterName)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateGKETarget(ctx).Body(body).Execute()
