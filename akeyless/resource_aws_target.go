@@ -35,39 +35,29 @@ func resourceAwsTarget() *schema.Resource {
 			},
 			"access_key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "AWS secret access key",
 			},
 			"session_token": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Required only for temporary security credentials retrieved using STS",
 			},
 			"region": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "AWS region",
 				Default:     "us-east-2",
 			},
 			"use_gw_cloud_identity": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Use the GW's Cloud IAM",
 			},
 			"key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used",
-			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -164,7 +154,7 @@ func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}

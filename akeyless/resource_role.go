@@ -34,11 +34,6 @@ func resourceRole() *schema.Resource {
 				ForceNew:    true,
 				Description: "Role name",
 			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -143,7 +138,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	ok := true
 
 	name := d.Get("name").(string)
-	description := common.GetRoleDescription(d)
+	description := d.Get("description").(string)
 	auditAccess := d.Get("audit_access").(string)
 	analyticsAccess := d.Get("analytics_access").(string)
 	gwAnalyticsAccess := d.Get("gw_analytics_access").(string)
@@ -327,7 +322,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	accessRulesNewValues := getNewAccessRules(d)
 	accessRulesOldValues := saveRoleAccessRuleOldValues(rules.PathRules)
 
-	description := common.GetRoleDescription(d)
+	description := d.Get("description").(string)
 
 	err, ok = updateRoleAccessRules(ctx, name, description, accessRulesNewValues, m)
 	if !ok {

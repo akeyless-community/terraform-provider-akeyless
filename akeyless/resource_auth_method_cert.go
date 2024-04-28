@@ -255,22 +255,13 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
-		bodyAcc := akeyless.GetAccountSettings{
-			Token: &token,
-		}
-		rOutAcc, _, err := client.GetAccountSettings(ctx).Body(bodyAcc).Execute()
+
+		rOutAcc, err := getAccountSettings(m)
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				if res.StatusCode == http.StatusNotFound {
-					// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-					d.SetId("")
-					return nil
-				}
-				return fmt.Errorf("failed to get account settings: %v", string(apiErr.Body()))
-			}
-			return fmt.Errorf("failed to get account settings: %w", err)
+			return err
 		}
-		jwtDefault := *rOutAcc.SystemAccessCredsSettings.JwtTtlDefault
+		jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
 		if accessInfo.JwtTtl != nil {
 			if *accessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
 				err = d.Set("jwt_ttl", *accessInfo.JwtTtl)

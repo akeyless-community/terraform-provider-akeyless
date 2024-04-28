@@ -52,11 +52,6 @@ func resourceStaticSecret() *schema.Resource {
 				Computed:    true,
 				Description: "The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
 			},
-			"metadata": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -132,7 +127,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	value := d.Get("value").(string)
 	ProtectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessSshCreds := d.Get("secure_access_ssh_creds").(string)
 	secureAccessUrl := d.Get("secure_access_url").(string)
@@ -257,7 +252,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if itemOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *itemOut.ItemMetadata)
+		err := d.Set("description", *itemOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -405,6 +400,11 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+	err := resourceStaticSecretRead(d, m)
+	}
+	return []*schema.ResourceData{d}, nil
+
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -418,7 +418,7 @@ func resourceStaticSecretImport(d *schema.ResourceData, m interface{}) ([]*schem
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	_, _, err = client.DescribeItem(ctx).Body(item).Execute()
 	if err != nil {
 		return nil, err
 	}

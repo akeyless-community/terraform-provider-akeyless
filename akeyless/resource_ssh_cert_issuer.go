@@ -56,12 +56,6 @@ func resourceSSHCertIssuer() *schema.Resource {
 				Description: "Signed certificates with extensions (key/val), e.g permit-port-forwarding=",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"metadata": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "[Deprecated: Use description instead]",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -126,7 +120,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -240,7 +234,7 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
+		err := d.Set("description", *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -271,7 +265,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessBastionApi := d.Get("secure_access_bastion_api").(string)
 	secureAccessBastionSsh := d.Get("secure_access_bastion_ssh").(string)

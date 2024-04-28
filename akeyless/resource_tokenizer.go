@@ -76,12 +76,6 @@ func resourceTokenizer() *schema.Resource {
 				Computed:    true,
 				Description: "",
 			},
-			"metadata": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "A metadata about the tokenizer",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -119,7 +113,7 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	pattern := d.Get("pattern").(string)
 	encodingTemplate := d.Get("encoding_template").(string)
 	decodingTemplate := d.Get("decoding_template").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tag").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
@@ -255,7 +249,7 @@ func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
+		err := d.Set("description", *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -292,7 +286,7 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tag").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)

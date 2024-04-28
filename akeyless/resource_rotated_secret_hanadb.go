@@ -184,7 +184,7 @@ func resourceRotatedSecretHanaDbRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if itemOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *itemOut.ItemMetadata)
+		err := d.Set("description", *itemOut.ItemMetadata)
 		if err != nil {
 			return err
 		}

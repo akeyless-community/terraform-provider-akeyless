@@ -126,12 +126,6 @@ func resourcePKICertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "A comma-separated list of postal codes that will be set in the issued certificate",
 			},
-			"metadata": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "[Deprecated: Use description instead]",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -213,8 +207,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	protectCertificates := d.Get("protect_certificates").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
-	metadata := d.Get("metadata").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
 	body := akeyless.CreatePKICertIssuer{
@@ -246,7 +239,6 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
@@ -298,7 +290,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
+		err := d.Set("description", *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -509,8 +501,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	protectCertificates := d.Get("protect_certificates").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
-	metadata := d.Get("metadata").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
 	body := akeyless.UpdatePKICertIssuer{
@@ -553,7 +544,6 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
