@@ -281,7 +281,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	value := d.Get("value").(string)
 	protectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
@@ -402,6 +402,8 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 func resourceStaticSecretImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	err := resourceStaticSecretRead(d, m)
+	if err != nil {
+		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
 
