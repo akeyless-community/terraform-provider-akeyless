@@ -20,30 +20,15 @@ func dataSourceCertificate() *schema.Resource {
 				Optional:    true,
 				Description: "Certificate name",
 			},
-			"display_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Certificate display ID",
-			},
 			"version": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "Certificate version",
 			},
-			"cert_issuer_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The parent PKI Certificate Issuer's name of the certificate, required when used with display-id and token",
-			},
-			"issuance_token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Token for getting the issued certificate",
-			},
 			"ignore_cache": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Retrieve the Secret value without checking the Gateway's cache [true/false]. This flag is only relevant when using the RestAPI",
+				Description: "Retrieve the Secret value without checking the Gateway's cache [true/false]",
 				Default:     "false",
 			},
 			"certificate_pem": {
@@ -70,20 +55,14 @@ func dataSourceGetCertificateValueRead(d *schema.ResourceData, m interface{}) er
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	displayId := d.Get("display_id").(string)
 	version := d.Get("version").(int)
-	certIssuerName := d.Get("cert_issuer_name").(string)
-	issuanceToken := d.Get("issuance_token").(string)
 	ignoreCache := d.Get("ignore_cache").(string)
 
 	body := akeyless.GetCertificateValue{
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Name, name)
-	common.GetAkeylessPtr(&body.DisplayId, displayId)
 	common.GetAkeylessPtr(&body.Version, version)
-	common.GetAkeylessPtr(&body.CertIssuerName, certIssuerName)
-	common.GetAkeylessPtr(&body.IssuanceToken, issuanceToken)
 	common.GetAkeylessPtr(&body.IgnoreCache, ignoreCache)
 
 	rOut, _, err := client.GetCertificateValue(ctx).Body(body).Execute()
@@ -107,11 +86,7 @@ func dataSourceGetCertificateValueRead(d *schema.ResourceData, m interface{}) er
 		}
 	}
 
-	if name != "" {
-		d.SetId(name)
-	} else {
-		d.SetId(displayId)
-	}
+	d.SetId(name)
 
 	return nil
 }
