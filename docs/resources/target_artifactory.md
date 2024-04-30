@@ -24,7 +24,6 @@ Artifactory Target resource
 
 ### Optional
 
-- `comment` (String, Deprecated)
 - `description` (String) Description of the object
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
 

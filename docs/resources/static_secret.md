@@ -46,7 +46,6 @@ resource "akeyless_static_secret" "secret" {
 ### Optional
 
 - `description` (String) Description of the object
-- `metadata` (String, Deprecated)
 - `multiline_value` (Boolean) The provided value is a multiline value (separated by '
 ')
 - `protection_key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)

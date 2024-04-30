@@ -30,6 +30,7 @@ OIDC Auth Method Resource
 - `client_secret` (String) Client Secret
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `issuer` (String) Issuer URL
+- `jwt_ttl` (Number) Creds expiration time in minutes
 - `required_scopes` (Set of String) Required scopes that the oidc method will request from the oidc provider and the user must approve
 - `required_scopes_prefix` (String) A prefix to add to all required-scopes when requesting them from the oidc server (for example, azure's Application ID URI)
 

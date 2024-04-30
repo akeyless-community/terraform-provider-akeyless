@@ -38,7 +38,6 @@ PKI Cert Issuer  resource
 - `gw_cluster_url` (String) The GW cluster URL to issue the certificate from, required in Public CA mode
 - `key_usage` (String) A comma-separated string or list of key usages
 - `locality` (String) A comma-separated list of localities that will be set in the issued certificate
-- `metadata` (String, Deprecated) [Deprecated: Use description instead]
 - `not_enforce_hostnames` (Boolean) If set, any names are allowed for CN and SANs in the certificate and not only a valid host name
 - `not_require_cn` (Boolean) If set, clients can request certificates without a CN
 - `organizational_units` (String) A comma-separated list of organizational units (OU) that will be set in the issued certificate

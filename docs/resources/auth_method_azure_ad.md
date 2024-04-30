@@ -37,6 +37,7 @@ Azure Active Directory Auth Method Resource
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `issuer` (String) Issuer URL
 - `jwks_uri` (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.
+- `jwt_ttl` (Number) Creds expiration time in minutes
 
 ### Read-Only
 

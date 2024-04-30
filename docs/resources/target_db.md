@@ -22,7 +22,6 @@ DB Target resource
 
 ### Optional
 
-- `comment` (String, Deprecated)
 - `db_name` (String) Database name
 - `db_server_certificates` (String) Set of root certificate authorities in base64 encoding used by clients to verify server certificates
 - `db_server_name` (String) Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is provided. It is also included in the client's handshake to support virtual hosting unless it is an IP address
@@ -39,6 +38,8 @@ DB Target resource
 - `port` (String) Database port
 - `pwd` (String) Database password
 - `snowflake_account` (String) Snowflake account name
+- `ssl` (Boolean) Enable/Disable SSL [true/false]
+- `ssl_certificate` (String) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
 - `user_name` (String) Database user name
 
 ### Read-Only
