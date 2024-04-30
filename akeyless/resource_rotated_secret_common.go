@@ -27,29 +27,3 @@ func resourceRotatedSecretCommonDelete(d *schema.ResourceData, m interface{}) er
 
 	return nil
 }
-
-func resourceRotatedSecretCommonImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
-
-	path := d.Id()
-
-	body := akeyless.RotatedSecretGetValue{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
-	if err != nil {
-		return nil, err
-	}
-
-	err = d.Set("name", path)
-	if err != nil {
-		return nil, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}

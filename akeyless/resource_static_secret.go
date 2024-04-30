@@ -400,25 +400,15 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.DescribeItem{
-		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
-		Token:        &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	err := resourceStaticSecretRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("path", path)
+	err = d.Set("path", id)
 	if err != nil {
 		return nil, err
 	}

@@ -361,5 +361,18 @@ func resourceRotatedSecretRedshiftDelete(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceRotatedSecretRedshiftImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	return resourceRotatedSecretCommonImport(d, m)
+
+	id := d.Id()
+
+	err := resourceRotatedSecretRedshiftRead(d, m)
+	if err != nil {
+		return nil, err
+	}
+
+	err = d.Set("name", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

@@ -349,5 +349,18 @@ func resourceDynamicSecretEksDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretEksImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	return resourceDynamicSecretImport(d, m)
+
+	id := d.Id()
+
+	err := resourceDynamicSecretEksRead(d, m)
+	if err != nil {
+		return nil, err
+	}
+
+	err = d.Set("name", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

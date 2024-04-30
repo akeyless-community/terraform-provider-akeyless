@@ -418,5 +418,18 @@ func resourceDynamicSecretAwsDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretAwsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	return resourceDynamicSecretImport(d, m)
+
+	id := d.Id()
+
+	err := resourceDynamicSecretAwsRead(d, m)
+	if err != nil {
+		return nil, err
+	}
+
+	err = d.Set("name", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

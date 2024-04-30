@@ -366,19 +366,25 @@ func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRoleImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
 	name := d.Id()
 
-	item := akeyless.GetRole{
-		Name:  name,
-		Token: &token,
+	role, err := getRole(d, name, m)
+	if err != nil {
+		return nil, err
 	}
 
-	ctx := context.Background()
-	_, _, err := client.GetRole(ctx).Body(item).Execute()
+	rules := role.Rules
+	if rules == nil {
+		// ok - role with no rules
+		return nil, nil
+	}
+
+	if rules.PathRules == nil {
+		return nil, nil
+	}
+
+	err = readRules(d, *rules.PathRules)
 	if err != nil {
 		return nil, err
 	}

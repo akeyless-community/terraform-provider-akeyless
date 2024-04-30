@@ -317,5 +317,18 @@ func resourceDynamicSecretGkeDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretGkeImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	return resourceDynamicSecretImport(d, m)
+
+	id := d.Id()
+
+	err := resourceDynamicSecretGkeRead(d, m)
+	if err != nil {
+		return nil, err
+	}
+
+	err = d.Set("name", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
