@@ -448,7 +448,7 @@ func TestTargetDataSourcePing(t *testing.T) {
 	targetDetailsType := "ping_target_details"
 
 	expect := map[string]interface{}{
-		"url":                 "https://ec2-1-2-3-4.us-east-2.compute.amazonaws.com",
+		"url":                 "https://www.test.com",
 		"privileged_user":     "Administrator",
 		"user_password":       "1234",
 		"administrative_port": "9999",
