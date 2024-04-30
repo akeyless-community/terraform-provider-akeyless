@@ -560,7 +560,7 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDele
 	var err error
 	var ok bool
 
-	err, ok = deleteRoleAssocs(ctx, name, assocAuthMethodToDelete, m)
+	err, ok = deleteRoleAssocs(ctx, assocAuthMethodToDelete, m)
 	if !ok {
 		return err, ok
 	}
@@ -570,7 +570,7 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDele
 		return err, ok
 	}
 
-	err, ok = updateRoleAssocs(ctx, name, assocAuthMethodToUpdate, m)
+	err, ok = updateRoleAssocs(ctx, assocAuthMethodToUpdate, m)
 	if !ok {
 		return err, ok
 	}
@@ -578,7 +578,7 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDele
 	return nil, true
 }
 
-func deleteRoleAssocs(ctx context.Context, name string, assocs []interface{}, m interface{}) (error, bool) {
+func deleteRoleAssocs(ctx context.Context, assocs []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(providerMeta)
 	client := *provider.client
@@ -646,7 +646,7 @@ func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface
 	return nil, true
 }
 
-func updateRoleAssocs(ctx context.Context, name string, assocAuthMethods []interface{}, m interface{}) (error, bool) {
+func updateRoleAssocs(ctx context.Context, assocAuthMethods []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(providerMeta)
 	client := *provider.client

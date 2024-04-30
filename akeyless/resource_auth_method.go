@@ -402,7 +402,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	accessExpires := int64(d.Get("access_expires").(int))
 
 	apiKeyAuthMethod := d.Get("api_key").([]interface{})
-	if apiKeyAuthMethod != nil && len(apiKeyAuthMethod) == 1 {
+	if len(apiKeyAuthMethod) == 1 {
 		body := akeyless.CreateAuthMethod{
 			Name:          path,
 			BoundIps:      &boundIpsList,
@@ -428,7 +428,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	}
 
 	samlAuthMethod := d.Get("saml").([]interface{})
-	if samlAuthMethod != nil && len(samlAuthMethod) == 1 {
+	if len(samlAuthMethod) == 1 {
 		saml := samlAuthMethod[0].(map[string]interface{})
 		idpMetadataUrl := saml["idp_metadata_url"].(string)
 		idpMetadataXmlData := saml["idp_metadata_xml_data"].(string)
@@ -455,7 +455,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	}
 
 	awsAuthMethod := d.Get("aws_iam").([]interface{})
-	if awsAuthMethod != nil && len(awsAuthMethod) == 1 {
+	if len(awsAuthMethod) == 1 {
 		aws := awsAuthMethod[0].(map[string]interface{})
 		boundAwsAccountId := aws["bound_aws_account_id"].(*schema.Set)
 		boundAwsAccountIdList := common.ExpandStringList(boundAwsAccountId.List())
@@ -501,7 +501,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	}
 
 	azureAuthMethod := d.Get("azure_ad").([]interface{})
-	if azureAuthMethod != nil && len(azureAuthMethod) == 1 {
+	if len(azureAuthMethod) == 1 {
 		azure := azureAuthMethod[0].(map[string]interface{})
 		boundTenantId := azure["bound_tenant_id"].(string)
 		jwksUri := azure["jwks_uri"].(string)
@@ -563,7 +563,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	}
 
 	gcpAuthMethod := d.Get("gcp").([]interface{})
-	if gcpAuthMethod != nil && len(gcpAuthMethod) == 1 {
+	if len(gcpAuthMethod) == 1 {
 		gcp := gcpAuthMethod[0].(map[string]interface{})
 		audience := gcp["audience"].(string)
 		serviceAccountCredsData := gcp["service_account_creds_data"].(string)
@@ -577,7 +577,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 		}
 
 		iam := gcp["iam"].([]interface{})
-		if iam != nil && len(iam) == 1 {
+		if len(iam) == 1 {
 			iamObj, ok := iam[0].(map[string]interface{})
 			if ok {
 				if iamObj["bound_service_accounts"] != nil {
@@ -590,7 +590,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 		}
 
 		gce := gcp["gce"].([]interface{})
-		if gce != nil && len(gce) == 1 {
+		if len(gce) == 1 {
 			gceObj, ok := gce[0].(map[string]interface{})
 			if ok {
 				if gceObj["bound_zones"] != nil {
