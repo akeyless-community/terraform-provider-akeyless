@@ -257,7 +257,7 @@ func TestRotatedSecretResource(t *testing.T) {
 			key 			= "%v"
 			auto_rotate		= "true"
 			rotation_interval = "2"
-			metadata 		= "bbbb"
+			description 	= "bbbb"
 			tags 			= ["abc", "def"]
 			depends_on = [
 				akeyless_target_db.%v,

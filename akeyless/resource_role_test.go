@@ -22,8 +22,8 @@ func TestRoleResourceBasic(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_role" "test_role" {
-			name 	= "%v1"
-			comment = "aaaa"
+			name 		= "%v1"
+			description = "aaaa"
 		}
 	`, rolePath)
 

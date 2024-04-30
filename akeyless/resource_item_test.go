@@ -126,7 +126,7 @@ func TestClassicKey(t *testing.T) {
 			name 		= "%v"	
 			alg 		= "RSA2048"
 			tags 		= ["cccc", "dddd"]
-			metadata 	= "abcd"
+			description = "abcd"
 		}
 	`, name, itemPath)
 
