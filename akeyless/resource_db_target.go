@@ -228,6 +228,12 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 		return fmt.Errorf("can't get value: %v", err)
 	}
+
+	targetType, err := getTargetType(rOut.Target)
+	if err != nil {
+		return err
+	}
+
 	if rOut.Value.DbTargetDetails != nil {
 		dbTargetDetails := *rOut.Value.DbTargetDetails
 		if dbTargetDetails.DbHostName != nil {
@@ -255,8 +261,8 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if dbTargetDetails.DbName != nil {
-			// oracle_service_name can be extracted from DbName in the result
-			if d.Get("db_type") == "oracle" {
+			// oracle_service_name can be extracted from DbName
+			if targetType == "oracle" {
 				err := d.Set("oracle_service_name", *dbTargetDetails.DbName)
 				if err != nil {
 					return err

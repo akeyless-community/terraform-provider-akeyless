@@ -237,7 +237,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	if rules.PathRules != nil {
 		rulesSet := d.Get("rules").(*schema.Set)
 		if len(rulesSet.List()) != 0 {
-			err = readRules(d, *rules.PathRules)
+			err := readRules(d, *rules.PathRules)
 			if err != nil {
 				return err
 			}
@@ -247,7 +247,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	if role.RoleAuthMethodsAssoc != nil {
 		assocsSet := d.Get("assoc_auth_method").(*schema.Set)
 		if len(assocsSet.List()) != 0 {
-			err = readAuthMethodsAssoc(d, role.RoleAuthMethodsAssoc)
+			err := readAuthMethodsAssoc(d, role.RoleAuthMethodsAssoc)
 			if err != nil {
 				return err
 			}
