@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 )
 
 const (
@@ -302,7 +302,7 @@ func generateDynamicSecret(client *akeyless.V2ApiService, token string) (string,
 		panic(err)
 	}
 
-	return value["user"], value["password"]
+	return value["user"].(string), value["password"].(string)
 }
 
 func deleteProducer(client *akeyless.V2ApiService, token string) {

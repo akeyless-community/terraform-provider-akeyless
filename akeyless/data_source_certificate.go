@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )

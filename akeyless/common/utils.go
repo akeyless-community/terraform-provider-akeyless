@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -501,4 +501,32 @@ func SetDataByPrefixSlash(d *schema.ResourceData, key, returnedValue, existValue
 		return d.Set(key, existValue)
 	}
 	return d.Set(key, returnedValue)
+}
+
+// SecondsToTimeString converts a total number of seconds to a formatted string like "1d2h3m4s".
+func SecondsToTimeString(totalSeconds int) string {
+	const secondsInAMinute = 60
+	const secondsInAnHour = secondsInAMinute * 60
+	const secondsInADay = secondsInAnHour * 24
+
+	days := totalSeconds / secondsInADay
+	hours := (totalSeconds % secondsInADay) / secondsInAnHour
+	minutes := (totalSeconds % secondsInAnHour) / secondsInAMinute
+	seconds := totalSeconds % secondsInAMinute
+
+	var result strings.Builder
+	if days > 0 {
+		result.WriteString(fmt.Sprintf("%dd", days))
+	}
+	if hours > 0 {
+		result.WriteString(fmt.Sprintf("%dh", hours))
+	}
+	if minutes > 0 {
+		result.WriteString(fmt.Sprintf("%dm", minutes))
+	}
+	if seconds > 0 || result.Len() == 0 {
+		result.WriteString(fmt.Sprintf("%ds", seconds))
+	}
+
+	return result.String()
 }

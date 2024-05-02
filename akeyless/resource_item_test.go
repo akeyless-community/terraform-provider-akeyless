@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -147,7 +147,7 @@ func TestPkiResource(t *testing.T) {
 		resource "akeyless_pki_cert_issuer" "%v" {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
-			ttl                   	= 60
+			ttl                   	= "50"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domains"
 			allowed_uri_sans      	= "uri_sans"
@@ -177,7 +177,7 @@ func TestPkiResource(t *testing.T) {
 		resource "akeyless_pki_cert_issuer" "%v" {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
-			ttl                   	= 90
+			ttl                   	= "51s"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domain1,domain2"
 			allowed_uri_sans      	= "uri_san1,uri_san2"

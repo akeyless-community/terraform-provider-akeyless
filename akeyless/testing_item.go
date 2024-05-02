@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/stretchr/testify/require"
 )
@@ -160,7 +160,7 @@ func createPkiCertIssuer(t *testing.T, keyName, issuerName, destPath, cn, uriSan
 		Name:          issuerName,
 		SignerKeyName: keyName,
 		Token:         &token,
-		Ttl:           300,
+		Ttl:           "300",
 	}
 	common.GetAkeylessPtr(&body.DestinationPath, destPath)
 	common.GetAkeylessPtr(&body.ClientFlag, true)

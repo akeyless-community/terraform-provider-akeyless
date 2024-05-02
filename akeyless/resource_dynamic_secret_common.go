@@ -3,7 +3,7 @@ package akeyless
 import (
 	"context"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
