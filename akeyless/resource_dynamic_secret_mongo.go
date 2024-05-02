@@ -220,14 +220,15 @@ func resourceDynamicSecretMongoRead(d *schema.ResourceData, m interface{}) error
 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
+
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GatewayGetProducer(ctx).Body(body).Execute()
+	rOut, res, err := client.DynamicSecretGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
