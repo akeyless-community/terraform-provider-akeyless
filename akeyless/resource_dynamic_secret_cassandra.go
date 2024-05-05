@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretCassandra() *schema.Resource {
 	return &schema.Resource{
-		Description: "Cassandra producer resource",
+		Description: "Cassandra dynamic secret resource",
 		Create:      resourceDynamicSecretCassandraCreate,
 		Read:        resourceDynamicSecretCassandraRead,
 		Update:      resourceDynamicSecretCassandraUpdate,
@@ -32,7 +32,7 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Target name",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"cassandra_hosts": {
 				Type:        schema.TypeString,

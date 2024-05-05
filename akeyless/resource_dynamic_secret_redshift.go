@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretRedshift() *schema.Resource {
 	return &schema.Resource{
-		Description: "Redshift producer resource",
+		Description: "Redshift dynamic secret resource",
 		Create:      resourceDynamicSecretRedshiftCreate,
 		Read:        resourceDynamicSecretRedshiftRead,
 		Update:      resourceDynamicSecretRedshiftUpdate,
@@ -32,7 +32,7 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"redshift_db_name": {
 				Type:        schema.TypeString,

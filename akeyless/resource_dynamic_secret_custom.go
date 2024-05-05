@@ -13,7 +13,7 @@ import (
 
 func resourceDynamicSecretCustom() *schema.Resource {
 	return &schema.Resource{
-		Description: "Custom producer resource",
+		Description: "Custom dynamic secret resource",
 		Create:      resourceDynamicSecretCustomCreate,
 		Read:        resourceDynamicSecretCustomRead,
 		Update:      resourceDynamicSecretCustomUpdate,

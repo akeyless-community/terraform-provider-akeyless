@@ -15,7 +15,7 @@ import (
 
 func resourceDynamicSecretGke() *schema.Resource {
 	return &schema.Resource{
-		Description: "Google Kubernetes Engine (GKE) producer resource",
+		Description: "Google Kubernetes Engine (GKE) dynamic secret resource",
 		Create:      resourceDynamicSecretGkeCreate,
 		Read:        resourceDynamicSecretGkeRead,
 		Update:      resourceDynamicSecretGkeUpdate,
@@ -33,7 +33,7 @@ func resourceDynamicSecretGke() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"gke_service_account_email": {
 				Type:        schema.TypeString,

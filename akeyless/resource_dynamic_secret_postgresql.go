@@ -13,7 +13,7 @@ import (
 
 func resourceDynamicSecretPostgresql() *schema.Resource {
 	return &schema.Resource{
-		Description: "PostgreSQLproducer resource",
+		Description: "PostgreSQL dynamic secret resource",
 		Create:      resourceDynamicSecretPostgresqlCreate,
 		Read:        resourceDynamicSecretPostgresqlRead,
 		Update:      resourceDynamicSecretPostgresqlUpdate,
@@ -31,7 +31,7 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"postgresql_db_name": {
 				Type:        schema.TypeString,

@@ -13,7 +13,7 @@ import (
 
 func resourceDynamicSecretGithub() *schema.Resource {
 	return &schema.Resource{
-		Description: "Github producer resource.",
+		Description: "Github dynamic secret resource",
 		Create:      resourceDynamicSecretGithubCreate,
 		Read:        resourceDynamicSecretGithubRead,
 		Update:      resourceDynamicSecretGithubUpdate,
@@ -41,7 +41,7 @@ func resourceDynamicSecretGithub() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"github_app_id": {
 				Type:        schema.TypeInt,

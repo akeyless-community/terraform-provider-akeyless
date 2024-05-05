@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretAzure() *schema.Resource {
 	return &schema.Resource{
-		Description: "Azure AD producer resource",
+		Description: "Azure AD dynamic secret resource",
 		Create:      resourceDynamicSecretAzureCreate,
 		Read:        resourceDynamicSecretAzureRead,
 		Update:      resourceDynamicSecretAzureUpdate,
@@ -32,7 +32,7 @@ func resourceDynamicSecretAzure() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"azure_tenant_id": {
 				Type:        schema.TypeString,

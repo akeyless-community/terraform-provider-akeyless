@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretMssql() *schema.Resource {
 	return &schema.Resource{
-		Description: "Microsoft SQL Server producer resource",
+		Description: "Microsoft SQL Server dynamic secret resource",
 		Create:      resourceDynamicSecretMssqlCreate,
 		Read:        resourceDynamicSecretMssqlRead,
 		Update:      resourceDynamicSecretMssqlUpdate,
@@ -32,7 +32,7 @@ func resourceDynamicSecretMssql() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"mssql_dbname": {
 				Type:        schema.TypeString,

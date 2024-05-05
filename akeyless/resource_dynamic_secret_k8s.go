@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretK8s() *schema.Resource {
 	return &schema.Resource{
-		Description: "Native Kubernetes Service producer resource",
+		Description: "Native Kubernetes Service dynamic secret resource",
 		Create:      resourceDynamicSecretK8sCreate,
 		Read:        resourceDynamicSecretK8sRead,
 		Update:      resourceDynamicSecretK8sUpdate,
@@ -32,7 +32,7 @@ func resourceDynamicSecretK8s() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"k8s_cluster_endpoint": {
 				Type:        schema.TypeString,

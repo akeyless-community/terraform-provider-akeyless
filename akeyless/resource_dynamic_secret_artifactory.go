@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretArtifactory() *schema.Resource {
 	return &schema.Resource{
-		Description: "Artifactory producer resource",
+		Description: "Artifactory dynamic secret resource",
 		Create:      resourceDynamicSecretArtifactoryCreate,
 		Read:        resourceDynamicSecretArtifactoryRead,
 		Update:      resourceDynamicSecretArtifactoryUpdate,
@@ -42,7 +42,7 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"base_url": {
 				Type:        schema.TypeString,

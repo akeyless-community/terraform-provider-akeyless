@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretEks() *schema.Resource {
 	return &schema.Resource{
-		Description: "Amazon Elastic Kubernetes Service (Amazon EKS) producer",
+		Description: "Amazon Elastic Kubernetes Service (Amazon EKS) dynamic secret",
 		Create:      resourceDynamicSecretEksCreate,
 		Read:        resourceDynamicSecretEksRead,
 		Update:      resourceDynamicSecretEksUpdate,
@@ -32,7 +32,7 @@ func resourceDynamicSecretEks() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"eks_cluster_name": {
 				Type:        schema.TypeString,

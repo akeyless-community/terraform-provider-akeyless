@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretOracle() *schema.Resource {
 	return &schema.Resource{
-		Description: "Oracle DB producer resource",
+		Description: "Oracle DB dynamic secret resource",
 		Create:      resourceDynamicSecretOracleCreate,
 		Read:        resourceDynamicSecretOracleRead,
 		Update:      resourceDynamicSecretOracleUpdate,
@@ -32,7 +32,7 @@ func resourceDynamicSecretOracle() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"oracle_service_name": {
 				Type:        schema.TypeString,

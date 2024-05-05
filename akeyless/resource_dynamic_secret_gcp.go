@@ -17,7 +17,7 @@ import (
 
 func resourceDynamicSecretGcp() *schema.Resource {
 	return &schema.Resource{
-		Description: "Google Cloud Provider (GCP)  producer resource",
+		Description: "Google Cloud Provider (GCP) dynamic secret resource",
 		Create:      resourceDynamicSecretGcpCreate,
 		Read:        resourceDynamicSecretGcpRead,
 		Update:      resourceDynamicSecretGcpUpdate,
@@ -35,7 +35,7 @@ func resourceDynamicSecretGcp() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"gcp_sa_email": {
 				Type:        schema.TypeString,

@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretRdp() *schema.Resource {
 	return &schema.Resource{
-		Description: "RDP Producer resource",
+		Description: "RDP dynamic secret resource",
 		Create:      resourceDynamicSecretRdpCreate,
 		Read:        resourceDynamicSecretRdpRead,
 		Update:      resourceDynamicSecretRdpUpdate,
@@ -32,7 +32,7 @@ func resourceDynamicSecretRdp() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"rdp_user_groups": {
 				Type:        schema.TypeString,

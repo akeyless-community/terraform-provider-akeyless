@@ -14,7 +14,7 @@ import (
 
 func resourceDynamicSecretAws() *schema.Resource {
 	return &schema.Resource{
-		Description: "AWS producer resource",
+		Description: "AWS dynamic secret resource",
 		Create:      resourceDynamicSecretAwsCreate,
 		Read:        resourceDynamicSecretAwsRead,
 		Update:      resourceDynamicSecretAwsUpdate,
@@ -32,7 +32,7 @@ func resourceDynamicSecretAws() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in producer creation",
+				Description: "Name of existing target to use in dynamic secret creation",
 			},
 			"aws_access_key_id": {
 				Type:        schema.TypeString,
