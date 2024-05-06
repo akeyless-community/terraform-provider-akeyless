@@ -28,6 +28,7 @@ Aws rotated secret resource
 - `authentication_credentials` (String) The credentials to connect with [use-self-creds/use-target-creds]
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation
 - `description` (String) Description of the object
+- `grace_rotation` (String) Create a new access key without deleting the old key from AWS for backup (relevant only for AWS) [true/false]
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `password_length` (String) The length of the password to be generated
 - `rotation_hour` (Number) The Hour of the rotation in UTC

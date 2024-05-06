@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_k8s Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  Native Kubernetes Service producer resource
+  Native Kubernetes Service dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_k8s (Resource)
 
-Native Kubernetes Service producer resource
+Native Kubernetes Service dynamic secret resource
 
 
 
@@ -41,7 +41,7 @@ Native Kubernetes Service producer resource
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless Web Access Bastion
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
-- `target_name` (String) Name of existing target to use in producer creation
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL
 
 ### Read-Only

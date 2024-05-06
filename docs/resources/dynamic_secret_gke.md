@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_gke Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  Google Kubernetes Engine (GKE) producer resource
+  Google Kubernetes Engine (GKE) dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_gke (Resource)
 
-Google Kubernetes Engine (GKE) producer resource
+Google Kubernetes Engine (GKE) dynamic secret resource
 
 
 
@@ -33,7 +33,7 @@ Google Kubernetes Engine (GKE) producer resource
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in producer creation
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL
 
 ### Read-Only

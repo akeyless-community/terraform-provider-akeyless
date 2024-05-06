@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_aws Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  AWS producer resource
+  AWS dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_aws (Resource)
 
-AWS producer resource
+AWS dynamic secret resource
 
 
 
@@ -41,7 +41,7 @@ AWS producer resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in producer creation
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL
 
 ### Read-Only

@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_gcp Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  Google Cloud Provider (GCP)  producer resource
+  Google Cloud Provider (GCP) dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_gcp (Resource)
 
-Google Cloud Provider (GCP)  producer resource
+Google Cloud Provider (GCP) dynamic secret resource
 
 
 
@@ -31,7 +31,7 @@ Google Cloud Provider (GCP)  producer resource
 - `role_binding` (String) Role binding definitions in json format
 - `service_account_type` (String) The type of the gcp dynamic secret. Options[fixed, dynamic]
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
-- `target_name` (String) Name of existing target to use in producer creation
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL (<=60m for access token)
 
 ### Read-Only

@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_azure Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  Azure AD producer resource
+  Azure AD dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_azure (Resource)
 
-Azure AD producer resource
+Azure AD dynamic secret resource
 
 
 
@@ -32,7 +32,7 @@ Azure AD producer resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
-- `target_name` (String) Name of existing target to use in producer creation
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_group_obj_id` (String) Azure AD User Group Object ID (required if selected Portal access)
 - `user_portal_access` (Boolean) Enable Azure AD user portal access
 - `user_principal_name` (String) Azure AD User Principal Name (required if selected Portal access)

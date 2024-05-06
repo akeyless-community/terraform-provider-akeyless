@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_eks Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  Amazon Elastic Kubernetes Service (Amazon EKS) producer
+  Amazon Elastic Kubernetes Service (Amazon EKS) dynamic secret
 ---
 
 # akeyless_dynamic_secret_eks (Resource)
 
-Amazon Elastic Kubernetes Service (Amazon EKS) producer
+Amazon Elastic Kubernetes Service (Amazon EKS) dynamic secret
 
 
 
@@ -35,7 +35,7 @@ Amazon Elastic Kubernetes Service (Amazon EKS) producer
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in producer creation
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL
 
 ### Read-Only

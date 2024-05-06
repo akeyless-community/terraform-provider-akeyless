@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_custom Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  Custom producer resource
+  Custom dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_custom (Resource)
 
-Custom producer resource
+Custom dynamic secret resource
 
 
 

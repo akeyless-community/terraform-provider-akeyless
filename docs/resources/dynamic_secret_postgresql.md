@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_postgresql Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  PostgreSQLproducer resource
+  PostgreSQL dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_postgresql (Resource)
 
-PostgreSQLproducer resource
+PostgreSQL dynamic secret resource
 
 
 
@@ -38,7 +38,7 @@ PostgreSQLproducer resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in producer creation
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL
 
 ### Read-Only

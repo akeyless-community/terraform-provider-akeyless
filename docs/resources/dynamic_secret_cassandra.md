@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_cassandra Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  Cassandra producer resource
+  Cassandra dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_cassandra (Resource)
 
-Cassandra producer resource
+Cassandra dynamic secret resource
 
 
 
@@ -31,7 +31,7 @@ Cassandra producer resource
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
 - `ssl_certificate` (String) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Target name
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL (<=60m for access token)
 
 ### Read-Only

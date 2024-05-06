@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_rdp Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  RDP Producer resource
+  RDP dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_rdp (Resource)
 
-RDP Producer resource
+RDP dynamic secret resource
 
 
 
@@ -36,7 +36,7 @@ RDP Producer resource
 - `secure_access_rdp_user` (String) Override the RDP Domain username
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in producer creation
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL
 
 ### Read-Only

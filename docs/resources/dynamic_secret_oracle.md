@@ -3,12 +3,12 @@
 page_title: "akeyless_dynamic_secret_oracle Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  Oracle DB producer resource
+  Oracle DB dynamic secret resource
 ---
 
 # akeyless_dynamic_secret_oracle (Resource)
 
-Oracle DB producer resource
+Oracle DB dynamic secret resource
 
 
 
@@ -33,7 +33,7 @@ Oracle DB producer resource
 - `oracle_username` (String) Oracle user
 - `password_length` (String) The length of the password to be generated
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in producer creation
+- `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL
 
 ### Read-Only

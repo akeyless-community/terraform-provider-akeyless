@@ -19,7 +19,7 @@ PKI Cert Issuer  resource
 
 - `name` (String) PKI certificate issuer name
 - `signer_key_name` (String) A key to sign the certificate with
-- `ttl` (Number) The maximum requested Time To Live for issued certificates, in seconds. In case of Public CA, this is based on the CA target's supported maximum TTLs
+- `ttl` (String) The maximum requested Time To Live for issued certificate by default in seconds, supported formats are s,m,h,d. In case of Public CA, this is based on the CA target's supported maximum TTLs
 
 ### Optional
 
