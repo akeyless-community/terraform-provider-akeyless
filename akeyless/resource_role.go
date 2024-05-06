@@ -840,7 +840,6 @@ func updateRoleAccessRules(ctx context.Context, name, description string,
 		SraReportsAccess:  akeyless.PtrString(sraReportsAccess),
 	}
 	common.GetAkeylessPtr(&updateBody.Description, description)
-	common.GetAkeylessPtr(&updateBody.NewComment, common.DefaultComment)
 
 	var apiErr akeyless.GenericOpenAPIError
 	_, _, err := client.UpdateRole(ctx).Body(updateBody).Execute()

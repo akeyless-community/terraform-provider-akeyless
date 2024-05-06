@@ -510,9 +510,15 @@ func SecondsToTimeString(totalSeconds int) string {
 	const secondsInADay = secondsInAnHour * 24
 
 	days := totalSeconds / secondsInADay
-	hours := (totalSeconds % secondsInADay) / secondsInAnHour
-	minutes := (totalSeconds % secondsInAnHour) / secondsInAMinute
-	seconds := totalSeconds % secondsInAMinute
+	remainSeconds := totalSeconds % secondsInADay
+
+	hours := remainSeconds / secondsInAnHour
+	remainSeconds %= secondsInAnHour
+
+	minutes := remainSeconds / secondsInAMinute
+	remainSeconds %= secondsInAMinute
+
+	seconds := remainSeconds
 
 	var result strings.Builder
 	if days > 0 {

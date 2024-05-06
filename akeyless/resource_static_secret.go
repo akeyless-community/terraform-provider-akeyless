@@ -331,7 +331,6 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	common.GetAkeylessPtr(&bodyItem.Description, description)
-	common.GetAkeylessPtr(&bodyItem.NewMetadata, common.DefaultMetadata)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCreds, secureAccessSshCreds)

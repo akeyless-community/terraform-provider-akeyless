@@ -296,9 +296,7 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 		DeleteProtection: &deleteProtection,
 		Token:            &token,
 	}
-
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultMetadata)
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
 	if err == nil {

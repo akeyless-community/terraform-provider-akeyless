@@ -178,7 +178,6 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
-	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.CertificateData, certificateData)
 	common.GetAkeylessPtr(&body.BoundCommonNames, boundCommonNames)
 	common.GetAkeylessPtr(&body.BoundDnsSans, boundDnsSans)
