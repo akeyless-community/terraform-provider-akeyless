@@ -279,8 +279,6 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 	}
 
 	value, ok := rOut["value"]
-	_ = rotatorType
-	_ = value
 	if ok {
 		switch rotatorType {
 		case common.LdapRotator:
@@ -296,6 +294,9 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 					return err
 				}
 			}
+
+			// TODO: ldap payload is removed in gateway and we can't get it.
+			//
 			// if userDn, ok := value["ldap_user_dn"]; ok {
 			// 	err := d.Set("user_dn", userDn.(string))
 			// 	if err != nil {
