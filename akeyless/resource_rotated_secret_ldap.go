@@ -205,20 +205,20 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err = d.Set("tags", *itemOut.ItemTags)
+		err := d.Set("tags", *itemOut.ItemTags)
 		if err != nil {
 			return err
 		}
 	}
 	if itemOut.ProtectionKeyName != nil {
-		err = d.Set("key", *itemOut.ProtectionKeyName)
+		err := d.Set("key", *itemOut.ProtectionKeyName)
 		if err != nil {
 			return err
 		}
 	}
 	if itemOut.AutoRotate != nil {
 		if *itemOut.AutoRotate || d.Get("auto_rotate").(string) != "" {
-			err = d.Set("auto_rotate", strconv.FormatBool(*itemOut.AutoRotate))
+			err := d.Set("auto_rotate", strconv.FormatBool(*itemOut.AutoRotate))
 			if err != nil {
 				return err
 			}
@@ -226,7 +226,7 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 	}
 	if itemOut.RotationInterval != nil {
 		if *itemOut.RotationInterval != 0 || d.Get("rotation_interval").(string) != "" {
-			err = d.Set("rotation_interval", strconv.Itoa(int(*itemOut.RotationInterval)))
+			err := d.Set("rotation_interval", strconv.Itoa(int(*itemOut.RotationInterval)))
 			if err != nil {
 				return err
 			}
@@ -238,7 +238,7 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.RotatedSecretDetails != nil {
 		rsd := itemOut.ItemGeneralInfo.RotatedSecretDetails
 		if rsd.RotationHour != nil {
-			err = d.Set("rotation_hour", *rsd.RotationHour)
+			err := d.Set("rotation_hour", *rsd.RotationHour)
 			if err != nil {
 				return err
 			}
@@ -253,13 +253,13 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 		}
 
 		if rsd.RotatorCredsType != nil {
-			err = d.Set("authentication_credentials", *rsd.RotatorCredsType)
+			err := d.Set("authentication_credentials", *rsd.RotatorCredsType)
 			if err != nil {
 				return err
 			}
 		}
 		if rsd.RotationStatement != nil {
-			err = d.Set("rotator_custom_cmd", *rsd.RotationStatement)
+			err := d.Set("rotator_custom_cmd", *rsd.RotationStatement)
 			if err != nil {
 				return err
 			}
@@ -282,55 +282,33 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 	_ = rotatorType
 	_ = value
 	if ok {
-		// val, ok := value.(map[string]interface{})
-		// if ok {
-		// 	switch rotatorType {
-		// 	case "user-pass-rotator":
-		// 		err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		err = d.Set("rotated_password", fmt.Sprintf("%v", val["password"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	case "api-key-rotator":
-		// 		err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		err = d.Set("api_key", fmt.Sprintf("%v", val["password"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	case "custom-rotator":
-		// 		err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	case "ldap-rotator":
-		// 		ldapPayloadInBytes, err := json.Marshal(val["ldap_payload"])
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		var ldapPayload map[string]interface{}
-		// 		err = json.Unmarshal(ldapPayloadInBytes, &ldapPayload)
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		err = d.Set("user_attribute", fmt.Sprintf("%v", ldapPayload["ldap_user_attr"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		err = d.Set("user_dn", fmt.Sprintf("%v", ldapPayload["ldap_user_dn"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	case "azure-storage-account-rotator":
-		// 	case "service-account-rotator":
-		// 	default:
-		// 	}
-		// }
+		switch rotatorType {
+		case common.LdapRotator:
+			if username, ok := value["username"]; ok {
+				err := d.Set("rotated_username", username.(string))
+				if err != nil {
+					return err
+				}
+			}
+			if password, ok := value["password"]; ok {
+				err := d.Set("rotated_password", password.(string))
+				if err != nil {
+					return err
+				}
+			}
+			// if userDn, ok := value["ldap_user_dn"]; ok {
+			// 	err := d.Set("user_dn", userDn.(string))
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// }
+			// if userAttr, ok := value["ldap_user_attr"]; ok {
+			// 	err := d.Set("user_attribute", userAttr.(string))
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// }
+		}
 	}
 
 	d.SetId(path)

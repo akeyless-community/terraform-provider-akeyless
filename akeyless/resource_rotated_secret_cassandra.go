@@ -177,7 +177,7 @@ func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 
 	if itemOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(itemOut.ItemTargetsAssoc)
-		err = common.SetDataByPrefixSlash(d, "target_name", targetName, d.Get("target_name").(string))
+		err := common.SetDataByPrefixSlash(d, "target_name", targetName, d.Get("target_name").(string))
 		if err != nil {
 			return err
 		}
@@ -189,20 +189,20 @@ func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err = d.Set("tags", *itemOut.ItemTags)
+		err := d.Set("tags", *itemOut.ItemTags)
 		if err != nil {
 			return err
 		}
 	}
 	if itemOut.ProtectionKeyName != nil {
-		err = d.Set("key", *itemOut.ProtectionKeyName)
+		err := d.Set("key", *itemOut.ProtectionKeyName)
 		if err != nil {
 			return err
 		}
 	}
 	if itemOut.AutoRotate != nil {
 		if *itemOut.AutoRotate || d.Get("auto_rotate").(string) != "" {
-			err = d.Set("auto_rotate", strconv.FormatBool(*itemOut.AutoRotate))
+			err := d.Set("auto_rotate", strconv.FormatBool(*itemOut.AutoRotate))
 			if err != nil {
 				return err
 			}
@@ -210,7 +210,7 @@ func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 	}
 	if itemOut.RotationInterval != nil {
 		if *itemOut.RotationInterval != 0 || d.Get("rotation_interval").(string) != "" {
-			err = d.Set("rotation_interval", strconv.Itoa(int(*itemOut.RotationInterval)))
+			err := d.Set("rotation_interval", strconv.Itoa(int(*itemOut.RotationInterval)))
 			if err != nil {
 				return err
 			}
@@ -222,7 +222,7 @@ func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.RotatedSecretDetails != nil {
 		rsd := itemOut.ItemGeneralInfo.RotatedSecretDetails
 		if rsd.RotationHour != nil {
-			err = d.Set("rotation_hour", *rsd.RotationHour)
+			err := d.Set("rotation_hour", *rsd.RotationHour)
 			if err != nil {
 				return err
 			}
@@ -230,20 +230,20 @@ func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 
 		if rsd.RotatorType != nil {
 			rotatorType = *rsd.RotatorType
-			err = setRotatorType(d, *rsd.RotatorType)
+			err := setRotatorType(d, *rsd.RotatorType)
 			if err != nil {
 				return err
 			}
 		}
 
 		if rsd.RotatorCredsType != nil {
-			err = d.Set("authentication_credentials", *rsd.RotatorCredsType)
+			err := d.Set("authentication_credentials", *rsd.RotatorCredsType)
 			if err != nil {
 				return err
 			}
 		}
 		if rsd.RotationStatement != nil {
-			err = d.Set("rotator_custom_cmd", *rsd.RotationStatement)
+			err := d.Set("rotator_custom_cmd", *rsd.RotationStatement)
 			if err != nil {
 				return err
 			}
@@ -266,7 +266,7 @@ func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 	if ok {
 		switch rotatorType {
 		case common.UserPassRotator:
-			err = d.Set("rotated_username", fmt.Sprintf("%v", value["username"]))
+			err := d.Set("rotated_username", fmt.Sprintf("%v", value["username"]))
 			if err != nil {
 				return err
 			}

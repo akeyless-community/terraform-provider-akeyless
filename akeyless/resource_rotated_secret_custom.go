@@ -39,12 +39,6 @@ func resourceRotatedSecretCustom() *schema.Resource {
 				Optional:    true,
 				Description: "Description of the object",
 			},
-			"authentication_credentials": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The credentials to connect with [use-self-creds/use-target-creds]",
-				Default:     "use-self-creds",
-			},
 			"custom_payload": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -103,7 +97,6 @@ func resourceRotatedSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
-	authenticationCredentials := d.Get("authentication_credentials").(string)
 	customPayload := d.Get("custom_payload").(string)
 
 	body := akeyless.RotatedSecretCreateCustom{
@@ -116,7 +109,6 @@ func resourceRotatedSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
-	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
@@ -210,13 +202,6 @@ func resourceRotatedSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 				return err
 			}
 		}
-
-		if rsd.RotatorCredsType != nil {
-			err = d.Set("authentication_credentials", *rsd.RotatorCredsType)
-			if err != nil {
-				return err
-			}
-		}
 		if rsd.RotationStatement != nil {
 			err = d.Set("rotator_custom_cmd", *rsd.RotationStatement)
 			if err != nil {
@@ -238,15 +223,11 @@ func resourceRotatedSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 	}
 
 	value, ok := rOut["value"]
-	_ = value
 	if ok {
-		// val, ok := value.(map[string]interface{})
-		// if ok {
-		// 		err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// }
+		err := d.Set("custom_payload", value["payload"].(string))
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(path)
@@ -269,7 +250,6 @@ func resourceRotatedSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
-	authenticationCredentials := d.Get("authentication_credentials").(string)
 	customPayload := d.Get("custom_payload").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -293,7 +273,6 @@ func resourceRotatedSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
-	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)

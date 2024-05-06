@@ -307,7 +307,7 @@ func resourceRotatedSecretAzureRead(d *schema.ResourceData, m interface{}) error
 					return err
 				}
 			}
-		case "azure-storage-account-rotator":
+		case common.StorageAccountRotator:
 			err := d.Set("storage_account_key_name", value["username"].(string))
 			if err != nil {
 				return err
