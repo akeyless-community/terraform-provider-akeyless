@@ -2,7 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -280,47 +279,40 @@ func resourceRotatedSecretAzureRead(d *schema.ResourceData, m interface{}) error
 				d.SetId("")
 				return nil
 			}
-
-			var out getDynamicSecretOutput
-			err = json.Unmarshal(apiErr.Body(), &out)
-			if err != nil {
-				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
-			}
-		}
-		if err != nil {
-			return fmt.Errorf("can't get value: %v", err)
+			return fmt.Errorf("can't get rotated secret value: %v", err)
 		}
 	}
 
 	value, ok := rOut["value"]
-	_ = rotatorType
-	_ = value
 	if ok {
-		// val, ok := value.(map[string]interface{})
-		// if ok {
-		// 	switch rotatorType {
-		// 	case "user-pass-rotator":
-		// 		err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		err = d.Set("rotated_password", fmt.Sprintf("%v", val["password"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	case "api-key-rotator":
-		// 		err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		err = d.Set("api_key", fmt.Sprintf("%v", val["password"]))
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	case "azure-storage-account-rotator":
-		// 	default:
-		// 	}
-		// }
+		switch rotatorType {
+		case common.UserPassRotator:
+			err := d.Set("username", value["username"].(string))
+			if err != nil {
+				return err
+			}
+		case common.ApiKeyRotator:
+			err := d.Set("api_id", value["username"].(string))
+			if err != nil {
+				return err
+			}
+			err = d.Set("api_key", value["password"].(string))
+			if err != nil {
+				return err
+			}
+			appId, ok := value["application_id"]
+			if ok {
+				err := d.Set("app_id", appId.(string))
+				if err != nil {
+					return err
+				}
+			}
+		case "azure-storage-account-rotator":
+			err := d.Set("storage_account_key_name", value["username"].(string))
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(path)

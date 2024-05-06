@@ -2,7 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -275,15 +274,7 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 				d.SetId("")
 				return nil
 			}
-
-			var out getDynamicSecretOutput
-			err = json.Unmarshal(apiErr.Body(), &out)
-			if err != nil {
-				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
-			}
-		}
-		if err != nil {
-			return fmt.Errorf("can't get value: %v", err)
+			return fmt.Errorf("can't get rotated secret value: %v", err)
 		}
 	}
 

@@ -2,7 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -265,29 +264,19 @@ func resourceRotatedSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-
-			var out getDynamicSecretOutput
-			err = json.Unmarshal(apiErr.Body(), &out)
-			if err != nil {
-				return fmt.Errorf("can't get value: %v", string(apiErr.Body()))
-			}
-		}
-		if err != nil {
-			return fmt.Errorf("can't get value: %v", err)
+			return fmt.Errorf("can't get rotated secret value: %v", err)
 		}
 	}
 
 	value, ok := rOut["value"]
-	_ = rotatorType
-	_ = value
 	if ok {
-		// val, ok := value.(map[string]interface{})
-		// if ok {
-		// 	switch rotatorType {
-		// 	case "service-account-rotator":
-		// 	default:
-		// 	}
-		// }
+		switch rotatorType {
+		case common.ServiceAccountRotator:
+			err := d.Set("gcp_key", value["service_account_key_base64"].(string))
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(path)

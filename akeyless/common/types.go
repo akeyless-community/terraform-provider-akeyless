@@ -18,4 +18,10 @@ const (
 
 	ClientTypeHeader    = "akeylessclienttype"
 	TerraformClientType = "terraform"
+
+	UserPassRotator       = "user-pass-rotator"
+	ApiKeyRotator         = "api-key-rotator"
+	LdapRotator           = "ldap-rotator"
+	ServiceAccountRotator = "service-account-rotator"
+	StorageAccountRotator = "azure-storage-account-rotator"
 )
