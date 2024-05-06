@@ -266,13 +266,17 @@ func resourceRotatedSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 	if ok {
 		switch rotatorType {
 		case common.UserPassRotator:
-			err = d.Set("rotated_username", fmt.Sprintf("%v", value["username"]))
-			if err != nil {
-				return err
+			if username, ok := value["username"]; ok {
+				err := d.Set("rotated_username", username.(string))
+				if err != nil {
+					return err
+				}
 			}
-			err = d.Set("rotated_password", fmt.Sprintf("%v", value["password"]))
-			if err != nil {
-				return err
+			if password, ok := value["password"]; ok {
+				err := d.Set("rotated_password", password.(string))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

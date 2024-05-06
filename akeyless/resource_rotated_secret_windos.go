@@ -242,12 +242,6 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 				return err
 			}
 		}
-		if rsd.RotationStatement != nil {
-			err = d.Set("rotator_custom_cmd", *rsd.RotationStatement)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
@@ -266,13 +260,17 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 	if ok {
 		switch rotatorType {
 		case common.UserPassRotator:
-			err = d.Set("rotated_username", fmt.Sprintf("%v", value["username"]))
-			if err != nil {
-				return err
+			if username, ok := value["username"]; ok {
+				err := d.Set("rotated_username", username.(string))
+				if err != nil {
+					return err
+				}
 			}
-			err = d.Set("rotated_password", fmt.Sprintf("%v", value["password"]))
-			if err != nil {
-				return err
+			if password, ok := value["password"]; ok {
+				err := d.Set("rotated_password", password.(string))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

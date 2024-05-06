@@ -281,13 +281,17 @@ func resourceRotatedSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 	if ok {
 		switch rotatorType {
 		case common.ApiKeyRotator:
-			err = d.Set("api_id", fmt.Sprintf("%v", value["username"]))
-			if err != nil {
-				return err
+			if username, ok := value["username"]; ok {
+				err := d.Set("api_id", username.(string))
+				if err != nil {
+					return err
+				}
 			}
-			err = d.Set("api_key", fmt.Sprintf("%v", value["password"]))
-			if err != nil {
-				return err
+			if password, ok := value["password"]; ok {
+				err := d.Set("api_key", password.(string))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
