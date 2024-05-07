@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login to Akeyless jira
         uses: atlassian/gajira-login@master
@@ -52,7 +52,7 @@ jobs:
         run: echo "Jira Issue ${{ steps.create-jira-issue.outputs.issue }} was created"
 
       - name: Label Create Git Issue
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: steps.create-jira-issue.outcome == 'success'
         with:
           script: |

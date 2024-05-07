@@ -20,13 +20,13 @@ jobs:
 
       - name: Import GPG key
         id: import_gpg
-        uses: paultyng/ghaction-import-gpg@v2.1.0
+        uses: crazy-max/ghaction-import-gpg@v6
         env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
           args: release --rm-dist
