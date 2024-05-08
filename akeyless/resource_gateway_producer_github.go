@@ -7,18 +7,19 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerGithub() *schema.Resource {
 	return &schema.Resource{
-		Description: "Github producer resource.",
-		Create:      resourceProducerGithubCreate,
-		Read:        resourceProducerGithubRead,
-		Update:      resourceProducerGithubUpdate,
-		Delete:      resourceProducerGithubDelete,
+		Description:        "Github producer resource.",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_github",
+		Create:             resourceProducerGithubCreate,
+		Read:               resourceProducerGithubRead,
+		Update:             resourceProducerGithubUpdate,
+		Delete:             resourceProducerGithubDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerGithubImport,
 		},
@@ -291,24 +292,15 @@ func resourceProducerGithubDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGithubImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerGithubRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

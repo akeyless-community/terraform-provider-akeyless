@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -47,11 +47,6 @@ func resourceGithubTarget() *schema.Resource {
 				Description: "Github base url",
 				Default:     "https://api.github.com/",
 			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -78,7 +73,6 @@ func resourceGithubTargetCreate(d *schema.ResourceData, m interface{}) error {
 	githubAppId := d.Get("github_app_id").(int)
 	githubAppPrivateKey := d.Get("github_app_private_key").(string)
 	githubBaseUrl := d.Get("github_base_url").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 
@@ -90,7 +84,6 @@ func resourceGithubTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
 	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 
@@ -154,7 +147,7 @@ func resourceGithubTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -182,7 +175,6 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	githubAppId := d.Get("github_app_id").(int)
 	githubAppPrivateKey := d.Get("github_app_private_key").(string)
 	githubBaseUrl := d.Get("github_base_url").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 
@@ -194,7 +186,6 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
 	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 
@@ -233,24 +224,15 @@ func resourceGithubTargetDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGithubTargetImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetTarget{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetTarget(ctx).Body(item).Execute()
+	err := resourceGithubTargetRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

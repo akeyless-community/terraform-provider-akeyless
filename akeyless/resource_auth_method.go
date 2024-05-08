@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -370,24 +370,15 @@ func resourceAuthMethodRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetAuthMethod{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetAuthMethod(ctx).Body(item).Execute()
+	err := resourceAuthMethodRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("path", path)
+	err = d.Set("path", id)
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +402,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	accessExpires := int64(d.Get("access_expires").(int))
 
 	apiKeyAuthMethod := d.Get("api_key").([]interface{})
-	if apiKeyAuthMethod != nil && len(apiKeyAuthMethod) == 1 {
+	if len(apiKeyAuthMethod) == 1 {
 		body := akeyless.CreateAuthMethod{
 			Name:          path,
 			BoundIps:      &boundIpsList,
@@ -437,7 +428,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	}
 
 	samlAuthMethod := d.Get("saml").([]interface{})
-	if samlAuthMethod != nil && len(samlAuthMethod) == 1 {
+	if len(samlAuthMethod) == 1 {
 		saml := samlAuthMethod[0].(map[string]interface{})
 		idpMetadataUrl := saml["idp_metadata_url"].(string)
 		idpMetadataXmlData := saml["idp_metadata_xml_data"].(string)
@@ -464,7 +455,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	}
 
 	awsAuthMethod := d.Get("aws_iam").([]interface{})
-	if awsAuthMethod != nil && len(awsAuthMethod) == 1 {
+	if len(awsAuthMethod) == 1 {
 		aws := awsAuthMethod[0].(map[string]interface{})
 		boundAwsAccountId := aws["bound_aws_account_id"].(*schema.Set)
 		boundAwsAccountIdList := common.ExpandStringList(boundAwsAccountId.List())
@@ -510,7 +501,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	}
 
 	azureAuthMethod := d.Get("azure_ad").([]interface{})
-	if azureAuthMethod != nil && len(azureAuthMethod) == 1 {
+	if len(azureAuthMethod) == 1 {
 		azure := azureAuthMethod[0].(map[string]interface{})
 		boundTenantId := azure["bound_tenant_id"].(string)
 		jwksUri := azure["jwks_uri"].(string)
@@ -572,7 +563,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	}
 
 	gcpAuthMethod := d.Get("gcp").([]interface{})
-	if gcpAuthMethod != nil && len(gcpAuthMethod) == 1 {
+	if len(gcpAuthMethod) == 1 {
 		gcp := gcpAuthMethod[0].(map[string]interface{})
 		audience := gcp["audience"].(string)
 		serviceAccountCredsData := gcp["service_account_creds_data"].(string)
@@ -586,7 +577,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 		}
 
 		iam := gcp["iam"].([]interface{})
-		if iam != nil && len(iam) == 1 {
+		if len(iam) == 1 {
 			iamObj, ok := iam[0].(map[string]interface{})
 			if ok {
 				if iamObj["bound_service_accounts"] != nil {
@@ -599,7 +590,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 		}
 
 		gce := gcp["gce"].([]interface{})
-		if gce != nil && len(gce) == 1 {
+		if len(gce) == 1 {
 			gceObj, ok := gce[0].(map[string]interface{})
 			if ok {
 				if gceObj["bound_zones"] != nil {
@@ -635,4 +626,29 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return nil
+}
+
+func getAccountSettings(m interface{}) (*akeyless.GetAccountSettingsCommandOutput, error) {
+	provider := m.(providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	ctx := context.Background()
+	bodyAcc := akeyless.GetAccountSettings{
+		Token: &token,
+	}
+	rOut, _, err := client.GetAccountSettings(ctx).Body(bodyAcc).Execute()
+	if err != nil {
+		var apiErr akeyless.GenericOpenAPIError
+		if errors.As(err, &apiErr) {
+			return nil, fmt.Errorf("failed to get account settings: %v", string(apiErr.Body()))
+		}
+		return nil, fmt.Errorf("failed to get account settings: %w", err)
+	}
+
+	return &rOut, nil
+}
+
+func extractAccountJwtTtlDefault(acc *akeyless.GetAccountSettingsCommandOutput) int64 {
+	return *acc.SystemAccessCredsSettings.JwtTtlDefault
 }

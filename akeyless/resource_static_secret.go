@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -51,11 +51,6 @@ func resourceStaticSecret() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
-			},
-			"metadata": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -132,7 +127,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	value := d.Get("value").(string)
 	ProtectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessSshCreds := d.Get("secure_access_ssh_creds").(string)
 	secureAccessUrl := d.Get("secure_access_url").(string)
@@ -257,7 +252,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if itemOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *itemOut.ItemMetadata)
+		err := d.Set("description", *itemOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -286,7 +281,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	value := d.Get("value").(string)
 	protectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
@@ -336,7 +331,6 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	common.GetAkeylessPtr(&bodyItem.Description, description)
-	common.GetAkeylessPtr(&bodyItem.NewMetadata, common.DefaultMetadata)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCreds, secureAccessSshCreds)
@@ -405,25 +399,15 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.DescribeItem{
-		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
-		Token:        &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	err := resourceStaticSecretRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("path", path)
+	err = d.Set("path", id)
 	if err != nil {
 		return nil, err
 	}

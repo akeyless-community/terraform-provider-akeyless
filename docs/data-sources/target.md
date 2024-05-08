@@ -26,7 +26,6 @@ Get target data source
 ### Read-Only
 
 - `client_permissions` (Set of String)
-- `comment` (String, Deprecated)
 - `description` (String)
 - `id` (String) The ID of this resource.
 - `last_version` (Number)

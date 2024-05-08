@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -16,12 +16,12 @@ import (
 func resourceGatewayAllowedAccess() *schema.Resource {
 	return &schema.Resource{
 		Description: "Create gateway allowed access",
-		Create:      resourceAllowedAccessCreate,
-		Read:        resourceAllowedAccessRead,
-		Update:      resourceAllowedAccessUpdate,
-		Delete:      resourceAllowedAccessDelete,
+		Create:      resourceGatewayAllowedAccessCreate,
+		Read:        resourceGatewayAllowedAccessRead,
+		Update:      resourceGatewayAllowedAccessUpdate,
+		Delete:      resourceGatewayAllowedAccessDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAllowedAccessImport,
+			State: resourceGatewayAllowedAccessImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -55,7 +55,7 @@ func resourceGatewayAllowedAccess() *schema.Resource {
 	}
 }
 
-func resourceAllowedAccessCreate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayAllowedAccessCreate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -95,7 +95,7 @@ func resourceAllowedAccessCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceAllowedAccessRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayAllowedAccessRead(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -162,7 +162,7 @@ func resourceAllowedAccessRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceAllowedAccessUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayAllowedAccessUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -202,7 +202,7 @@ func resourceAllowedAccessUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceAllowedAccessDelete(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayAllowedAccessDelete(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -223,25 +223,16 @@ func resourceAllowedAccessDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceAllowedAccessImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
+func resourceGatewayAllowedAccessImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetAllowedAccess{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetAllowedAccess(ctx).Body(item).Execute()
+	err := resourceGatewayAllowedAccessRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

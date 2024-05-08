@@ -21,7 +21,6 @@ SSH Target resource
 
 ### Optional
 
-- `comment` (String, Deprecated)
 - `description` (String) Description of the object
 - `host` (String) SSH host name
 - `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used

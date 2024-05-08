@@ -8,18 +8,19 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceRotatedSecret() *schema.Resource {
 	return &schema.Resource{
-		Description: "Rotated secret resource",
-		Create:      resourceRotatedSecretCreate,
-		Read:        resourceRotatedSecretRead,
-		Update:      resourceRotatedSecretUpdate,
-		Delete:      resourceRotatedSecretDelete,
+		Description:        "Rotated secret resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_rotated_secret_<TYPE>",
+		Create:             resourceRotatedSecretCreate,
+		Read:               resourceRotatedSecretRead,
+		Update:             resourceRotatedSecretUpdate,
+		Delete:             resourceRotatedSecretDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRotatedSecretImport,
 		},
@@ -34,11 +35,6 @@ func resourceRotatedSecret() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The target name to associate",
-			},
-			"metadata": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -156,7 +152,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	key := d.Get("key").(string)
@@ -243,7 +239,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if itemOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *itemOut.ItemMetadata)
+		err := d.Set("description", *itemOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -406,7 +402,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	customPayload := d.Get("custom_payload").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 
 	body := akeyless.UpdateRotatedSecret{
@@ -435,7 +431,6 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultMetadata)
 
 	bodyItem := akeyless.UpdateItem{
 		Name:    name,
@@ -486,24 +481,15 @@ func resourceRotatedSecretDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRotatedSecretImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetRotatedSecretValue{
-		Names: path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetRotatedSecretValue(ctx).Body(item).Execute()
+	err := resourceRotatedSecretRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}
@@ -522,6 +508,10 @@ func setRotatorType(d *schema.ResourceData, rsdType string) error {
 		return d.Set("rotator_type", "custom")
 	case "ldap-rotator":
 		return d.Set("rotator_type", "ldap")
+	case "azure-storage-account-rotator":
+		return d.Set("rotator_type", "azure-storage-account")
+	case "service-account-rotator":
+		return d.Set("rotator_type", "service-account-rotator")
 	case "target-rotator":
 		return d.Set("rotator_type", "target")
 	default:

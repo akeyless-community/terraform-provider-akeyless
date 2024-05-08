@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -46,12 +46,6 @@ func dataSourceGetTarget() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Required:    false,
-				Description: "",
-			},
-			"comment": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Deprecated:  "Deprecated: Use description instead",
 				Description: "",
 			},
 			"description": {
@@ -129,41 +123,37 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 	if rOut.TargetName != nil {
-		err = d.Set("target_name", *rOut.TargetName)
+		err := d.Set("target_name", *rOut.TargetName)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.TargetType != nil {
-		err = d.Set("target_type", *rOut.TargetType)
+		err := d.Set("target_type", *rOut.TargetType)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.TargetId != nil {
-		err = d.Set("target_id", *rOut.TargetId)
+		err := d.Set("target_id", *rOut.TargetId)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.Comment != nil {
-		err = d.Set("comment", *rOut.Comment)
-		if err != nil {
-			return err
-		}
-		err = d.Set("description", *rOut.Comment)
+		err := d.Set("description", *rOut.Comment)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.WithCustomerFragment != nil {
-		err = d.Set("with_customer_fragment", *rOut.WithCustomerFragment)
+		err := d.Set("with_customer_fragment", *rOut.WithCustomerFragment)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.ProtectionKeyName != nil {
-		err = d.Set("protection_key_name", *rOut.ProtectionKeyName)
+		err := d.Set("protection_key_name", *rOut.ProtectionKeyName)
 		if err != nil {
 			return err
 		}
@@ -179,13 +169,13 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ClientPermissions != nil {
-		err = d.Set("client_permissions", *rOut.ClientPermissions)
+		err := d.Set("client_permissions", *rOut.ClientPermissions)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.LastVersion != nil {
-		err = d.Set("last_version", *rOut.LastVersion)
+		err := d.Set("last_version", *rOut.LastVersion)
 		if err != nil {
 			return err
 		}

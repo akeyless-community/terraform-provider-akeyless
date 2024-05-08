@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerMysql() *schema.Resource {
 	return &schema.Resource{
-		Description: "MySQL producer resource",
-		Create:      resourceProducerMysqlCreate,
-		Read:        resourceProducerMysqlRead,
-		Update:      resourceProducerMysqlUpdate,
-		Delete:      resourceProducerMysqlDelete,
+		Description:        "MySQL producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_mysql",
+		Create:             resourceProducerMysqlCreate,
+		Read:               resourceProducerMysqlRead,
+		Update:             resourceProducerMysqlUpdate,
+		Delete:             resourceProducerMysqlDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerMysqlImport,
 		},
@@ -397,24 +398,15 @@ func resourceProducerMysqlDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMysqlImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerMysqlRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

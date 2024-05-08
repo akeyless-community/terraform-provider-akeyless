@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -49,11 +49,6 @@ func resourceArtifactoryTarget() *schema.Resource {
 				Optional:    true,
 				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -75,7 +70,6 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.CreateArtifactoryTarget{
@@ -86,7 +80,6 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 		Token:                &token,
 	}
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateArtifactoryTarget(ctx).Body(body).Execute()
@@ -154,7 +147,7 @@ func resourceArtifactoryTargetRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -177,7 +170,6 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.UpdateArtifactoryTarget{
@@ -188,7 +180,6 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 		Token:                &token,
 	}
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateArtifactoryTarget(ctx).Body(body).Execute()
@@ -226,24 +217,15 @@ func resourceArtifactoryTargetDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceArtifactoryTargetImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetTarget{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetTarget(ctx).Body(item).Execute()
+	err := resourceArtifactoryTargetRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

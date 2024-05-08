@@ -23,7 +23,6 @@ Azure Target resource
 
 - `client_id` (String) Azure client/application id
 - `client_secret` (String) Azure client secret
-- `comment` (String, Deprecated)
 - `description` (String) Description of the object
 - `key` (String) Key name. The key is used to encrypt the target secret value. If the key name is not specified, the account default protection key is used
 - `tenant_id` (String) Azure tenant id

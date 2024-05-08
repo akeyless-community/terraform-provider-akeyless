@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -53,11 +53,6 @@ func resourceGcpTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used",
 			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -78,7 +73,6 @@ func resourceGcpTargetCreate(d *schema.ResourceData, m interface{}) error {
 	gcpKey := d.Get("gcp_key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.CreateGcpTarget{
@@ -88,7 +82,6 @@ func resourceGcpTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateGcpTarget(ctx).Body(body).Execute()
@@ -161,7 +154,7 @@ func resourceGcpTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if rOut.Target.Comment != nil {
-			err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+			err := d.Set("description", *rOut.Target.Comment)
 			if err != nil {
 				return err
 			}
@@ -184,7 +177,6 @@ func resourceGcpTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	gcpKey := d.Get("gcp_key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.UpdateGcpTarget{
@@ -194,7 +186,6 @@ func resourceGcpTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateGcpTarget(ctx).Body(body).Execute()
@@ -232,24 +223,15 @@ func resourceGcpTargetDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGcpTargetImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetTarget{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetTarget(ctx).Body(item).Execute()
+	err := resourceGcpTargetRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

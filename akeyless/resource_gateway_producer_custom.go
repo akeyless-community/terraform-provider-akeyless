@@ -6,18 +6,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerCustom() *schema.Resource {
 	return &schema.Resource{
-		Description: "Custom producer resource",
-		Create:      resourceProducerCustomCreate,
-		Read:        resourceProducerCustomRead,
-		Update:      resourceProducerCustomUpdate,
-		Delete:      resourceProducerCustomDelete,
+		Description:        "Custom producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_custom",
+		Create:             resourceProducerCustomCreate,
+		Read:               resourceProducerCustomRead,
+		Update:             resourceProducerCustomUpdate,
+		Delete:             resourceProducerCustomDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerCustomImport,
 		},
@@ -305,24 +306,15 @@ func resourceProducerCustomDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerCustomImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerCustomRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

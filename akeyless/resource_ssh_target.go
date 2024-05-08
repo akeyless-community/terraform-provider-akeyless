@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,11 +28,6 @@ func resourceSSHTarget() *schema.Resource {
 				Required:    true,
 				Description: "Target name",
 				ForceNew:    true,
-			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -94,7 +89,6 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
@@ -108,7 +102,6 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Port, port)
@@ -202,7 +195,7 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -221,7 +214,6 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
@@ -235,7 +227,6 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Port, port)
@@ -280,24 +271,15 @@ func resourceSSHTargetDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHTargetImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetTarget{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetTarget(ctx).Body(item).Execute()
+	err := resourceSSHTargetRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

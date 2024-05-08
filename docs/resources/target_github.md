@@ -21,7 +21,6 @@ Github Target resource
 
 ### Optional
 
-- `comment` (String, Deprecated)
 - `description` (String) Description of the object
 - `github_app_id` (Number) Github application id
 - `github_app_private_key` (String) Github application private key (base64 encoded key)

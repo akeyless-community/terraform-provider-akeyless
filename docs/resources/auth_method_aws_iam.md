@@ -32,6 +32,7 @@ AWS IAM Auth Method Resource
 - `bound_user_id` (Set of String) A list of full user ids that the access is restricted to
 - `bound_user_name` (Set of String) A list of full user-name that the access is restricted to
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
+- `jwt_ttl` (Number) Creds expiration time in minutes
 - `sts_url` (String) sts URL
 
 ### Read-Only

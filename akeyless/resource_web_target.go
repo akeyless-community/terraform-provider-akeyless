@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -40,11 +40,6 @@ func resourceWebTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used",
 			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -64,7 +59,6 @@ func resourceWebTargetCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	url := d.Get("url").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.CreateWebTarget{
@@ -73,7 +67,6 @@ func resourceWebTargetCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Url, url)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateWebTarget(ctx).Body(body).Execute()
@@ -130,7 +123,7 @@ func resourceWebTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -151,7 +144,6 @@ func resourceWebTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	url := d.Get("url").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless.UpdateWebTarget{
@@ -160,7 +152,6 @@ func resourceWebTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Url, url)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateWebTarget(ctx).Body(body).Execute()
@@ -198,24 +189,15 @@ func resourceWebTargetDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceWebTargetImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetTarget{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetTarget(ctx).Body(item).Execute()
+	err := resourceWebTargetRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

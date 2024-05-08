@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,11 +35,6 @@ func resourceDfcKey() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "DFCKey type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, AES128CBC, AES256CBC, RSA1024, RSA2048, RSA3072, RSA4096]",
-			},
-			"metadata": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -129,7 +124,7 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	splitLevel := d.Get("split_level").(int)
@@ -184,7 +179,7 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
+		err := d.Set("description", *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -290,7 +285,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tags").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 	certData := d.Get("cert_data_base64").(string)
@@ -301,7 +296,6 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultMetadata)
 	common.GetAkeylessPtr(&body.CertFileData, certData)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
@@ -352,24 +346,15 @@ func resourceDfcKeyDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDfcKeyImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.DescribeItem{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	err := resourceDfcKeyRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

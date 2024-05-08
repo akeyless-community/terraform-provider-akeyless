@@ -21,7 +21,6 @@ GKE Target resource
 
 ### Optional
 
-- `comment` (String, Deprecated)
 - `description` (String) Description of the object
 - `gke_account_key` (String) GKE service account key
 - `gke_cluster_cert` (String) GKE Base-64 encoded cluster certificate

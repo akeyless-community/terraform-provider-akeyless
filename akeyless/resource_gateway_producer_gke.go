@@ -8,18 +8,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerGke() *schema.Resource {
 	return &schema.Resource{
-		Description: "Google Kubernetes Engine (GKE) producer resource",
-		Create:      resourceProducerGkeCreate,
-		Read:        resourceProducerGkeRead,
-		Update:      resourceProducerGkeUpdate,
-		Delete:      resourceProducerGkeDelete,
+		Description:        "Google Kubernetes Engine (GKE) producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_gke",
+		Create:             resourceProducerGkeCreate,
+		Read:               resourceProducerGkeRead,
+		Update:             resourceProducerGkeUpdate,
+		Delete:             resourceProducerGkeDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerGkeImport,
 		},
@@ -348,24 +349,15 @@ func resourceProducerGkeDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGkeImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerGkeRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

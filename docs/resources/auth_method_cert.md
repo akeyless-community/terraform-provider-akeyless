@@ -34,7 +34,7 @@ Cert Auth Method Resource
 - `certificate_data` (String) The certificate data in base64, if no file was provided.
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `gw_bound_ips` (Set of String) A comma-separated CIDR block list as a trusted Gateway entity
-- `jwt_ttl` (Number) creds expiration time in minutes. If not set, use default according to account settings (see get-account-settings)
+- `jwt_ttl` (Number) Creds expiration time in minutes
 - `revoked_cert_ids` (Set of String) A list of revoked cert ids
 
 ### Read-Only

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
@@ -19,7 +19,7 @@ func TestGithubTargetResource(t *testing.T) {
 			name 					= "%v"
 			github_app_id 			= "1234"
 			github_app_private_key 	= "abcd"
-			comment 				= "aaaa"
+			description 			= "aaaa"
 		}
 	`, secretName, secretPath)
 

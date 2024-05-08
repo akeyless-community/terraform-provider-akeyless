@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +27,7 @@ var (
 	oidEmailAddress = asn1.ObjectIdentifier{1, 2, 3, 4, 5, 6, 7}
 )
 
-func generateCertForTest(t *testing.T, size int) string {
+func generateCertForTest(t *testing.T, size int) (string, string) {
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(2023),
 		Subject: pkix.Name{
@@ -43,8 +43,10 @@ func generateCertForTest(t *testing.T, size int) string {
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 	}
 
-	caPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
+	caPrivKey, err := rsa.GenerateKey(rand.Reader, size)
 	require.NoError(t, err)
+
+	keyBase64 := createPrivateKeyBase64(caPrivKey)
 
 	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
 	require.NoError(t, err)
@@ -56,7 +58,9 @@ func generateCertForTest(t *testing.T, size int) string {
 
 	certBytes := pem.EncodeToMemory(&block)
 
-	return base64.StdEncoding.EncodeToString(certBytes)
+	certBase64 := base64.StdEncoding.EncodeToString(certBytes)
+
+	return keyBase64, certBase64
 }
 
 func generateKey(size int) string {
@@ -156,7 +160,7 @@ func createPkiCertIssuer(t *testing.T, keyName, issuerName, destPath, cn, uriSan
 		Name:          issuerName,
 		SignerKeyName: keyName,
 		Token:         &token,
-		Ttl:           300,
+		Ttl:           "300",
 	}
 	common.GetAkeylessPtr(&body.DestinationPath, destPath)
 	common.GetAkeylessPtr(&body.ClientFlag, true)
@@ -181,6 +185,21 @@ func createSshCertIssuer(t *testing.T, keyName, issuerName, users string) {
 
 	_, res, err := client.CreateSSHCertIssuer(context.Background()).Body(body).Execute()
 	require.NoError(t, handleError(res, err), "failed to create ssh cert issuer for test")
+}
+
+func createCertificate(t *testing.T, certName, certBase64, keyBase64 string) {
+
+	client, token := prepareClient(t)
+
+	body := akeyless.CreateCertificate{
+		Name:  certName,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.CertificateData, certBase64)
+	common.GetAkeylessPtr(&body.KeyData, keyBase64)
+
+	_, res, err := client.CreateCertificate(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(res, err), "failed to create certificate for test")
 }
 
 func deleteItem(t *testing.T, path string) {

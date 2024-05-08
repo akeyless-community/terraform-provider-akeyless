@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -48,6 +48,12 @@ func resourceAuthMethodOauth2() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
+			},
+			"jwt_ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Creds expiration time in minutes",
+				Default:     0,
 			},
 			"jwks_uri": {
 				Type:        schema.TypeString,
@@ -107,6 +113,7 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	jwksUri := d.Get("jwks_uri").(string)
 	jwksJsonData := d.Get("jwks_json_data").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -124,6 +131,7 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.BoundClientIds, boundClientIds)
 	common.GetAkeylessPtr(&body.Issuer, issuer)
 	common.GetAkeylessPtr(&body.Audience, audience)
@@ -203,6 +211,21 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	rOutAcc, err := getAccountSettings(m)
+	if err != nil {
+		return err
+	}
+	jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
+	if rOut.AccessInfo.JwtTtl != nil {
+		if *rOut.AccessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+			err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	if rOut.AccessInfo.Oauth2AccessRules.JwksUri != nil {
 		err = d.Set("jwks_uri", *rOut.AccessInfo.Oauth2AccessRules.JwksUri)
 		if err != nil {
@@ -261,6 +284,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	jwksUri := d.Get("jwks_uri").(string)
 	jwksJsonData := d.Get("jwks_json_data").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -278,6 +302,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.BoundClientIds, boundClientIds)
 	common.GetAkeylessPtr(&body.Issuer, issuer)
 	common.GetAkeylessPtr(&body.Audience, audience)
@@ -319,24 +344,15 @@ func resourceAuthMethodOauth2Delete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodOauth2Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetAuthMethod{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetAuthMethod(ctx).Body(item).Execute()
+	err := resourceAuthMethodOauth2Read(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

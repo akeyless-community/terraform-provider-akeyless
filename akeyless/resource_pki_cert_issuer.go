@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -36,9 +36,9 @@ func resourcePKICertIssuer() *schema.Resource {
 				Description: "A key to sign the certificate with",
 			},
 			"ttl": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The maximum requested Time To Live for issued certificates, in seconds. In case of Public CA, this is based on the CA target's supported maximum TTLs",
+				Description: "The maximum requested Time To Live for issued certificate by default in seconds, supported formats are s,m,h,d. In case of Public CA, this is based on the CA target's supported maximum TTLs",
 			},
 			"allowed_domains": {
 				Type:        schema.TypeString,
@@ -126,12 +126,6 @@ func resourcePKICertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "A comma-separated list of postal codes that will be set in the issued certificate",
 			},
-			"metadata": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "[Deprecated: Use description instead]",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -187,7 +181,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
-	ttl := d.Get("ttl").(int)
+	ttl := d.Get("ttl").(string)
 	allowedDomains := d.Get("allowed_domains").(string)
 	allowedUriSans := d.Get("allowed_uri_sans").(string)
 	allowSubdomains := d.Get("allow_subdomains").(bool)
@@ -213,13 +207,12 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	protectCertificates := d.Get("protect_certificates").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
-	metadata := d.Get("metadata").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
 	body := akeyless.CreatePKICertIssuer{
 		Name:  name,
-		Ttl:   int64(ttl),
+		Ttl:   ttl,
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.SignerKeyName, signerKeyName)
@@ -246,7 +239,6 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
@@ -298,7 +290,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
+		err := d.Set("description", *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -332,7 +324,14 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		certDetails := rOut.CertificateIssueDetails
 
 		if certDetails.MaxTtl != nil {
-			err := d.Set("ttl", *certDetails.MaxTtl)
+			// if ttl represents seconds, it can contain or not contain - "s" at the end.
+			outTtl := common.SecondsToTimeString(int(*certDetails.MaxTtl))
+			ttlInState := d.Get("ttl").(string)
+			if ttlInState != "" && !strings.HasSuffix(ttlInState, "s") {
+				outTtl = strings.TrimSuffix(outTtl, "s")
+			}
+
+			err := d.Set("ttl", outTtl)
 			if err != nil {
 				return err
 			}
@@ -484,7 +483,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
-	ttl := d.Get("ttl").(int)
+	ttl := d.Get("ttl").(string)
 	allowedDomains := d.Get("allowed_domains").(string)
 	allowedUriSans := d.Get("allowed_uri_sans").(string)
 	allowSubdomains := d.Get("allow_subdomains").(bool)
@@ -509,14 +508,13 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	protectCertificates := d.Get("protect_certificates").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
-	metadata := d.Get("metadata").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
 	body := akeyless.UpdatePKICertIssuer{
 		Name:          name,
 		SignerKeyName: signerKeyName,
-		Ttl:           int64(ttl),
+		Ttl:           ttl,
 		Token:         &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagsList, client)
@@ -553,7 +551,6 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
@@ -592,24 +589,15 @@ func resourcePKICertIssuerDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePKICertIssuerImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.DescribeItem{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	err := resourcePKICertIssuerRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

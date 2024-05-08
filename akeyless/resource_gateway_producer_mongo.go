@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	"github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerMongo() *schema.Resource {
 	return &schema.Resource{
-		Description: "Mongo DB Producer resource",
-		Create:      resourceProducerMongoCreate,
-		Read:        resourceProducerMongoRead,
-		Update:      resourceProducerMongoUpdate,
-		Delete:      resourceProducerMongoDelete,
+		Description:        "Mongo DB Producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_mongodb",
+		Create:             resourceProducerMongoCreate,
+		Read:               resourceProducerMongoRead,
+		Update:             resourceProducerMongoUpdate,
+		Delete:             resourceProducerMongoDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerMongoImport,
 		},
@@ -442,24 +443,15 @@ func resourceProducerMongoDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMongoImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerMongoRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}
