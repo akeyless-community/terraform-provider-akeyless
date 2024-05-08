@@ -13,6 +13,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # required for the changelog to work correctly
+          ref: 'v1.5.0'
 
       - name: Set up Go
         uses: actions/setup-go@v5
