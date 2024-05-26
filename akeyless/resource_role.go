@@ -302,7 +302,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	rulesSet := d.Get("rules").(*schema.Set)
 	roleRulesNewValues := rulesSet.List()
 
-	roleRulesOldValues := extractRoleRuleOldValues(rules.PathRules) //something here I guess should be befor
+	roleRulesOldValues := extractRoleRuleOldValues(rules.PathRules)
 
 	rulesToAdd := extractRulesToSet(roleRulesNewValues, roleRulesOldValues)
 	rulesToDelete := extractRulesToSet(roleRulesOldValues, roleRulesNewValues)
