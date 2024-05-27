@@ -312,7 +312,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 		if !ok {
 			err, _ := setRoleRules(ctx, name, rulesToAdd, rulesToDelete, m)
 			if err != nil {
-				log.Fatal("fatal error, can't delete new role rules after bad update: %v", err)
+				log.Fatal(fmt.Printf("fatal error, can't delete new role rules after bad update: %v", err))
 			}
 		}
 	}()
