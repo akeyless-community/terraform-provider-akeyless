@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -307,17 +308,17 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	rulesToDelete := extractRulesToSet(roleRulesOldValues, roleRulesNewValues)
 
 	err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, m)
-	if !ok {
-		return err
-	}
 	defer func() {
 		if !ok {
-			err, _ = setRoleRules(ctx, name, rulesToAdd, rulesToDelete, m)
+			err, _ := setRoleRules(ctx, name, rulesToAdd, rulesToDelete, m)
 			if err != nil {
-				err = fmt.Errorf("fatal error, can't delete new role rules after bad update: %v", err)
+				log.Fatal(fmt.Printf("fatal error, can't delete new role rules after bad update: %v", err))
 			}
 		}
 	}()
+	if !ok {
+		return err
+	}
 
 	accessRulesNewValues := getNewAccessRules(d)
 	accessRulesOldValues := saveRoleAccessRuleOldValues(rules.PathRules)
