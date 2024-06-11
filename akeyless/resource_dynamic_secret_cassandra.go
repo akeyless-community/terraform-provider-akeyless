@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -103,7 +103,7 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -120,7 +120,7 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 
-	body := akeyless.DynamicSecretCreateCassandra{
+	body := akeyless_api.DynamicSecretCreateCassandra{
 		Name:  name,
 		Token: &token,
 	}
@@ -155,12 +155,12 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -256,7 +256,7 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -273,7 +273,7 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 
-	body := akeyless.DynamicSecretUpdateCassandra{
+	body := akeyless_api.DynamicSecretUpdateCassandra{
 		Name:  name,
 		Token: &token,
 	}

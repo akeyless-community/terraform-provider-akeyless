@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -85,7 +85,7 @@ func resourceRotatedSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -99,7 +99,7 @@ func resourceRotatedSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	rotationHour := d.Get("rotation_hour").(int)
 	customPayload := d.Get("custom_payload").(string)
 
-	body := akeyless.RotatedSecretCreateCustom{
+	body := akeyless_api.RotatedSecretCreateCustom{
 		Name:       name,
 		TargetName: targetName,
 		Token:      &token,
@@ -131,19 +131,19 @@ func resourceRotatedSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.RotatedSecretGetValue{
+	body := akeyless_api.RotatedSecretGetValue{
 		Name:  path,
 		Token: &token,
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
+		ShowVersions: akeyless_api.PtrBool(true),
 		Token:        &token,
 	}
 
@@ -243,7 +243,7 @@ func resourceRotatedSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -256,9 +256,9 @@ func resourceRotatedSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.RotatedSecretUpdateCustom{
+	body := akeyless_api.RotatedSecretUpdateCustom{
 		Name:    name,
-		NewName: akeyless.PtrString(name),
+		NewName: akeyless_api.PtrString(name),
 		Token:   &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)

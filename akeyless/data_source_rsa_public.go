@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -46,9 +46,9 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 
 	ctx := context.Background()
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 
-	body := akeyless.GetRSAPublic{
+	body := akeyless_api.GetRSAPublic{
 		Name:  name,
 		Token: &token,
 	}

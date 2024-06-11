@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -152,7 +152,7 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -181,7 +181,7 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	boundResourceIdSet := d.Get("bound_resource_id").(*schema.Set)
 	boundResourceId := common.ExpandStringList(boundResourceIdSet.List())
 
-	body := akeyless.CreateAuthMethodAzureAD{
+	body := akeyless_api.CreateAuthMethodAzureAD{
 		Name:          name,
 		BoundTenantId: boundTenantId,
 		Token:         &token,
@@ -227,12 +227,12 @@ func resourceAuthMethodAzureAdRead(d *schema.ResourceData, m interface{}) error 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetAuthMethod{
+	body := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -375,7 +375,7 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -404,7 +404,7 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	boundResourceIdSet := d.Get("bound_resource_id").(*schema.Set)
 	boundResourceId := common.ExpandStringList(boundResourceIdSet.List())
 
-	body := akeyless.UpdateAuthMethodAzureAD{
+	body := akeyless_api.UpdateAuthMethodAzureAD{
 		Name:          name,
 		BoundTenantId: boundTenantId,
 		Token:         &token,
@@ -446,7 +446,7 @@ func resourceAuthMethodAzureAdDelete(d *schema.ResourceData, m interface{}) erro
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteAuthMethod{
+	deleteItem := akeyless_api.DeleteAuthMethod{
 		Token: &token,
 		Name:  path,
 	}

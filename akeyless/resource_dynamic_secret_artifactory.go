@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -85,7 +85,7 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
@@ -99,7 +99,7 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.DynamicSecretCreateArtifactory{
+	body := akeyless_api.DynamicSecretCreateArtifactory{
 		Name:                     name,
 		ArtifactoryTokenScope:    artifactoryTokenScope,
 		ArtifactoryTokenAudience: artifactoryTokenAudience,
@@ -131,12 +131,12 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -221,7 +221,7 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
@@ -235,7 +235,7 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.DynamicSecretUpdateArtifactory{
+	body := akeyless_api.DynamicSecretUpdateArtifactory{
 		Name:                     name,
 		ArtifactoryTokenScope:    artifactoryTokenScope,
 		ArtifactoryTokenAudience: artifactoryTokenAudience,

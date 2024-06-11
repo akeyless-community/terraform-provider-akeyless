@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -134,7 +134,7 @@ func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -156,7 +156,7 @@ func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.DynamicSecretCreateAzure{
+	body := akeyless_api.DynamicSecretCreateAzure{
 		Name:  name,
 		Token: &token,
 	}
@@ -196,12 +196,12 @@ func resourceDynamicSecretAzureRead(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -312,7 +312,7 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -334,7 +334,7 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.DynamicSecretUpdateAzure{
+	body := akeyless_api.DynamicSecretUpdateAzure{
 		Name:  name,
 		Token: &token,
 	}

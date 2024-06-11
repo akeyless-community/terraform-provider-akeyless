@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -140,16 +140,16 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
-	body := akeyless.CreateSecret{
+	body := akeyless_api.CreateSecret{
 		Name:           path,
 		Value:          value,
-		MultilineValue: akeyless.PtrBool(multilineValue),
+		MultilineValue: akeyless_api.PtrBool(multilineValue),
 		Token:          &token,
 	}
 	if ProtectionKey != "" {
-		body.ProtectionKey = akeyless.PtrString(ProtectionKey)
+		body.ProtectionKey = akeyless_api.PtrString(ProtectionKey)
 	}
 	common.GetAkeylessPtr(&body.Tags, tagsList)
 
@@ -170,9 +170,9 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't create Secret: %v", err)
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
+		ShowVersions: akeyless_api.PtrBool(true),
 		Token:        &token,
 	}
 
@@ -206,9 +206,9 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
-	gsvBody := akeyless.GetSecretValue{
+	gsvBody := akeyless_api.GetSecretValue{
 		Names: []string{path},
 		Token: &token,
 	}
@@ -227,9 +227,9 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get Secret value: %v", err)
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
+		ShowVersions: akeyless_api.PtrBool(true),
 		Token:        &token,
 	}
 
@@ -283,14 +283,14 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	multilineValue := d.Get("multiline_value").(bool)
 	description := d.Get("description").(string)
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
-	body := akeyless.UpdateSecretVal{
+	body := akeyless_api.UpdateSecretVal{
 		Name:      path,
-		Key:       akeyless.PtrString(protectionKey),
+		Key:       akeyless_api.PtrString(protectionKey),
 		Value:     value,
-		Multiline: akeyless.PtrBool(multilineValue),
+		Multiline: akeyless_api.PtrBool(multilineValue),
 		Token:     &token,
 	}
 
@@ -314,9 +314,9 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
 
-	bodyItem := akeyless.UpdateItem{
+	bodyItem := akeyless_api.UpdateItem{
 		Name:    path,
-		NewName: akeyless.PtrString(path),
+		NewName: akeyless_api.PtrString(path),
 		Token:   &token,
 	}
 
@@ -348,9 +348,9 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't update item: %v", err)
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(false),
+		ShowVersions: akeyless_api.PtrBool(false),
 		Token:        &token,
 	}
 
@@ -384,7 +384,7 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteItem{
+	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}

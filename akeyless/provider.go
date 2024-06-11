@@ -9,7 +9,8 @@ import (
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/gcp"
-	"github.com/akeylesslabs/akeyless-go/v4"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -321,8 +322,8 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 		return "", diagnostic
 	}
 
-	client := akeyless.NewAPIClient(&akeyless.Configuration{
-		Servers: []akeyless.ServerConfiguration{
+	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
+		Servers: []akeyless_api.ServerConfiguration{
 			{
 				URL: apiGwAddress,
 			},
@@ -330,7 +331,7 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
 	}).V2Api
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 
 	authOut, _, err := client.Auth(ctx).Body(*authBody).Execute()
 	if err != nil {
@@ -346,13 +347,13 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	return providerMeta{client, &token}, nil
 }
 
-func getAuthInfo(d *schema.ResourceData) (*akeyless.Auth, error) {
+func getAuthInfo(d *schema.ResourceData) (*akeyless_api.Auth, error) {
 	login, authType, err := getLoginWithValidation(d)
 	if err != nil {
 		return nil, err
 	}
 
-	authBody := akeyless.NewAuthWithDefaults()
+	authBody := akeyless_api.NewAuthWithDefaults()
 	err = setAuthBody(authBody, login, authType)
 	if err != nil {
 		return nil, err
@@ -361,7 +362,7 @@ func getAuthInfo(d *schema.ResourceData) (*akeyless.Auth, error) {
 	return authBody, nil
 }
 
-func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginType) error {
+func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType loginType) error {
 
 	login, ok := loginObj.(map[string]interface{})
 	if !ok {
@@ -372,62 +373,62 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 	case ApiKeyLogin:
 		accessID := login["access_id"].(string)
 		accessKey := login["access_key"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.AccessKey = akeyless.PtrString(accessKey)
-		authBody.AccessType = akeyless.PtrString(common.ApiKey)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.AccessKey = akeyless_api.PtrString(accessKey)
+		authBody.AccessType = akeyless_api.PtrString(common.ApiKey)
 		return nil
 	case EmailLogin:
 		adminEmail := login["admin_email"].(string)
 		adminPassword := login["admin_password"].(string)
-		authBody.AdminEmail = akeyless.PtrString(adminEmail)
-		authBody.AdminPassword = akeyless.PtrString(adminPassword)
-		authBody.AccessType = akeyless.PtrString(common.Password)
+		authBody.AdminEmail = akeyless_api.PtrString(adminEmail)
+		authBody.AdminPassword = akeyless_api.PtrString(adminPassword)
+		authBody.AccessType = akeyless_api.PtrString(common.Password)
 		return nil
 	case AwsIAMLogin:
 		accessID := login["access_id"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
 		cloudId, err := aws.GetCloudId()
 		if err != nil {
 			return fmt.Errorf("require Cloud ID: %v", err.Error())
 		}
-		authBody.CloudId = akeyless.PtrString(cloudId)
-		authBody.AccessType = akeyless.PtrString(common.AwsIAM)
+		authBody.CloudId = akeyless_api.PtrString(cloudId)
+		authBody.AccessType = akeyless_api.PtrString(common.AwsIAM)
 		return nil
 	case GcpIAMLogin:
 		accessID := login["access_id"].(string)
 		audience := login["audience"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.GcpAudience = akeyless.PtrString(audience)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.GcpAudience = akeyless_api.PtrString(audience)
 		cloudId, err := gcp.GetCloudID(audience)
 		if err != nil {
 			return fmt.Errorf("require Cloud ID: %v", err.Error())
 		}
-		authBody.CloudId = akeyless.PtrString(cloudId)
-		authBody.AccessType = akeyless.PtrString(common.Gcp)
+		authBody.CloudId = akeyless_api.PtrString(cloudId)
+		authBody.AccessType = akeyless_api.PtrString(common.Gcp)
 		return nil
 	case AzureADLogin:
 		accessID := login["access_id"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
 		cloudId, err := azure.GetCloudId("")
 		if err != nil {
 			return fmt.Errorf("require Cloud ID: %v", err.Error())
 		}
-		authBody.CloudId = akeyless.PtrString(cloudId)
-		authBody.AccessType = akeyless.PtrString(common.AzureAD)
+		authBody.CloudId = akeyless_api.PtrString(cloudId)
+		authBody.AccessType = akeyless_api.PtrString(common.AzureAD)
 		return nil
 	case JwtLogin:
 		accessID := login["access_id"].(string)
 		jwt := login["jwt"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.Jwt = akeyless.PtrString(jwt)
-		authBody.AccessType = akeyless.PtrString(common.Jwt)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.Jwt = akeyless_api.PtrString(jwt)
+		authBody.AccessType = akeyless_api.PtrString(common.Jwt)
 		return nil
 	case UidLogin:
 		accessID := login["access_id"].(string)
 		uidToken := login["uid_token"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.UidToken = akeyless.PtrString(uidToken)
-		authBody.AccessType = akeyless.PtrString(common.Uid)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.UidToken = akeyless_api.PtrString(uidToken)
+		authBody.AccessType = akeyless_api.PtrString(common.Uid)
 		return nil
 	case CertLogin:
 		certFile := login["cert_file_name"].(string)
@@ -459,10 +460,10 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 		}
 
 		accessID := login["access_id"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.CertData = akeyless.PtrString(certData)
-		authBody.KeyData = akeyless.PtrString(keyData)
-		authBody.AccessType = akeyless.PtrString(common.Cert)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.CertData = akeyless_api.PtrString(certData)
+		authBody.KeyData = akeyless_api.PtrString(keyData)
+		authBody.AccessType = akeyless_api.PtrString(common.Cert)
 		return nil
 	default:
 		return fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login")
@@ -470,7 +471,7 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 }
 
 type providerMeta struct {
-	client *akeyless.V2ApiService
+	client *akeyless_api.V2ApiService
 	token  *string
 }
 

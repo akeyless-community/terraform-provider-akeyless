@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -91,7 +91,7 @@ func resourceDynamicSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
@@ -106,7 +106,7 @@ func resourceDynamicSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
 	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
 
-	body := akeyless.DynamicSecretCreateCustom{
+	body := akeyless_api.DynamicSecretCreateCustom{
 		Name:          name,
 		CreateSyncUrl: createSyncUrl,
 		RevokeSyncUrl: revokeSyncUrl,
@@ -139,12 +139,12 @@ func resourceDynamicSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -232,7 +232,7 @@ func resourceDynamicSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
@@ -247,7 +247,7 @@ func resourceDynamicSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
 	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
 
-	body := akeyless.DynamicSecretUpdateCustom{
+	body := akeyless_api.DynamicSecretUpdateCustom{
 		Name:          name,
 		CreateSyncUrl: createSyncUrl,
 		RevokeSyncUrl: revokeSyncUrl,

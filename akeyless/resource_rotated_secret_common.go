@@ -3,7 +3,7 @@ package akeyless
 import (
 	"context"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,7 +14,7 @@ func resourceRotatedSecretCommonDelete(d *schema.ResourceData, m interface{}) er
 
 	path := d.Id()
 
-	body := akeyless.DeleteItem{
+	body := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}

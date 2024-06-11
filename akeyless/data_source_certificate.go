@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -52,13 +52,13 @@ func dataSourceGetCertificateValueRead(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	version := d.Get("version").(int)
 	ignoreCache := d.Get("ignore_cache").(string)
 
-	body := akeyless.GetCertificateValue{
+	body := akeyless_api.GetCertificateValue{
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Name, name)
