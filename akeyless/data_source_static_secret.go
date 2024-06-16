@@ -21,6 +21,7 @@ func dataSourceStaticSecret() *schema.Resource {
 			},
 			"version": {
 				Type:        schema.TypeInt,
+				Optional:    true,
 				Computed:    true,
 				Description: "The version of the secret.",
 			},
