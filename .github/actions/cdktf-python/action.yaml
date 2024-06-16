@@ -1,0 +1,81 @@
+name: Python Package
+description: 'Python Package'
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ var.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry=='${{ var.POETRY_VERSION }}'
+
+    - name: Build Python package
+      shell: bash
+      run: |
+        cd "${{ github.workspace }}/python/akeyless/.gen"
+        poetry build
+        cp -r ./ "${{ github.workspace }}/"
+
+    - name: Publish Python package
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+    - name: Release CDKTF-Python summary
+      shell: bash
+      run: echo '### Release-CDKTF-python, Version-${{ env.version }} has finished! Link to artifact- https://pypi.org/manage/project/akeyless-cdktf/release/${{ env.version }}  :rocket:' >> $GITHUB_STEP_SUMMARY
+
+    - name: Prepare Slack Message On Success
+      shell: bash
+      id: slack-message-success-creator
+      run: |
+        SLACK_MESSAGE="*CDKTF-Python:* "CDKTF-Python"
+        *Version:* $version"
+        delimiter="$(openssl rand -hex 8)"
+        echo "slack-message<<${delimiter}" >> $GITHUB_ENV
+        echo "${SLACK_MESSAGE//$/%0A}" >> $GITHUB_ENV
+        echo "${delimiter}" >> $GITHUB_ENV
+
+    - name: Slack Success Notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_CHANNEL: 'operations'
+        SLACK_COLOR: ${{ job.status }}
+        SLACK_ICON: https://github.com/rtCamp.png?size=48
+        SLACK_TITLE: 'New CDKTF-Python Released Successfully! :rocket:'
+        SLACK_MESSAGE: '${{ env.slack-message }}'
+        SLACK_USERNAME: githubBot
+        MSG_MINIMAL: true
+        SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+        SLACK_FOOTER: Akeyless.io Release CDKTF-Python Pipeline
+
+    - name: Prepare Slack Message On Failure
+      shell: bash
+      if: ${{ failure() && steps.*.outcome != 'success' }}
+      id: slack-message-failure-creator
+      run: |
+        SLACK_MESSAGE="*CDKTF-Python:* "CDKTF-Python"
+        *Version:* $version"
+        delimiter="$(openssl rand -hex 8)"
+        echo "slack-message<<${delimiter}" >> $GITHUB_ENV
+        echo "${SLACK_MESSAGE//$/%0A}" >> $GITHUB_ENV
+        echo "${delimiter}" >> $GITHUB_ENV
+
+    - name: Slack Failure Notification
+      if: (failure() && steps.*.outcome != 'success')
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_CHANNEL: 'operations'
+        SLACK_COLOR: '#bd3232'
+        SLACK_ICON: https://github.com/rtCamp.png?size=48
+        SLACK_TITLE: 'Release Latest Akeyless CDKTF-Python Failed! :bell:'
+        SLACK_MESSAGE: '${{ env.slack-message }}'
+        SLACK_USERNAME: githubBot
+        SLACK_LINK_NAMES: true
+        SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+        SLACK_FOOTER: Akeyless.io Release CDKTF-Python Pipeline

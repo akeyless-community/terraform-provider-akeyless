@@ -1,0 +1,81 @@
+on:
+  workflow_run:
+    workflows: [Release]
+    types:
+      - completed
+
+jobs:
+  release-cdktf:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      id-token: write
+    environment:
+      name: pypi
+      url: https://pypi.org/p/akeyless-cdktf/
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        language: ['python']
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
+
+      - name: Grab Current Version
+        run: |
+          version=$(grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+' version)
+          echo "version=${version}" >> "${GITHUB_ENV}"
+
+      - name: Login in to jfrog Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.JFROG_USER_NAME }}
+          password: ${{ secrets.JFROG_PASSWORD }}
+          registry: akeyless.jfrog.io/akeyless-dev
+
+      - name: docker run
+        run: |
+          docker run --rm --user root -v "${GITHUB_WORKSPACE}/temp":"/src" -w '/src' -e GH_DEBUG=${{ runner.debug }} akeyless.jfrog.io/akeyless-internals/cdktf:0.0.5 "${{ env.version }}" "${{ matrix.language }}"
+
+      - name: Copy Files for ${{ matrix.language }}
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/${{ matrix.language }}/akeyless"
+          cp -vr "${GITHUB_WORKSPACE}/temp/${{ matrix.language }}/.gen" "${GITHUB_WORKSPACE}/${{ matrix.language }}/akeyless"
+
+      - name: python action
+        if: matrix.language == 'python'
+        uses: ./.github/actions/cdktf-python
+
+
+  failed-terraform-provider:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Grab Current Version
+        run: |
+          version=$(grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+' version)
+          echo "version=${version}" >> "${GITHUB_ENV}"
+
+      - name: Prepare Slack Message On Failure
+        id: slack-message-failure-creator
+        run: |
+          SLACK_MESSAGE="*Version:* $version"
+          delimiter="$(openssl rand -hex 8)"
+          echo "slack-message<<${delimiter}" >> $GITHUB_ENV
+          echo "${SLACK_MESSAGE//$/%0A}" >> $GITHUB_ENV
+          echo "${delimiter}" >> $GITHUB_ENV
+
+      - name: Slack Failure Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: 'operations'
+          SLACK_COLOR: '#bd3232'
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_TITLE: 'Release Akeyless Terraform provider and CDKTF Failed! :bell:'
+          SLACK_MESSAGE: '${{ env.slack-message }}'
+          SLACK_USERNAME: githubBot
+          SLACK_LINK_NAMES: true
+          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          SLACK_FOOTER: Akeyless.io Release CDKTF-Akeyless Pipeline
+
