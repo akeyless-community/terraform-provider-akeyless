@@ -27,6 +27,7 @@ var (
 	oidEmailAddress = asn1.ObjectIdentifier{1, 2, 3, 4, 5, 6, 7}
 )
 
+// generates base64 private key & certificate
 func generateCertForTest(t *testing.T, size int) (string, string) {
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(2023),
