@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingAwsS3() *schema.Resource {
+func resourceGatewayUpdateLogForwardingAwsS3() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for aws-s3",
-		Create:      resourcegatewayUpdateLogForwardingAwsS3Update,
-		Read:        resourcegatewayUpdateLogForwardingAwsS3Read,
-		Update:      resourcegatewayUpdateLogForwardingAwsS3Update,
-		Delete:      resourcegatewayUpdateLogForwardingAwsS3Update,
+		Create:      resourceGatewayUpdateLogForwardingAwsS3Update,
+		Read:        resourceGatewayUpdateLogForwardingAwsS3Read,
+		Update:      resourceGatewayUpdateLogForwardingAwsS3Update,
+		Delete:      resourceGatewayUpdateLogForwardingAwsS3Update,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingAwsS3Import,
+			State: resourceGatewayUpdateLogForwardingAwsS3Import,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -83,7 +83,7 @@ func resourcegatewayUpdateLogForwardingAwsS3() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingAwsS3Read(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingAwsS3Read(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -111,7 +111,7 @@ func resourcegatewayUpdateLogForwardingAwsS3Read(d *schema.ResourceData, m inter
 
 	config := rOut.AwsS3Config
 	if config != nil {
-		if config.LogFolder != nil && d.Get("log_folder").(string) != "use-existing" {
+		if config.LogFolder != nil && d.Get("log_folder").(string) != common.UseExisting {
 			err := d.Set("log_folder", *config.LogFolder)
 			if err != nil {
 				return err
@@ -158,7 +158,7 @@ func resourcegatewayUpdateLogForwardingAwsS3Read(d *schema.ResourceData, m inter
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingAwsS3Update(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingAwsS3Update(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -206,7 +206,7 @@ func resourcegatewayUpdateLogForwardingAwsS3Update(d *schema.ResourceData, m int
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingAwsS3Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingAwsS3Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

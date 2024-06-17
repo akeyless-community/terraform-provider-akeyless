@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingStdout() *schema.Resource {
+func resourceGatewayUpdateLogForwardingStdout() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for standard output",
-		Create:      resourcegatewayUpdateLogForwardingStdoutUpdate,
-		Read:        resourcegatewayUpdateLogForwardingStdoutRead,
-		Update:      resourcegatewayUpdateLogForwardingStdoutUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingStdoutUpdate,
+		Create:      resourceGatewayUpdateLogForwardingStdoutUpdate,
+		Read:        resourceGatewayUpdateLogForwardingStdoutRead,
+		Update:      resourceGatewayUpdateLogForwardingStdoutUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingStdoutUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingStdoutImport,
+			State: resourceGatewayUpdateLogForwardingStdoutImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -46,7 +46,7 @@ func resourcegatewayUpdateLogForwardingStdout() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingStdoutRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingStdoutRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -75,7 +75,7 @@ func resourcegatewayUpdateLogForwardingStdoutRead(d *schema.ResourceData, m inte
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingStdoutUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingStdoutUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -109,7 +109,7 @@ func resourcegatewayUpdateLogForwardingStdoutUpdate(d *schema.ResourceData, m in
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingStdoutImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingStdoutImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

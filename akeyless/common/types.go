@@ -14,7 +14,8 @@ const (
 	DynamicStaticSecretType = "DYNAMIC_SECRET"
 	RotatedSecretType       = "ROTATED_SECRET"
 
-	AlgRsa1024 = "RSA1024"
+	AlgRsa1024   = "RSA1024"
+	AlgAes128GCM = "AES128GCM"
 
 	ClientTypeHeader    = "akeylessclienttype"
 	TerraformClientType = "terraform"
@@ -24,4 +25,6 @@ const (
 	LdapRotator           = "ldap-rotator"
 	ServiceAccountRotator = "service-account-rotator"
 	StorageAccountRotator = "azure-storage-account-rotator"
+
+	UseExisting = "use-existing"
 )

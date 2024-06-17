@@ -138,6 +138,23 @@ func createDfcKey(t *testing.T, name string) {
 	}
 }
 
+func createProtectionKey(t *testing.T, name string) {
+
+	client, token := prepareClient(t)
+
+	body := akeyless_api.CreateDFCKey{
+		Name:  name,
+		Alg:   common.AlgAes128GCM,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.SplitLevel, 2)
+
+	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
+	if err != nil && !isAlreadyExistError(err) {
+		require.Fail(t, handleError(res, err).Error(), "failed to create key for test")
+	}
+}
+
 func getRsaPublicKey(t *testing.T, name string) akeyless_api.GetRSAPublicOutput {
 	client, token := prepareClient(t)
 

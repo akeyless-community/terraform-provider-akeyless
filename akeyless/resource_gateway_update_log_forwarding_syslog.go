@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingSyslog() *schema.Resource {
+func resourceGatewayUpdateLogForwardingSyslog() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for syslog",
-		Create:      resourcegatewayUpdateLogForwardingSyslogUpdate,
-		Read:        resourcegatewayUpdateLogForwardingSyslogRead,
-		Update:      resourcegatewayUpdateLogForwardingSyslogUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingSyslogUpdate,
+		Create:      resourceGatewayUpdateLogForwardingSyslogUpdate,
+		Read:        resourceGatewayUpdateLogForwardingSyslogRead,
+		Update:      resourceGatewayUpdateLogForwardingSyslogUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingSyslogUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingSyslogImport,
+			State: resourceGatewayUpdateLogForwardingSyslogImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -81,7 +81,7 @@ func resourcegatewayUpdateLogForwardingSyslog() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -121,7 +121,7 @@ func resourcegatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m inte
 				return err
 			}
 		}
-		if config.SyslogTargetTag != nil && d.Get("target_tag").(string) != "use-existing" {
+		if config.SyslogTargetTag != nil && d.Get("target_tag").(string) != common.UseExisting {
 			err := d.Set("target_tag", *config.SyslogTargetTag)
 			if err != nil {
 				return err
@@ -139,7 +139,7 @@ func resourcegatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m inte
 				return err
 			}
 		}
-		if config.SyslogTlsCertificate != nil && d.Get("tls_certificate").(string) != "use-existing" {
+		if config.SyslogTlsCertificate != nil && d.Get("tls_certificate").(string) != common.UseExisting {
 			err := d.Set("tls_certificate", common.Base64Encode(*config.SyslogTlsCertificate))
 			if err != nil {
 				return err
@@ -150,7 +150,7 @@ func resourcegatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m inte
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingSyslogUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingSyslogUpdate(d *schema.ResourceData, m interface{}) error {
 
 	provider := m.(providerMeta)
 	client := *provider.client
@@ -197,7 +197,7 @@ func resourcegatewayUpdateLogForwardingSyslogUpdate(d *schema.ResourceData, m in
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingSyslogImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingSyslogImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingAzureAnalytics() *schema.Resource {
+func resourceGatewayUpdateLogForwardingAzureAnalytics() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for azure-analytics",
-		Create:      resourcegatewayUpdateLogForwardingAzureAnalyticsUpdate,
-		Read:        resourcegatewayUpdateLogForwardingAzureAnalyticsRead,
-		Update:      resourcegatewayUpdateLogForwardingAzureAnalyticsUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingAzureAnalyticsUpdate,
+		Create:      resourceGatewayUpdateLogForwardingAzureAnalyticsUpdate,
+		Read:        resourceGatewayUpdateLogForwardingAzureAnalyticsRead,
+		Update:      resourceGatewayUpdateLogForwardingAzureAnalyticsUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingAzureAnalyticsUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingAzureAnalyticsImport,
+			State: resourceGatewayUpdateLogForwardingAzureAnalyticsImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -57,7 +57,7 @@ func resourcegatewayUpdateLogForwardingAzureAnalytics() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingAzureAnalyticsRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingAzureAnalyticsRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -102,7 +102,7 @@ func resourcegatewayUpdateLogForwardingAzureAnalyticsRead(d *schema.ResourceData
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingAzureAnalyticsUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingAzureAnalyticsUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -140,7 +140,7 @@ func resourcegatewayUpdateLogForwardingAzureAnalyticsUpdate(d *schema.ResourceDa
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingAzureAnalyticsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingAzureAnalyticsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

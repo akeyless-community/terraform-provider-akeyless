@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingElasticsearch() *schema.Resource {
+func resourceGatewayUpdateLogForwardingElasticsearch() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for elasticsearch",
-		Create:      resourcegatewayUpdateLogForwardingElasticsearchUpdate,
-		Read:        resourcegatewayUpdateLogForwardingElasticsearchRead,
-		Update:      resourcegatewayUpdateLogForwardingElasticsearchUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingElasticsearchUpdate,
+		Create:      resourceGatewayUpdateLogForwardingElasticsearchUpdate,
+		Read:        resourceGatewayUpdateLogForwardingElasticsearchRead,
+		Update:      resourceGatewayUpdateLogForwardingElasticsearchUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingElasticsearchUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingElasticsearchImport,
+			State: resourceGatewayUpdateLogForwardingElasticsearchImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -100,7 +100,7 @@ func resourcegatewayUpdateLogForwardingElasticsearch() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingElasticsearchRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingElasticsearchRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -182,7 +182,7 @@ func resourcegatewayUpdateLogForwardingElasticsearchRead(d *schema.ResourceData,
 				return err
 			}
 		}
-		if config.ElasticsearchTlsCertificate != nil && d.Get("tls_certificate").(string) != "use-existing" {
+		if config.ElasticsearchTlsCertificate != nil && d.Get("tls_certificate").(string) != common.UseExisting {
 			err := d.Set("tls_certificate", common.Base64Encode(*config.ElasticsearchTlsCertificate))
 			if err != nil {
 				return err
@@ -193,7 +193,7 @@ func resourcegatewayUpdateLogForwardingElasticsearchRead(d *schema.ResourceData,
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingElasticsearchUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingElasticsearchUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -247,7 +247,7 @@ func resourcegatewayUpdateLogForwardingElasticsearchUpdate(d *schema.ResourceDat
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingElasticsearchImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingElasticsearchImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

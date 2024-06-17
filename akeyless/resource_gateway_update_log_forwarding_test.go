@@ -39,7 +39,7 @@ func TestGatewayUpdateLogForwardingAwsS3(t *testing.T) {
 		}
 	`, name)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingAzureAnalytics(t *testing.T) {
@@ -64,7 +64,7 @@ func TestGatewayUpdateLogForwardingAzureAnalytics(t *testing.T) {
 		}
 	`, name)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingDatadog(t *testing.T) {
@@ -92,7 +92,7 @@ func TestGatewayUpdateLogForwardingDatadog(t *testing.T) {
 		}
 	`, name)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingElasticsearch(t *testing.T) {
@@ -128,7 +128,7 @@ func TestGatewayUpdateLogForwardingElasticsearch(t *testing.T) {
 		}
 	`, name, ElasticCertForTest)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingGoogleChronicle(t *testing.T) {
@@ -168,7 +168,7 @@ func TestGatewayUpdateLogForwardingGoogleChronicle(t *testing.T) {
 		}
 	`, name, saKey)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingLogstash(t *testing.T) {
@@ -196,7 +196,7 @@ func TestGatewayUpdateLogForwardingLogstash(t *testing.T) {
 		}
 	`, name)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingLogzIo(t *testing.T) {
@@ -221,7 +221,7 @@ func TestGatewayUpdateLogForwardingLogzIo(t *testing.T) {
 		}
 	`, name)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingSplunk(t *testing.T) {
@@ -252,12 +252,12 @@ func TestGatewayUpdateLogForwardingSplunk(t *testing.T) {
 		}
 	`, name)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingStdout(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	// t.Skip("not supported on public gateway")
+	// t.Parallel()
 
 	name := "test-gw-log-forwarding-stdout"
 
@@ -271,11 +271,10 @@ func TestGatewayUpdateLogForwardingStdout(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_stdout" "%v" {
-			enable        	= "true"
 		}
 	`, name)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingSumologic(t *testing.T) {
@@ -301,7 +300,7 @@ func TestGatewayUpdateLogForwardingSumologic(t *testing.T) {
 		}
 	`, name)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingSyslog(t *testing.T) {
@@ -331,10 +330,10 @@ func TestGatewayUpdateLogForwardingSyslog(t *testing.T) {
 		}
 	`, name)
 
-	testGatewayLogForwardingResource(t, config, configUpdate)
+	testGatewayConfigResource(t, config, configUpdate)
 }
 
-func testGatewayLogForwardingResource(t *testing.T, config, configUpdate string) {
+func testGatewayConfigResource(t *testing.T, config, configUpdate string) {
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{

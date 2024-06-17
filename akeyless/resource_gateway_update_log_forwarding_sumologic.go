@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingSumologic() *schema.Resource {
+func resourceGatewayUpdateLogForwardingSumologic() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for sumologic",
-		Create:      resourcegatewayUpdateLogForwardingSumologicUpdate,
-		Read:        resourcegatewayUpdateLogForwardingSumologicRead,
-		Update:      resourcegatewayUpdateLogForwardingSumologicUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingSumologicUpdate,
+		Create:      resourceGatewayUpdateLogForwardingSumologicUpdate,
+		Read:        resourceGatewayUpdateLogForwardingSumologicRead,
+		Update:      resourceGatewayUpdateLogForwardingSumologicUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingSumologicUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingSumologicImport,
+			State: resourceGatewayUpdateLogForwardingSumologicImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -64,7 +64,7 @@ func resourcegatewayUpdateLogForwardingSumologic() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingSumologicRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingSumologicRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -98,13 +98,13 @@ func resourcegatewayUpdateLogForwardingSumologicRead(d *schema.ResourceData, m i
 				return err
 			}
 		}
-		if config.SumoLogicTags != nil && d.Get("sumologic_tags").(string) != "use-existing" {
+		if config.SumoLogicTags != nil && d.Get("sumologic_tags").(string) != common.UseExisting {
 			err := d.Set("sumologic_tags", *config.SumoLogicTags)
 			if err != nil {
 				return err
 			}
 		}
-		if config.SumoLogicHost != nil && d.Get("host").(string) != "use-existing" {
+		if config.SumoLogicHost != nil && d.Get("host").(string) != common.UseExisting {
 			err := d.Set("host", *config.SumoLogicHost)
 			if err != nil {
 				return err
@@ -115,7 +115,7 @@ func resourcegatewayUpdateLogForwardingSumologicRead(d *schema.ResourceData, m i
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingSumologicUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingSumologicUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -155,7 +155,7 @@ func resourcegatewayUpdateLogForwardingSumologicUpdate(d *schema.ResourceData, m
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingSumologicImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingSumologicImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

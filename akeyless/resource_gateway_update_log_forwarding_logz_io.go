@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingLogzIo() *schema.Resource {
+func resourceGatewayUpdateLogForwardingLogzIo() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for logz-io",
-		Create:      resourcegatewayUpdateLogForwardingLogzIoUpdate,
-		Read:        resourcegatewayUpdateLogForwardingLogzIoRead,
-		Update:      resourcegatewayUpdateLogForwardingLogzIoUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingLogzIoUpdate,
+		Create:      resourceGatewayUpdateLogForwardingLogzIoUpdate,
+		Read:        resourceGatewayUpdateLogForwardingLogzIoRead,
+		Update:      resourceGatewayUpdateLogForwardingLogzIoUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingLogzIoUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingLogzIoImport,
+			State: resourceGatewayUpdateLogForwardingLogzIoImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -57,7 +57,7 @@ func resourcegatewayUpdateLogForwardingLogzIo() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingLogzIoRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingLogzIoRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -102,7 +102,7 @@ func resourcegatewayUpdateLogForwardingLogzIoRead(d *schema.ResourceData, m inte
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingLogzIoUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingLogzIoUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -140,7 +140,7 @@ func resourcegatewayUpdateLogForwardingLogzIoUpdate(d *schema.ResourceData, m in
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingLogzIoImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingLogzIoImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

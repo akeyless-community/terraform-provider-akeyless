@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingLogstash() *schema.Resource {
+func resourceGatewayUpdateLogForwardingLogstash() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for logstash",
-		Create:      resourcegatewayUpdateLogForwardingLogstashUpdate,
-		Read:        resourcegatewayUpdateLogForwardingLogstashRead,
-		Update:      resourcegatewayUpdateLogForwardingLogstashUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingLogstashUpdate,
+		Create:      resourceGatewayUpdateLogForwardingLogstashUpdate,
+		Read:        resourceGatewayUpdateLogForwardingLogstashRead,
+		Update:      resourceGatewayUpdateLogForwardingLogstashUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingLogstashUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingLogstashImport,
+			State: resourceGatewayUpdateLogForwardingLogstashImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -68,7 +68,7 @@ func resourcegatewayUpdateLogForwardingLogstash() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingLogstashRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingLogstashRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -114,7 +114,7 @@ func resourcegatewayUpdateLogForwardingLogstashRead(d *schema.ResourceData, m in
 				return err
 			}
 		}
-		if config.LogstashTlsCertificate != nil && d.Get("tls_certificate").(string) != "use-existing" {
+		if config.LogstashTlsCertificate != nil && d.Get("tls_certificate").(string) != common.UseExisting {
 			err := d.Set("tls_certificate", common.Base64Encode(*config.LogstashTlsCertificate))
 			if err != nil {
 				return err
@@ -125,7 +125,7 @@ func resourcegatewayUpdateLogForwardingLogstashRead(d *schema.ResourceData, m in
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingLogstashUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingLogstashUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -167,7 +167,7 @@ func resourcegatewayUpdateLogForwardingLogstashUpdate(d *schema.ResourceData, m 
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingLogstashImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingLogstashImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

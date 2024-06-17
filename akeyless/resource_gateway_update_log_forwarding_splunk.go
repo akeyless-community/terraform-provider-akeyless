@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingSplunk() *schema.Resource {
+func resourceGatewayUpdateLogForwardingSplunk() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for splunk",
-		Create:      resourcegatewayUpdateLogForwardingSplunkUpdate,
-		Read:        resourcegatewayUpdateLogForwardingSplunkRead,
-		Update:      resourcegatewayUpdateLogForwardingSplunkUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingSplunkUpdate,
+		Create:      resourceGatewayUpdateLogForwardingSplunkUpdate,
+		Read:        resourceGatewayUpdateLogForwardingSplunkRead,
+		Update:      resourceGatewayUpdateLogForwardingSplunkUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingSplunkUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingSplunkImport,
+			State: resourceGatewayUpdateLogForwardingSplunkImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -86,7 +86,7 @@ func resourcegatewayUpdateLogForwardingSplunk() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -126,13 +126,13 @@ func resourcegatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m inte
 				return err
 			}
 		}
-		if config.SplunkSource != nil && d.Get("source").(string) != "use-existing" {
+		if config.SplunkSource != nil && d.Get("source").(string) != common.UseExisting {
 			err := d.Set("source", *config.SplunkSource)
 			if err != nil {
 				return err
 			}
 		}
-		if config.SplunkSourcetype != nil && d.Get("source_type").(string) != "use-existing" {
+		if config.SplunkSourcetype != nil && d.Get("source_type").(string) != common.UseExisting {
 			err := d.Set("source_type", *config.SplunkSourcetype)
 			if err != nil {
 				return err
@@ -150,7 +150,7 @@ func resourcegatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m inte
 				return err
 			}
 		}
-		if config.SplunkTlsCertificate != nil && d.Get("tls_certificate").(string) != "use-existing" {
+		if config.SplunkTlsCertificate != nil && d.Get("tls_certificate").(string) != common.UseExisting {
 			err := d.Set("tls_certificate", common.Base64Encode(*config.SplunkTlsCertificate))
 			if err != nil {
 				return err
@@ -161,7 +161,7 @@ func resourcegatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m inte
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -209,7 +209,7 @@ func resourcegatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m in
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingSplunkImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingSplunkImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingDatadog() *schema.Resource {
+func resourceGatewayUpdateLogForwardingDatadog() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for datadog",
-		Create:      resourcegatewayUpdateLogForwardingDatadogUpdate,
-		Read:        resourcegatewayUpdateLogForwardingDatadogRead,
-		Update:      resourcegatewayUpdateLogForwardingDatadogUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingDatadogUpdate,
+		Create:      resourceGatewayUpdateLogForwardingDatadogUpdate,
+		Read:        resourceGatewayUpdateLogForwardingDatadogRead,
+		Update:      resourceGatewayUpdateLogForwardingDatadogUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingDatadogUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingDatadogImport,
+			State: resourceGatewayUpdateLogForwardingDatadogImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -75,7 +75,7 @@ func resourcegatewayUpdateLogForwardingDatadog() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingDatadogRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingDatadogRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -115,19 +115,19 @@ func resourcegatewayUpdateLogForwardingDatadogRead(d *schema.ResourceData, m int
 				return err
 			}
 		}
-		if config.DatadogLogSource != nil && d.Get("log_source").(string) != "use-existing" {
+		if config.DatadogLogSource != nil && d.Get("log_source").(string) != common.UseExisting {
 			err := d.Set("log_source", *config.DatadogLogSource)
 			if err != nil {
 				return err
 			}
 		}
-		if config.DatadogLogTags != nil && d.Get("log_tags").(string) != "use-existing" {
+		if config.DatadogLogTags != nil && d.Get("log_tags").(string) != common.UseExisting {
 			err := d.Set("log_tags", *config.DatadogLogTags)
 			if err != nil {
 				return err
 			}
 		}
-		if config.DatadogLogService != nil && d.Get("log_service").(string) != "use-existing" {
+		if config.DatadogLogService != nil && d.Get("log_service").(string) != common.UseExisting {
 			err := d.Set("log_service", *config.DatadogLogService)
 			if err != nil {
 				return err
@@ -138,7 +138,7 @@ func resourcegatewayUpdateLogForwardingDatadogRead(d *schema.ResourceData, m int
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingDatadogUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingDatadogUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -182,7 +182,7 @@ func resourcegatewayUpdateLogForwardingDatadogUpdate(d *schema.ResourceData, m i
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingDatadogImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingDatadogImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {

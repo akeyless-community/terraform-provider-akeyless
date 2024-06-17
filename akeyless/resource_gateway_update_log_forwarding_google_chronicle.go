@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourcegatewayUpdateLogForwardingGoogleChronicle() *schema.Resource {
+func resourceGatewayUpdateLogForwardingGoogleChronicle() *schema.Resource {
 	return &schema.Resource{
 		Description: "Log Forwarding config for google-chronicle",
-		Create:      resourcegatewayUpdateLogForwardingGoogleChronicleUpdate,
-		Read:        resourcegatewayUpdateLogForwardingGoogleChronicleRead,
-		Update:      resourcegatewayUpdateLogForwardingGoogleChronicleUpdate,
-		Delete:      resourcegatewayUpdateLogForwardingGoogleChronicleUpdate,
+		Create:      resourceGatewayUpdateLogForwardingGoogleChronicleUpdate,
+		Read:        resourceGatewayUpdateLogForwardingGoogleChronicleRead,
+		Update:      resourceGatewayUpdateLogForwardingGoogleChronicleUpdate,
+		Delete:      resourceGatewayUpdateLogForwardingGoogleChronicleUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourcegatewayUpdateLogForwardingGoogleChronicleImport,
+			State: resourceGatewayUpdateLogForwardingGoogleChronicleImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -67,7 +67,7 @@ func resourcegatewayUpdateLogForwardingGoogleChronicle() *schema.Resource {
 	}
 }
 
-func resourcegatewayUpdateLogForwardingGoogleChronicleRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingGoogleChronicleRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
@@ -124,7 +124,7 @@ func resourcegatewayUpdateLogForwardingGoogleChronicleRead(d *schema.ResourceDat
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingGoogleChronicleUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayUpdateLogForwardingGoogleChronicleUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -166,7 +166,7 @@ func resourcegatewayUpdateLogForwardingGoogleChronicleUpdate(d *schema.ResourceD
 	return nil
 }
 
-func resourcegatewayUpdateLogForwardingGoogleChronicleImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayUpdateLogForwardingGoogleChronicleImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	rOut, err := getGwLogForwardingConfig(m)
 	if err != nil {
