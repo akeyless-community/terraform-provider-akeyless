@@ -20,7 +20,8 @@ func TestStaticResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
 			path 		= "%v"
-			value 		= "value1"
+			value 		= "{\"secret value\":\"abc\"}"
+			format 		= "json"
 			tags 		= ["t1", "t2"]
 			description = "aaaa"
 		}

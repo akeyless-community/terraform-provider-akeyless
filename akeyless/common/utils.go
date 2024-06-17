@@ -496,6 +496,10 @@ func ReadAndEncodeFile(fileName string) (string, error) {
 	return data, nil
 }
 
+func Base64Encode(input string) string {
+	return base64.StdEncoding.EncodeToString([]byte(input))
+}
+
 func SetDataByPrefixSlash(d *schema.ResourceData, key, returnedValue, existValue string) error {
 	if "/"+returnedValue == existValue {
 		return d.Set(key, existValue)
@@ -535,4 +539,11 @@ func SecondsToTimeString(totalSeconds int) string {
 	}
 
 	return result.String()
+}
+
+func ExtractLogForwardingFormat(isJson bool) string {
+	if isJson {
+		return "json"
+	}
+	return "text"
 }

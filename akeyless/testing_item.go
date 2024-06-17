@@ -27,6 +27,7 @@ var (
 	oidEmailAddress = asn1.ObjectIdentifier{1, 2, 3, 4, 5, 6, 7}
 )
 
+// generates base64 private key & certificate
 func generateCertForTest(t *testing.T, size int) (string, string) {
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(2023),
@@ -130,6 +131,23 @@ func createDfcKey(t *testing.T, name string) {
 	common.GetAkeylessPtr(&body.SplitLevel, 2)
 	common.GetAkeylessPtr(&body.GenerateSelfSignedCertificate, true)
 	common.GetAkeylessPtr(&body.CertificateTtl, 60)
+
+	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
+	if err != nil && !isAlreadyExistError(err) {
+		require.Fail(t, handleError(res, err).Error(), "failed to create key for test")
+	}
+}
+
+func createProtectionKey(t *testing.T, name string) {
+
+	client, token := prepareClient(t)
+
+	body := akeyless_api.CreateDFCKey{
+		Name:  name,
+		Alg:   common.AlgAes128GCM,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.SplitLevel, 2)
 
 	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
 	if err != nil && !isAlreadyExistError(err) {

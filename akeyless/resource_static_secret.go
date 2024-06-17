@@ -35,6 +35,11 @@ func resourceStaticSecret() *schema.Resource {
 				Sensitive:   true,
 				Description: "The secret content.",
 			},
+			"format": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Secret format [text/json] (relevant only for type 'generic')",
+			},
 			"multiline_value": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -125,6 +130,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 	value := d.Get("value").(string)
+	format := d.Get("format").(string)
 	ProtectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
 	description := d.Get("description").(string)
@@ -153,6 +159,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Tags, tagsList)
 
+	common.GetAkeylessPtr(&body.Format, format)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessSshCreds, secureAccessSshCreds)
@@ -264,6 +271,19 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	info := itemOut.ItemGeneralInfo
+	if info != nil {
+		staticSecretInfo := info.StaticSecretInfo
+		if staticSecretInfo != nil {
+			if staticSecretInfo.Format != nil && d.Get("format") != "" {
+				err := d.Set("format", *staticSecretInfo.Format)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	err = d.Set("value", gsvOut[path])
 	if err != nil {
 		return err
@@ -279,6 +299,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 	value := d.Get("value").(string)
+	format := d.Get("format").(string)
 	protectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
 	description := d.Get("description").(string)
@@ -293,6 +314,8 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		Multiline: akeyless_api.PtrBool(multilineValue),
 		Token:     &token,
 	}
+
+	common.GetAkeylessPtr(&body.Format, format)
 
 	_, _, err := client.UpdateSecretVal(ctx).Body(body).Execute()
 	if err != nil {
