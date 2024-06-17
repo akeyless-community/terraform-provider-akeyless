@@ -256,8 +256,8 @@ func TestGatewayUpdateLogForwardingSplunk(t *testing.T) {
 }
 
 func TestGatewayUpdateLogForwardingStdout(t *testing.T) {
-	// t.Skip("not supported on public gateway")
-	// t.Parallel()
+	t.Skip("not supported on public gateway")
+	t.Parallel()
 
 	name := "test-gw-log-forwarding-stdout"
 
