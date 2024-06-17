@@ -1,6 +1,6 @@
 module github.com/akeylesslabs/terraform-provider-akeyless
 
-go 1.18
+go 1.20
 
 require (
 	github.com/akeylesslabs/akeyless-go-cloud-id v0.3.5
