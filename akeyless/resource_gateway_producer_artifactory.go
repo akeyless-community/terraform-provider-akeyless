@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -93,7 +93,7 @@ func resourceProducerArtifactoryCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
@@ -107,7 +107,7 @@ func resourceProducerArtifactoryCreate(d *schema.ResourceData, m interface{}) er
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.GatewayCreateProducerArtifactory{
+	body := akeyless_api.GatewayCreateProducerArtifactory{
 		Name:                     name,
 		ArtifactoryTokenScope:    artifactoryTokenScope,
 		ArtifactoryTokenAudience: artifactoryTokenAudience,
@@ -139,12 +139,12 @@ func resourceProducerArtifactoryRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -229,7 +229,7 @@ func resourceProducerArtifactoryUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
@@ -243,7 +243,7 @@ func resourceProducerArtifactoryUpdate(d *schema.ResourceData, m interface{}) er
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.GatewayUpdateProducerArtifactory{
+	body := akeyless_api.GatewayUpdateProducerArtifactory{
 		Name:                     name,
 		ArtifactoryTokenScope:    artifactoryTokenScope,
 		ArtifactoryTokenAudience: artifactoryTokenAudience,
@@ -277,7 +277,7 @@ func resourceProducerArtifactoryDelete(d *schema.ResourceData, m interface{}) er
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}

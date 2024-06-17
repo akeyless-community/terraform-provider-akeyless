@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -48,13 +48,13 @@ func dataSourceGetTargetDetailsRead(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetVersion := d.Get("target_version").(int)
 	showVersions := d.Get("show_versions").(bool)
 
-	body := akeyless.GetTargetDetails{
+	body := akeyless_api.GetTargetDetails{
 		Name:  name,
 		Token: &token,
 	}
@@ -91,7 +91,7 @@ func dataSourceGetTargetDetailsRead(d *schema.ResourceData, m interface{}) error
 	return nil
 }
 
-func getTargetType(targetOut *akeyless.Target) (string, error) {
+func getTargetType(targetOut *akeyless_api.Target) (string, error) {
 
 	if targetOut == nil {
 		return "", errors.New("empty target")
@@ -104,7 +104,7 @@ func getTargetType(targetOut *akeyless.Target) (string, error) {
 	return *targetType, nil
 }
 
-func setTargetDetailsByType(d *schema.ResourceData, details *akeyless.TargetTypeDetailsInput, targetType string) error {
+func setTargetDetailsByType(d *schema.ResourceData, details *akeyless_api.TargetTypeDetailsInput, targetType string) error {
 	value, err := extractTargetDetailsByType(details, targetType)
 	if err != nil {
 		return err
@@ -117,7 +117,7 @@ func setTargetDetailsByType(d *schema.ResourceData, details *akeyless.TargetType
 	return nil
 }
 
-func extractTargetDetailsByType(details *akeyless.TargetTypeDetailsInput, targetType string) (map[string]string, error) {
+func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, targetType string) (map[string]string, error) {
 	switch {
 	case details.ArtifactoryTargetDetails != nil:
 		return extractArtifactoryTargetDetails(details.ArtifactoryTargetDetails)
@@ -174,7 +174,7 @@ func extractTargetDetailsByType(details *akeyless.TargetTypeDetailsInput, target
 	}
 }
 
-func extractArtifactoryTargetDetails(details *akeyless.ArtifactoryTargetDetails) (map[string]string, error) {
+func extractArtifactoryTargetDetails(details *akeyless_api.ArtifactoryTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -195,7 +195,7 @@ func extractArtifactoryTargetDetails(details *akeyless.ArtifactoryTargetDetails)
 	return value, nil
 }
 
-func extractAwsTargetDetails(details *akeyless.AWSTargetDetails) (map[string]string, error) {
+func extractAwsTargetDetails(details *akeyless_api.AWSTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -222,7 +222,7 @@ func extractAwsTargetDetails(details *akeyless.AWSTargetDetails) (map[string]str
 	return value, nil
 }
 
-func extractAzureTargetDetails(details *akeyless.AzureTargetDetails) (map[string]string, error) {
+func extractAzureTargetDetails(details *akeyless_api.AzureTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -255,7 +255,7 @@ func extractAzureTargetDetails(details *akeyless.AzureTargetDetails) (map[string
 	return value, nil
 }
 
-func extractChefTargetDetails(details *akeyless.ChefTargetDetails) (map[string]string, error) {
+func extractChefTargetDetails(details *akeyless_api.ChefTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -285,7 +285,7 @@ func extractChefTargetDetails(details *akeyless.ChefTargetDetails) (map[string]s
 	return value, nil
 }
 
-func extractCustomTargetDetails(details *akeyless.CustomTargetDetails) (map[string]string, error) {
+func extractCustomTargetDetails(details *akeyless_api.CustomTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -300,7 +300,7 @@ func extractCustomTargetDetails(details *akeyless.CustomTargetDetails) (map[stri
 	return value, nil
 }
 
-func extractDbTargetDetails(details *akeyless.DbTargetDetails) (map[string]string, error) {
+func extractDbTargetDetails(details *akeyless_api.DbTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -348,7 +348,7 @@ func extractDbTargetDetails(details *akeyless.DbTargetDetails) (map[string]strin
 	return value, nil
 }
 
-func extractDockerhubTargetDetails(details *akeyless.DockerhubTargetDetails) (map[string]string, error) {
+func extractDockerhubTargetDetails(details *akeyless_api.DockerhubTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -366,7 +366,7 @@ func extractDockerhubTargetDetails(details *akeyless.DockerhubTargetDetails) (ma
 	return value, nil
 }
 
-func extractEksTargetDetails(details *akeyless.EKSTargetDetails) (map[string]string, error) {
+func extractEksTargetDetails(details *akeyless_api.EKSTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -399,7 +399,7 @@ func extractEksTargetDetails(details *akeyless.EKSTargetDetails) (map[string]str
 	return value, nil
 }
 
-func extractGcpTargetDetails(details *akeyless.GcpTargetDetails) (map[string]string, error) {
+func extractGcpTargetDetails(details *akeyless_api.GcpTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -420,7 +420,7 @@ func extractGcpTargetDetails(details *akeyless.GcpTargetDetails) (map[string]str
 	return value, nil
 }
 
-func extractGithubTargetDetails(details *akeyless.GithubTargetDetails) (map[string]string, error) {
+func extractGithubTargetDetails(details *akeyless_api.GithubTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -441,7 +441,7 @@ func extractGithubTargetDetails(details *akeyless.GithubTargetDetails) (map[stri
 	return value, nil
 }
 
-func extractGkeTargetDetails(details *akeyless.GKETargetDetails) (map[string]string, error) {
+func extractGkeTargetDetails(details *akeyless_api.GKETargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -471,7 +471,7 @@ func extractGkeTargetDetails(details *akeyless.GKETargetDetails) (map[string]str
 	return value, nil
 }
 
-func extractGlobalsignAtlasTargetDetails(details *akeyless.GlobalSignAtlasTargetDetails) (map[string]string, error) {
+func extractGlobalsignAtlasTargetDetails(details *akeyless_api.GlobalSignAtlasTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -498,7 +498,7 @@ func extractGlobalsignAtlasTargetDetails(details *akeyless.GlobalSignAtlasTarget
 	return value, nil
 }
 
-func extractGlobalsignTargetDetails(details *akeyless.GlobalSignGCCTargetDetails) (map[string]string, error) {
+func extractGlobalsignTargetDetails(details *akeyless_api.GlobalSignGCCTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -534,7 +534,7 @@ func extractGlobalsignTargetDetails(details *akeyless.GlobalSignGCCTargetDetails
 	return value, nil
 }
 
-func extractLdapTargetDetails(details *akeyless.LdapTargetDetails) (map[string]string, error) {
+func extractLdapTargetDetails(details *akeyless_api.LdapTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -567,7 +567,7 @@ func extractLdapTargetDetails(details *akeyless.LdapTargetDetails) (map[string]s
 	return value, nil
 }
 
-func extractLinkedTargetDetails(details *akeyless.LinkedTargetDetails) (map[string]string, error) {
+func extractLinkedTargetDetails(details *akeyless_api.LinkedTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -582,7 +582,7 @@ func extractLinkedTargetDetails(details *akeyless.LinkedTargetDetails) (map[stri
 	return value, nil
 }
 
-func extractMongoDbTargetDetails(details *akeyless.MongoDBTargetDetails) (map[string]string, error) {
+func extractMongoDbTargetDetails(details *akeyless_api.MongoDBTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -627,7 +627,7 @@ func extractMongoDbTargetDetails(details *akeyless.MongoDBTargetDetails) (map[st
 	return value, nil
 }
 
-func extractNativeK8sTargetDetails(details *akeyless.NativeK8sTargetDetails) (map[string]string, error) {
+func extractNativeK8sTargetDetails(details *akeyless_api.NativeK8sTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -651,7 +651,7 @@ func extractNativeK8sTargetDetails(details *akeyless.NativeK8sTargetDetails) (ma
 	return value, nil
 }
 
-func extractPingTargetDetails(details *akeyless.PingTargetDetails) (map[string]string, error) {
+func extractPingTargetDetails(details *akeyless_api.PingTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -678,7 +678,7 @@ func extractPingTargetDetails(details *akeyless.PingTargetDetails) (map[string]s
 	return value, nil
 }
 
-func extractRabbitMqTargetDetails(details *akeyless.RabbitMQTargetDetails) (map[string]string, error) {
+func extractRabbitMqTargetDetails(details *akeyless_api.RabbitMQTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -699,7 +699,7 @@ func extractRabbitMqTargetDetails(details *akeyless.RabbitMQTargetDetails) (map[
 	return value, nil
 }
 
-func extractSalesforceTargetDetails(details *akeyless.SalesforceTargetDetails) (map[string]string, error) {
+func extractSalesforceTargetDetails(details *akeyless_api.SalesforceTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -741,7 +741,7 @@ func extractSalesforceTargetDetails(details *akeyless.SalesforceTargetDetails) (
 	return value, nil
 }
 
-func extractSshTargetDetails(details *akeyless.SSHTargetDetails) (map[string]string, error) {
+func extractSshTargetDetails(details *akeyless_api.SSHTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -771,7 +771,7 @@ func extractSshTargetDetails(details *akeyless.SSHTargetDetails) (map[string]str
 	return value, nil
 }
 
-func extractVenafiTargetDetails(details *akeyless.VenafiTargetDetails) (map[string]string, error) {
+func extractVenafiTargetDetails(details *akeyless_api.VenafiTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -804,7 +804,7 @@ func extractVenafiTargetDetails(details *akeyless.VenafiTargetDetails) (map[stri
 	return value, nil
 }
 
-func extractWebTargetDetails(details *akeyless.WebTargetDetails) (map[string]string, error) {
+func extractWebTargetDetails(details *akeyless_api.WebTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -819,7 +819,7 @@ func extractWebTargetDetails(details *akeyless.WebTargetDetails) (map[string]str
 	return value, nil
 }
 
-func extractWindowsTargetDetails(details *akeyless.WindowsTargetDetails) (map[string]string, error) {
+func extractWindowsTargetDetails(details *akeyless_api.WindowsTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 
@@ -852,7 +852,7 @@ func extractWindowsTargetDetails(details *akeyless.WindowsTargetDetails) (map[st
 	return value, nil
 }
 
-func extractZerosslTargetDetails(details *akeyless.ZeroSSLTargetDetails) (map[string]string, error) {
+func extractZerosslTargetDetails(details *akeyless_api.ZeroSSLTargetDetails) (map[string]string, error) {
 
 	m := make(map[string]interface{})
 

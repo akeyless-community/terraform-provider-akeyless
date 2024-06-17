@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -127,7 +127,7 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -147,7 +147,7 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.DynamicSecretCreateRedshift{
+	body := akeyless_api.DynamicSecretCreateRedshift{
 		Name:  name,
 		Token: &token,
 	}
@@ -184,12 +184,12 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -287,7 +287,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -307,7 +307,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.DynamicSecretUpdateRedshift{
+	body := akeyless_api.DynamicSecretUpdateRedshift{
 		Name:  name,
 		Token: &token,
 	}

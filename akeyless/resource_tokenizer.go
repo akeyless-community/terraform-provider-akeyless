@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -102,7 +102,7 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	tokenizerType := d.Get("tokenizer_type").(string)
@@ -118,7 +118,7 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	tag := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.CreateTokenizer{
+	body := akeyless_api.CreateTokenizer{
 		Name:          name,
 		TokenizerType: tokenizerType,
 		TemplateType:  templateType,
@@ -152,12 +152,12 @@ func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DescribeItem{
+	body := akeyless_api.DescribeItem{
 		Name:  path,
 		Token: &token,
 	}
@@ -283,7 +283,7 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -291,7 +291,7 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 	tagList := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.UpdateItem{
+	body := akeyless_api.UpdateItem{
 		Name:             name,
 		DeleteProtection: &deleteProtection,
 		Token:            &token,
@@ -328,7 +328,7 @@ func resourceTokenizerDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteItem{
+	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}

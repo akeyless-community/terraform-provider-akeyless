@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -107,7 +107,7 @@ func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -125,7 +125,7 @@ func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	apiKey := d.Get("api_key").(string)
 	graceRotation := d.Get("grace_rotation").(string)
 
-	body := akeyless.RotatedSecretCreateAws{
+	body := akeyless_api.RotatedSecretCreateAws{
 		Name:        name,
 		TargetName:  targetName,
 		RotatorType: rotatorType,
@@ -161,19 +161,19 @@ func resourceRotatedSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.RotatedSecretGetValue{
+	body := akeyless_api.RotatedSecretGetValue{
 		Name:  path,
 		Token: &token,
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
+		ShowVersions: akeyless_api.PtrBool(true),
 		Token:        &token,
 	}
 
@@ -307,7 +307,7 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -323,9 +323,9 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.RotatedSecretUpdateAws{
+	body := akeyless_api.RotatedSecretUpdateAws{
 		Name:    name,
-		NewName: akeyless.PtrString(name),
+		NewName: akeyless_api.PtrString(name),
 		Token:   &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)

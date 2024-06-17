@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -90,7 +90,7 @@ func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	username := d.Get("username").(string)
@@ -104,7 +104,7 @@ func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.CreateGlobalSignTarget{
+	body := akeyless_api.CreateGlobalSignTarget{
 		Name:             name,
 		Username:         username,
 		Password:         password,
@@ -137,12 +137,12 @@ func resourceGlobalsignTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetTargetDetails{
+	body := akeyless_api.GetTargetDetails{
 		Name:  path,
 		Token: &token,
 	}
@@ -243,7 +243,7 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	username := d.Get("username").(string)
@@ -257,7 +257,7 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.UpdateGlobalSignTarget{
+	body := akeyless_api.UpdateGlobalSignTarget{
 		Name:             name,
 		Username:         username,
 		Password:         password,
@@ -292,7 +292,7 @@ func resourceGlobalsignTargetDelete(d *schema.ResourceData, m interface{}) error
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteTarget{
+	deleteItem := akeyless_api.DeleteTarget{
 		Token: &token,
 		Name:  path,
 	}

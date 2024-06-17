@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -63,7 +63,7 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	baseUrl := d.Get("base_url").(string)
@@ -72,7 +72,7 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.CreateArtifactoryTarget{
+	body := akeyless_api.CreateArtifactoryTarget{
 		Name:                 name,
 		BaseUrl:              baseUrl,
 		ArtifactoryAdminName: artifactoryAdminName,
@@ -100,12 +100,12 @@ func resourceArtifactoryTargetRead(d *schema.ResourceData, m interface{}) error 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetTargetDetails{
+	body := akeyless_api.GetTargetDetails{
 		Name:  path,
 		Token: &token,
 	}
@@ -163,7 +163,7 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	baseUrl := d.Get("base_url").(string)
@@ -172,7 +172,7 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.UpdateArtifactoryTarget{
+	body := akeyless_api.UpdateArtifactoryTarget{
 		Name:                 name,
 		BaseUrl:              baseUrl,
 		ArtifactoryAdminName: artifactoryAdminName,
@@ -202,7 +202,7 @@ func resourceArtifactoryTargetDelete(d *schema.ResourceData, m interface{}) erro
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteTarget{
+	deleteItem := akeyless_api.DeleteTarget{
 		Token: &token,
 		Name:  path,
 	}

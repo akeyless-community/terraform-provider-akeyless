@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -88,7 +88,7 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
@@ -101,7 +101,7 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.CreateEKSTarget{
+	body := akeyless_api.CreateEKSTarget{
 		Name:               name,
 		EksClusterName:     eksClusterName,
 		EksClusterEndpoint: eksClusterEndpoint,
@@ -133,12 +133,12 @@ func resourceEksTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetTargetDetails{
+	body := akeyless_api.GetTargetDetails{
 		Name:  path,
 		Token: &token,
 	}
@@ -221,7 +221,7 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
@@ -234,7 +234,7 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.UpdateEKSTarget{
+	body := akeyless_api.UpdateEKSTarget{
 		Name:               name,
 		EksClusterName:     eksClusterName,
 		EksClusterEndpoint: eksClusterEndpoint,
@@ -268,7 +268,7 @@ func resourceEksTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteTarget{
+	deleteItem := akeyless_api.DeleteTarget{
 		Token: &token,
 		Name:  path,
 	}

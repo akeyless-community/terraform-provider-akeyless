@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -124,7 +124,7 @@ func resourceDynamicSecretEksCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -145,7 +145,7 @@ func resourceDynamicSecretEksCreate(d *schema.ResourceData, m interface{}) error
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.DynamicSecretCreateEks{
+	body := akeyless_api.DynamicSecretCreateEks{
 		Name:  name,
 		Token: &token,
 	}
@@ -184,12 +184,12 @@ func resourceDynamicSecretEksRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -289,7 +289,7 @@ func resourceDynamicSecretEksUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -310,7 +310,7 @@ func resourceDynamicSecretEksUpdate(d *schema.ResourceData, m interface{}) error
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.DynamicSecretUpdateEks{
+	body := akeyless_api.DynamicSecretUpdateEks{
 		Name:  name,
 		Token: &token,
 	}

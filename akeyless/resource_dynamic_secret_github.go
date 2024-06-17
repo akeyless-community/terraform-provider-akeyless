@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -80,7 +80,7 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
@@ -94,7 +94,7 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	tokenRepositoriesSet := d.Get("token_repositories").(*schema.Set)
 	tokenRepositories := common.ExpandStringList(tokenRepositoriesSet.List())
 
-	body := akeyless.DynamicSecretCreateGithub{
+	body := akeyless_api.DynamicSecretCreateGithub{
 		Name:  name,
 		Token: &token,
 	}
@@ -125,12 +125,12 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -220,7 +220,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
@@ -234,7 +234,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	tokenRepositoriesSet := d.Get("token_repositories").(*schema.Set)
 	tokenRepositories := common.ExpandStringList(tokenRepositoriesSet.List())
 
-	body := akeyless.DynamicSecretUpdateGithub{
+	body := akeyless_api.DynamicSecretUpdateGithub{
 		Name:  name,
 		Token: &token,
 	}

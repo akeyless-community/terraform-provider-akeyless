@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -86,7 +86,7 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -98,7 +98,7 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	privateKeyPassword := d.Get("private_key_password").(string)
 	key := d.Get("key").(string)
 
-	body := akeyless.CreateSSHTarget{
+	body := akeyless_api.CreateSSHTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -129,12 +129,12 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetTargetDetails{
+	body := akeyless_api.GetTargetDetails{
 		Name:  path,
 		Token: &token,
 	}
@@ -211,7 +211,7 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -223,7 +223,7 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	privateKeyPassword := d.Get("private_key_password").(string)
 	key := d.Get("key").(string)
 
-	body := akeyless.UpdateSSHTarget{
+	body := akeyless_api.UpdateSSHTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -256,7 +256,7 @@ func resourceSSHTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteTarget{
+	deleteItem := akeyless_api.DeleteTarget{
 		Token: &token,
 		Name:  path,
 	}

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -112,7 +112,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
@@ -132,7 +132,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessUseInternalBastion := d.Get("secure_access_use_internal_bastion").(bool)
 	deleteProtection := d.Get("delete_protection").(bool)
 
-	body := akeyless.CreateSSHCertIssuer{
+	body := akeyless_api.CreateSSHCertIssuer{
 		Name:          name,
 		SignerKeyName: signerKeyName,
 		AllowedUsers:  allowedUsers,
@@ -169,12 +169,12 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DescribeItem{
+	body := akeyless_api.DescribeItem{
 		Name:  path,
 		Token: &token,
 	}
@@ -257,7 +257,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
@@ -278,7 +278,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	tagSet := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tagSet.List())
 
-	body := akeyless.UpdateSSHCertIssuer{
+	body := akeyless_api.UpdateSSHCertIssuer{
 		Name:          name,
 		SignerKeyName: signerKeyName,
 		AllowedUsers:  allowedUsers,
@@ -325,7 +325,7 @@ func resourceSSHCertIssuerDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteItem{
+	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}

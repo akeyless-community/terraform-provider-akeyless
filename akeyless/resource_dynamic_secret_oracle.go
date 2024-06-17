@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -114,7 +114,7 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -133,7 +133,7 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
 
-	body := akeyless.DynamicSecretCreateOracleDb{
+	body := akeyless_api.DynamicSecretCreateOracleDb{
 		Name:  name,
 		Token: &token,
 	}
@@ -170,12 +170,12 @@ func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -283,7 +283,7 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -302,7 +302,7 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
 
-	body := akeyless.DynamicSecretUpdateOracleDb{
+	body := akeyless_api.DynamicSecretUpdateOracleDb{
 		Name:  name,
 		Token: &token,
 	}

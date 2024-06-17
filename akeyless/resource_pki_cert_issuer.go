@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -177,7 +177,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
@@ -210,7 +210,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
-	body := akeyless.CreatePKICertIssuer{
+	body := akeyless_api.CreatePKICertIssuer{
 		Name:  name,
 		Ttl:   ttl,
 		Token: &token,
@@ -260,12 +260,12 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DescribeItem{
+	body := akeyless_api.DescribeItem{
 		Name:  path,
 		Token: &token,
 	}
@@ -479,7 +479,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
@@ -511,7 +511,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
-	body := akeyless.UpdatePKICertIssuer{
+	body := akeyless_api.UpdatePKICertIssuer{
 		Name:          name,
 		SignerKeyName: signerKeyName,
 		Ttl:           ttl,
@@ -574,7 +574,7 @@ func resourcePKICertIssuerDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteItem{
+	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}
@@ -605,7 +605,7 @@ func resourcePKICertIssuerImport(d *schema.ResourceData, m interface{}) ([]*sche
 	return []*schema.ResourceData{d}, nil
 }
 
-func readExpirationEventInParam(expirationEvents []akeyless.CertificateExpirationEvent) []string {
+func readExpirationEventInParam(expirationEvents []akeyless_api.CertificateExpirationEvent) []string {
 	var expirationEventsList []string
 	for _, e := range expirationEvents {
 		seconds := e.GetSecondsBefore()

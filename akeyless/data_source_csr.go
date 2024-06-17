@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -116,7 +116,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	commonName := d.Get("common_name").(string)
@@ -136,7 +136,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	uriSans := d.Get("uri_sans").(string)
 	splitLevel := d.Get("split_level").(int)
 
-	body := akeyless.GenerateCsr{
+	body := akeyless_api.GenerateCsr{
 		Name:       name,
 		CommonName: commonName,
 		Token:      &token,
