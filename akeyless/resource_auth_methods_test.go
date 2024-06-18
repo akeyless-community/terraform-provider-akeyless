@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
@@ -465,7 +465,7 @@ func checkMethodExistsRemotelyNew(path string) resource.TestCheckFunc {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetAuthMethod{
+		gsvBody := akeyless_api.GetAuthMethod{
 			Name:  path,
 			Token: &token,
 		}

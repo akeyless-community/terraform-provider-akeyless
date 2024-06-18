@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -37,11 +37,11 @@ func dataSourceGatewayGetProducerTmpCredsRead(d *schema.ResourceData, m interfac
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 
-	body := akeyless.GatewayGetTmpUsers{
+	body := akeyless_api.GatewayGetTmpUsers{
 		Name:  name,
 		Token: &token,
 	}

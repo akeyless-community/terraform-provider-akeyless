@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -120,7 +120,7 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
@@ -138,7 +138,7 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	certificateProvince := d.Get("certificate_province").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
-	body := akeyless.CreateDFCKey{
+	body := akeyless_api.CreateDFCKey{
 		Name:  name,
 		Alg:   alg,
 		Token: &token,
@@ -282,7 +282,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -291,7 +291,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	certData := d.Get("cert_data_base64").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
-	body := akeyless.UpdateItem{
+	body := akeyless_api.UpdateItem{
 		Name:  name,
 		Token: &token,
 	}
@@ -329,11 +329,11 @@ func resourceDfcKeyDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteItem{
+	deleteItem := akeyless_api.DeleteItem{
 		Token:             &token,
 		Name:              path,
-		DeleteImmediately: akeyless.PtrBool(true),
-		DeleteInDays:      akeyless.PtrInt64(-1),
+		DeleteImmediately: akeyless_api.PtrBool(true),
+		DeleteInDays:      akeyless_api.PtrInt64(-1),
 	}
 
 	ctx := context.Background()
@@ -362,12 +362,12 @@ func resourceDfcKeyImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 	return []*schema.ResourceData{d}, nil
 }
 
-func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
+func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless_api.Item, error) {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -375,7 +375,7 @@ func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless.Item, error) {
 		path = d.Get("name").(string)
 	}
 
-	body := akeyless.DescribeItem{
+	body := akeyless_api.DescribeItem{
 		Name:  path,
 		Token: &token,
 	}

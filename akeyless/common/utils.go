@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -55,7 +55,7 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 	case **string:
 		if v, ok := val.(string); ok {
 			a := ptr.(**string)
-			*a = akeyless.PtrString(v)
+			*a = akeyless_api.PtrString(v)
 			return
 		}
 	case **[]string:
@@ -71,7 +71,7 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 	case **bool:
 		if v, ok := val.(bool); ok {
 			a := ptr.(**bool)
-			*a = akeyless.PtrBool(v)
+			*a = akeyless_api.PtrBool(v)
 			return
 		}
 	case *bool:
@@ -83,19 +83,19 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 	case **int64:
 		if v, ok := val.(int); ok {
 			a := ptr.(**int64)
-			*a = akeyless.PtrInt64(int64(v))
+			*a = akeyless_api.PtrInt64(int64(v))
 			return
 		}
 	case **int32:
 		if v, ok := val.(int); ok {
 			a := ptr.(**int32)
-			*a = akeyless.PtrInt32(int32(v))
+			*a = akeyless_api.PtrInt32(int32(v))
 			return
 		}
 	case **int:
 		if v, ok := val.(int); ok {
 			a := ptr.(**int)
-			*a = akeyless.PtrInt(v)
+			*a = akeyless_api.PtrInt(v)
 			return
 		}
 	case *int64:
@@ -119,19 +119,19 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 	case **float32:
 		if v, ok := val.(float32); ok {
 			a := ptr.(**float32)
-			*a = akeyless.PtrFloat32(v)
+			*a = akeyless_api.PtrFloat32(v)
 			return
 		}
 	case **float64:
 		if v, ok := val.(float64); ok {
 			a := ptr.(**float64)
-			*a = akeyless.PtrFloat64(v)
+			*a = akeyless_api.PtrFloat64(v)
 			return
 		}
 	case **time.Time:
 		if v, ok := val.(time.Time); ok {
 			a := ptr.(**time.Time)
-			*a = akeyless.PtrTime(v)
+			*a = akeyless_api.PtrTime(v)
 			return
 		}
 	case *float32:
@@ -170,7 +170,7 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 	}
 }
 
-func GetTargetName(itemTargetsAssoc *[]akeyless.ItemTargetAssociation) string {
+func GetTargetName(itemTargetsAssoc *[]akeyless_api.ItemTargetAssociation) string {
 	if itemTargetsAssoc == nil {
 		return ""
 	}
@@ -194,10 +194,10 @@ func GetTargetName(itemTargetsAssoc *[]akeyless.ItemTargetAssociation) string {
 }
 
 func GetTagsForUpdate(d *schema.ResourceData, name, token string, newTags []string,
-	client akeyless.V2ApiService) ([]string, []string, error) {
+	client akeyless_api.V2ApiService) ([]string, []string, error) {
 	ctx := context.Background()
 
-	item := akeyless.GetTags{
+	item := akeyless_api.GetTags{
 		Name:  name,
 		Token: &token,
 	}
@@ -230,13 +230,13 @@ func difference(a, b []string) []string {
 	return diff
 }
 
-func GetSraWithDescribeItem(d *schema.ResourceData, path, token string, client akeyless.V2ApiService) error {
+func GetSraWithDescribeItem(d *schema.ResourceData, path, token string, client akeyless_api.V2ApiService) error {
 
 	ctx := context.Background()
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(false),
+		ShowVersions: akeyless_api.PtrBool(false),
 		Token:        &token,
 	}
 
@@ -248,7 +248,7 @@ func GetSraWithDescribeItem(d *schema.ResourceData, path, token string, client a
 	return GetSraFromItem(d, itemOut)
 }
 
-func GetSraFromItem(d *schema.ResourceData, item akeyless.Item) error {
+func GetSraFromItem(d *schema.ResourceData, item akeyless_api.Item) error {
 
 	if item.GetItemGeneralInfo().SecureRemoteAccessDetails == nil {
 		return nil
@@ -260,7 +260,7 @@ func GetSraFromItem(d *schema.ResourceData, item akeyless.Item) error {
 	return GetSra(d, sra, itemType)
 }
 
-func GetSra(d *schema.ResourceData, sra *akeyless.SecureRemoteAccess, itemType string) error {
+func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemType string) error {
 	var err error
 	if sra == nil {
 		return nil
@@ -496,6 +496,10 @@ func ReadAndEncodeFile(fileName string) (string, error) {
 	return data, nil
 }
 
+func Base64Encode(input string) string {
+	return base64.StdEncoding.EncodeToString([]byte(input))
+}
+
 func SetDataByPrefixSlash(d *schema.ResourceData, key, returnedValue, existValue string) error {
 	if "/"+returnedValue == existValue {
 		return d.Set(key, existValue)
@@ -535,4 +539,11 @@ func SecondsToTimeString(totalSeconds int) string {
 	}
 
 	return result.String()
+}
+
+func ExtractLogForwardingFormat(isJson bool) string {
+	if isJson {
+		return "json"
+	}
+	return "text"
 }

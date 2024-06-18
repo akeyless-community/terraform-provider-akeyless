@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -145,8 +145,8 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	gwAnalyticsAccess := d.Get("gw_analytics_access").(string)
 	sraReportsAccess := d.Get("sra_reports_access").(string)
 
-	var apiErr akeyless.GenericOpenAPIError
-	body := akeyless.CreateRole{
+	var apiErr akeyless_api.GenericOpenAPIError
+	body := akeyless_api.CreateRole{
 		Name:  name,
 		Token: &token,
 	}
@@ -346,12 +346,12 @@ func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Id()
 
-	deleteRole := akeyless.DeleteRole{
+	deleteRole := akeyless_api.DeleteRole{
 		Name:  name,
 		Token: &token,
 	}
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	_, res, err := client.DeleteRole(ctx).Body(deleteRole).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
@@ -398,15 +398,15 @@ func resourceRoleImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 	return []*schema.ResourceData{d}, nil
 }
 
-func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless.Role, error) {
+func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless_api.Role, error) {
 	provider := m.(providerMeta)
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
-	body := akeyless.GetRole{
+	body := akeyless_api.GetRole{
 		Name:  name,
 		Token: &token,
 	}
@@ -416,16 +416,16 @@ func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless.Role,
 			if res.StatusCode == http.StatusNotFound {
 				// The secret was deleted outside of the current Terraform workspace, so invalidate this resource
 				d.SetId("")
-				return akeyless.Role{}, nil
+				return akeyless_api.Role{}, nil
 			}
-			return akeyless.Role{}, fmt.Errorf("can't get Role value: %v", string(apiErr.Body()))
+			return akeyless_api.Role{}, fmt.Errorf("can't get Role value: %v", string(apiErr.Body()))
 		}
-		return akeyless.Role{}, fmt.Errorf("can't get Role value: %v", err)
+		return akeyless_api.Role{}, fmt.Errorf("can't get Role value: %v", err)
 	}
 	return role, nil
 }
 
-func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc *[]akeyless.RoleAuthMethodAssociation) error {
+func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc *[]akeyless_api.RoleAuthMethodAssociation) error {
 
 	roleAuthMethodsAssoc := extractAssocValues(authMethodsAssoc)
 
@@ -436,7 +436,7 @@ func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc *[]akeyless.R
 	return nil
 }
 
-func readRules(d *schema.ResourceData, rules []akeyless.PathRule) error {
+func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 	var err error
 	var roleRules []interface{}
 
@@ -586,8 +586,8 @@ func deleteRoleAssocs(ctx context.Context, assocs []interface{}, m interface{}) 
 	token := *provider.token
 
 	for _, v := range assocs {
-		var apiErr akeyless.GenericOpenAPIError
-		association := akeyless.DeleteRoleAssociation{
+		var apiErr akeyless_api.GenericOpenAPIError
+		association := akeyless_api.DeleteRoleAssociation{
 			AssocId: v.(map[string]interface{})["assoc_id"].(string),
 			Token:   &token,
 		}
@@ -622,8 +622,8 @@ func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface
 			sc[k] = v.(string)
 		}
 
-		var apiErr akeyless.GenericOpenAPIError
-		asBody := akeyless.AssocRoleAuthMethod{
+		var apiErr akeyless_api.GenericOpenAPIError
+		asBody := akeyless_api.AssocRoleAuthMethod{
 			RoleName:      name,
 			AmName:        authMethodName,
 			SubClaims:     &sc,
@@ -663,8 +663,8 @@ func updateRoleAssocs(ctx context.Context, assocAuthMethods []interface{}, m int
 			sc[k] = v.(string)
 		}
 
-		var apiErr akeyless.GenericOpenAPIError
-		asBody := akeyless.UpdateAssoc{
+		var apiErr akeyless_api.GenericOpenAPIError
+		asBody := akeyless_api.UpdateAssoc{
 			AssocId:       assocId,
 			SubClaims:     &sc,
 			Token:         &token,
@@ -712,11 +712,11 @@ func deleteRoleRules(ctx context.Context, name string, rules []interface{}, m in
 
 	for _, v := range rules {
 		ruleMap := v.(map[string]interface{})
-		var apiErr akeyless.GenericOpenAPIError
-		rule := akeyless.DeleteRoleRule{
+		var apiErr akeyless_api.GenericOpenAPIError
+		rule := akeyless_api.DeleteRoleRule{
 			RoleName: name,
 			Path:     ruleMap["path"].(string),
-			RuleType: akeyless.PtrString(ruleMap["rule_type"].(string)),
+			RuleType: akeyless_api.PtrString(ruleMap["rule_type"].(string)),
 			Token:    &token,
 		}
 		_, res, err := client.DeleteRoleRule(ctx).Body(rule).Execute()
@@ -753,12 +753,12 @@ func addRoleRules(ctx context.Context, name string, roleRules []interface{}, m i
 			return fmt.Errorf("wrong rule types"), false
 		}
 
-		var apiErr akeyless.GenericOpenAPIError
-		setRoleRule := akeyless.SetRoleRule{
+		var apiErr akeyless_api.GenericOpenAPIError
+		setRoleRule := akeyless_api.SetRoleRule{
 			RoleName:   name,
 			Capability: capability,
 			Path:       path,
-			RuleType:   akeyless.PtrString(ruleType),
+			RuleType:   akeyless_api.PtrString(ruleType),
 			Token:      &token,
 		}
 
@@ -832,17 +832,17 @@ func updateRoleAccessRules(ctx context.Context, name, description string,
 		}
 	}
 
-	updateBody := akeyless.UpdateRole{
+	updateBody := akeyless_api.UpdateRole{
 		Name:              name,
 		Token:             &token,
-		AuditAccess:       akeyless.PtrString(auditAccess),
-		AnalyticsAccess:   akeyless.PtrString(analyticsAccess),
-		GwAnalyticsAccess: akeyless.PtrString(gwAnalyticsAccess),
-		SraReportsAccess:  akeyless.PtrString(sraReportsAccess),
+		AuditAccess:       akeyless_api.PtrString(auditAccess),
+		AnalyticsAccess:   akeyless_api.PtrString(analyticsAccess),
+		GwAnalyticsAccess: akeyless_api.PtrString(gwAnalyticsAccess),
+		SraReportsAccess:  akeyless_api.PtrString(sraReportsAccess),
 	}
 	common.GetAkeylessPtr(&updateBody.Description, description)
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	_, _, err := client.UpdateRole(ctx).Body(updateBody).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
@@ -854,7 +854,7 @@ func updateRoleAccessRules(ctx context.Context, name, description string,
 	return nil, true
 }
 
-func extractAssocValues(assocs *[]akeyless.RoleAuthMethodAssociation) []interface{} {
+func extractAssocValues(assocs *[]akeyless_api.RoleAuthMethodAssociation) []interface{} {
 	var assocValues []interface{}
 
 	if assocs != nil {
@@ -901,7 +901,7 @@ func cleanEmptyAssocs(d *schema.ResourceData) error {
 	return nil
 }
 
-func extractRoleRuleOldValues(roleRules *[]akeyless.PathRule) []interface{} {
+func extractRoleRuleOldValues(roleRules *[]akeyless_api.PathRule) []interface{} {
 	var roleRulesOldValues []interface{}
 
 	if roleRules != nil {
@@ -919,7 +919,7 @@ func extractRoleRuleOldValues(roleRules *[]akeyless.PathRule) []interface{} {
 	return roleRulesOldValues
 }
 
-func saveRoleAccessRuleOldValues(roleRules *[]akeyless.PathRule) []interface{} {
+func saveRoleAccessRuleOldValues(roleRules *[]akeyless_api.PathRule) []interface{} {
 
 	var roleRulesOldValues = generateEmptyAccessRulesSet()
 

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -102,7 +102,7 @@ func resourceRotatedSecretRedisCreate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -119,7 +119,7 @@ func resourceRotatedSecretRedisCreate(d *schema.ResourceData, m interface{}) err
 	rotatedUsername := d.Get("rotated_username").(string)
 	rotatedPassword := d.Get("rotated_password").(string)
 
-	body := akeyless.RotatedSecretCreateRedis{
+	body := akeyless_api.RotatedSecretCreateRedis{
 		Name:        name,
 		TargetName:  targetName,
 		RotatorType: rotatorType,
@@ -154,19 +154,19 @@ func resourceRotatedSecretRedisRead(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.RotatedSecretGetValue{
+	body := akeyless_api.RotatedSecretGetValue{
 		Name:  path,
 		Token: &token,
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
+		ShowVersions: akeyless_api.PtrBool(true),
 		Token:        &token,
 	}
 
@@ -292,7 +292,7 @@ func resourceRotatedSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -307,9 +307,9 @@ func resourceRotatedSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.RotatedSecretUpdateRedis{
+	body := akeyless_api.RotatedSecretUpdateRedis{
 		Name:    name,
-		NewName: akeyless.PtrString(name),
+		NewName: akeyless_api.PtrString(name),
 		Token:   &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)

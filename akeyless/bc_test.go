@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -357,9 +357,9 @@ func checkItemDescriptionRemotely(path, expDescription string) resource.TestChec
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.DescribeItem{
+		gsvBody := akeyless_api.DescribeItem{
 			Name:         path,
-			ShowVersions: akeyless.PtrBool(false),
+			ShowVersions: akeyless_api.PtrBool(false),
 			Token:        &token,
 		}
 
@@ -412,7 +412,7 @@ func checkTargetDescriptionRemotely(path, expDescription string) resource.TestCh
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetTargetDetails{
+		gsvBody := akeyless_api.GetTargetDetails{
 			Name:  path,
 			Token: &token,
 		}
@@ -474,7 +474,7 @@ func checkRoleDescriptionRemotely(roleName, expDescription string) resource.Test
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetRole{
+		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
 			Token: &token,
 		}

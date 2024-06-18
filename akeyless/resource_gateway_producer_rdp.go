@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -142,7 +142,7 @@ func resourceProducerRdpCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -163,7 +163,7 @@ func resourceProducerRdpCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessAllowExternalUser := d.Get("secure_access_allow_external_user").(bool)
 
-	body := akeyless.GatewayCreateProducerRdp{
+	body := akeyless_api.GatewayCreateProducerRdp{
 		Name:  name,
 		Token: &token,
 	}
@@ -201,11 +201,11 @@ func resourceProducerRdpRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -297,7 +297,7 @@ func resourceProducerRdpUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -318,7 +318,7 @@ func resourceProducerRdpUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessAllowExternalUser := d.Get("secure_access_allow_external_user").(bool)
 
-	body := akeyless.GatewayUpdateProducerRdp{
+	body := akeyless_api.GatewayUpdateProducerRdp{
 		Name:  name,
 		Token: &token,
 	}
@@ -358,7 +358,7 @@ func resourceProducerRdpDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}

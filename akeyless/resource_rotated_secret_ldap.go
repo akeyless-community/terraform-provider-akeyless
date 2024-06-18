@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -114,7 +114,7 @@ func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -133,7 +133,7 @@ func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	userDn := d.Get("user_dn").(string)
 	userAttribute := d.Get("user_attribute").(string)
 
-	body := akeyless.RotatedSecretCreateLdap{
+	body := akeyless_api.RotatedSecretCreateLdap{
 		Name:        name,
 		TargetName:  targetName,
 		RotatorType: rotatorType,
@@ -170,19 +170,19 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.RotatedSecretGetValue{
+	body := akeyless_api.RotatedSecretGetValue{
 		Name:  path,
 		Token: &token,
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
+		ShowVersions: akeyless_api.PtrBool(true),
 		Token:        &token,
 	}
 
@@ -323,7 +323,7 @@ func resourceRotatedSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -340,9 +340,9 @@ func resourceRotatedSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.RotatedSecretUpdateLdap{
+	body := akeyless_api.RotatedSecretUpdateLdap{
 		Name:    name,
-		NewName: akeyless.PtrString(name),
+		NewName: akeyless_api.PtrString(name),
 		Token:   &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)

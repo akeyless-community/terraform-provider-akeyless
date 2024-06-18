@@ -3,7 +3,7 @@ package akeyless
 import (
 	"context"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,7 +14,7 @@ func resourceDynamicSecretDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DynamicSecretDelete{
+	deleteItem := akeyless_api.DynamicSecretDelete{
 		Token: &token,
 		Name:  path,
 	}

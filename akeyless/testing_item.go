@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/stretchr/testify/require"
 )
@@ -27,6 +27,7 @@ var (
 	oidEmailAddress = asn1.ObjectIdentifier{1, 2, 3, 4, 5, 6, 7}
 )
 
+// generates base64 private key & certificate
 func generateCertForTest(t *testing.T, size int) (string, string) {
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(2023),
@@ -122,7 +123,7 @@ func createDfcKey(t *testing.T, name string) {
 
 	client, token := prepareClient(t)
 
-	body := akeyless.CreateDFCKey{
+	body := akeyless_api.CreateDFCKey{
 		Name:  name,
 		Alg:   common.AlgRsa1024,
 		Token: &token,
@@ -137,10 +138,27 @@ func createDfcKey(t *testing.T, name string) {
 	}
 }
 
-func getRsaPublicKey(t *testing.T, name string) akeyless.GetRSAPublicOutput {
+func createProtectionKey(t *testing.T, name string) {
+
 	client, token := prepareClient(t)
 
-	body := akeyless.GetRSAPublic{
+	body := akeyless_api.CreateDFCKey{
+		Name:  name,
+		Alg:   common.AlgAes128GCM,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.SplitLevel, 2)
+
+	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
+	if err != nil && !isAlreadyExistError(err) {
+		require.Fail(t, handleError(res, err).Error(), "failed to create key for test")
+	}
+}
+
+func getRsaPublicKey(t *testing.T, name string) akeyless_api.GetRSAPublicOutput {
+	client, token := prepareClient(t)
+
+	body := akeyless_api.GetRSAPublic{
 		Name:  name,
 		Token: &token,
 	}
@@ -156,7 +174,7 @@ func createPkiCertIssuer(t *testing.T, keyName, issuerName, destPath, cn, uriSan
 
 	client, token := prepareClient(t)
 
-	body := akeyless.CreatePKICertIssuer{
+	body := akeyless_api.CreatePKICertIssuer{
 		Name:          issuerName,
 		SignerKeyName: keyName,
 		Token:         &token,
@@ -175,7 +193,7 @@ func createSshCertIssuer(t *testing.T, keyName, issuerName, users string) {
 
 	client, token := prepareClient(t)
 
-	body := akeyless.CreateSSHCertIssuer{
+	body := akeyless_api.CreateSSHCertIssuer{
 		Name:          issuerName,
 		SignerKeyName: keyName,
 		Token:         &token,
@@ -191,7 +209,7 @@ func createCertificate(t *testing.T, certName, certBase64, keyBase64 string) {
 
 	client, token := prepareClient(t)
 
-	body := akeyless.CreateCertificate{
+	body := akeyless_api.CreateCertificate{
 		Name:  certName,
 		Token: &token,
 	}
@@ -206,10 +224,10 @@ func deleteItem(t *testing.T, path string) {
 
 	client, token := prepareClient(t)
 
-	gsvBody := akeyless.DeleteItem{
+	gsvBody := akeyless_api.DeleteItem{
 		Name:              path,
-		DeleteImmediately: akeyless.PtrBool(true),
-		DeleteInDays:      akeyless.PtrInt64(-1),
+		DeleteImmediately: akeyless_api.PtrBool(true),
+		DeleteInDays:      akeyless_api.PtrInt64(-1),
 		Token:             &token,
 	}
 
@@ -221,7 +239,7 @@ func deleteItems(t *testing.T, path string) {
 
 	client, token := prepareClient(t)
 
-	gsvBody := akeyless.DeleteItems{
+	gsvBody := akeyless_api.DeleteItems{
 		Path:  path,
 		Token: &token,
 	}
@@ -236,18 +254,18 @@ func getProviderMeta() (*providerMeta, error) {
 	if apiGwAddress == "" {
 		apiGwAddress = publicApi
 	}
-	client := akeyless.NewAPIClient(&akeyless.Configuration{
-		Servers: []akeyless.ServerConfiguration{
+	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
+		Servers: []akeyless_api.ServerConfiguration{
 			{
 				URL: apiGwAddress,
 			},
 		},
 	}).V2Api
 
-	authBody := akeyless.NewAuthWithDefaults()
-	authBody.AccessId = akeyless.PtrString(os.Getenv("AKEYLESS_ACCESS_ID"))
-	authBody.AccessKey = akeyless.PtrString(os.Getenv("AKEYLESS_ACCESS_KEY"))
-	authBody.AccessType = akeyless.PtrString(common.ApiKey)
+	authBody := akeyless_api.NewAuthWithDefaults()
+	authBody.AccessId = akeyless_api.PtrString(os.Getenv("AKEYLESS_ACCESS_ID"))
+	authBody.AccessKey = akeyless_api.PtrString(os.Getenv("AKEYLESS_ACCESS_KEY"))
+	authBody.AccessType = akeyless_api.PtrString(common.ApiKey)
 
 	ctx := context.Background()
 
@@ -261,7 +279,7 @@ func getProviderMeta() (*providerMeta, error) {
 	return &providerMeta{client, &token}, nil
 }
 
-func prepareClient(t *testing.T) (*akeyless.V2ApiService, string) {
+func prepareClient(t *testing.T) (*akeyless_api.V2ApiService, string) {
 	p, err := getProviderMeta()
 	require.NoError(t, err)
 
@@ -276,7 +294,7 @@ func handleError(resp *http.Response, err error) error {
 		return nil
 	}
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	if !errors.As(err, &apiErr) {
 		return err
 	}
@@ -294,7 +312,7 @@ func isAlreadyExistError(err error) bool {
 			return true
 		}
 
-		var apiErr akeyless.GenericOpenAPIError
+		var apiErr akeyless_api.GenericOpenAPIError
 		if errors.As(err, &apiErr) && containsAlreadyExist(string(apiErr.Body())) {
 			return true
 		}

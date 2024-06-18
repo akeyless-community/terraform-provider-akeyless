@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -116,7 +116,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -134,7 +134,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	boundNamespacesSet := d.Get("bound_namespaces").(*schema.Set)
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
 
-	body := akeyless.CreateAuthMethodK8S{
+	body := akeyless_api.CreateAuthMethodK8S{
 		Name:  name,
 		Token: &token,
 	}
@@ -172,7 +172,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if publicKey == "" {
-		body := akeyless.GetAuthMethod{
+		body := akeyless_api.GetAuthMethod{
 			Name:  name,
 			Token: &token,
 		}
@@ -197,12 +197,12 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetAuthMethod{
+	body := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -304,7 +304,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -321,7 +321,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	boundNamespacesSet := d.Get("bound_namespaces").(*schema.Set)
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
 
-	body := akeyless.UpdateAuthMethodK8S{
+	body := akeyless_api.UpdateAuthMethodK8S{
 		Name:  name,
 		Token: &token,
 	}
@@ -357,7 +357,7 @@ func resourceAuthMethodK8sDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteAuthMethod{
+	deleteItem := akeyless_api.DeleteAuthMethod{
 		Token: &token,
 		Name:  path,
 	}

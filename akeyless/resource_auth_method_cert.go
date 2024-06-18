@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -139,7 +139,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -168,7 +168,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
 	certificateData = base64.StdEncoding.EncodeToString([]byte(certificateData))
 
-	body := akeyless.CreateAuthMethodCert{
+	body := akeyless_api.CreateAuthMethodCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -217,12 +217,12 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetAuthMethod{
+	body := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -362,7 +362,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -389,7 +389,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	revokedCertIdsSet := d.Get("revoked_cert_ids").(*schema.Set)
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
 
-	body := akeyless.UpdateAuthMethodCert{
+	body := akeyless_api.UpdateAuthMethodCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -429,7 +429,7 @@ func resourceAuthMethodCertDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteAuthMethod{
+	deleteItem := akeyless_api.DeleteAuthMethod{
 		Token: &token,
 		Name:  path,
 	}

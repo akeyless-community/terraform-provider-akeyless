@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -156,7 +156,7 @@ func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -183,7 +183,7 @@ func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error
 	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.DynamicSecretCreateK8s{
+	body := akeyless_api.DynamicSecretCreateK8s{
 		Name:  name,
 		Token: &token,
 	}
@@ -228,12 +228,12 @@ func resourceDynamicSecretK8sRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -350,7 +350,7 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -377,7 +377,7 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.DynamicSecretUpdateK8s{
+	body := akeyless_api.DynamicSecretUpdateK8s{
 		Name:  name,
 		Token: &token,
 	}

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -139,7 +139,7 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	dbType := d.Get("db_type").(string)
@@ -163,7 +163,7 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 
-	body := akeyless.CreateDBTarget{
+	body := akeyless_api.CreateDBTarget{
 		Name:   name,
 		DbType: dbType,
 		Token:  &token,
@@ -206,12 +206,12 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetTargetDetails{
+	body := akeyless_api.GetTargetDetails{
 		Name:  path,
 		Token: &token,
 	}
@@ -368,7 +368,7 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	dbType := d.Get("db_type").(string)
@@ -392,7 +392,7 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 
-	body := akeyless.UpdateDBTarget{
+	body := akeyless_api.UpdateDBTarget{
 		Name:   name,
 		DbType: dbType,
 		Token:  &token,
@@ -437,7 +437,7 @@ func resourceDbTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteTarget{
+	deleteItem := akeyless_api.DeleteTarget{
 		Token: &token,
 		Name:  path,
 	}

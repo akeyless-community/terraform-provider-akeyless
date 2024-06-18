@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -86,7 +86,7 @@ func dataSourceGetKubeExecCredsRead(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	certIssuerName := d.Get("cert_issuer_name").(string)
 	keyDataBase64 := d.Get("key_data_base64").(string)
@@ -94,7 +94,7 @@ func dataSourceGetKubeExecCredsRead(d *schema.ResourceData, m interface{}) error
 	altNames := d.Get("alt_names").(string)
 	uriSans := d.Get("uri_sans").(string)
 
-	body := akeyless.GetKubeExecCreds{
+	body := akeyless_api.GetKubeExecCreds{
 		CertIssuerName: certIssuerName,
 		Token:          &token,
 	}

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -148,7 +148,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -170,7 +170,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	userAttribute := d.Get("user_attribute").(string)
 	customPayload := d.Get("custom_payload").(string)
 
-	body := akeyless.CreateRotatedSecret{
+	body := akeyless_api.CreateRotatedSecret{
 		Name:        name,
 		TargetName:  targetName,
 		RotatorType: rotatorType,
@@ -210,19 +210,19 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetRotatedSecretValue{
+	body := akeyless_api.GetRotatedSecretValue{
 		Names: path,
 		Token: &token,
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
+		ShowVersions: akeyless_api.PtrBool(true),
 		Token:        &token,
 	}
 
@@ -387,7 +387,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	key := d.Get("key").(string)
@@ -405,7 +405,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 
-	body := akeyless.UpdateRotatedSecret{
+	body := akeyless_api.UpdateRotatedSecret{
 		Name:  name,
 		Token: &token,
 	}
@@ -432,9 +432,9 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	bodyItem := akeyless.UpdateItem{
+	bodyItem := akeyless_api.UpdateItem{
 		Name:    name,
-		NewName: akeyless.PtrString(name),
+		NewName: akeyless_api.PtrString(name),
 		Token:   &token,
 	}
 
@@ -466,7 +466,7 @@ func resourceRotatedSecretDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteItem{
+	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}

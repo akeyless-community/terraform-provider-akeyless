@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -106,7 +106,7 @@ func resourceRotatedSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -124,7 +124,7 @@ func resourceRotatedSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	gcpServiceAccountEmail := d.Get("gcp_service_account_email").(string)
 	gcpServiceAccountKeyId := d.Get("gcp_service_account_key_id").(string)
 
-	body := akeyless.RotatedSecretCreateGcp{
+	body := akeyless_api.RotatedSecretCreateGcp{
 		Name:        name,
 		TargetName:  targetName,
 		RotatorType: rotatorType,
@@ -160,19 +160,19 @@ func resourceRotatedSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.RotatedSecretGetValue{
+	body := akeyless_api.RotatedSecretGetValue{
 		Name:  path,
 		Token: &token,
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
+		ShowVersions: akeyless_api.PtrBool(true),
 		Token:        &token,
 	}
 
@@ -304,7 +304,7 @@ func resourceRotatedSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -320,9 +320,9 @@ func resourceRotatedSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	gcpServiceAccountEmail := d.Get("gcp_service_account_email").(string)
 	gcpServiceAccountKeyId := d.Get("gcp_service_account_key_id").(string)
 
-	body := akeyless.RotatedSecretUpdateGcp{
+	body := akeyless_api.RotatedSecretUpdateGcp{
 		Name:    name,
-		NewName: akeyless.PtrString(name),
+		NewName: akeyless_api.PtrString(name),
 		Token:   &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)

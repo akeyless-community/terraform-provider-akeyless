@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -106,7 +106,7 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -122,7 +122,7 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	issuer := d.Get("issuer").(string)
 	audience := d.Get("audience").(string)
 
-	body := akeyless.CreateAuthMethodOAuth2{
+	body := akeyless_api.CreateAuthMethodOAuth2{
 		Name:             name,
 		JwksUri:          jwksUri,
 		UniqueIdentifier: uniqueIdentifier,
@@ -162,12 +162,12 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetAuthMethod{
+	body := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -277,7 +277,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -293,7 +293,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	issuer := d.Get("issuer").(string)
 	audience := d.Get("audience").(string)
 
-	body := akeyless.UpdateAuthMethodOAuth2{
+	body := akeyless_api.UpdateAuthMethodOAuth2{
 		Name:             name,
 		JwksUri:          jwksUri,
 		UniqueIdentifier: uniqueIdentifier,
@@ -329,7 +329,7 @@ func resourceAuthMethodOauth2Delete(d *schema.ResourceData, m interface{}) error
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteAuthMethod{
+	deleteItem := akeyless_api.DeleteAuthMethod{
 		Token: &token,
 		Name:  path,
 	}

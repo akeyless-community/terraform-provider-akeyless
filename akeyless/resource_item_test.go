@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestDfcKeyRsaResource(t *testing.T) {
@@ -486,9 +486,9 @@ func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.DescribeItem{
+		gsvBody := akeyless_api.DescribeItem{
 			Name:         path,
-			ShowVersions: akeyless.PtrBool(false),
+			ShowVersions: akeyless_api.PtrBool(false),
 			Token:        &token,
 		}
 
@@ -507,7 +507,7 @@ func checkGatewayAllowedAccessExistsAndValidateDetails(t *testing.T, allowedAcce
 
 		ctx := context.Background()
 
-		body := akeyless.GatewayGetAllowedAccess{
+		body := akeyless_api.GatewayGetAllowedAccess{
 			Name:  allowedAccessName,
 			Token: &token,
 		}

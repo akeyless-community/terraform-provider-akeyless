@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -45,12 +45,12 @@ func dataSourceGetRotatedSecretValueRead(d *schema.ResourceData, m interface{}) 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	names := d.Get("name").(string)
 	version := d.Get("version").(int)
 
-	body := akeyless.GetRotatedSecretValue{
+	body := akeyless_api.GetRotatedSecretValue{
 		Names: names,
 		Token: &token,
 	}

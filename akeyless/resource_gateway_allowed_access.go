@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -60,7 +60,7 @@ func resourceGatewayAllowedAccessCreate(d *schema.ResourceData, m interface{}) e
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -72,7 +72,7 @@ func resourceGatewayAllowedAccessCreate(d *schema.ResourceData, m interface{}) e
 		return err
 	}
 
-	body := akeyless.GatewayCreateAllowedAccess{
+	body := akeyless_api.GatewayCreateAllowedAccess{
 		Name:      name,
 		AccessId:  accessId,
 		Token:     &token,
@@ -100,12 +100,12 @@ func resourceGatewayAllowedAccessRead(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetAllowedAccess{
+	body := akeyless_api.GatewayGetAllowedAccess{
 		Name:  path,
 		Token: &token,
 	}
@@ -167,7 +167,7 @@ func resourceGatewayAllowedAccessUpdate(d *schema.ResourceData, m interface{}) e
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -179,7 +179,7 @@ func resourceGatewayAllowedAccessUpdate(d *schema.ResourceData, m interface{}) e
 		return err
 	}
 
-	body := akeyless.GatewayUpdateAllowedAccess{
+	body := akeyless_api.GatewayUpdateAllowedAccess{
 		Name:      name,
 		AccessId:  accessId,
 		Token:     &token,
@@ -209,7 +209,7 @@ func resourceGatewayAllowedAccessDelete(d *schema.ResourceData, m interface{}) e
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteAllowedAccess{
+	deleteItem := akeyless_api.GatewayDeleteAllowedAccess{
 		Token: &token,
 		Name:  path,
 	}

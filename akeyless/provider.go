@@ -9,7 +9,8 @@ import (
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/gcp"
-	"github.com/akeylesslabs/akeyless-go/v4"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -198,93 +199,106 @@ func Provider() *schema.Provider {
 		//ConfigureFunc: configureProvider,
 		ConfigureContextFunc: configureProvider,
 		ResourcesMap: map[string]*schema.Resource{
-			"akeyless_dfc_key":                        resourceDfcKey(),
-			"akeyless_static_secret":                  resourceStaticSecret(),
-			"akeyless_pki_cert_issuer":                resourcePKICertIssuer(),
-			"akeyless_ssh_cert_issuer":                resourceSSHCertIssuer(),
-			"akeyless_auth_method":                    resourceAuthMethod(),
-			"akeyless_auth_method_api_key":            resourceAuthMethodApiKey(),
-			"akeyless_auth_method_aws_iam":            resourceAuthMethodAwsIam(),
-			"akeyless_auth_method_azure_ad":           resourceAuthMethodAzureAd(),
-			"akeyless_auth_method_cert":               resourceAuthMethodCert(),
-			"akeyless_auth_method_gcp":                resourceAuthMethodGcp(),
-			"akeyless_auth_method_k8s":                resourceAuthMethodK8s(),
-			"akeyless_auth_method_oauth2":             resourceAuthMethodOauth2(),
-			"akeyless_auth_method_oidc":               resourceAuthMethodOidc(),
-			"akeyless_auth_method_saml":               resourceAuthMethodSaml(),
-			"akeyless_auth_method_universal_identity": resourceAuthMethodUniversalIdentity(),
-			"akeyless_role":                           resourceRole(),
-			"akeyless_producer_aws":                   resourceProducerAws(),
-			"akeyless_gateway_allowed_access":         resourceGatewayAllowedAccess(),
-			"akeyless_producer_custom":                resourceProducerCustom(),
-			"akeyless_producer_rdp":                   resourceProducerRdp(),
-			"akeyless_producer_mongo":                 resourceProducerMongo(),
-			"akeyless_producer_mssql":                 resourceProducerMssql(),
-			"akeyless_producer_mysql":                 resourceProducerMysql(),
-			"akeyless_producer_oracle":                resourceProducerOracle(),
-			"akeyless_producer_postgres":              resourceProducerPostgresql(),
-			"akeyless_producer_redshift":              resourceProducerRedshift(),
-			"akeyless_producer_gcp":                   resourceProducerGcp(),
-			"akeyless_producer_gke":                   resourceProducerGke(),
-			"akeyless_producer_github":                resourceProducerGithub(),
-			"akeyless_producer_eks":                   resourceProducerEks(),
-			"akeyless_producer_cassandra":             resourceProducerCassandra(),
-			"akeyless_producer_azure":                 resourceProducerAzure(),
-			"akeyless_producer_artifactory":           resourceProducerArtifactory(),
-			"akeyless_producer_k8s":                   resourceProducerK8s(),
-			"akeyless_dynamic_secret_artifactory":     resourceDynamicSecretArtifactory(),
-			"akeyless_dynamic_secret_aws":             resourceDynamicSecretAws(),
-			"akeyless_dynamic_secret_azure":           resourceDynamicSecretAzure(),
-			"akeyless_dynamic_secret_cassandra":       resourceDynamicSecretCassandra(),
-			"akeyless_dynamic_secret_custom":          resourceDynamicSecretCustom(),
-			"akeyless_dynamic_secret_eks":             resourceDynamicSecretEks(),
-			"akeyless_dynamic_secret_gcp":             resourceDynamicSecretGcp(),
-			"akeyless_dynamic_secret_github":          resourceDynamicSecretGithub(),
-			"akeyless_dynamic_secret_gke":             resourceDynamicSecretGke(),
-			"akeyless_dynamic_secret_k8s":             resourceDynamicSecretK8s(),
-			"akeyless_dynamic_secret_mongodb":         resourceDynamicSecretMongo(),
-			"akeyless_dynamic_secret_mssql":           resourceDynamicSecretMssql(),
-			"akeyless_dynamic_secret_mysql":           resourceDynamicSecretMysql(),
-			"akeyless_dynamic_secret_oracle":          resourceDynamicSecretOracle(),
-			"akeyless_dynamic_secret_postgresql":      resourceDynamicSecretPostgresql(),
-			"akeyless_dynamic_secret_rdp":             resourceDynamicSecretRdp(),
-			"akeyless_dynamic_secret_redshift":        resourceDynamicSecretRedshift(),
-			"akeyless_rotated_secret":                 resourceRotatedSecret(),
-			"akeyless_rotated_secret_aws":             resourceRotatedSecretAws(),
-			"akeyless_rotated_secret_azure":           resourceRotatedSecretAzure(),
-			"akeyless_rotated_secret_cassandra":       resourceRotatedSecretCassandra(),
-			"akeyless_rotated_secret_custom":          resourceRotatedSecretCustom(),
-			"akeyless_rotated_secret_dockerhub":       resourceRotatedSecretDockerHub(),
-			"akeyless_rotated_secret_gcp":             resourceRotatedSecretGcp(),
-			"akeyless_rotated_secret_hanadb":          resourceRotatedSecretHanaDb(),
-			"akeyless_rotated_secret_ldap":            resourceRotatedSecretLdap(),
-			"akeyless_rotated_secret_mongodb":         resourceRotatedSecretMongo(),
-			"akeyless_rotated_secret_mssql":           resourceRotatedSecretMsSql(),
-			"akeyless_rotated_secret_mysql":           resourceRotatedSecretMySql(),
-			"akeyless_rotated_secret_oracle":          resourceRotatedSecretOracle(),
-			"akeyless_rotated_secret_postgresql":      resourceRotatedSecretPostgreSql(),
-			"akeyless_rotated_secret_redis":           resourceRotatedSecretRedis(),
-			"akeyless_rotated_secret_redshift":        resourceRotatedSecretRedshift(),
-			"akeyless_rotated_secret_snowflake":       resourceRotatedSecretSnowflake(),
-			"akeyless_rotated_secret_ssh":             resourceRotatedSecretSsh(),
-			"akeyless_rotated_secret_windows":         resourceRotatedSecretWindows(),
-			"akeyless_target_artifactory":             resourceArtifactoryTarget(),
-			"akeyless_target_aws":                     resourceAwsTarget(),
-			"akeyless_target_azure":                   resourceAzureTarget(),
-			"akeyless_target_db":                      resourceDbTarget(),
-			"akeyless_target_eks":                     resourceEksTarget(),
-			"akeyless_target_gcp":                     resourceGcpTarget(),
-			"akeyless_target_github":                  resourceGithubTarget(),
-			"akeyless_target_gke":                     resourceGkeTarget(),
-			"akeyless_target_globalsign":              resourceGlobalsignTarget(),
-			"akeyless_target_k8s":                     resourceK8sTarget(),
-			"akeyless_target_rabbit":                  resourceRabbitmqTarget(),
-			"akeyless_target_ssh":                     resourceSSHTarget(),
-			"akeyless_target_web":                     resourceWebTarget(),
-			"akeyless_target_zerossl":                 resourceZerosslTarget(),
-			"akeyless_k8s_auth_config":                resourceK8sAuthConfig(),
-			"akeyless_associate_role_auth_method":     resourceAssocRoleAm(),
-			"akeyless_tokenizer":                      resourceTokenizer(),
+			"akeyless_dfc_key":                                 resourceDfcKey(),
+			"akeyless_static_secret":                           resourceStaticSecret(),
+			"akeyless_pki_cert_issuer":                         resourcePKICertIssuer(),
+			"akeyless_ssh_cert_issuer":                         resourceSSHCertIssuer(),
+			"akeyless_auth_method":                             resourceAuthMethod(),
+			"akeyless_auth_method_api_key":                     resourceAuthMethodApiKey(),
+			"akeyless_auth_method_aws_iam":                     resourceAuthMethodAwsIam(),
+			"akeyless_auth_method_azure_ad":                    resourceAuthMethodAzureAd(),
+			"akeyless_auth_method_cert":                        resourceAuthMethodCert(),
+			"akeyless_auth_method_gcp":                         resourceAuthMethodGcp(),
+			"akeyless_auth_method_k8s":                         resourceAuthMethodK8s(),
+			"akeyless_auth_method_oauth2":                      resourceAuthMethodOauth2(),
+			"akeyless_auth_method_oidc":                        resourceAuthMethodOidc(),
+			"akeyless_auth_method_saml":                        resourceAuthMethodSaml(),
+			"akeyless_auth_method_universal_identity":          resourceAuthMethodUniversalIdentity(),
+			"akeyless_role":                                    resourceRole(),
+			"akeyless_producer_aws":                            resourceProducerAws(),
+			"akeyless_gateway_allowed_access":                  resourceGatewayAllowedAccess(),
+			"akeyless_gateway_cache":                           resourceGatewayUpdateCache(),
+			"akeyless_gateway_defaults":                        resourceGatewayUpdateDefaults(),
+			"akeyless_gateway_log_forwarding_aws_s3":           resourceGatewayUpdateLogForwardingAwsS3(),
+			"akeyless_gateway_log_forwarding_azure_analytics":  resourceGatewayUpdateLogForwardingAzureAnalytics(),
+			"akeyless_gateway_log_forwarding_datadog":          resourceGatewayUpdateLogForwardingDatadog(),
+			"akeyless_gateway_log_forwarding_elasticsearch":    resourceGatewayUpdateLogForwardingElasticsearch(),
+			"akeyless_gateway_log_forwarding_google_chronicle": resourceGatewayUpdateLogForwardingGoogleChronicle(),
+			"akeyless_gateway_log_forwarding_logstash":         resourceGatewayUpdateLogForwardingLogstash(),
+			"akeyless_gateway_log_forwarding_logz_io":          resourceGatewayUpdateLogForwardingLogzIo(),
+			"akeyless_gateway_log_forwarding_splunk":           resourceGatewayUpdateLogForwardingSplunk(),
+			"akeyless_gateway_log_forwarding_stdout":           resourceGatewayUpdateLogForwardingStdout(),
+			"akeyless_gateway_log_forwarding_sumologic":        resourceGatewayUpdateLogForwardingSumologic(),
+			"akeyless_gateway_log_forwarding_syslog":           resourceGatewayUpdateLogForwardingSyslog(),
+			"akeyless_producer_custom":                         resourceProducerCustom(),
+			"akeyless_producer_rdp":                            resourceProducerRdp(),
+			"akeyless_producer_mongo":                          resourceProducerMongo(),
+			"akeyless_producer_mssql":                          resourceProducerMssql(),
+			"akeyless_producer_mysql":                          resourceProducerMysql(),
+			"akeyless_producer_oracle":                         resourceProducerOracle(),
+			"akeyless_producer_postgres":                       resourceProducerPostgresql(),
+			"akeyless_producer_redshift":                       resourceProducerRedshift(),
+			"akeyless_producer_gcp":                            resourceProducerGcp(),
+			"akeyless_producer_gke":                            resourceProducerGke(),
+			"akeyless_producer_github":                         resourceProducerGithub(),
+			"akeyless_producer_eks":                            resourceProducerEks(),
+			"akeyless_producer_cassandra":                      resourceProducerCassandra(),
+			"akeyless_producer_azure":                          resourceProducerAzure(),
+			"akeyless_producer_artifactory":                    resourceProducerArtifactory(),
+			"akeyless_producer_k8s":                            resourceProducerK8s(),
+			"akeyless_dynamic_secret_artifactory":              resourceDynamicSecretArtifactory(),
+			"akeyless_dynamic_secret_aws":                      resourceDynamicSecretAws(),
+			"akeyless_dynamic_secret_azure":                    resourceDynamicSecretAzure(),
+			"akeyless_dynamic_secret_cassandra":                resourceDynamicSecretCassandra(),
+			"akeyless_dynamic_secret_custom":                   resourceDynamicSecretCustom(),
+			"akeyless_dynamic_secret_eks":                      resourceDynamicSecretEks(),
+			"akeyless_dynamic_secret_gcp":                      resourceDynamicSecretGcp(),
+			"akeyless_dynamic_secret_github":                   resourceDynamicSecretGithub(),
+			"akeyless_dynamic_secret_gke":                      resourceDynamicSecretGke(),
+			"akeyless_dynamic_secret_k8s":                      resourceDynamicSecretK8s(),
+			"akeyless_dynamic_secret_mongodb":                  resourceDynamicSecretMongo(),
+			"akeyless_dynamic_secret_mssql":                    resourceDynamicSecretMssql(),
+			"akeyless_dynamic_secret_mysql":                    resourceDynamicSecretMysql(),
+			"akeyless_dynamic_secret_oracle":                   resourceDynamicSecretOracle(),
+			"akeyless_dynamic_secret_postgresql":               resourceDynamicSecretPostgresql(),
+			"akeyless_dynamic_secret_rdp":                      resourceDynamicSecretRdp(),
+			"akeyless_dynamic_secret_redshift":                 resourceDynamicSecretRedshift(),
+			"akeyless_rotated_secret":                          resourceRotatedSecret(),
+			"akeyless_rotated_secret_aws":                      resourceRotatedSecretAws(),
+			"akeyless_rotated_secret_azure":                    resourceRotatedSecretAzure(),
+			"akeyless_rotated_secret_cassandra":                resourceRotatedSecretCassandra(),
+			"akeyless_rotated_secret_custom":                   resourceRotatedSecretCustom(),
+			"akeyless_rotated_secret_dockerhub":                resourceRotatedSecretDockerHub(),
+			"akeyless_rotated_secret_gcp":                      resourceRotatedSecretGcp(),
+			"akeyless_rotated_secret_hanadb":                   resourceRotatedSecretHanaDb(),
+			"akeyless_rotated_secret_ldap":                     resourceRotatedSecretLdap(),
+			"akeyless_rotated_secret_mongodb":                  resourceRotatedSecretMongo(),
+			"akeyless_rotated_secret_mssql":                    resourceRotatedSecretMsSql(),
+			"akeyless_rotated_secret_mysql":                    resourceRotatedSecretMySql(),
+			"akeyless_rotated_secret_oracle":                   resourceRotatedSecretOracle(),
+			"akeyless_rotated_secret_postgresql":               resourceRotatedSecretPostgreSql(),
+			"akeyless_rotated_secret_redis":                    resourceRotatedSecretRedis(),
+			"akeyless_rotated_secret_redshift":                 resourceRotatedSecretRedshift(),
+			"akeyless_rotated_secret_snowflake":                resourceRotatedSecretSnowflake(),
+			"akeyless_rotated_secret_ssh":                      resourceRotatedSecretSsh(),
+			"akeyless_rotated_secret_windows":                  resourceRotatedSecretWindows(),
+			"akeyless_target_artifactory":                      resourceArtifactoryTarget(),
+			"akeyless_target_aws":                              resourceAwsTarget(),
+			"akeyless_target_azure":                            resourceAzureTarget(),
+			"akeyless_target_db":                               resourceDbTarget(),
+			"akeyless_target_eks":                              resourceEksTarget(),
+			"akeyless_target_gcp":                              resourceGcpTarget(),
+			"akeyless_target_github":                           resourceGithubTarget(),
+			"akeyless_target_gke":                              resourceGkeTarget(),
+			"akeyless_target_globalsign":                       resourceGlobalsignTarget(),
+			"akeyless_target_k8s":                              resourceK8sTarget(),
+			"akeyless_target_rabbit":                           resourceRabbitmqTarget(),
+			"akeyless_target_ssh":                              resourceSSHTarget(),
+			"akeyless_target_web":                              resourceWebTarget(),
+			"akeyless_target_zerossl":                          resourceZerosslTarget(),
+			"akeyless_k8s_auth_config":                         resourceK8sAuthConfig(),
+			"akeyless_associate_role_auth_method":              resourceAssocRoleAm(),
+			"akeyless_tokenizer":                               resourceTokenizer(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_static_secret":      dataSourceStaticSecret(),
@@ -321,8 +335,8 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 		return "", diagnostic
 	}
 
-	client := akeyless.NewAPIClient(&akeyless.Configuration{
-		Servers: []akeyless.ServerConfiguration{
+	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
+		Servers: []akeyless_api.ServerConfiguration{
 			{
 				URL: apiGwAddress,
 			},
@@ -330,7 +344,7 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
 	}).V2Api
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 
 	authOut, _, err := client.Auth(ctx).Body(*authBody).Execute()
 	if err != nil {
@@ -346,13 +360,13 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	return providerMeta{client, &token}, nil
 }
 
-func getAuthInfo(d *schema.ResourceData) (*akeyless.Auth, error) {
+func getAuthInfo(d *schema.ResourceData) (*akeyless_api.Auth, error) {
 	login, authType, err := getLoginWithValidation(d)
 	if err != nil {
 		return nil, err
 	}
 
-	authBody := akeyless.NewAuthWithDefaults()
+	authBody := akeyless_api.NewAuthWithDefaults()
 	err = setAuthBody(authBody, login, authType)
 	if err != nil {
 		return nil, err
@@ -361,7 +375,7 @@ func getAuthInfo(d *schema.ResourceData) (*akeyless.Auth, error) {
 	return authBody, nil
 }
 
-func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginType) error {
+func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType loginType) error {
 
 	login, ok := loginObj.(map[string]interface{})
 	if !ok {
@@ -372,62 +386,62 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 	case ApiKeyLogin:
 		accessID := login["access_id"].(string)
 		accessKey := login["access_key"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.AccessKey = akeyless.PtrString(accessKey)
-		authBody.AccessType = akeyless.PtrString(common.ApiKey)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.AccessKey = akeyless_api.PtrString(accessKey)
+		authBody.AccessType = akeyless_api.PtrString(common.ApiKey)
 		return nil
 	case EmailLogin:
 		adminEmail := login["admin_email"].(string)
 		adminPassword := login["admin_password"].(string)
-		authBody.AdminEmail = akeyless.PtrString(adminEmail)
-		authBody.AdminPassword = akeyless.PtrString(adminPassword)
-		authBody.AccessType = akeyless.PtrString(common.Password)
+		authBody.AdminEmail = akeyless_api.PtrString(adminEmail)
+		authBody.AdminPassword = akeyless_api.PtrString(adminPassword)
+		authBody.AccessType = akeyless_api.PtrString(common.Password)
 		return nil
 	case AwsIAMLogin:
 		accessID := login["access_id"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
 		cloudId, err := aws.GetCloudId()
 		if err != nil {
 			return fmt.Errorf("require Cloud ID: %v", err.Error())
 		}
-		authBody.CloudId = akeyless.PtrString(cloudId)
-		authBody.AccessType = akeyless.PtrString(common.AwsIAM)
+		authBody.CloudId = akeyless_api.PtrString(cloudId)
+		authBody.AccessType = akeyless_api.PtrString(common.AwsIAM)
 		return nil
 	case GcpIAMLogin:
 		accessID := login["access_id"].(string)
 		audience := login["audience"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.GcpAudience = akeyless.PtrString(audience)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.GcpAudience = akeyless_api.PtrString(audience)
 		cloudId, err := gcp.GetCloudID(audience)
 		if err != nil {
 			return fmt.Errorf("require Cloud ID: %v", err.Error())
 		}
-		authBody.CloudId = akeyless.PtrString(cloudId)
-		authBody.AccessType = akeyless.PtrString(common.Gcp)
+		authBody.CloudId = akeyless_api.PtrString(cloudId)
+		authBody.AccessType = akeyless_api.PtrString(common.Gcp)
 		return nil
 	case AzureADLogin:
 		accessID := login["access_id"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
 		cloudId, err := azure.GetCloudId("")
 		if err != nil {
 			return fmt.Errorf("require Cloud ID: %v", err.Error())
 		}
-		authBody.CloudId = akeyless.PtrString(cloudId)
-		authBody.AccessType = akeyless.PtrString(common.AzureAD)
+		authBody.CloudId = akeyless_api.PtrString(cloudId)
+		authBody.AccessType = akeyless_api.PtrString(common.AzureAD)
 		return nil
 	case JwtLogin:
 		accessID := login["access_id"].(string)
 		jwt := login["jwt"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.Jwt = akeyless.PtrString(jwt)
-		authBody.AccessType = akeyless.PtrString(common.Jwt)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.Jwt = akeyless_api.PtrString(jwt)
+		authBody.AccessType = akeyless_api.PtrString(common.Jwt)
 		return nil
 	case UidLogin:
 		accessID := login["access_id"].(string)
 		uidToken := login["uid_token"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.UidToken = akeyless.PtrString(uidToken)
-		authBody.AccessType = akeyless.PtrString(common.Uid)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.UidToken = akeyless_api.PtrString(uidToken)
+		authBody.AccessType = akeyless_api.PtrString(common.Uid)
 		return nil
 	case CertLogin:
 		certFile := login["cert_file_name"].(string)
@@ -459,10 +473,10 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 		}
 
 		accessID := login["access_id"].(string)
-		authBody.AccessId = akeyless.PtrString(accessID)
-		authBody.CertData = akeyless.PtrString(certData)
-		authBody.KeyData = akeyless.PtrString(keyData)
-		authBody.AccessType = akeyless.PtrString(common.Cert)
+		authBody.AccessId = akeyless_api.PtrString(accessID)
+		authBody.CertData = akeyless_api.PtrString(certData)
+		authBody.KeyData = akeyless_api.PtrString(keyData)
+		authBody.AccessType = akeyless_api.PtrString(common.Cert)
 		return nil
 	default:
 		return fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login")
@@ -470,7 +484,7 @@ func setAuthBody(authBody *akeyless.Auth, loginObj interface{}, authType loginTy
 }
 
 type providerMeta struct {
-	client *akeyless.V2ApiService
+	client *akeyless_api.V2ApiService
 	token  *string
 }
 

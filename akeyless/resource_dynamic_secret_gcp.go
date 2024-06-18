@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -105,7 +105,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -122,7 +122,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	roleBinding := d.Get("role_binding").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.DynamicSecretCreateGcp{
+	body := akeyless_api.DynamicSecretCreateGcp{
 		Name:  name,
 		Token: &token,
 	}
@@ -157,12 +157,12 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -270,7 +270,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -287,7 +287,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	roleBinding := d.Get("role_binding").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.DynamicSecretUpdateGcp{
+	body := akeyless_api.DynamicSecretUpdateGcp{
 		Name:  name,
 		Token: &token,
 	}

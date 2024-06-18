@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -142,7 +142,7 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -166,7 +166,7 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	secureAccessDbSchema := d.Get("secure_access_db_schema").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.DynamicSecretCreatePostgreSql{
+	body := akeyless_api.DynamicSecretCreatePostgreSql{
 		Name:  name,
 		Token: &token,
 	}
@@ -207,12 +207,12 @@ func resourceDynamicSecretPostgresqlRead(d *schema.ResourceData, m interface{}) 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DynamicSecretGet{
+	body := akeyless_api.DynamicSecretGet{
 		Name:  path,
 		Token: &token,
 	}
@@ -316,7 +316,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -340,7 +340,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	secureAccessDbSchema := d.Get("secure_access_db_schema").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.DynamicSecretUpdatePostgreSql{
+	body := akeyless_api.DynamicSecretUpdatePostgreSql{
 		Name:  name,
 		Token: &token,
 	}
