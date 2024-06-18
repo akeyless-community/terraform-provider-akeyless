@@ -1,6 +1,6 @@
 on:
   workflow_run:
-    workflows: [Release]
+    workflows: [ Release ]
     types:
       - completed
 
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        language: ['python']
+        language: [ 'python' ]
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -47,35 +47,13 @@ jobs:
         if: matrix.language == 'python'
         uses: ./.github/actions/cdktf-python
 
-
-  failed-terraform-provider:
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Grab Current Version
-        run: |
-          version=$(grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+' version)
-          echo "version=${version}" >> "${GITHUB_ENV}"
-
-      - name: Prepare Slack Message On Failure
-        id: slack-message-failure-creator
-        run: |
-          SLACK_MESSAGE="*Version:* $version"
-          delimiter="$(openssl rand -hex 8)"
-          echo "slack-message<<${delimiter}" >> $GITHUB_ENV
-          echo "${SLACK_MESSAGE//$/%0A}" >> $GITHUB_ENV
-          echo "${delimiter}" >> $GITHUB_ENV
-
-      - name: Slack Failure Notification
+      - name: Slack Notification
+        if: failure() || success()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: 'operations'
-          SLACK_COLOR: '#bd3232'
-          SLACK_ICON: https://github.com/rtCamp.png?size=48
-          SLACK_TITLE: 'Release Akeyless Terraform provider and CDKTF Failed! :bell:'
-          SLACK_MESSAGE: '${{ env.slack-message }}'
-          SLACK_USERNAME: githubBot
-          SLACK_LINK_NAMES: true
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: 'Release Latest Akeyless CDKTF-${{ matrix.language }}, Version:${{ env.version }}, Status: ${{ job.status }}!'
           SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
-          SLACK_FOOTER: Akeyless.io Release CDKTF-Akeyless Pipeline
-
+          MSG_MINIMAL: true
+          SLACK_FOOTER: Akeyless.io Release CDKTF-${{ matrix.language }} Pipeline
