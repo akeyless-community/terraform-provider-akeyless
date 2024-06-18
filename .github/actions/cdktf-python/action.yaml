@@ -8,13 +8,13 @@ runs:
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ var.PYTHON_VERSION }}
+        python-version: ${{ vars.PYTHON_VERSION }}
 
     - name: Install dependencies
       shell: bash
       run: |
         python -m pip install --upgrade pip
-        pip install poetry=='${{ var.POETRY_VERSION }}'
+        pip install poetry=='${{ vars.POETRY_VERSION }}'
 
     - name: Build Python package
       shell: bash

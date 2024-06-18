@@ -53,7 +53,8 @@ jobs:
         env:
           SLACK_CHANNEL: 'operations'
           SLACK_COLOR: ${{ job.status }}
-          SLACK_TITLE: 'Release Latest Akeyless CDKTF-${{ matrix.language }}, Version:${{ env.version }}, Status: ${{ job.status }}!'
+          SLACK_TITLE: 'Release Latest Akeyless CDKTF-${{ matrix.language }}, Status: ${{ job.status }}!'
+          SLACK_MESSAGE: 'Version:${{ env.version }}'
           SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
           MSG_MINIMAL: true
           SLACK_FOOTER: Akeyless.io Release CDKTF-${{ matrix.language }} Pipeline
