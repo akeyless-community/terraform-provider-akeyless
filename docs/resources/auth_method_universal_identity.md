@@ -27,6 +27,7 @@ Akeyless Universal Identity Auth Method Resource
 - `deny_inheritance` (Boolean) Deny from root to create children
 - `deny_rotate` (Boolean) Deny from the token to rotate
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
+- `jwt_ttl` (Number) Creds expiration time in minutes
 - `ttl` (Number) Token ttl (in minutes)
 
 ### Read-Only

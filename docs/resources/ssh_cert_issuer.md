@@ -27,7 +27,6 @@ SSH Cert Issuer  resource
 - `delete_protection` (Boolean) Protection from accidental deletion of this item, [true/false]
 - `description` (String) Description of the object
 - `extensions` (Map of String) Signed certificates with extensions (key/val), e.g permit-port-forwarding=
-- `metadata` (String, Deprecated) [Deprecated: Use description instead]
 - `principals` (String) Signed certificates with principal, e.g example_role1,example_role2
 - `secure_access_bastion_api` (String) Bastion's SSH control API endpoint. E.g. https://my.bastion:9900
 - `secure_access_bastion_ssh` (String) Bastion's SSH server. E.g. my.bastion:22

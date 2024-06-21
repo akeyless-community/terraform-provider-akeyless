@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -76,12 +76,6 @@ func resourceTokenizer() *schema.Resource {
 				Computed:    true,
 				Description: "",
 			},
-			"metadata": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "A metadata about the tokenizer",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -108,7 +102,7 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	tokenizerType := d.Get("tokenizer_type").(string)
@@ -119,12 +113,12 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	pattern := d.Get("pattern").(string)
 	encodingTemplate := d.Get("encoding_template").(string)
 	decodingTemplate := d.Get("decoding_template").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tag").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.CreateTokenizer{
+	body := akeyless_api.CreateTokenizer{
 		Name:          name,
 		TokenizerType: tokenizerType,
 		TemplateType:  templateType,
@@ -158,12 +152,12 @@ func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DescribeItem{
+	body := akeyless_api.DescribeItem{
 		Name:  path,
 		Token: &token,
 	}
@@ -255,7 +249,7 @@ func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
+		err := d.Set("description", *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -289,22 +283,20 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tag").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.UpdateItem{
+	body := akeyless_api.UpdateItem{
 		Name:             name,
 		DeleteProtection: &deleteProtection,
 		Token:            &token,
 	}
-
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultMetadata)
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
 	if err == nil {
@@ -336,7 +328,7 @@ func resourceTokenizerDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteItem{
+	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}
@@ -351,24 +343,15 @@ func resourceTokenizerDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceTokenizerImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.DescribeItem{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	err := resourceTokenizerRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

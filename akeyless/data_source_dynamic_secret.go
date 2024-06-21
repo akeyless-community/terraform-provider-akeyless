@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -37,9 +37,9 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
-	gsvBody := akeyless.GetDynamicSecretValue{
+	gsvBody := akeyless_api.GetDynamicSecretValue{
 		Name:  path,
 		Token: &token,
 	}
@@ -60,7 +60,7 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 	var marshal []byte
 
 	if gsvOutIntr != nil {
-		gsvOut = make(map[string]string)
+		gsvOut = make(map[string]interface{})
 		for k, val := range gsvOutIntr {
 			if v, ok := val.(string); ok {
 				gsvOut[k] = v

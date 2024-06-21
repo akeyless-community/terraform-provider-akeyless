@@ -8,18 +8,19 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceRotatedSecret() *schema.Resource {
 	return &schema.Resource{
-		Description: "Rotated secret resource",
-		Create:      resourceRotatedSecretCreate,
-		Read:        resourceRotatedSecretRead,
-		Update:      resourceRotatedSecretUpdate,
-		Delete:      resourceRotatedSecretDelete,
+		Description:        "Rotated secret resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_rotated_secret_<TYPE>",
+		Create:             resourceRotatedSecretCreate,
+		Read:               resourceRotatedSecretRead,
+		Update:             resourceRotatedSecretUpdate,
+		Delete:             resourceRotatedSecretDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRotatedSecretImport,
 		},
@@ -34,11 +35,6 @@ func resourceRotatedSecret() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The target name to associate",
-			},
-			"metadata": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -152,11 +148,11 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	key := d.Get("key").(string)
@@ -174,7 +170,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	userAttribute := d.Get("user_attribute").(string)
 	customPayload := d.Get("custom_payload").(string)
 
-	body := akeyless.CreateRotatedSecret{
+	body := akeyless_api.CreateRotatedSecret{
 		Name:        name,
 		TargetName:  targetName,
 		RotatorType: rotatorType,
@@ -214,19 +210,19 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetRotatedSecretValue{
+	body := akeyless_api.GetRotatedSecretValue{
 		Names: path,
 		Token: &token,
 	}
 
-	item := akeyless.DescribeItem{
+	item := akeyless_api.DescribeItem{
 		Name:         path,
-		ShowVersions: akeyless.PtrBool(true),
+		ShowVersions: akeyless_api.PtrBool(true),
 		Token:        &token,
 	}
 
@@ -237,13 +233,13 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	if itemOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(itemOut.ItemTargetsAssoc)
-		err = d.Set("target_name", targetName)
+		err = common.SetDataByPrefixSlash(d, "target_name", targetName, d.Get("target_name").(string))
 		if err != nil {
 			return err
 		}
 	}
 	if itemOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *itemOut.ItemMetadata)
+		err := d.Set("description", *itemOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -391,7 +387,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	key := d.Get("key").(string)
@@ -406,10 +402,10 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	customPayload := d.Get("custom_payload").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 
-	body := akeyless.UpdateRotatedSecret{
+	body := akeyless_api.UpdateRotatedSecret{
 		Name:  name,
 		Token: &token,
 	}
@@ -435,11 +431,10 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.NewMetadata, common.DefaultMetadata)
 
-	bodyItem := akeyless.UpdateItem{
+	bodyItem := akeyless_api.UpdateItem{
 		Name:    name,
-		NewName: akeyless.PtrString(name),
+		NewName: akeyless_api.PtrString(name),
 		Token:   &token,
 	}
 
@@ -471,7 +466,7 @@ func resourceRotatedSecretDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteItem{
+	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}
@@ -486,24 +481,15 @@ func resourceRotatedSecretDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRotatedSecretImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetRotatedSecretValue{
-		Names: path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetRotatedSecretValue(ctx).Body(item).Execute()
+	err := resourceRotatedSecretRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}
@@ -522,6 +508,10 @@ func setRotatorType(d *schema.ResourceData, rsdType string) error {
 		return d.Set("rotator_type", "custom")
 	case "ldap-rotator":
 		return d.Set("rotator_type", "ldap")
+	case "azure-storage-account-rotator":
+		return d.Set("rotator_type", "azure-storage-account")
+	case "service-account-rotator":
+		return d.Set("rotator_type", "service-account-rotator")
 	case "target-rotator":
 		return d.Set("rotator_type", "target")
 	default:

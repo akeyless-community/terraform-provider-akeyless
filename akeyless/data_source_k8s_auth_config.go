@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -104,11 +104,11 @@ func dataSourceGatewayGetK8sAuthConfigRead(d *schema.ResourceData, m interface{}
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 
-	body := akeyless.GatewayGetK8SAuthConfig{
+	body := akeyless_api.GatewayGetK8SAuthConfig{
 		Name:  name,
 		Token: &token,
 	}

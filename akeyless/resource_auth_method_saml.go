@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -49,6 +49,12 @@ func resourceAuthMethodSaml() *schema.Resource {
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
+			"jwt_ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Creds expiration time in minutes",
+				Default:     0,
+			},
 			"unique_identifier": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -88,20 +94,21 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	idpMetadataUrl := d.Get("idp_metadata_url").(string)
 	idpMetadataXmlData := d.Get("idp_metadata_xml_data").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
 
-	body := akeyless.CreateAuthMethodSAML{
+	body := akeyless_api.CreateAuthMethodSAML{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -109,6 +116,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.IdpMetadataUrl, idpMetadataUrl)
 	common.GetAkeylessPtr(&body.IdpMetadataXmlData, idpMetadataXmlData)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
@@ -138,12 +146,12 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetAuthMethod{
+	body := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -186,6 +194,21 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	rOutAcc, err := getAccountSettings(m)
+	if err != nil {
+		return err
+	}
+	jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
+	if rOut.AccessInfo.JwtTtl != nil {
+		if *rOut.AccessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+			err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	if rOut.AccessInfo.SamlAccessRules.UniqueIdentifier != nil {
 		err = d.Set("unique_identifier", *rOut.AccessInfo.SamlAccessRules.UniqueIdentifier)
 		if err != nil {
@@ -224,20 +247,21 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	idpMetadataUrl := d.Get("idp_metadata_url").(string)
 	idpMetadataXmlData := d.Get("idp_metadata_xml_data").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
 
-	body := akeyless.UpdateAuthMethodSAML{
+	body := akeyless_api.UpdateAuthMethodSAML{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -245,6 +269,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.IdpMetadataUrl, idpMetadataUrl)
 	common.GetAkeylessPtr(&body.IdpMetadataXmlData, idpMetadataXmlData)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
@@ -270,7 +295,7 @@ func resourceAuthMethodSamlDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteAuthMethod{
+	deleteItem := akeyless_api.DeleteAuthMethod{
 		Token: &token,
 		Name:  path,
 	}
@@ -285,24 +310,15 @@ func resourceAuthMethodSamlDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodSamlImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetAuthMethod{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetAuthMethod(ctx).Body(item).Execute()
+	err := resourceAuthMethodSamlRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

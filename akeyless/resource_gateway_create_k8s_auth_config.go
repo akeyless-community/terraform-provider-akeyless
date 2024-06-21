@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -103,7 +103,7 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	configEncryptionKeyName := d.Get("config_encryption_key_name").(string)
@@ -120,7 +120,7 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	rancherApiKey := d.Get("rancher_api_key").(string)
 	rancherClusterId := d.Get("rancher_cluster_id").(string)
 
-	body := akeyless.GatewayCreateK8SAuthConfig{
+	body := akeyless_api.GatewayCreateK8SAuthConfig{
 		Name:     name,
 		AccessId: accessId,
 		Token:    &token,
@@ -156,12 +156,12 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetK8SAuthConfig{
+	body := akeyless_api.GatewayGetK8SAuthConfig{
 		Name:  path,
 		Token: &token,
 	}
@@ -269,7 +269,7 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	configEncryptionKeyName := d.Get("config_encryption_key_name").(string)
@@ -286,7 +286,7 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	rancherApiKey := d.Get("rancher_api_key").(string)
 	rancherClusterId := d.Get("rancher_cluster_id").(string)
 
-	body := akeyless.GatewayUpdateK8SAuthConfig{
+	body := akeyless_api.GatewayUpdateK8SAuthConfig{
 		Name:     name,
 		AccessId: accessId,
 		Token:    &token,
@@ -324,7 +324,7 @@ func resourceK8sAuthConfigDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteK8SAuthConfig{
+	deleteItem := akeyless_api.GatewayDeleteK8SAuthConfig{
 		Token: &token,
 		Name:  path,
 	}
@@ -339,24 +339,15 @@ func resourceK8sAuthConfigDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sAuthConfigImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetK8SAuthConfig{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetK8SAuthConfig(ctx).Body(item).Execute()
+	err := resourceK8sAuthConfigRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

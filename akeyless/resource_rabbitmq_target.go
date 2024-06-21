@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -51,11 +51,6 @@ func resourceRabbitmqTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used",
 			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -70,17 +65,16 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	rabbitmqServerUser := d.Get("rabbitmq_server_user").(string)
 	rabbitmqServerPassword := d.Get("rabbitmq_server_password").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.CreateRabbitMQTarget{
+	body := akeyless_api.CreateRabbitMQTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -88,7 +82,6 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.RabbitmqServerPassword, rabbitmqServerPassword)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateRabbitMQTarget(ctx).Body(body).Execute()
@@ -109,12 +102,12 @@ func resourceRabbitmqTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetTargetDetails{
+	body := akeyless_api.GetTargetDetails{
 		Name:  path,
 		Token: &token,
 	}
@@ -157,7 +150,7 @@ func resourceRabbitmqTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -173,17 +166,16 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	rabbitmqServerUser := d.Get("rabbitmq_server_user").(string)
 	rabbitmqServerPassword := d.Get("rabbitmq_server_password").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	key := d.Get("key").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.UpdateRabbitMQTarget{
+	body := akeyless_api.UpdateRabbitMQTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -191,7 +183,6 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RabbitmqServerPassword, rabbitmqServerPassword)
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateRabbitMQTarget(ctx).Body(body).Execute()
@@ -214,7 +205,7 @@ func resourceRabbitmqTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteTarget{
+	deleteItem := akeyless_api.DeleteTarget{
 		Token: &token,
 		Name:  path,
 	}
@@ -229,24 +220,15 @@ func resourceRabbitmqTargetDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRabbitmqTargetImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetTarget{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetTarget(ctx).Body(item).Execute()
+	err := resourceRabbitmqTargetRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

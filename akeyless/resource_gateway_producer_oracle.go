@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerOracle() *schema.Resource {
 	return &schema.Resource{
-		Description: "Oracle DB producer resource",
-		Create:      resourceProducerOracleCreate,
-		Read:        resourceProducerOracleRead,
-		Update:      resourceProducerOracleUpdate,
-		Delete:      resourceProducerOracleDelete,
+		Description:        "Oracle DB producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_oracle",
+		Create:             resourceProducerOracleCreate,
+		Read:               resourceProducerOracleRead,
+		Update:             resourceProducerOracleUpdate,
+		Delete:             resourceProducerOracleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerOracleImport,
 		},
@@ -114,7 +115,7 @@ func resourceProducerOracleCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -131,7 +132,7 @@ func resourceProducerOracleCreate(d *schema.ResourceData, m interface{}) error {
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
 
-	body := akeyless.GatewayCreateProducerOracleDb{
+	body := akeyless_api.GatewayCreateProducerOracleDb{
 		Name:  name,
 		Token: &token,
 	}
@@ -166,12 +167,12 @@ func resourceProducerOracleRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -273,7 +274,7 @@ func resourceProducerOracleUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -290,7 +291,7 @@ func resourceProducerOracleUpdate(d *schema.ResourceData, m interface{}) error {
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
 
-	body := akeyless.GatewayUpdateProducerOracleDb{
+	body := akeyless_api.GatewayUpdateProducerOracleDb{
 		Name:  name,
 		Token: &token,
 	}
@@ -327,7 +328,7 @@ func resourceProducerOracleDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}
@@ -342,24 +343,15 @@ func resourceProducerOracleDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerOracleImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerOracleRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

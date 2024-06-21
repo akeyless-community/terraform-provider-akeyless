@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerAws() *schema.Resource {
 	return &schema.Resource{
-		Description: "AWS producer resource",
-		Create:      resourceProducerAwsCreate,
-		Read:        resourceProducerAwsRead,
-		Update:      resourceProducerAwsUpdate,
-		Delete:      resourceProducerAwsDelete,
+		Description:        "AWS producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_aws",
+		Create:             resourceProducerAwsCreate,
+		Read:               resourceProducerAwsRead,
+		Update:             resourceProducerAwsUpdate,
+		Delete:             resourceProducerAwsDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerAwsImport,
 		},
@@ -172,7 +173,7 @@ func resourceProducerAwsCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -196,7 +197,7 @@ func resourceProducerAwsCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.GatewayCreateProducerAws{
+	body := akeyless_api.GatewayCreateProducerAws{
 		Name:  name,
 		Token: &token,
 	}
@@ -238,11 +239,11 @@ func resourceProducerAwsRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -364,7 +365,7 @@ func resourceProducerAwsUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -388,7 +389,7 @@ func resourceProducerAwsUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.GatewayUpdateProducerAws{
+	body := akeyless_api.GatewayUpdateProducerAws{
 		Name:  name,
 		Token: &token,
 	}
@@ -432,7 +433,7 @@ func resourceProducerAwsDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}
@@ -447,24 +448,15 @@ func resourceProducerAwsDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerAwsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerAwsRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

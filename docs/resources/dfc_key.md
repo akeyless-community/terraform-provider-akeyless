@@ -33,7 +33,6 @@ DFC Key resource
 - `delete_protection` (Boolean) Protection from accidental deletion of this item, [true/false]
 - `description` (String) Description of the object
 - `generate_self_signed_certificate` (Boolean) Whether to generate a self signed certificate with the key. If set, certificate-ttl must be provided.
-- `metadata` (String, Deprecated)
 - `split_level` (Number) The number of fragments that the item will be split into (not includes customer fragment)
 - `tags` (Set of String) List of the tags attached to this DFC key
 

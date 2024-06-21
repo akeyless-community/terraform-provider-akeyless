@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -35,9 +35,9 @@ func dataSourceRoleRead(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Get("name").(string)
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
-	body := akeyless.GetRole{
+	body := akeyless_api.GetRole{
 		Name:  name,
 		Token: &token,
 	}

@@ -21,7 +21,6 @@ GCP Target resource
 
 ### Optional
 
-- `comment` (String, Deprecated)
 - `description` (String) Description of the object
 - `gcp_key` (String, Sensitive) Base64-encoded service account private key text
 - `gcp_sa_email` (String) GCP service account email

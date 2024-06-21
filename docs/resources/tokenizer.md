@@ -28,7 +28,6 @@ Tokenizer resource
 - `description` (String) Description of the object
 - `encoding_template` (String) The Encoding output template to use in custom vaultless tokenization
 - `encryption_key_name` (String) AES key name to use in vaultless tokenization
-- `metadata` (String, Deprecated) A metadata about the tokenizer
 - `pattern` (String) Pattern to use in custom vaultless tokenization
 - `tag` (Set of String) List of the tags attached to this key. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
 - `tokenizer_type` (String) Tokenizer type(vaultless)

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -57,7 +57,7 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	certUsername := d.Get("cert_username").(string)
 	certIssuerName := d.Get("cert_issuer_name").(string)
@@ -65,7 +65,7 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 	ttl := d.Get("ttl").(int)
 	legacySigningAlgName := d.Get("legacy_signing_alg_name").(bool)
 
-	body := akeyless.GetSSHCertificate{
+	body := akeyless_api.GetSSHCertificate{
 		CertUsername:   certUsername,
 		CertIssuerName: certIssuerName,
 		Token:          &token,

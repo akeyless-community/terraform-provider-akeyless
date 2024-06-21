@@ -8,18 +8,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerGke() *schema.Resource {
 	return &schema.Resource{
-		Description: "Google Kubernetes Engine (GKE) producer resource",
-		Create:      resourceProducerGkeCreate,
-		Read:        resourceProducerGkeRead,
-		Update:      resourceProducerGkeUpdate,
-		Delete:      resourceProducerGkeDelete,
+		Description:        "Google Kubernetes Engine (GKE) producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_gke",
+		Create:             resourceProducerGkeCreate,
+		Read:               resourceProducerGkeRead,
+		Update:             resourceProducerGkeUpdate,
+		Delete:             resourceProducerGkeDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerGkeImport,
 		},
@@ -126,7 +127,7 @@ func resourceProducerGkeCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -145,7 +146,7 @@ func resourceProducerGkeCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.GatewayCreateProducerGke{
+	body := akeyless_api.GatewayCreateProducerGke{
 		Name:  name,
 		Token: &token,
 	}
@@ -182,12 +183,12 @@ func resourceProducerGkeRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -275,7 +276,7 @@ func resourceProducerGkeUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -294,7 +295,7 @@ func resourceProducerGkeUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.GatewayUpdateProducerGke{
+	body := akeyless_api.GatewayUpdateProducerGke{
 		Name:  name,
 		Token: &token,
 	}
@@ -333,7 +334,7 @@ func resourceProducerGkeDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}
@@ -348,24 +349,15 @@ func resourceProducerGkeDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGkeImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerGkeRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

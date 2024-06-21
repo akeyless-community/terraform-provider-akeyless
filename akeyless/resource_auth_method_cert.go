@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -64,9 +64,9 @@ func resourceAuthMethodCert() *schema.Resource {
 			},
 			"jwt_ttl": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
-				Description: "creds expiration time in minutes. If not set, use default according to account settings (see get-account-settings)",
+				Description: "Creds expiration time in minutes",
+				Default:     0,
 			},
 			"certificate_data": {
 				Type:        schema.TypeString,
@@ -139,7 +139,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -168,7 +168,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
 	certificateData = base64.StdEncoding.EncodeToString([]byte(certificateData))
 
-	body := akeyless.CreateAuthMethodCert{
+	body := akeyless_api.CreateAuthMethodCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -217,12 +217,12 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetAuthMethod{
+	body := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -254,22 +254,13 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
-		bodyAcc := akeyless.GetAccountSettings{
-			Token: &token,
-		}
-		rOutAcc, _, err := client.GetAccountSettings(ctx).Body(bodyAcc).Execute()
+
+		rOutAcc, err := getAccountSettings(m)
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				if res.StatusCode == http.StatusNotFound {
-					// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-					d.SetId("")
-					return nil
-				}
-				return fmt.Errorf("failed to get account settings: %v", string(apiErr.Body()))
-			}
-			return fmt.Errorf("failed to get account settings: %w", err)
+			return err
 		}
-		jwtDefault := *rOutAcc.SystemAccessCredsSettings.JwtTtlDefault
+		jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
 		if accessInfo.JwtTtl != nil {
 			if *accessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
 				err = d.Set("jwt_ttl", *accessInfo.JwtTtl)
@@ -371,7 +362,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -398,7 +389,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	revokedCertIdsSet := d.Get("revoked_cert_ids").(*schema.Set)
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
 
-	body := akeyless.UpdateAuthMethodCert{
+	body := akeyless_api.UpdateAuthMethodCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -407,6 +398,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.CertificateData, certificateData)
 	common.GetAkeylessPtr(&body.BoundCommonNames, boundCommonNames)
@@ -437,7 +429,7 @@ func resourceAuthMethodCertDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteAuthMethod{
+	deleteItem := akeyless_api.DeleteAuthMethod{
 		Token: &token,
 		Name:  path,
 	}
@@ -452,24 +444,15 @@ func resourceAuthMethodCertDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodCertImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetAuthMethod{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetAuthMethod(ctx).Body(item).Execute()
+	err := resourceAuthMethodCertRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

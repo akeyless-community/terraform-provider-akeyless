@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -49,6 +49,12 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
+			"jwt_ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Creds expiration time in minutes",
+				Default:     0,
+			},
 			"deny_rotate": {
 				Type:        schema.TypeBool,
 				Required:    false,
@@ -83,24 +89,26 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	denyRotate := d.Get("deny_rotate").(bool)
 	denyInheritance := d.Get("deny_inheritance").(bool)
 	ttl := d.Get("ttl").(int)
 
-	body := akeyless.CreateAuthMethodUniversalIdentity{
+	body := akeyless_api.CreateAuthMethodUniversalIdentity{
 		Name:  name,
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.DenyRotate, denyRotate)
 	common.GetAkeylessPtr(&body.DenyInheritance, denyInheritance)
 	common.GetAkeylessPtr(&body.Ttl, ttl)
@@ -129,12 +137,12 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetAuthMethod{
+	body := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -177,6 +185,21 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 		}
 	}
 
+	rOutAcc, err := getAccountSettings(m)
+	if err != nil {
+		return err
+	}
+	jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
+	if rOut.AccessInfo.JwtTtl != nil {
+		if *rOut.AccessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+			err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	if rOut.AccessInfo.UniversalIdentityAccessRules.DenyRotate != nil {
 		err = d.Set("deny_rotate", *rOut.AccessInfo.UniversalIdentityAccessRules.DenyRotate)
 		if err != nil {
@@ -206,24 +229,26 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	denyRotate := d.Get("deny_rotate").(bool)
 	denyInheritance := d.Get("deny_inheritance").(bool)
 	ttl := d.Get("ttl").(int)
 
-	body := akeyless.UpdateAuthMethodUniversalIdentity{
+	body := akeyless_api.UpdateAuthMethodUniversalIdentity{
 		Name:  name,
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.DenyRotate, denyRotate)
 	common.GetAkeylessPtr(&body.DenyInheritance, denyInheritance)
 	common.GetAkeylessPtr(&body.Ttl, ttl)
@@ -249,7 +274,7 @@ func resourceAuthMethodUniversalIdentityDelete(d *schema.ResourceData, m interfa
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteAuthMethod{
+	deleteItem := akeyless_api.DeleteAuthMethod{
 		Token: &token,
 		Name:  path,
 	}
@@ -264,24 +289,15 @@ func resourceAuthMethodUniversalIdentityDelete(d *schema.ResourceData, m interfa
 }
 
 func resourceAuthMethodUniversalIdentityImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetAuthMethod{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetAuthMethod(ctx).Body(item).Execute()
+	err := resourceAuthMethodUniversalIdentityRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

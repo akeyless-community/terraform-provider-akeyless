@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 )
 
 const (
@@ -257,7 +257,7 @@ func TestRotatedSecretResource(t *testing.T) {
 			key 			= "%v"
 			auto_rotate		= "true"
 			rotation_interval = "2"
-			metadata 		= "bbbb"
+			description 	= "bbbb"
 			tags 			= ["abc", "def"]
 			depends_on = [
 				akeyless_target_db.%v,
@@ -270,7 +270,7 @@ func TestRotatedSecretResource(t *testing.T) {
 	deleteProducer(client, token)
 }
 
-func getClient() (*akeyless.V2ApiService, string) {
+func getClient() (*akeyless_api.V2ApiService, string) {
 	p, err := getProviderMeta()
 	if err != nil {
 		panic(err)
@@ -278,23 +278,23 @@ func getClient() (*akeyless.V2ApiService, string) {
 	return p.client, *p.token
 }
 
-func generateDynamicSecret(client *akeyless.V2ApiService, token string) (string, string) {
+func generateDynamicSecret(client *akeyless_api.V2ApiService, token string) (string, string) {
 
-	producerBody := akeyless.GatewayCreateProducerMySQL{
+	producerBody := akeyless_api.GatewayCreateProducerMySQL{
 		Token:         &token,
 		Name:          PRODUCER_NAME,
-		MysqlUsername: akeyless.PtrString(MYSQL_USERNAME),
-		MysqlPassword: akeyless.PtrString(MYSQL_PASSWORD),
-		MysqlHost:     akeyless.PtrString(MYSQL_HOST),
-		MysqlPort:     akeyless.PtrString(MYSQL_PORT),
-		MysqlDbname:   akeyless.PtrString(MYSQL_DBNAME),
+		MysqlUsername: akeyless_api.PtrString(MYSQL_USERNAME),
+		MysqlPassword: akeyless_api.PtrString(MYSQL_PASSWORD),
+		MysqlHost:     akeyless_api.PtrString(MYSQL_HOST),
+		MysqlPort:     akeyless_api.PtrString(MYSQL_PORT),
+		MysqlDbname:   akeyless_api.PtrString(MYSQL_DBNAME),
 	}
 	_, _, err := client.GatewayCreateProducerMySQL(context.Background()).Body(producerBody).Execute()
 	if err != nil {
 		panic(err)
 	}
 
-	dynamicSecret := akeyless.GetDynamicSecretValue{
+	dynamicSecret := akeyless_api.GetDynamicSecretValue{
 		Name: PRODUCER_NAME,
 	}
 	value, _, err := client.GetDynamicSecretValue(context.Background()).Body(dynamicSecret).Execute()
@@ -302,16 +302,16 @@ func generateDynamicSecret(client *akeyless.V2ApiService, token string) (string,
 		panic(err)
 	}
 
-	return value["user"], value["password"]
+	return value["user"].(string), value["password"].(string)
 }
 
-func deleteProducer(client *akeyless.V2ApiService, token string) {
+func deleteProducer(client *akeyless_api.V2ApiService, token string) {
 
-	toDelete := akeyless.DeleteItem{
+	toDelete := akeyless_api.DeleteItem{
 		Name:              PRODUCER_NAME,
 		Token:             &token,
-		DeleteImmediately: akeyless.PtrBool(true),
-		DeleteInDays:      akeyless.PtrInt64(-1),
+		DeleteImmediately: akeyless_api.PtrBool(true),
+		DeleteInDays:      akeyless_api.PtrInt64(-1),
 	}
 	_, _, err := client.DeleteItem(context.Background()).Body(toDelete).Execute()
 	if err != nil {

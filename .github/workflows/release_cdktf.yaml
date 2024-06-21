@@ -1,0 +1,60 @@
+on:
+  workflow_run:
+    workflows: [ Release ]
+    types:
+      - completed
+
+jobs:
+  release-cdktf:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      id-token: write
+    environment:
+      name: pypi
+      url: https://pypi.org/p/akeyless-cdktf/
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        language: [ 'python' ]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
+
+      - name: Grab Current Version
+        run: |
+          version=$(grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+' version)
+          echo "version=${version}" >> "${GITHUB_ENV}"
+
+      - name: Login in to jfrog Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.JFROG_USER_NAME }}
+          password: ${{ secrets.JFROG_PASSWORD }}
+          registry: akeyless.jfrog.io/akeyless-dev
+
+      - name: docker run
+        run: |
+          docker run --rm --user root -v "${GITHUB_WORKSPACE}/temp":"/src" -w '/src' -e GH_DEBUG=${{ runner.debug }} akeyless.jfrog.io/akeyless-internals/cdktf:0.0.5 "${{ env.version }}" "${{ matrix.language }}"
+
+      - name: Copy Files for ${{ matrix.language }}
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/${{ matrix.language }}/akeyless"
+          cp -vr "${GITHUB_WORKSPACE}/temp/${{ matrix.language }}/.gen" "${GITHUB_WORKSPACE}/${{ matrix.language }}/akeyless"
+
+      - name: python action
+        if: matrix.language == 'python'
+        uses: ./.github/actions/cdktf-python
+
+      - name: Slack Notification
+        if: failure() || success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: 'operations'
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: 'Release Latest Akeyless CDKTF-${{ matrix.language }}, Status: ${{ job.status }}!'
+          SLACK_MESSAGE: 'Version:${{ env.version }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          MSG_MINIMAL: true
+          SLACK_FOOTER: Akeyless.io Release CDKTF-${{ matrix.language }} Pipeline

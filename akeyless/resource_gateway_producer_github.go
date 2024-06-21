@@ -7,18 +7,19 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerGithub() *schema.Resource {
 	return &schema.Resource{
-		Description: "Github producer resource.",
-		Create:      resourceProducerGithubCreate,
-		Read:        resourceProducerGithubRead,
-		Update:      resourceProducerGithubUpdate,
-		Delete:      resourceProducerGithubDelete,
+		Description:        "Github producer resource.",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_github",
+		Create:             resourceProducerGithubCreate,
+		Read:               resourceProducerGithubRead,
+		Update:             resourceProducerGithubUpdate,
+		Delete:             resourceProducerGithubDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerGithubImport,
 		},
@@ -89,7 +90,7 @@ func resourceProducerGithubCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
@@ -103,7 +104,7 @@ func resourceProducerGithubCreate(d *schema.ResourceData, m interface{}) error {
 	tokenRepositoriesSet := d.Get("token_repositories").(*schema.Set)
 	tokenRepositories := common.ExpandStringList(tokenRepositoriesSet.List())
 
-	body := akeyless.GatewayCreateProducerGithub{
+	body := akeyless_api.GatewayCreateProducerGithub{
 		Name:  name,
 		Token: &token,
 	}
@@ -134,12 +135,12 @@ func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -229,7 +230,7 @@ func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
@@ -243,7 +244,7 @@ func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
 	tokenRepositoriesSet := d.Get("token_repositories").(*schema.Set)
 	tokenRepositories := common.ExpandStringList(tokenRepositoriesSet.List())
 
-	body := akeyless.GatewayUpdateProducerGithub{
+	body := akeyless_api.GatewayUpdateProducerGithub{
 		Name:  name,
 		Token: &token,
 	}
@@ -276,7 +277,7 @@ func resourceProducerGithubDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}
@@ -291,24 +292,15 @@ func resourceProducerGithubDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGithubImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerGithubRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

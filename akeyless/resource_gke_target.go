@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -71,11 +71,6 @@ func resourceGkeTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Use the GW's Cloud IAM",
 			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -90,7 +85,7 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
@@ -100,10 +95,9 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	gkeClusterName := d.Get("gke_cluster_name").(string)
 	key := d.Get("key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.CreateGKETarget{
+	body := akeyless_api.CreateGKETarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -114,7 +108,6 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GkeClusterName, gkeClusterName)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.CreateGKETarget(ctx).Body(body).Execute()
@@ -135,12 +128,12 @@ func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetTargetDetails{
+	body := akeyless_api.GetTargetDetails{
 		Name:  path,
 		Token: &token,
 	}
@@ -201,7 +194,7 @@ func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -217,7 +210,7 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
@@ -227,10 +220,9 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	gkeClusterName := d.Get("gke_cluster_name").(string)
 	key := d.Get("key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless.UpdateGKETarget{
+	body := akeyless_api.UpdateGKETarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -241,7 +233,6 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GkeClusterName, gkeClusterName)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 
 	_, _, err := client.UpdateGKETarget(ctx).Body(body).Execute()
@@ -264,7 +255,7 @@ func resourceGkeTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteTarget{
+	deleteItem := akeyless_api.DeleteTarget{
 		Token: &token,
 		Name:  path,
 	}
@@ -279,24 +270,15 @@ func resourceGkeTargetDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGkeTargetImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetTarget{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetTarget(ctx).Body(item).Execute()
+	err := resourceGkeTargetRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

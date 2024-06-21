@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerCassandra() *schema.Resource {
 	return &schema.Resource{
-		Description: "Cassandra producer resource",
-		Create:      resourceProducerCassandraCreate,
-		Read:        resourceProducerCassandraRead,
-		Update:      resourceProducerCassandraUpdate,
-		Delete:      resourceProducerCassandraDelete,
+		Description:        "Cassandra producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_cassandra",
+		Create:             resourceProducerCassandraCreate,
+		Read:               resourceProducerCassandraRead,
+		Update:             resourceProducerCassandraUpdate,
+		Delete:             resourceProducerCassandraDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerCassandraImport,
 		},
@@ -96,7 +97,7 @@ func resourceProducerCassandraCreate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -110,7 +111,7 @@ func resourceProducerCassandraCreate(d *schema.ResourceData, m interface{}) erro
 	tags := common.ExpandStringList(tagsSet.List())
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
 
-	body := akeyless.GatewayCreateProducerCassandra{
+	body := akeyless_api.GatewayCreateProducerCassandra{
 		Name:  name,
 		Token: &token,
 	}
@@ -142,12 +143,12 @@ func resourceProducerCassandraRead(d *schema.ResourceData, m interface{}) error 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -231,7 +232,7 @@ func resourceProducerCassandraUpdate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -248,7 +249,7 @@ func resourceProducerCassandraUpdate(d *schema.ResourceData, m interface{}) erro
 	/*
 	 */
 
-	body := akeyless.GatewayUpdateProducerCassandra{
+	body := akeyless_api.GatewayUpdateProducerCassandra{
 		Name:  name,
 		Token: &token,
 	}
@@ -282,7 +283,7 @@ func resourceProducerCassandraDelete(d *schema.ResourceData, m interface{}) erro
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}
@@ -297,24 +298,15 @@ func resourceProducerCassandraDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceProducerCassandraImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerCassandraRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

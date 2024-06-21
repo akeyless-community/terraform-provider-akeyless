@@ -53,3 +53,55 @@ func TestGatewayAllowedAccess(t *testing.T) {
 
 	testGatewayAllowedAccessResource(t, inputParams)
 }
+
+func TestGatewayUpdateCache(t *testing.T) {
+	t.Skip("not supported on public gateway")
+	t.Parallel()
+
+	name := "test-gw-cache"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_gateway_cache" "%v" {
+			enable_cache        	= "true"
+			stale_timeout 			= "50"
+			enable_proactive   		= "true"
+			minimum_fetch_interval 	= "6"
+			backup_interval 		= "2"
+		}
+	`, name)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_gateway_cache" "%v" {
+		}
+	`, name)
+
+	testGatewayConfigResource(t, config, configUpdate)
+}
+
+func TestGatewayUpdateDefaults(t *testing.T) {
+	t.Skip("not supported on public gateway")
+	t.Parallel()
+
+	keyName := "/protection-key-for-gw-defaults"
+	createProtectionKey(t, keyName)
+	defer deleteItem(t, keyName)
+
+	name := "test-gw-defaults"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_gateway_defaults" "%v" {
+			saml_access_id        	= "p-saml-1"
+			oidc_access_id 			= "p-oidc-1"
+			cert_access_id   		= "p-cert-1"
+			key 					= "%s"
+			event_on_status_change 	= "true"
+		}
+	`, name, keyName)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_gateway_defaults" "%v" {
+		}
+	`, name)
+
+	testGatewayConfigResource(t, config, configUpdate)
+}

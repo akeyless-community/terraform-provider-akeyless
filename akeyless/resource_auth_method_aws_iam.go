@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -48,6 +48,12 @@ func resourceAuthMethodAwsIam() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
+			},
+			"jwt_ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Creds expiration time in minutes",
+				Default:     0,
 			},
 			"bound_aws_account_id": {
 				Type:        schema.TypeSet,
@@ -119,13 +125,14 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	boundAwsAccountIdSet := d.Get("bound_aws_account_id").(*schema.Set)
 	boundAwsAccountId := common.ExpandStringList(boundAwsAccountIdSet.List())
 	stsUrl := d.Get("sts_url").(string)
@@ -142,7 +149,7 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 	boundUserIdSet := d.Get("bound_user_id").(*schema.Set)
 	boundUserId := common.ExpandStringList(boundUserIdSet.List())
 
-	body := akeyless.CreateAuthMethodAWSIAM{
+	body := akeyless_api.CreateAuthMethodAWSIAM{
 		Name:              name,
 		BoundAwsAccountId: boundAwsAccountId,
 		Token:             &token,
@@ -150,6 +157,7 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.StsUrl, stsUrl)
 	common.GetAkeylessPtr(&body.BoundArn, boundArn)
 	common.GetAkeylessPtr(&body.BoundRoleName, boundRoleName)
@@ -181,12 +189,12 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetAuthMethod{
+	body := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -228,6 +236,21 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 		err = d.Set("bound_ips", strings.Split(*rOut.AccessInfo.CidrWhitelist, ","))
 		if err != nil {
 			return err
+		}
+	}
+
+	rOutAcc, err := getAccountSettings(m)
+	if err != nil {
+		return err
+	}
+	jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
+	if rOut.AccessInfo.JwtTtl != nil {
+		if *rOut.AccessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+			err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -290,13 +313,14 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	boundAwsAccountIdSet := d.Get("bound_aws_account_id").(*schema.Set)
 	boundAwsAccountId := common.ExpandStringList(boundAwsAccountIdSet.List())
 	stsUrl := d.Get("sts_url").(string)
@@ -313,7 +337,7 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	boundUserIdSet := d.Get("bound_user_id").(*schema.Set)
 	boundUserId := common.ExpandStringList(boundUserIdSet.List())
 
-	body := akeyless.UpdateAuthMethodAWSIAM{
+	body := akeyless_api.UpdateAuthMethodAWSIAM{
 		Name:              name,
 		BoundAwsAccountId: boundAwsAccountId,
 		Token:             &token,
@@ -321,6 +345,7 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.StsUrl, stsUrl)
 	common.GetAkeylessPtr(&body.BoundArn, boundArn)
 	common.GetAkeylessPtr(&body.BoundRoleName, boundRoleName)
@@ -350,7 +375,7 @@ func resourceAuthMethodAwsIamDelete(d *schema.ResourceData, m interface{}) error
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteAuthMethod{
+	deleteItem := akeyless_api.DeleteAuthMethod{
 		Token: &token,
 		Name:  path,
 	}
@@ -365,24 +390,15 @@ func resourceAuthMethodAwsIamDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodAwsIamImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetAuthMethod{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetAuthMethod(ctx).Body(item).Execute()
+	err := resourceAuthMethodAwsIamRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

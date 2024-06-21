@@ -1,0 +1,31 @@
+name: Python Package
+description: 'Python Package'
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.12
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry==1.4.2
+
+    - name: Build Python package
+      shell: bash
+      run: |
+        cd "${{ github.workspace }}/python/akeyless/.gen"
+        poetry build
+        cp -r ./ "${{ github.workspace }}/"
+
+    - name: Publish Python package
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+    - name: Release CDKTF-Python summary
+      shell: bash
+      run: echo '### Release-CDKTF-python, Version-${{ env.version }} has finished! Link to artifact- https://pypi.org/manage/project/akeyless-cdktf/release/${{ env.version }}  :rocket:' >> $GITHUB_STEP_SUMMARY

@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -43,13 +43,13 @@ func dataSourceSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 
-	itemBody := akeyless.DescribeItem{
+	itemBody := akeyless_api.DescribeItem{
 		Name:  path,
 		Token: &token,
 	}
 
 	ctx := context.Background()
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 
 	itemOut, _, err := client.DescribeItem(ctx).Body(itemBody).Execute()
 	if err != nil {

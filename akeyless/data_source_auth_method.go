@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -40,9 +40,9 @@ func dataSourceAuthMethodRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
-	gsvBody := akeyless.GetAuthMethod{
+	gsvBody := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}

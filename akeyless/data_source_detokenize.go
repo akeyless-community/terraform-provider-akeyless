@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -46,13 +46,13 @@ func dataSourceDetokenizeRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	tokenizerName := d.Get("tokenizer_name").(string)
 	ciphertext := d.Get("ciphertext").(string)
 	tweak := d.Get("tweak").(string)
 
-	body := akeyless.Detokenize{
+	body := akeyless_api.Detokenize{
 		TokenizerName: tokenizerName,
 		Ciphertext:    ciphertext,
 		Token:         &token,

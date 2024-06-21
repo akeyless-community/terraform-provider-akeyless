@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerArtifactory() *schema.Resource {
 	return &schema.Resource{
-		Description: "Artifactory producer resource",
-		Create:      resourceProducerArtifactoryCreate,
-		Read:        resourceProducerArtifactoryRead,
-		Update:      resourceProducerArtifactoryUpdate,
-		Delete:      resourceProducerArtifactoryDelete,
+		Description:        "Artifactory producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_artifactory",
+		Create:             resourceProducerArtifactoryCreate,
+		Read:               resourceProducerArtifactoryRead,
+		Update:             resourceProducerArtifactoryUpdate,
+		Delete:             resourceProducerArtifactoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerArtifactoryImport,
 		},
@@ -92,7 +93,7 @@ func resourceProducerArtifactoryCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
@@ -106,7 +107,7 @@ func resourceProducerArtifactoryCreate(d *schema.ResourceData, m interface{}) er
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.GatewayCreateProducerArtifactory{
+	body := akeyless_api.GatewayCreateProducerArtifactory{
 		Name:                     name,
 		ArtifactoryTokenScope:    artifactoryTokenScope,
 		ArtifactoryTokenAudience: artifactoryTokenAudience,
@@ -138,12 +139,12 @@ func resourceProducerArtifactoryRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -228,7 +229,7 @@ func resourceProducerArtifactoryUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
@@ -242,7 +243,7 @@ func resourceProducerArtifactoryUpdate(d *schema.ResourceData, m interface{}) er
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
-	body := akeyless.GatewayUpdateProducerArtifactory{
+	body := akeyless_api.GatewayUpdateProducerArtifactory{
 		Name:                     name,
 		ArtifactoryTokenScope:    artifactoryTokenScope,
 		ArtifactoryTokenAudience: artifactoryTokenAudience,
@@ -276,7 +277,7 @@ func resourceProducerArtifactoryDelete(d *schema.ResourceData, m interface{}) er
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}
@@ -291,24 +292,15 @@ func resourceProducerArtifactoryDelete(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceProducerArtifactoryImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerArtifactoryRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

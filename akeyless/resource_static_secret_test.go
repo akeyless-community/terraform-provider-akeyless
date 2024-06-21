@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -20,7 +20,8 @@ func TestStaticResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
 			path 		= "%v"
-			value 		= "value1"
+			value 		= "{\"secret value\":\"abc\"}"
+			format 		= "json"
 			tags 		= ["t1", "t2"]
 			description = "aaaa"
 		}
@@ -62,7 +63,7 @@ func checkSecretExistsRemotely(path string) resource.TestCheckFunc {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetSecretValue{
+		gsvBody := akeyless_api.GetSecretValue{
 			Names: []string{path},
 			Token: &token,
 		}

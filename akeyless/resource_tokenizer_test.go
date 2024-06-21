@@ -27,7 +27,7 @@ func TestTokenizerCreateUpdate(t *testing.T) {
 			name 				= "%v"
 			template_type     	= "CreditCard"
 			tweak_type        	= "Internal"
-			metadata          	= "aaaa"
+			description         = "aaaa"
 			tag               	= ["t1","t2"]
 			delete_protection 	= "true"
 		}
@@ -38,7 +38,7 @@ func TestTokenizerCreateUpdate(t *testing.T) {
 			name 				= "%v"
 			template_type     	= "CreditCard"
 			tweak_type        	= "Internal"
-			metadata          	= "bbbb"
+			description         = "bbbb"
 			tag               	= ["t3","t4"]
 			delete_protection 	= "false"
 		}

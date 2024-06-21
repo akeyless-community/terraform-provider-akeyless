@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -448,7 +448,7 @@ func TestTargetDataSourcePing(t *testing.T) {
 	targetDetailsType := "ping_target_details"
 
 	expect := map[string]interface{}{
-		"url":                 "https://ec2-1-2-3-4.us-east-2.compute.amazonaws.com",
+		"url":                 "https://www.test.com",
 		"privileged_user":     "Administrator",
 		"user_password":       "1234",
 		"administrative_port": "9999",
@@ -778,7 +778,7 @@ func createArtifactoryTarget(t *testing.T, name string, details map[string]inter
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateArtifactoryTarget{
+	body := akeyless_api.CreateArtifactoryTarget{
 		Name:                 name,
 		Token:                &token,
 		ArtifactoryAdminName: details["admin_name"].(string),
@@ -798,7 +798,7 @@ func createAwsTarget(t *testing.T, name string, details map[string]interface{}) 
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateAWSTarget{
+	body := akeyless_api.CreateAWSTarget{
 		Name:        name,
 		Token:       &token,
 		AccessKeyId: details["access_key_id"].(string),
@@ -820,7 +820,7 @@ func createAzureTarget(t *testing.T, name string, details map[string]interface{}
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateAzureTarget{
+	body := akeyless_api.CreateAzureTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -844,7 +844,7 @@ func createDbTarget(t *testing.T, name string, details map[string]interface{}) {
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateDBTarget{
+	body := akeyless_api.CreateDBTarget{
 		Name:   name,
 		Token:  &token,
 		DbType: "mysql",
@@ -869,7 +869,7 @@ func createDockerHubTarget(t *testing.T, name string, details map[string]interfa
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateDockerhubTarget{
+	body := akeyless_api.CreateDockerhubTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -888,7 +888,7 @@ func createEksTarget(t *testing.T, name string, details map[string]interface{}) 
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateEKSTarget{
+	body := akeyless_api.CreateEKSTarget{
 		Name:               name,
 		Token:              &token,
 		EksClusterName:     details["cluster_name"].(string),
@@ -911,7 +911,7 @@ func createGcpTarget(t *testing.T, name string, details map[string]interface{}) 
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateGcpTarget{
+	body := akeyless_api.CreateGcpTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -929,7 +929,7 @@ func createGithubTarget(t *testing.T, name string, details map[string]interface{
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateGithubTarget{
+	body := akeyless_api.CreateGithubTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -949,7 +949,7 @@ func createGkeTarget(t *testing.T, name string, details map[string]interface{}) 
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateGKETarget{
+	body := akeyless_api.CreateGKETarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -971,7 +971,7 @@ func createGlobalSignAtlasTarget(t *testing.T, name string, details map[string]i
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateGlobalSignAtlasTarget{
+	body := akeyless_api.CreateGlobalSignAtlasTarget{
 		Name:      name,
 		Token:     &token,
 		ApiKey:    details["api_key"].(string),
@@ -993,7 +993,7 @@ func createGlobalSignTarget(t *testing.T, name string, details map[string]interf
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateGlobalSignTarget{
+	body := akeyless_api.CreateGlobalSignTarget{
 		Name:             name,
 		Token:            &token,
 		Username:         details["username"].(string),
@@ -1018,7 +1018,7 @@ func createLdapTarget(t *testing.T, name string, details map[string]interface{})
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateLdapTarget{
+	body := akeyless_api.CreateLdapTarget{
 		Name:           name,
 		Token:          &token,
 		LdapUrl:        details["url"].(string),
@@ -1041,7 +1041,7 @@ func createLinkedTarget(t *testing.T, name string, details map[string]interface{
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateLinkedTarget{
+	body := akeyless_api.CreateLinkedTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -1060,7 +1060,7 @@ func createK8sTarget(t *testing.T, name string, details map[string]interface{}) 
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateNativeK8STarget{
+	body := akeyless_api.CreateNativeK8STarget{
 		Name:               name,
 		Token:              &token,
 		K8sClusterEndpoint: details["cluster_endpoint"].(string),
@@ -1084,7 +1084,7 @@ func createMongoDbTarget(t *testing.T, name string, details map[string]interface
 	host := hostAndPort[0]
 	port := hostAndPort[1]
 
-	body := akeyless.CreateDBTarget{
+	body := akeyless_api.CreateDBTarget{
 		Name:   name,
 		Token:  &token,
 		DbType: "mongodb",
@@ -1109,7 +1109,7 @@ func createPingTarget(t *testing.T, name string, details map[string]interface{})
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreatePingTarget{
+	body := akeyless_api.CreatePingTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -1131,7 +1131,7 @@ func createRabbitMqTarget(t *testing.T, name string, details map[string]interfac
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateRabbitMQTarget{
+	body := akeyless_api.CreateRabbitMQTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -1151,7 +1151,7 @@ func createSalesforceTarget(t *testing.T, name string, details map[string]interf
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateSalesforceTarget{
+	body := akeyless_api.CreateSalesforceTarget{
 		Name:      name,
 		Token:     &token,
 		AuthFlow:  details["auth_flow"].(string),
@@ -1175,7 +1175,7 @@ func createSshTarget(t *testing.T, name string, details map[string]interface{}) 
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateSSHTarget{
+	body := akeyless_api.CreateSSHTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -1198,7 +1198,7 @@ func createWebTarget(t *testing.T, name string, details map[string]interface{}) 
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateWebTarget{
+	body := akeyless_api.CreateWebTarget{
 		Name:  name,
 		Token: &token,
 	}
@@ -1216,7 +1216,7 @@ func createWindowsTarget(t *testing.T, name string, details map[string]interface
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateWindowsTarget{
+	body := akeyless_api.CreateWindowsTarget{
 		Name:     name,
 		Token:    &token,
 		Username: details["username"].(string),
@@ -1240,7 +1240,7 @@ func createZeroSslTarget(t *testing.T, name string, details map[string]interface
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateZeroSSLTarget{
+	body := akeyless_api.CreateZeroSSLTarget{
 		Name:         name,
 		Token:        &token,
 		ApiKey:       details["api_key"].(string),
@@ -1266,7 +1266,7 @@ func createTarget(t *testing.T, targetName string) {
 	client := p.client
 	token := *p.token
 
-	body := akeyless.CreateDBTarget{
+	body := akeyless_api.CreateDBTarget{
 		Name:   targetPath,
 		Token:  &token,
 		DbType: "mysql",

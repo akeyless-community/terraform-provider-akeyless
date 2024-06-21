@@ -6,18 +6,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerCustom() *schema.Resource {
 	return &schema.Resource{
-		Description: "Custom producer resource",
-		Create:      resourceProducerCustomCreate,
-		Read:        resourceProducerCustomRead,
-		Update:      resourceProducerCustomUpdate,
-		Delete:      resourceProducerCustomDelete,
+		Description:        "Custom producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_custom",
+		Create:             resourceProducerCustomCreate,
+		Read:               resourceProducerCustomRead,
+		Update:             resourceProducerCustomUpdate,
+		Delete:             resourceProducerCustomDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerCustomImport,
 		},
@@ -99,7 +100,7 @@ func resourceProducerCustomCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
@@ -114,7 +115,7 @@ func resourceProducerCustomCreate(d *schema.ResourceData, m interface{}) error {
 	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
 	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
 
-	body := akeyless.GatewayCreateProducerCustom{
+	body := akeyless_api.GatewayCreateProducerCustom{
 		Name:          name,
 		CreateSyncUrl: createSyncUrl,
 		RevokeSyncUrl: revokeSyncUrl,
@@ -147,12 +148,12 @@ func resourceProducerCustomRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -240,7 +241,7 @@ func resourceProducerCustomUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
@@ -255,7 +256,7 @@ func resourceProducerCustomUpdate(d *schema.ResourceData, m interface{}) error {
 	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
 	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
 
-	body := akeyless.GatewayUpdateProducerCustom{
+	body := akeyless_api.GatewayUpdateProducerCustom{
 		Name:          name,
 		CreateSyncUrl: createSyncUrl,
 		RevokeSyncUrl: revokeSyncUrl,
@@ -290,7 +291,7 @@ func resourceProducerCustomDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}
@@ -305,24 +306,15 @@ func resourceProducerCustomDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerCustomImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerCustomRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

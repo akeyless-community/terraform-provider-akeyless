@@ -6,17 +6,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestDfcKeyRsaResource(t *testing.T) {
 	t.Parallel()
 
-	cert := generateCertForTest(t, 1024)
+	_, cert := generateCertForTest(t, 1024)
 
 	name := "test_rsa_key"
 	itemPath := testPath(name)
@@ -126,7 +126,7 @@ func TestClassicKey(t *testing.T) {
 			name 		= "%v"	
 			alg 		= "RSA2048"
 			tags 		= ["cccc", "dddd"]
-			metadata 	= "abcd"
+			description = "abcd"
 		}
 	`, name, itemPath)
 
@@ -147,8 +147,7 @@ func TestPkiResource(t *testing.T) {
 		resource "akeyless_pki_cert_issuer" "%v" {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
-			ttl                   	= 60
-			gw_cluster_url        	= "http://localhost:8000"
+			ttl                   	= "50"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domains"
 			allowed_uri_sans      	= "uri_sans"
@@ -178,8 +177,7 @@ func TestPkiResource(t *testing.T) {
 		resource "akeyless_pki_cert_issuer" "%v" {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
-			ttl                   	= 90
-			gw_cluster_url        	= "http://localhost:8000"
+			ttl                   	= "51s"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domain1,domain2"
 			allowed_uri_sans      	= "uri_san1,uri_san2"
@@ -414,6 +412,30 @@ func TestCsrDataSource(t *testing.T) {
 	tesItemDataSource(t, config, "csr", []string{"data"})
 }
 
+func TestCertificateDataSource(t *testing.T) {
+
+	// create certificate
+	key, cert := generateCertForTest(t, 512)
+
+	certificateName := "test-certificate-data"
+	certificatePath := testPath(certificateName)
+	createCertificate(t, certificatePath, cert, key)
+	defer deleteItem(t, certificatePath)
+
+	config := fmt.Sprintf(`
+		data "akeyless_certificate" "test_certificate" {
+			name	= "%v"
+		}
+
+		output "certificate" {
+			value     = data.akeyless_certificate.test_certificate
+			sensitive = true
+		}
+	`, certificatePath)
+
+	tesItemDataSource(t, config, "certificate", []string{"certificate_pem", "private_key_pem"})
+}
+
 func tesItemResource(t *testing.T, config, configUpdate, itemPath string) {
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
@@ -464,9 +486,9 @@ func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.DescribeItem{
+		gsvBody := akeyless_api.DescribeItem{
 			Name:         path,
-			ShowVersions: akeyless.PtrBool(false),
+			ShowVersions: akeyless_api.PtrBool(false),
 			Token:        &token,
 		}
 
@@ -485,7 +507,7 @@ func checkGatewayAllowedAccessExistsAndValidateDetails(t *testing.T, allowedAcce
 
 		ctx := context.Background()
 
-		body := akeyless.GatewayGetAllowedAccess{
+		body := akeyless_api.GatewayGetAllowedAccess{
 			Name:  allowedAccessName,
 			Token: &token,
 		}
@@ -512,13 +534,13 @@ func tesItemDataSource(t *testing.T, config, outputName string, params []string)
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  checkOutputNotEmpty(t, outputName, params),
+				Check:  checkOutputNotEmpty(outputName, params),
 			},
 		},
 	})
 }
 
-func checkOutputNotEmpty(t *testing.T, name string, params []string) resource.TestCheckFunc {
+func checkOutputNotEmpty(name string, params []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ms := s.RootModule()
 		outputs, ok := ms.Outputs[name]

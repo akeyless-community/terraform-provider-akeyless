@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -60,7 +60,7 @@ func resourceAssocRoleAmCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	roleName := d.Get("role_name").(string)
 	amName := d.Get("am_name").(string)
@@ -72,7 +72,7 @@ func resourceAssocRoleAmCreate(d *schema.ResourceData, m interface{}) error {
 		sc[k] = v.(string)
 	}
 
-	body := akeyless.AssocRoleAuthMethod{
+	body := akeyless_api.AssocRoleAuthMethod{
 		RoleName: roleName,
 		AmName:   amName,
 		Token:    &token,
@@ -105,9 +105,8 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	if role.RoleName != nil {
-		err = d.Set("role_name", *role.RoleName)
+		err = common.SetDataByPrefixSlash(d, "role_name", *role.RoleName, roleName)
 		if err != nil {
 			return err
 		}
@@ -116,7 +115,7 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 		for _, acc := range *role.RoleAuthMethodsAssoc {
 			if acc.AssocId != nil && *acc.AssocId == id {
 				if acc.AuthMethodName != nil {
-					err = d.Set("am_name", *acc.AuthMethodName)
+					err = common.SetDataByPrefixSlash(d, "am_name", *acc.AuthMethodName, d.Get("am_name").(string))
 					if err != nil {
 						return err
 					}
@@ -164,7 +163,7 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	subClaims := d.Get("sub_claims").(map[string]interface{})
 	sc := make(map[string]string, len(subClaims))
@@ -175,7 +174,7 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 
 	id := d.Id()
 
-	body := akeyless.UpdateAssoc{
+	body := akeyless_api.UpdateAssoc{
 		AssocId: id,
 		Token:   &token,
 	}
@@ -202,13 +201,13 @@ func resourceAssocRoleAmDelete(d *schema.ResourceData, m interface{}) error {
 
 	id := d.Id()
 
-	deleteItem := akeyless.DeleteRoleAssociation{
+	deleteItem := akeyless_api.DeleteRoleAssociation{
 		Token:   &token,
 		AssocId: id,
 	}
 
 	ctx := context.Background()
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 
 	_, res, err := client.DeleteRoleAssociation(ctx).Body(deleteItem).Execute()
 	if err != nil {
@@ -263,7 +262,7 @@ func resourceAssocRoleAmImport(d *schema.ResourceData, m interface{}) ([]*schema
 
 }
 
-func importByAuthMethod(d *schema.ResourceData, role akeyless.Role, amName string) ([]*schema.ResourceData, error) {
+func importByAuthMethod(d *schema.ResourceData, role akeyless_api.Role, amName string) ([]*schema.ResourceData, error) {
 	id := d.Id()
 
 	assocs := *role.RoleAuthMethodsAssoc
@@ -293,7 +292,7 @@ func importByAuthMethod(d *schema.ResourceData, role akeyless.Role, amName strin
 	return nil, fmt.Errorf("association %v was not found", id)
 }
 
-func importByAssocId(d *schema.ResourceData, role akeyless.Role, assocId string) ([]*schema.ResourceData, error) {
+func importByAssocId(d *schema.ResourceData, role akeyless_api.Role, assocId string) ([]*schema.ResourceData, error) {
 	id := d.Id()
 
 	for _, acc := range *role.RoleAuthMethodsAssoc {
@@ -312,7 +311,7 @@ func importByAssocId(d *schema.ResourceData, role akeyless.Role, assocId string)
 	return nil, fmt.Errorf("association %v was not found", id)
 }
 
-func fillAssocFields(d *schema.ResourceData, acc akeyless.RoleAuthMethodAssociation) error {
+func fillAssocFields(d *schema.ResourceData, acc akeyless_api.RoleAuthMethodAssociation) error {
 	if acc.AuthMethodName != nil {
 		err := d.Set("am_name", *acc.AuthMethodName)
 		if err != nil {
@@ -342,7 +341,7 @@ func fillAssocFields(d *schema.ResourceData, acc akeyless.RoleAuthMethodAssociat
 	return nil
 }
 
-func countRoleAmAssocs(assocs []akeyless.RoleAuthMethodAssociation, amName string) int {
+func countRoleAmAssocs(assocs []akeyless_api.RoleAuthMethodAssociation, amName string) int {
 	count := 0
 	for _, acc := range assocs {
 		if acc.AuthMethodName != nil && *acc.AuthMethodName == amName {

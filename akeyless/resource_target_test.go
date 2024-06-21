@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
@@ -19,7 +19,7 @@ func TestGithubTargetResource(t *testing.T) {
 			name 					= "%v"
 			github_app_id 			= "1234"
 			github_app_private_key 	= "abcd"
-			comment 				= "aaaa"
+			description 			= "aaaa"
 		}
 	`, secretName, secretPath)
 
@@ -422,7 +422,7 @@ func checkTargetExistsRemotelyprod(path string) resource.TestCheckFunc {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetTarget{
+		gsvBody := akeyless_api.GetTarget{
 			Name:  path,
 			Token: &token,
 		}
@@ -444,7 +444,7 @@ func deleteTarget(t *testing.T, name string) {
 	client := p.client
 	token := *p.token
 
-	gsvBody := akeyless.DeleteTarget{
+	gsvBody := akeyless_api.DeleteTarget{
 		Name:  name,
 		Token: &token,
 	}

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,11 +28,6 @@ func resourceSSHTarget() *schema.Resource {
 				Required:    true,
 				Description: "Target name",
 				ForceNew:    true,
-			},
-			"comment": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Deprecated: Use description instead",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -91,10 +86,9 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
@@ -104,11 +98,10 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	privateKeyPassword := d.Get("private_key_password").(string)
 	key := d.Get("key").(string)
 
-	body := akeyless.CreateSSHTarget{
+	body := akeyless_api.CreateSSHTarget{
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Port, port)
@@ -136,12 +129,12 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetTargetDetails{
+	body := akeyless_api.GetTargetDetails{
 		Name:  path,
 		Token: &token,
 	}
@@ -202,7 +195,7 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.Comment != nil {
-		err := common.SetDescriptionBc(d, *rOut.Target.Comment)
+		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
@@ -218,10 +211,9 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	comment := d.Get("comment").(string)
 	description := d.Get("description").(string)
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
@@ -231,11 +223,10 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	privateKeyPassword := d.Get("private_key_password").(string)
 	key := d.Get("key").(string)
 
-	body := akeyless.UpdateSSHTarget{
+	body := akeyless_api.UpdateSSHTarget{
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.Comment, comment)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Port, port)
@@ -265,7 +256,7 @@ func resourceSSHTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteTarget{
+	deleteItem := akeyless_api.DeleteTarget{
 		Token: &token,
 		Name:  path,
 	}
@@ -280,24 +271,15 @@ func resourceSSHTargetDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHTargetImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetTarget{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetTarget(ctx).Body(item).Execute()
+	err := resourceSSHTargetRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

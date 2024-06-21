@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -86,7 +86,7 @@ func dataSourceGetPKICertificateRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	certIssuerName := d.Get("cert_issuer_name").(string)
 	keyDataBase64 := d.Get("key_data_base64").(string)
@@ -97,7 +97,7 @@ func dataSourceGetPKICertificateRead(d *schema.ResourceData, m interface{}) erro
 	ttl := d.Get("ttl").(int)
 	extendedKeyUsage := d.Get("extended_key_usage").(string)
 
-	body := akeyless.GetPKICertificate{
+	body := akeyless_api.GetPKICertificate{
 		CertIssuerName: certIssuerName,
 		Token:          &token,
 	}

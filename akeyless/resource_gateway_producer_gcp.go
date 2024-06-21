@@ -10,18 +10,19 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerGcp() *schema.Resource {
 	return &schema.Resource{
-		Description: "Google Cloud Provider (GCP)  producer resource",
-		Create:      resourceProducerGcpCreate,
-		Read:        resourceProducerGcpRead,
-		Update:      resourceProducerGcpUpdate,
-		Delete:      resourceProducerGcpDelete,
+		Description:        "Google Cloud Provider (GCP)  producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_gcp",
+		Create:             resourceProducerGcpCreate,
+		Read:               resourceProducerGcpRead,
+		Update:             resourceProducerGcpUpdate,
+		Delete:             resourceProducerGcpDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerGcpImport,
 		},
@@ -105,7 +106,7 @@ func resourceProducerGcpCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -122,7 +123,7 @@ func resourceProducerGcpCreate(d *schema.ResourceData, m interface{}) error {
 	roleBinding := d.Get("role_binding").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.GatewayCreateProducerGcp{
+	body := akeyless_api.GatewayCreateProducerGcp{
 		Name:  name,
 		Token: &token,
 	}
@@ -157,12 +158,12 @@ func resourceProducerGcpRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -270,7 +271,7 @@ func resourceProducerGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -287,7 +288,7 @@ func resourceProducerGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	roleBinding := d.Get("role_binding").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless.GatewayUpdateProducerGcp{
+	body := akeyless_api.GatewayUpdateProducerGcp{
 		Name:  name,
 		Token: &token,
 	}
@@ -324,7 +325,7 @@ func resourceProducerGcpDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}
@@ -339,24 +340,15 @@ func resourceProducerGcpDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGcpImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerGcpRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

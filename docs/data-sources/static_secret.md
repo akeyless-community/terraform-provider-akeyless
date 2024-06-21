@@ -25,10 +25,13 @@ data "akeyless_static_secret" "secret" {
 
 - `path` (String) The path where the secret is stored. Defaults to the latest version.
 
+### Optional
+
+- `version` (Number) The version of the secret.
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.
 - `value` (String, Sensitive) The secret contents.
-- `version` (Number) The version of the secret.
 
 

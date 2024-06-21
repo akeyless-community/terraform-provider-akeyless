@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceProducerMongo() *schema.Resource {
 	return &schema.Resource{
-		Description: "Mongo DB Producer resource",
-		Create:      resourceProducerMongoCreate,
-		Read:        resourceProducerMongoRead,
-		Update:      resourceProducerMongoUpdate,
-		Delete:      resourceProducerMongoDelete,
+		Description:        "Mongo DB Producer resource",
+		DeprecationMessage: "Deprecated: Please use new resource: akeyless_dynamic_secret_mongodb",
+		Create:             resourceProducerMongoCreate,
+		Read:               resourceProducerMongoRead,
+		Update:             resourceProducerMongoUpdate,
+		Delete:             resourceProducerMongoDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceProducerMongoImport,
 		},
@@ -164,7 +165,7 @@ func resourceProducerMongoCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -189,7 +190,7 @@ func resourceProducerMongoCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.GatewayCreateProducerMongo{
+	body := akeyless_api.GatewayCreateProducerMongo{
 		Name:  name,
 		Token: &token,
 	}
@@ -231,11 +232,11 @@ func resourceProducerMongoRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	path := d.Id()
 
-	body := akeyless.GatewayGetProducer{
+	body := akeyless_api.GatewayGetProducer{
 		Name:  path,
 		Token: &token,
 	}
@@ -358,7 +359,7 @@ func resourceProducerMongoUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -383,7 +384,7 @@ func resourceProducerMongoUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
-	body := akeyless.GatewayUpdateProducerMongo{
+	body := akeyless_api.GatewayUpdateProducerMongo{
 		Name:  name,
 		Token: &token,
 	}
@@ -427,7 +428,7 @@ func resourceProducerMongoDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.GatewayDeleteProducer{
+	deleteItem := akeyless_api.GatewayDeleteProducer{
 		Token: &token,
 		Name:  path,
 	}
@@ -442,24 +443,15 @@ func resourceProducerMongoDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMongoImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GatewayGetProducer{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GatewayGetProducer(ctx).Body(item).Execute()
+	err := resourceProducerMongoRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -48,6 +48,12 @@ func resourceAuthMethodGcp() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
+			},
+			"jwt_ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Creds expiration time in minutes",
+				Default:     0,
 			},
 			"type": {
 				Type:        schema.TypeString,
@@ -117,13 +123,14 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	gcptype := d.Get("type").(string)
 	audience := d.Get("audience").(string)
 	serviceAccountCredsData := d.Get("service_account_creds_data").(string)
@@ -138,7 +145,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	boundLabelsSet := d.Get("bound_labels").(*schema.Set)
 	boundLabels := common.ExpandStringList(boundLabelsSet.List())
 
-	body := akeyless.CreateAuthMethodGCP{
+	body := akeyless_api.CreateAuthMethodGCP{
 		Name:     name,
 		Type:     gcptype,
 		Audience: audience,
@@ -147,6 +154,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.ServiceAccountCredsData, serviceAccountCredsData)
 	common.GetAkeylessPtr(&body.BoundProjects, boundProjects)
 	common.GetAkeylessPtr(&body.BoundServiceAccounts, boundServiceAccounts)
@@ -179,12 +187,12 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.GetAuthMethod{
+	body := akeyless_api.GetAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -224,6 +232,21 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 		err = d.Set("bound_ips", strings.Split(*rOut.AccessInfo.CidrWhitelist, ","))
 		if err != nil {
 			return err
+		}
+	}
+
+	rOutAcc, err := getAccountSettings(m)
+	if err != nil {
+		return err
+	}
+	jwtDefault := extractAccountJwtTtlDefault(rOutAcc)
+
+	if rOut.AccessInfo.JwtTtl != nil {
+		if *rOut.AccessInfo.JwtTtl != jwtDefault || d.Get("jwt_ttl").(int) != 0 {
+			err = d.Set("jwt_ttl", *rOut.AccessInfo.JwtTtl)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -296,13 +319,14 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
+	jwtTtl := d.Get("jwt_ttl").(int)
 	gcptype := d.Get("type").(string)
 	audience := d.Get("audience").(string)
 	serviceAccountCredsData := d.Get("service_account_creds_data").(string)
@@ -317,7 +341,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	boundLabelsSet := d.Get("bound_labels").(*schema.Set)
 	boundLabels := common.ExpandStringList(boundLabelsSet.List())
 
-	body := akeyless.UpdateAuthMethodGCP{
+	body := akeyless_api.UpdateAuthMethodGCP{
 		Name:     name,
 		Type:     gcptype,
 		Audience: audience,
@@ -326,6 +350,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.ServiceAccountCredsData, serviceAccountCredsData)
 	common.GetAkeylessPtr(&body.BoundProjects, boundProjects)
 	common.GetAkeylessPtr(&body.BoundServiceAccounts, boundServiceAccounts)
@@ -354,7 +379,7 @@ func resourceAuthMethodGcpDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteAuthMethod{
+	deleteItem := akeyless_api.DeleteAuthMethod{
 		Token: &token,
 		Name:  path,
 	}
@@ -369,24 +394,15 @@ func resourceAuthMethodGcpDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodGcpImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.GetAuthMethod{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.GetAuthMethod(ctx).Body(item).Execute()
+	err := resourceAuthMethodGcpRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

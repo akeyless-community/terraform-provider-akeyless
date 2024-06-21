@@ -31,6 +31,7 @@ AOAuth2 Auth Method Resource
 - `issuer` (String) Issuer URL
 - `jwks_json_data` (String) The JSON Web Key Set (JWKS) containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization serve, in base64 format.
 - `jwks_uri` (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.
+- `jwt_ttl` (Number) Creds expiration time in minutes
 
 ### Read-Only
 

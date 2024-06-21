@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -55,12 +55,6 @@ func resourceSSHCertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "Signed certificates with extensions (key/val), e.g permit-port-forwarding=",
 				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"metadata": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Deprecated:  "Deprecated: Use description instead",
-				Description: "[Deprecated: Use description instead]",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -118,7 +112,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
@@ -126,7 +120,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -138,7 +132,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessUseInternalBastion := d.Get("secure_access_use_internal_bastion").(bool)
 	deleteProtection := d.Get("delete_protection").(bool)
 
-	body := akeyless.CreateSSHCertIssuer{
+	body := akeyless_api.CreateSSHCertIssuer{
 		Name:          name,
 		SignerKeyName: signerKeyName,
 		AllowedUsers:  allowedUsers,
@@ -175,12 +169,12 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
 
-	body := akeyless.DescribeItem{
+	body := akeyless_api.DescribeItem{
 		Name:  path,
 		Token: &token,
 	}
@@ -240,7 +234,7 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemMetadata != nil {
-		err := common.SetDescriptionBc(d, *rOut.ItemMetadata)
+		err := d.Set("description", *rOut.ItemMetadata)
 		if err != nil {
 			return err
 		}
@@ -263,7 +257,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
@@ -271,7 +265,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	description := common.GetItemDescription(d)
+	description := d.Get("description").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessBastionApi := d.Get("secure_access_bastion_api").(string)
 	secureAccessBastionSsh := d.Get("secure_access_bastion_ssh").(string)
@@ -284,7 +278,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	tagSet := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tagSet.List())
 
-	body := akeyless.UpdateSSHCertIssuer{
+	body := akeyless_api.UpdateSSHCertIssuer{
 		Name:          name,
 		SignerKeyName: signerKeyName,
 		AllowedUsers:  allowedUsers,
@@ -331,7 +325,7 @@ func resourceSSHCertIssuerDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless.DeleteItem{
+	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}
@@ -346,24 +340,15 @@ func resourceSSHCertIssuerDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHCertIssuerImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	provider := m.(providerMeta)
-	client := *provider.client
-	token := *provider.token
 
-	path := d.Id()
+	id := d.Id()
 
-	item := akeyless.DescribeItem{
-		Name:  path,
-		Token: &token,
-	}
-
-	ctx := context.Background()
-	_, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	err := resourceSSHCertIssuerRead(d, m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = d.Set("name", path)
+	err = d.Set("name", id)
 	if err != nil {
 		return nil, err
 	}

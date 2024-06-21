@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/akeylesslabs/akeyless-go/v3"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
@@ -22,8 +22,8 @@ func TestRoleResourceBasic(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_role" "test_role" {
-			name 	= "%v1"
-			comment = "aaaa"
+			name 		= "%v1"
+			description = "aaaa"
 		}
 	`, rolePath)
 
@@ -503,6 +503,51 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 	})
 }
 
+func TestRoleResourceWithSraRule(t *testing.T) {
+	//todo need to fix this test
+	t.Skip()
+	rolePath := testPath("test_role_resource_sra_rule")
+	deleteRole(rolePath)
+
+	config := fmt.Sprintf(
+		`resource "akeyless_role" "test_role1" {
+	name = "%v"
+	rules {
+		capability 	= ["allow_access"]
+		path 		= "%v"
+		rule_type 	= "sra-rule"
+	}
+	audit_access 		= "all"
+	analytics_access 	= "all"
+}`, rolePath, rolePath)
+
+	configUpdateRole := fmt.Sprintf(`
+		resource "akeyless_role" "test_role1" {
+		  name = "%v"
+		  rules {
+			capability  = ["allow_access", "request_access"]
+			path        = "/*"
+			rule_type   = "sra-rule"
+		  }
+		  audit_access        = "all"
+		  analytics_access    = "none"
+		  gw_analytics_access = "all"
+		  sra_reports_access  = "own"
+		}`, rolePath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				Config: configUpdateRole,
+			},
+		},
+	})
+}
+
 func TestRoleResourceWithFewAssocs(t *testing.T) {
 	resourceName := "test_role_few_assocs"
 	rolePath := testPath(resourceName)
@@ -570,7 +615,7 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rule
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetRole{
+		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
 			Token: &token,
 		}
@@ -607,7 +652,7 @@ func checkAssocExistsRemotely(t *testing.T, roleName, authMethodPath string) res
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetRole{
+		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
 			Token: &token,
 		}
@@ -630,7 +675,7 @@ func checkAssocExistsRemotely2(t *testing.T, roleName, authMethodPath string) re
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetRole{
+		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
 			Token: &token,
 		}
@@ -660,7 +705,7 @@ func checkAddRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetRole{
+		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
 			Token: &token,
 		}
@@ -687,7 +732,7 @@ func checkUpdateRole(t *testing.T, roleName string, accnum, rulesNum int) resour
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetRole{
+		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
 			Token: &token,
 		}
@@ -707,7 +752,7 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string, rulesNum int) resour
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless.GetRole{
+		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
 			Token: &token,
 		}
@@ -732,12 +777,12 @@ func deleteRole(path string) error {
 	client := p.client
 	token := *p.token
 
-	gsvBody := akeyless.DeleteRole{
+	gsvBody := akeyless_api.DeleteRole{
 		Name:  path,
 		Token: &token,
 	}
 
-	var apiErr akeyless.GenericOpenAPIError
+	var apiErr akeyless_api.GenericOpenAPIError
 
 	_, res, err := client.DeleteRole(context.Background()).Body(gsvBody).Execute()
 	if err != nil {
@@ -762,7 +807,7 @@ func createTestAuthMethod(path string) error {
 	client := p.client
 	token := *p.token
 
-	gsvBody := akeyless.CreateAuthMethod{
+	gsvBody := akeyless_api.CreateAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
@@ -785,7 +830,7 @@ func deleteAuthMethod(path string) error {
 	client := p.client
 	token := *p.token
 
-	gsvBody := akeyless.DeleteAuthMethod{
+	gsvBody := akeyless_api.DeleteAuthMethod{
 		Name:  path,
 		Token: &token,
 	}
