@@ -22,8 +22,8 @@ Gitlab Target resource
 ### Optional
 
 - `description` (String) Description of the object
-- `gitlab_access_token` (String) Gitlab access token
-- `gitlab_certificate` (String) Gitlab tls certificate (base64 encoded)
+- `gitlab_access_token` (String, Sensitive) Gitlab access token
+- `gitlab_certificate` (String, Sensitive) Gitlab tls certificate (base64 encoded)
 - `gitlab_url` (String) Gitlab base url
 - `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
 

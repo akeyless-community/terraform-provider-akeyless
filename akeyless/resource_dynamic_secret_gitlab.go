@@ -32,85 +32,75 @@ func resourceDynamicSecretGitlab() *schema.Resource {
 			},
 			"target_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Name of an existing target",
 			},
 			"gitlab_access_type": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Gitlab access token type [project,group]",
 			},
 			"installation_organization": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Gitlab project name, required for access-type=project",
 			},
 			"group_name": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Gitlab group name, required for access-type=group",
 			},
 			"gitlab_role": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Gitlab role",
 				Default:     "GuestPermissions",
 			},
 			"gitlab_token_scopes": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Comma-separated list of access token scopes to grant",
 			},
 			"ttl": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Access Token TTL",
 				Default:     "60m",
 			},
 			"gitlab_access_token": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Gitlab access token",
 			},
 			"gitlab_certificate": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Gitlab tls certificate (base64 encoded)",
 			},
 			"gitlab_url": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Gitlab base url",
 				Default:     "https://gitlab.com/",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
-				Description: "Add tags attached to this object. To specify multiple tags use argument multiple times: --tag Tag1 -t Tag2",
+				Description: "A comma-separated list of tags attached to this secret",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"description": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Description of the object",
 			},
 			"delete_protection": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this item, [true/false]",
+				Default:     "false",
 			},
 		},
 	}
@@ -233,7 +223,6 @@ func resourceDynamicSecretGitlabRead(d *schema.ResourceData, m interface{}) erro
 			return err
 		}
 	}
-
 	if rOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
 		err = d.Set("target_name", targetName)
@@ -267,6 +256,12 @@ func resourceDynamicSecretGitlabRead(d *schema.ResourceData, m interface{}) erro
 	}
 	if rOut.DeleteProtection != nil {
 		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GetMetadata() != "" {
+		err = d.Set("description", rOut.GetMetadata())
 		if err != nil {
 			return err
 		}

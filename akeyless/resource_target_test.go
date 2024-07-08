@@ -44,6 +44,7 @@ func TestGitlabTargetResource(t *testing.T) {
 			gitlab_access_token = "aaaaa"
 			gitlab_certificate  = "1234"
 			description 		= "eeeee"
+			gitlab_url 			= "https:aaaaa.com"
 		}
 	`, secretName, secretPath)
 

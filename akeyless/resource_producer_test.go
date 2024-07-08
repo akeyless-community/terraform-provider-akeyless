@@ -14,7 +14,7 @@ const (
 	GITHUB_INSTALL_REPO = "XXXXXXXX"
 	GITHUB_APP_ID       = 1234
 	GITHUB_APP_KEY      = "XXXXXXXX"
-	GITHUB_TOKEN        = "XXXXXXXX"
+	GITLAB_TOKEN        = "XXXXXXXX"
 	GCP_KEY             = "XXXXXXXX"
 	GCP_SA_EMAIL        = "XXXXXXXX"
 	GCP_TOKEN_SCOPES    = "XXXXXXXX"
@@ -126,7 +126,7 @@ func TestGitlabProducerResource(t *testing.T) {
 	itemPath := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gitlab" "gitlab_test" {
-			name 				= "gitlab_target""
+			name 				= "%v"
   			gitlab_access_token = "%v"
   			gitlab_url 			= "http://127.0.0.1:81"
   			description 		= "example"
@@ -140,21 +140,23 @@ func TestGitlabProducerResource(t *testing.T) {
   			group_name          = "mygroup"
   			ttl      			= "10m"
   			gitlab_access_token = "%v"
+			depends_on = [
+    			akeyless_target_gitlab.gitlab_test,
+  			]
 		}
-	`, GITHUB_TOKEN, name, itemPath, GITHUB_TOKEN)
+	`, t.Name(), GITLAB_TOKEN, name, itemPath, GITLAB_TOKEN)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_producer_github" "%v" {
+		resource "akeyless_dynamic_secret_gitlab" "%v" {
 			name            	= "%v"
 			target_name         = "gitlab_target"
   			gitlab_url          = "http://127.0.0.1:81"
   			gitlab_token_scopes = "api"
   			gitlab_access_type  = "group"
   			group_name          = "mygroup2"
-  			ttl      			= "20m"
   			gitlab_access_token = "%v"
 		}
-	`, name, itemPath, GITHUB_TOKEN)
+	`, name, itemPath, GITLAB_TOKEN)
 
 	tesItemResource(t, config, configUpdate, itemPath)
 }
