@@ -23,7 +23,6 @@ K8S Auth config
 ### Optional
 
 - `cluster_api_type` (String) Cluster access type. options: [native_k8s, rancher]
-- `config_encryption_key_name` (String) Encrypt K8S Auth config with following key
 - `disable_issuer_validation` (String) Disable issuer validation [true/false]
 - `k8s_ca_cert` (String) The CA Certificate (base64 encoded) to use to call into the kubernetes API server
 - `k8s_host` (String) The URL of the kubernetes API server

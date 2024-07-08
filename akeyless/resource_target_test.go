@@ -35,6 +35,31 @@ func TestGithubTargetResource(t *testing.T) {
 	tesTargetResource(t, config, configUpdate, secretPath)
 }
 
+func TestGitlabTargetResource(t *testing.T) {
+	secretName := "gitlab_test"
+	secretPath := testPath("gitlab_target1")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_gitlab" "%v" {
+			name 				= "%v"
+			gitlab_access_token = "aaaaa"
+			gitlab_certificate  = "1234"
+			description 		= "eeeee"
+			gitlab_url 			= "https:aaaaa.com"
+		}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_gitlab" "%v" {
+			name 				= "%v"
+			gitlab_access_token = "bbbbb"
+  			gitlab_certificate  = "5678"
+			description			= "ddddd"
+		}
+	`, secretName, secretPath)
+
+	tesTargetResource(t, config, configUpdate, secretPath)
+}
+
 func TestAwsTargetResource(t *testing.T) {
 	secretName := "aws123"
 	secretPath := testPath("aws_target1")

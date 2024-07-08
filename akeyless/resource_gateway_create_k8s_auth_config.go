@@ -30,11 +30,6 @@ func resourceK8sAuthConfig() *schema.Resource {
 				Description: "K8S Auth config name",
 				ForceNew:    true,
 			},
-			"config_encryption_key_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Encrypt K8S Auth config with following key",
-			},
 			"access_id": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -106,7 +101,6 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	configEncryptionKeyName := d.Get("config_encryption_key_name").(string)
 	accessId := d.Get("access_id").(string)
 	signingKey := d.Get("signing_key").(string)
 	tokenExp := d.Get("token_exp").(int)
@@ -125,7 +119,6 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 		AccessId: accessId,
 		Token:    &token,
 	}
-	common.GetAkeylessPtr(&body.ConfigEncryptionKeyName, configEncryptionKeyName)
 	common.GetAkeylessPtr(&body.SigningKey, signingKey)
 	common.GetAkeylessPtr(&body.TokenExp, tokenExp)
 	common.GetAkeylessPtr(&body.K8sHost, k8sHost)
@@ -208,12 +201,6 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.ProtectionKey != nil {
-		err = d.Set("config_encryption_key_name", *rOut.ProtectionKey)
-		if err != nil {
-			return err
-		}
-	}
 	if rOut.AuthMethodAccessId != nil {
 		err = d.Set("access_id", *rOut.AuthMethodAccessId)
 		if err != nil {
@@ -272,7 +259,6 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	configEncryptionKeyName := d.Get("config_encryption_key_name").(string)
 	accessId := d.Get("access_id").(string)
 	signingKey := d.Get("signing_key").(string)
 	tokenExp := d.Get("token_exp").(int)
@@ -291,7 +277,6 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 		AccessId: accessId,
 		Token:    &token,
 	}
-	common.GetAkeylessPtr(&body.ConfigEncryptionKeyName, configEncryptionKeyName)
 	common.GetAkeylessPtr(&body.SigningKey, signingKey)
 	common.GetAkeylessPtr(&body.TokenExp, tokenExp)
 	common.GetAkeylessPtr(&body.K8sHost, k8sHost)
