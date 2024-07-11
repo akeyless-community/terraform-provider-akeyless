@@ -14,7 +14,7 @@ import (
 
 func resourceAuthMethodApiKey() *schema.Resource {
 	return &schema.Resource{
-		Description: "AWS API Key Auth Method Resource",
+		Description: "API Key Auth Method Resource",
 		Create:      resourceAuthMethodApiKeyCreate,
 		Read:        resourceAuthMethodApiKeyRead,
 		Update:      resourceAuthMethodApiKeyUpdate,
