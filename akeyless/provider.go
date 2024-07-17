@@ -195,6 +195,21 @@ func Provider() *schema.Provider {
 					},
 				},
 			},
+			"token_login": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A configuration block, described below, that attempts to authenticate using akeyless token. The token can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_TOKEN.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"token": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Sensitive:   true,
+							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_TOKEN", nil),
+						},
+					},
+				},
+			},
 		},
 		//ConfigureFunc: configureProvider,
 		ConfigureContextFunc: configureProvider,
@@ -329,14 +344,6 @@ func Provider() *schema.Provider {
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	apiGwAddress := d.Get("api_gateway_address").(string)
 
-	diagnostic := diag.Diagnostics{{Severity: diag.Error, Summary: ""}}
-
-	authBody, err := getAuthInfo(d)
-	if err != nil {
-		diagnostic[0].Summary = err.Error()
-		return "", diagnostic
-	}
-
 	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
 		Servers: []akeyless_api.ServerConfiguration{
 			{
@@ -346,20 +353,53 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
 	}).V2Api
 
-	var apiErr akeyless_api.GenericOpenAPIError
+	token, err := getProviderToken(ctx, d, client)
+	if err != nil {
+		diagnostic := diag.Diagnostics{{Severity: diag.Error, Summary: err.Error()}}
+		return "", diagnostic
+	}
+	return providerMeta{client, &token}, nil
+}
+
+func getProviderToken(ctx context.Context, d *schema.ResourceData, client *akeyless_api.V2ApiService) (string, error) {
+
+	tokenLogin := d.Get("token_login").([]interface{})
+	if len(tokenLogin) > 0 {
+		return extractTokenFromInput(tokenLogin)
+	}
+	return getTokenByAuth(ctx, d, client)
+}
+
+func extractTokenFromInput(tokenLogin []interface{}) (string, error) {
+
+	if len(tokenLogin) > 1 {
+		return "", fmt.Errorf("token_login block may appear only once")
+	}
+
+	login, ok := tokenLogin[0].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("wrong login detais")
+	}
+	token := login["token"].(string)
+	return token, nil
+}
+
+func getTokenByAuth(ctx context.Context, d *schema.ResourceData, client *akeyless_api.V2ApiService) (string, error) {
+
+	authBody, err := getAuthInfo(d)
+	if err != nil {
+		return "", err
+	}
 
 	authOut, _, err := client.Auth(ctx).Body(*authBody).Execute()
 	if err != nil {
+		var apiErr akeyless_api.GenericOpenAPIError
 		if errors.As(err, &apiErr) {
-			diagnostic[0].Summary = fmt.Sprintf("authentication failed: %v", string(apiErr.Body()))
-			return "", diagnostic
+			return "", fmt.Errorf("authentication failed: %s", string(apiErr.Body()))
 		}
-		diagnostic[0].Summary = fmt.Sprintf("authentication failed: %v", err)
-		return "", diagnostic
+		return "", fmt.Errorf("authentication failed: %w", err)
 	}
-	token := authOut.GetToken()
-
-	return providerMeta{client, &token}, nil
+	return authOut.GetToken(), nil
 }
 
 func getAuthInfo(d *schema.ResourceData) (*akeyless_api.Auth, error) {
@@ -481,7 +521,7 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 		authBody.AccessType = akeyless_api.PtrString(common.Cert)
 		return nil
 	default:
-		return fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login")
+		return fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")
 	}
 }
 
@@ -565,5 +605,5 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 		return login, ApiKeyLogin, nil
 	}
 
-	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login")
+	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")
 }
