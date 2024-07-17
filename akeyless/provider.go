@@ -151,7 +151,7 @@ func Provider() *schema.Provider {
 					Schema: map[string]*schema.Schema{
 						"access_id": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"uid_token": {
 							Type:        schema.TypeString,
