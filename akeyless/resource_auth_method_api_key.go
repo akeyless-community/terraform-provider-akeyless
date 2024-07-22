@@ -68,6 +68,12 @@ func resourceAuthMethodApiKey() *schema.Resource {
 				Description: "Auth Method access key",
 				Sensitive:   true,
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -85,6 +91,8 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	jwtTtl := d.Get("jwt_ttl").(int)
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.CreateAuthMethod{
 		Name:  name,
@@ -94,6 +102,7 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, _, err := client.CreateAuthMethod(ctx).Body(body).Execute()
 	if err != nil {
@@ -191,6 +200,13 @@ func resourceAuthMethodApiKeyRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.AccessInfo.AuditLogsClaims != nil {
+		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -209,6 +225,8 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	jwtTtl := d.Get("jwt_ttl").(int)
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethod{
 		Name:  name,
@@ -219,6 +237,7 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.NewName, name)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	_, _, err := client.UpdateAuthMethod(ctx).Body(body).Execute()
 	if err != nil {

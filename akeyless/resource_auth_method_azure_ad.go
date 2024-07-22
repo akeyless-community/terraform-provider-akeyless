@@ -143,6 +143,12 @@ func resourceAuthMethodAzureAd() *schema.Resource {
 				Computed:    true,
 				Description: "Auth Method access ID",
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -180,6 +186,8 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	boundResourceNames := common.ExpandStringList(boundResourceNamesSet.List())
 	boundResourceIdSet := d.Get("bound_resource_id").(*schema.Set)
 	boundResourceId := common.ExpandStringList(boundResourceIdSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.CreateAuthMethodAzureAD{
 		Name:          name,
@@ -201,6 +209,7 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.BoundResourceTypes, boundResourceTypes)
 	common.GetAkeylessPtr(&body.BoundResourceNames, boundResourceNames)
 	common.GetAkeylessPtr(&body.BoundResourceId, boundResourceId)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, _, err := client.CreateAuthMethodAzureAD(ctx).Body(body).Execute()
 	if err != nil {
@@ -364,6 +373,12 @@ func resourceAuthMethodAzureAdRead(d *schema.ResourceData, m interface{}) error 
 			return err
 		}
 	}
+	if rOut.AccessInfo.AuditLogsClaims != nil {
+		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -403,6 +418,8 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	boundResourceNames := common.ExpandStringList(boundResourceNamesSet.List())
 	boundResourceIdSet := d.Get("bound_resource_id").(*schema.Set)
 	boundResourceId := common.ExpandStringList(boundResourceIdSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethodAzureAD{
 		Name:          name,
@@ -424,6 +441,7 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.BoundResourceTypes, boundResourceTypes)
 	common.GetAkeylessPtr(&body.BoundResourceNames, boundResourceNames)
 	common.GetAkeylessPtr(&body.BoundResourceId, boundResourceId)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodAzureAD(ctx).Body(body).Execute()

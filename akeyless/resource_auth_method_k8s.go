@@ -107,6 +107,12 @@ func resourceAuthMethodK8s() *schema.Resource {
 				Computed:    true,
 				Description: "The generated public key",
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -133,6 +139,8 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	boundPodNames := common.ExpandStringList(boundPodNamesSet.List())
 	boundNamespacesSet := d.Get("bound_namespaces").(*schema.Set)
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.CreateAuthMethodK8S{
 		Name:  name,
@@ -149,6 +157,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundNamespaces, boundNamespaces)
 	common.GetAkeylessPtr(&body.PublicKey, publicKey)
 	common.GetAkeylessPtr(&body.GenKey, genKey)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, _, err := client.CreateAuthMethodK8S(ctx).Body(body).Execute()
 	if err != nil {
@@ -294,6 +303,13 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.AccessInfo.AuditLogsClaims != nil {
+		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -320,6 +336,8 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	boundPodNames := common.ExpandStringList(boundPodNamesSet.List())
 	boundNamespacesSet := d.Get("bound_namespaces").(*schema.Set)
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethodK8S{
 		Name:  name,
@@ -335,6 +353,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundNamespaces, boundNamespaces)
 	common.GetAkeylessPtr(&body.PublicKey, publicKey)
 	common.GetAkeylessPtr(&body.GenKey, "false")
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodK8S(ctx).Body(body).Execute()

@@ -80,6 +80,12 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 				Computed:    true,
 				Description: "Auth Method access ID",
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -100,6 +106,8 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	denyRotate := d.Get("deny_rotate").(bool)
 	denyInheritance := d.Get("deny_inheritance").(bool)
 	ttl := d.Get("ttl").(int)
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.CreateAuthMethodUniversalIdentity{
 		Name:  name,
@@ -112,6 +120,7 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	common.GetAkeylessPtr(&body.DenyRotate, denyRotate)
 	common.GetAkeylessPtr(&body.DenyInheritance, denyInheritance)
 	common.GetAkeylessPtr(&body.Ttl, ttl)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, _, err := client.CreateAuthMethodUniversalIdentity(ctx).Body(body).Execute()
 	if err != nil {
@@ -218,6 +227,12 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 			return err
 		}
 	}
+	if rOut.AccessInfo.AuditLogsClaims != nil {
+		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -240,6 +255,8 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	denyRotate := d.Get("deny_rotate").(bool)
 	denyInheritance := d.Get("deny_inheritance").(bool)
 	ttl := d.Get("ttl").(int)
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethodUniversalIdentity{
 		Name:  name,
@@ -252,6 +269,7 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	common.GetAkeylessPtr(&body.DenyRotate, denyRotate)
 	common.GetAkeylessPtr(&body.DenyInheritance, denyInheritance)
 	common.GetAkeylessPtr(&body.Ttl, ttl)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodUniversalIdentity(ctx).Body(body).Execute()

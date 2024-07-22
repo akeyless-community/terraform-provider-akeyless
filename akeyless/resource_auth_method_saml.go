@@ -85,6 +85,12 @@ func resourceAuthMethodSaml() *schema.Resource {
 				Computed:    true,
 				Description: "Auth Method access ID",
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -107,6 +113,8 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	idpMetadataXmlData := d.Get("idp_metadata_xml_data").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.CreateAuthMethodSAML{
 		Name:             name,
@@ -120,6 +128,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.IdpMetadataUrl, idpMetadataUrl)
 	common.GetAkeylessPtr(&body.IdpMetadataXmlData, idpMetadataXmlData)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, _, err := client.CreateAuthMethodSAML(ctx).Body(body).Execute()
 	if err != nil {
@@ -236,6 +245,12 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.AccessInfo.AuditLogsClaims != nil {
+		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -260,6 +275,8 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	idpMetadataXmlData := d.Get("idp_metadata_xml_data").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethodSAML{
 		Name:             name,
@@ -273,6 +290,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.IdpMetadataUrl, idpMetadataUrl)
 	common.GetAkeylessPtr(&body.IdpMetadataXmlData, idpMetadataXmlData)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodSAML(ctx).Body(body).Execute()

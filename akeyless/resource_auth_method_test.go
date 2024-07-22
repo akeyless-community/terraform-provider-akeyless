@@ -17,6 +17,7 @@ func TestAuthMethodApiKeyResourceCreate(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "%v" {
 			path = "%v"
+            audit_logs_claims = ["eee","kk"]
 			api_key {
 			}
 		}
