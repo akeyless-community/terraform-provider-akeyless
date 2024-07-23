@@ -51,6 +51,11 @@ func resourceStaticSecret() *schema.Resource {
 				Computed:    true,
 				Description: "The version of the secret.",
 			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
 			"protection_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -297,36 +302,45 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	path := d.Get("path").(string)
-	value := d.Get("value").(string)
-	format := d.Get("format").(string)
-	protectionKey := d.Get("protection_key").(string)
-	multilineValue := d.Get("multiline_value").(bool)
-	description := d.Get("description").(string)
-
 	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
-	body := akeyless_api.UpdateSecretVal{
-		Name:      path,
-		Key:       akeyless_api.PtrString(protectionKey),
-		Value:     value,
-		Multiline: akeyless_api.PtrBool(multilineValue),
-		Token:     &token,
+	path := d.Get("path").(string)
+
+	if !d.HasChangeExcept("keep_prev_version") {
+		return nil
 	}
 
-	common.GetAkeylessPtr(&body.Format, format)
+	if d.HasChanges("value", "multiline_value", "protection_key", "format") {
+		value := d.Get("value").(string)
+		format := d.Get("format").(string)
+		protectionKey := d.Get("protection_key").(string)
+		multilineValue := d.Get("multiline_value").(bool)
+		keepPrevVersion := d.Get("keep_prev_version").(string)
 
-	_, _, err := client.UpdateSecretVal(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Secret: %v", string(apiErr.Body()))
+		body := akeyless_api.UpdateSecretVal{
+			Name:      path,
+			Key:       akeyless_api.PtrString(protectionKey),
+			Value:     value,
+			Multiline: akeyless_api.PtrBool(multilineValue),
+			Token:     &token,
 		}
-		return fmt.Errorf("can't update Secret: %v", err)
+
+		common.GetAkeylessPtr(&body.Format, format)
+		common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+
+		_, _, err := client.UpdateSecretVal(ctx).Body(body).Execute()
+		if err != nil {
+			if errors.As(err, &apiErr) {
+				return fmt.Errorf("can't update Secret: %v", string(apiErr.Body()))
+			}
+			return fmt.Errorf("can't update Secret: %v", err)
+		}
 	}
 
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
+	description := d.Get("description").(string)
 
 	secureAccessHost := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHostList := common.ExpandStringList(secureAccessHost.List())

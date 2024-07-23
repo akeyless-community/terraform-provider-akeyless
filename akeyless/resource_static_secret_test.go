@@ -36,6 +36,7 @@ func TestStaticResource(t *testing.T) {
 			secure_access_url 			= "http://abc.com"
 			tags 						= ["t1", "t3"]
 			description 				= "bbbb"
+            keep_prev_version           = "true"
 		}
 	`, secretName, secretPath)
 
