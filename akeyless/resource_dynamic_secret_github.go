@@ -33,6 +33,11 @@ func resourceDynamicSecretGithub() *schema.Resource {
 				Optional:    true,
 				Description: "Github application installation id",
 			},
+			"installation_organization": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Optional, instead of installation id, set a GitHub organization name",
+			},
 			"installation_repository": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -84,6 +89,7 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
+	installationOrganization := d.Get("installation_organization").(string)
 	installationRepository := d.Get("installation_repository").(string)
 	targetName := d.Get("target_name").(string)
 	githubAppId := d.Get("github_app_id").(int)
@@ -99,6 +105,7 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.InstallationId, installationId)
+	common.GetAkeylessPtr(&body.InstallationOrganization, installationOrganization)
 	common.GetAkeylessPtr(&body.InstallationRepository, installationRepository)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
@@ -166,18 +173,27 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
-	// installation_id is relevant when installation_repository isn't (need exactly one)
+	// installation_id is relevant when installation_organization and installation_repository aren't (need exactly one)
 	if rOut.GithubInstallationId != nil {
-		if d.Get("installation_repository").(string) == "" {
+		if d.Get("installation_repository").(string) == "" && d.Get("installation_organization").(string) == "" {
 			err = d.Set("installation_id", *rOut.GithubInstallationId)
 			if err != nil {
 				return err
 			}
 		}
 	}
-	// installation_repository is relevant when installation_id isn't (need exactly one)
+	// installation_organization is relevant when installation_id and installation_repository aren't (need exactly one)
+	if rOut.GithubOrganizationName != nil {
+		if d.Get("installation_id").(int) == 0 && d.Get("installation_repository").(string) == "" {
+			err = d.Set("installation_organization", *rOut.GithubOrganizationName)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// installation_repository is relevant when installation_id and installation_organization aren't (need exactly one)
 	if rOut.GithubRepositoryPath != nil {
-		if d.Get("installation_id").(int) == 0 {
+		if d.Get("installation_id").(int) == 0 && d.Get("installation_organization").(string) == "" {
 			err = d.Set("installation_repository", *rOut.GithubRepositoryPath)
 			if err != nil {
 				return err
@@ -224,6 +240,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
+	installationOrganization := d.Get("installation_organization").(string)
 	installationRepository := d.Get("installation_repository").(string)
 	targetName := d.Get("target_name").(string)
 	githubAppId := d.Get("github_app_id").(int)
@@ -239,6 +256,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.InstallationId, installationId)
+	common.GetAkeylessPtr(&body.InstallationOrganization, installationOrganization)
 	common.GetAkeylessPtr(&body.InstallationRepository, installationRepository)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)

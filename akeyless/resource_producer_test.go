@@ -10,22 +10,22 @@ import (
 )
 
 const (
-	GITHUB_INSTALL_ID   = 1234
-	GITHUB_INSTALL_REPO = "XXXXXXXX"
-	GITHUB_APP_ID       = 1234
-	GITHUB_APP_KEY      = "XXXXXXXX"
-	GITLAB_TOKEN        = "XXXXXXXX"
-	GCP_KEY             = "XXXXXXXX"
-	GCP_SA_EMAIL        = "XXXXXXXX"
-	GCP_TOKEN_SCOPES    = "XXXXXXXX"
-	KEY                 = "XXXXXXXX"
-	PRODUCER_NAME       = "terraform-tests/mysql_for_rs_test"
-	MYSQL_USERNAME      = "XXXXXXXX"
-	MYSQL_PASSWORD      = "XXXXXXXX"
-	MYSQL_HOST          = "127.0.0.1"
-	MYSQL_PORT          = "3306"
-	MYSQL_DBNAME        = "XXXXXXXX"
-	K8S_HOST            = "https://kubernetes.docker.internal:6443"
+	GITHUB_INSTALL_ORGANIZATION = "XXXXXXXX"
+	GITHUB_INSTALL_REPO         = "XXXXXXXX"
+	GITHUB_APP_ID               = 1234
+	GITHUB_APP_KEY              = "XXXXXXXX"
+	GITLAB_TOKEN                = "XXXXXXXX"
+	GCP_KEY                     = "XXXXXXXX"
+	GCP_SA_EMAIL                = "XXXXXXXX"
+	GCP_TOKEN_SCOPES            = "XXXXXXXX"
+	KEY                         = "XXXXXXXX"
+	PRODUCER_NAME               = "terraform-tests/mysql_for_rs_test"
+	MYSQL_USERNAME              = "XXXXXXXX"
+	MYSQL_PASSWORD              = "XXXXXXXX"
+	MYSQL_HOST                  = "127.0.0.1"
+	MYSQL_PORT                  = "3306"
+	MYSQL_DBNAME                = "XXXXXXXX"
+	K8S_HOST                    = "https://kubernetes.docker.internal:6443"
 )
 
 var (
@@ -97,13 +97,13 @@ func TestGithubProducerResource(t *testing.T) {
 	itemPath := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_producer_github" "%v" {
-			name            		= "%v"
-			installation_id 		= %v
-			token_permissions 		= %v
-			github_app_id 			= %v
-			github_app_private_key 	= "%v"
+			name            		  = "%v"
+			installation_organization = "%v"
+			token_permissions 		  = %v
+			github_app_id 			  = %v
+			github_app_private_key 	  = "%v"
 		}
-	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_TOKEN_PERM, GITHUB_APP_ID, GITHUB_APP_KEY)
+	`, name, itemPath, GITHUB_INSTALL_ORGANIZATION, GITHUB_TOKEN_PERM, GITHUB_APP_ID, GITHUB_APP_KEY)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_producer_github" "%v" {
