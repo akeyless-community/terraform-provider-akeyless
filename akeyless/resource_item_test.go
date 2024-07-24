@@ -57,7 +57,7 @@ func TestDfcKeyRsaResource(t *testing.T) {
 		}
 	`, name, itemPath, cert)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestDfcKeyAesResource(t *testing.T) {
@@ -81,7 +81,7 @@ func TestDfcKeyAesResource(t *testing.T) {
 		}
 	`, name, itemPath)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestRsaPublicResource(t *testing.T) {
@@ -102,7 +102,7 @@ func TestRsaPublicResource(t *testing.T) {
 
 	configUpdate := config
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestClassicKey(t *testing.T) {
@@ -130,7 +130,7 @@ func TestClassicKey(t *testing.T) {
 		}
 	`, name, itemPath)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestPkiResource(t *testing.T) {
@@ -202,7 +202,7 @@ func TestPkiResource(t *testing.T) {
 		}
 	`, name, itemPath, keyPath)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestPkiDataSource(t *testing.T) {
@@ -321,7 +321,7 @@ func TestSshCertResource(t *testing.T) {
 		}
 	`, name, itemPath)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestSshDataSource(t *testing.T) {
@@ -436,24 +436,20 @@ func TestCertificateDataSource(t *testing.T) {
 	tesItemDataSource(t, config, "certificate", []string{"certificate_pem", "private_key_pem"})
 }
 
-func tesItemResource(t *testing.T, config, configUpdate, itemPath string) {
+func testItemResource(t *testing.T, itemPath string, configs ...string) {
+	steps := make([]resource.TestStep, len(configs))
+	for i, config := range configs {
+		steps[i] = resource.TestStep{
+			Config: config,
+			Check: resource.ComposeTestCheckFunc(
+				checkItemExistsRemotely(itemPath),
+			),
+		}
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				//PreConfig: deleteFunc,
-				Check: resource.ComposeTestCheckFunc(
-					checkItemExistsRemotely(itemPath),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkItemExistsRemotely(itemPath),
-				),
-			},
-		},
+		Steps:             steps,
 	})
 }
 

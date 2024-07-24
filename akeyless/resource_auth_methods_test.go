@@ -39,7 +39,7 @@ func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 			name = "%v"
 			access_expires = 10001
 			bound_ips = ["1.1.4.0/32"]
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 
@@ -78,7 +78,7 @@ func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 			name = "%v"
 			bound_aws_account_id = ["516111111111"]
 			bound_ips = ["1.1.1.0/32"]
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 
@@ -119,7 +119,7 @@ func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
 			bound_tenant_id = "my-tenant-id"
 			bound_ips = ["1.1.1.0/32"]
 			issuer = "https://sts.windows.net/sdfjskfjsdkcsjnc"
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 
@@ -165,7 +165,7 @@ func TestAuthMethodCertResource(t *testing.T) {
 			certificate_data 	= "%v"
 			unique_identifier 	= "uid"
 			bound_ips 			= ["1.1.1.0/32"]
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path, cert)
 
@@ -197,7 +197,6 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 			bound_service_accounts = ["%v"]
 			type = "gce"
 			bound_ips = ["1.1.1.0/32"]
-            audit_logs_claims = ["eitan","kk"]
 		}
 	`, name, path, os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT"), os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC"))
 
@@ -239,7 +238,7 @@ func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
 			access_expires = 1638741817
 			bound_ips = ["1.1.4.0/32"]
 			bound_pod_names = ["mypod1", "mypod3"]
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 
@@ -282,7 +281,7 @@ func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
 			jwks_uri = "https://test.wixpress.com"
 			bound_ips = ["1.1.1.0/32"]
 			access_expires = 1638741817
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 
@@ -319,7 +318,6 @@ func TestAuthMethodOidcResourceCreateNew(t *testing.T) {
 			access_expires = 1638741817
 			required_scopes = ["email", "profile"]
 			required_scopes_prefix = "devops"
-            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
@@ -332,7 +330,7 @@ func TestAuthMethodOidcResourceCreateNew(t *testing.T) {
 			bound_ips = ["1.1.1.0/32"]
 			required_scopes = ["id"]
 			required_scopes_prefix = "rnd"
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 
@@ -376,7 +374,7 @@ func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 			idp_metadata_url = "https://dev-1111.okta.com/app/abc12345/sso/saml/metadata"
 			unique_identifier = "email"
 			bound_ips = ["1.1.1.0/32"]
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 
@@ -419,7 +417,7 @@ func TestAuthMethodSAMLWithXmlResourceCreateNew(t *testing.T) {
 			idp_metadata_xml_data = "<ss>ddddd<ss>"
 			unique_identifier = "email"
 			bound_ips = ["1.1.1.0/32"]
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 
@@ -459,7 +457,7 @@ func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
 			name = "%v"
 			deny_inheritance = false
 			bound_ips = ["1.1.1.0/32"]
-            audit_logs_claims = ["eitan","kk"]
+            audit_logs_claims = ["eee","kk"]
 		}
 	`, name, path)
 

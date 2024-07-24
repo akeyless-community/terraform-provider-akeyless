@@ -36,12 +36,12 @@ func resourceDynamicSecretGithub() *schema.Resource {
 			"installation_organization": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Optional, instead of installation id, set a GitHub organization name",
+				Description: "Instead of installation id, set a GitHub organization name",
 			},
 			"installation_repository": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Optional, instead of installation id, set a GitHub repository '<owner>/<repo-name>'",
+				Description: "Instead of installation id, set a GitHub repository '<owner>/<repo-name>'",
 			},
 			"target_name": {
 				Type:        schema.TypeString,

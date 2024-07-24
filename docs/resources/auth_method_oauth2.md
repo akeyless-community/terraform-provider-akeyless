@@ -25,6 +25,7 @@ AOAuth2 Auth Method Resource
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
 - `access_id` (String) Auth Method access ID
 - `audience` (String) The audience in the JWT
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_client_ids` (Set of String) The clients ids that the access is restricted to
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims

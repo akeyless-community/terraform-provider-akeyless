@@ -23,6 +23,7 @@ Akeyless Universal Identity Auth Method Resource
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
 - `access_id` (String) Auth Method access ID
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `deny_inheritance` (Boolean) Deny from root to create children
 - `deny_rotate` (Boolean) Deny from the token to rotate

@@ -44,7 +44,7 @@ func TestTokenizerCreateUpdate(t *testing.T) {
 		}
 	`, name, itemPath)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestTokenizerCustomType(t *testing.T) {

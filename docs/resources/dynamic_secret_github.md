@@ -25,7 +25,8 @@ Github dynamic secret resource
 - `github_app_private_key` (String) Github application private key (base64 encoded key)
 - `github_base_url` (String) Github base url
 - `installation_id` (Number) Github application installation id
-- `installation_repository` (String) Optional, instead of installation id, set a GitHub repository '<owner>/<repo-name>'
+- `installation_organization` (String) Instead of installation id, set a GitHub organization name
+- `installation_repository` (String) Instead of installation id, set a GitHub repository '<owner>/<repo-name>'
 - `target_name` (String) Name of existing target to use in dynamic secret creation
 - `token_permissions` (Set of String) Tokens' allowed permissions. By default use installation allowed permissions. Input format: key=value pairs or JSON strings, e.g - -p contents=read -p issues=write or -p '{content:read}'
 - `token_repositories` (Set of String) Tokens' allowed repositories. By default use installation allowed repositories. To specify multiple repositories use argument multiple times: -r RepoName1 -r RepoName2

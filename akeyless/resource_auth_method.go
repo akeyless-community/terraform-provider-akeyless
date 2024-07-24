@@ -59,12 +59,6 @@ func resourceAuthMethod() *schema.Resource {
 					Schema: map[string]*schema.Schema{},
 				},
 			},
-			"audit_logs_claims": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Subclaims to include in audit logs",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
 			"saml": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -406,17 +400,14 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 		boundIpsList = common.ExpandStringList(boundIps.List())
 	}
 	accessExpires := int64(d.Get("access_expires").(int))
-	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
-	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	apiKeyAuthMethod := d.Get("api_key").([]interface{})
 	if len(apiKeyAuthMethod) == 1 {
 		body := akeyless_api.CreateAuthMethod{
-			Name:            path,
-			BoundIps:        &boundIpsList,
-			AccessExpires:   &accessExpires,
-			Token:           &token,
-			AuditLogsClaims: &subClaims,
+			Name:          path,
+			BoundIps:      &boundIpsList,
+			AccessExpires: &accessExpires,
+			Token:         &token,
 		}
 		apiKey, _, err := client.CreateAuthMethod(ctx).Body(body).Execute()
 		if err != nil {
@@ -450,7 +441,6 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 			IdpMetadataXmlData: akeyless_api.PtrString(idpMetadataXmlData),
 			UniqueIdentifier:   uniqueIdentifier,
 			Token:              &token,
-			AuditLogsClaims:    &subClaims,
 		}
 		apiKey, _, err := client.CreateAuthMethodSAML(ctx).Body(body).Execute()
 		if err != nil {
@@ -497,7 +487,6 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 			BoundUserName:     &boundUserNameList,
 			BoundResourceId:   &boundResourceIDList,
 			Token:             &token,
-			AuditLogsClaims:   &subClaims,
 		}
 		apiKey, _, err := client.CreateAuthMethodAWSIAM(ctx).Body(body).Execute()
 		if err != nil {
@@ -560,7 +549,6 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 			Audience:           akeyless_api.PtrString(audience),
 			Issuer:             akeyless_api.PtrString(issuer),
 			Token:              &token,
-			AuditLogsClaims:    &subClaims,
 		}
 		apiKey, _, err := client.CreateAuthMethodAzureAD(ctx).Body(body).Execute()
 		if err != nil {
@@ -586,7 +574,6 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 			Audience:                audience,
 			ServiceAccountCredsData: akeyless_api.PtrString(serviceAccountCredsData),
 			Token:                   &token,
-			AuditLogsClaims:         &subClaims,
 		}
 
 		iam := gcp["iam"].([]interface{})
