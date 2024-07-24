@@ -99,9 +99,9 @@ func TestGithubProducerResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_producer_github" "%v" {
 			name            		= "%v"
-			installation_id 		= "%v"
-			token_permissions 	   	= %v
-			github_app_id 		  	= %v
+			installation_id 		= %v
+			token_permissions 		= %v
+			github_app_id 			= %v
 			github_app_private_key	= "%v"
 		}
 	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_TOKEN_PERM, GITHUB_APP_ID, GITHUB_APP_KEY)
