@@ -173,6 +173,7 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
+	// Akeyless might return more than one installation, but we will update only if we work appropriately with one installation.
 	// installation_id is relevant when installation_organization and installation_repository aren't (need exactly one)
 	if rOut.GithubInstallationId != nil {
 		if d.Get("installation_repository").(string) == "" && d.Get("installation_organization").(string) == "" {
