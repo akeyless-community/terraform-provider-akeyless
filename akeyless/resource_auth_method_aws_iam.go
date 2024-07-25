@@ -116,6 +116,12 @@ func resourceAuthMethodAwsIam() *schema.Resource {
 				Computed:    true,
 				Description: "Auth Method access ID",
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -148,6 +154,8 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 	boundUserName := common.ExpandStringList(boundUserNameSet.List())
 	boundUserIdSet := d.Get("bound_user_id").(*schema.Set)
 	boundUserId := common.ExpandStringList(boundUserIdSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.CreateAuthMethodAWSIAM{
 		Name:              name,
@@ -165,6 +173,7 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.BoundResourceId, boundResourceId)
 	common.GetAkeylessPtr(&body.BoundUserName, boundUserName)
 	common.GetAkeylessPtr(&body.BoundUserId, boundUserId)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, _, err := client.CreateAuthMethodAWSIAM(ctx).Body(body).Execute()
 	if err != nil {
@@ -302,6 +311,12 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.AccessInfo.AuditLogsClaims != nil {
+		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -336,6 +351,8 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	boundUserName := common.ExpandStringList(boundUserNameSet.List())
 	boundUserIdSet := d.Get("bound_user_id").(*schema.Set)
 	boundUserId := common.ExpandStringList(boundUserIdSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethodAWSIAM{
 		Name:              name,
@@ -354,6 +371,7 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.BoundUserName, boundUserName)
 	common.GetAkeylessPtr(&body.BoundUserId, boundUserId)
 	common.GetAkeylessPtr(&body.NewName, name)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	_, _, err := client.UpdateAuthMethodAWSIAM(ctx).Body(body).Execute()
 	if err != nil {

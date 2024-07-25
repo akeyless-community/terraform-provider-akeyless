@@ -129,6 +129,12 @@ func resourceAuthMethodCert() *schema.Resource {
 				Computed:    true,
 				Description: "Auth Method access ID",
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -165,6 +171,8 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	boundExtensions := common.ExpandStringList(boundExtensionsSet.List())
 	revokedCertIdsSet := d.Get("revoked_cert_ids").(*schema.Set)
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	certificateData = base64.StdEncoding.EncodeToString([]byte(certificateData))
 
@@ -186,6 +194,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundOrganizationalUnits, boundOrganizationalUnits)
 	common.GetAkeylessPtr(&body.BoundExtensions, boundExtensions)
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, res, err := client.CreateAuthMethodCert(ctx).Body(body).Execute()
 	if err != nil {
@@ -277,6 +286,12 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 		}
 		if accessInfo.GwCidrWhitelist != nil && *accessInfo.GwCidrWhitelist != "" {
 			err = d.Set("gw_bound_ips", strings.Split(*accessInfo.GwCidrWhitelist, ","))
+			if err != nil {
+				return err
+			}
+		}
+		if accessInfo.AuditLogsClaims != nil {
+			err = d.Set("audit_logs_claims", *accessInfo.AuditLogsClaims)
 			if err != nil {
 				return err
 			}
@@ -388,6 +403,8 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	boundExtensions := common.ExpandStringList(boundExtensionsSet.List())
 	revokedCertIdsSet := d.Get("revoked_cert_ids").(*schema.Set)
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethodCert{
 		Name:             name,
@@ -408,6 +425,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundOrganizationalUnits, boundOrganizationalUnits)
 	common.GetAkeylessPtr(&body.BoundExtensions, boundExtensions)
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	_, _, err := client.UpdateAuthMethodCert(ctx).Body(body).Execute()
 	if err != nil {

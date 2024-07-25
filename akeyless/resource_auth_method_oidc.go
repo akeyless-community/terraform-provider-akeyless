@@ -102,6 +102,12 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Computed:    true,
 				Description: "Auth Method access ID",
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -128,6 +134,8 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	requiredScopesSet := d.Get("required_scopes").(*schema.Set)
 	requiredScopes := common.ExpandStringList(requiredScopesSet.List())
 	requiredScopesPrefix := d.Get("required_scopes_prefix").(string)
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.CreateAuthMethodOIDC{
 		Name:             name,
@@ -144,6 +152,7 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
 	common.GetAkeylessPtr(&body.RequiredScopes, requiredScopes)
 	common.GetAkeylessPtr(&body.RequiredScopesPrefix, requiredScopesPrefix)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, _, err := client.CreateAuthMethodOIDC(ctx).Body(body).Execute()
 	if err != nil {
@@ -280,6 +289,13 @@ func resourceAuthMethodOidcRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.AccessInfo.AuditLogsClaims != nil {
+		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -307,6 +323,8 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	requiredScopesSet := d.Get("required_scopes").(*schema.Set)
 	requiredScopes := common.ExpandStringList(requiredScopesSet.List())
 	requiredScopesPrefix := d.Get("required_scopes_prefix").(string)
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethodOIDC{
 		Name:             name,
@@ -323,6 +341,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
 	common.GetAkeylessPtr(&body.RequiredScopes, requiredScopes)
 	common.GetAkeylessPtr(&body.RequiredScopesPrefix, requiredScopesPrefix)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 
 	_, _, err := client.UpdateAuthMethodOIDC(ctx).Body(body).Execute()

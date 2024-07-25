@@ -25,6 +25,7 @@ GCE Auth Method Resource
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
 - `access_id` (String) Auth Method access ID
 - `audience` (String) The audience to verify in the JWT received by the client
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `bound_labels` (Set of String) GCE only. A list of GCP labels formatted as key:value pairs that must be set on instances in order to authenticate. For multiple values repeat this flag.
 - `bound_projects` (Set of String) A list of GCP project IDs. Clients must belong to any of the provided projects in order to authenticate. For multiple values repeat this flag.

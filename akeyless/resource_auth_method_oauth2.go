@@ -97,6 +97,12 @@ func resourceAuthMethodOauth2() *schema.Resource {
 				Computed:    true,
 				Description: "Auth Method access ID",
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -121,6 +127,8 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	boundClientIds := common.ExpandStringList(boundClientIdsSet.List())
 	issuer := d.Get("issuer").(string)
 	audience := d.Get("audience").(string)
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.CreateAuthMethodOAuth2{
 		Name:             name,
@@ -136,6 +144,7 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Issuer, issuer)
 	common.GetAkeylessPtr(&body.Audience, audience)
 	common.GetAkeylessPtr(&body.JwksJsonData, jwksJsonData)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, _, err := client.CreateAuthMethodOAuth2(ctx).Body(body).Execute()
 	if err != nil {
@@ -267,6 +276,13 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.AccessInfo.AuditLogsClaims != nil {
+		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -292,6 +308,8 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	boundClientIds := common.ExpandStringList(boundClientIdsSet.List())
 	issuer := d.Get("issuer").(string)
 	audience := d.Get("audience").(string)
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethodOAuth2{
 		Name:             name,
@@ -308,6 +326,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Audience, audience)
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.JwksJsonData, jwksJsonData)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	_, _, err := client.UpdateAuthMethodOAuth2(ctx).Body(body).Execute()
 	if err != nil {

@@ -25,6 +25,7 @@ OIDC Auth Method Resource
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
 - `access_id` (String) Auth Method access ID
 - `allowed_redirect_uri` (Set of String) Allowed redirect URIs after the authentication (default is https://console.akeyless.io/login-oidc to enable OIDC via Akeyless Console and  http://127.0.0.1:* to enable OIDC via akeyless CLI)
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `client_id` (String) Client ID
 - `client_secret` (String) Client Secret

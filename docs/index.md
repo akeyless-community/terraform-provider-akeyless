@@ -117,6 +117,7 @@ output "auth_method" {
 - `email_login` (Block List) A configuration block, described below, that attempts to authenticate using email and password. (see [below for nested schema](#nestedblock--email_login))
 - `gcp_login` (Block List) A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials. (see [below for nested schema](#nestedblock--gcp_login))
 - `jwt_login` (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT. (see [below for nested schema](#nestedblock--jwt_login))
+- `token_login` (Block List) A configuration block, described below, that attempts to authenticate using akeyless token. The token can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_TOKEN. (see [below for nested schema](#nestedblock--token_login))
 - `uid_login` (Block List) A configuration block, described below, that attempts to authenticate using Universal Identity authentication. (see [below for nested schema](#nestedblock--uid_login))
 
 <a id="nestedblock--api_key_login"></a>
@@ -189,10 +190,21 @@ Required:
 - `jwt` (String, Sensitive)
 
 
+<a id="nestedblock--token_login"></a>
+### Nested Schema for `token_login`
+
+Required:
+
+- `token` (String, Sensitive)
+
+
 <a id="nestedblock--uid_login"></a>
 ### Nested Schema for `uid_login`
 
 Required:
 
-- `access_id` (String)
 - `uid_token` (String, Sensitive)
+
+Optional:
+
+- `access_id` (String)

@@ -114,6 +114,12 @@ func resourceAuthMethodGcp() *schema.Resource {
 				Computed:    true,
 				Description: "Auth Method access ID",
 			},
+			"audit_logs_claims": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Subclaims to include in audit logs",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -144,6 +150,8 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	boundRegions := common.ExpandStringList(boundRegionsSet.List())
 	boundLabelsSet := d.Get("bound_labels").(*schema.Set)
 	boundLabels := common.ExpandStringList(boundLabelsSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.CreateAuthMethodGCP{
 		Name:     name,
@@ -161,6 +169,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundZones, boundZones)
 	common.GetAkeylessPtr(&body.BoundRegions, boundRegions)
 	common.GetAkeylessPtr(&body.BoundLabels, boundLabels)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	rOut, _, err := client.CreateAuthMethodGCP(ctx).Body(body).Execute()
 	if err != nil {
@@ -309,6 +318,13 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.AccessInfo.AuditLogsClaims != nil {
+		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -340,6 +356,8 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	boundRegions := common.ExpandStringList(boundRegionsSet.List())
 	boundLabelsSet := d.Get("bound_labels").(*schema.Set)
 	boundLabels := common.ExpandStringList(boundLabelsSet.List())
+	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
+	subClaims := common.ExpandStringList(subClaimsSet.List())
 
 	body := akeyless_api.UpdateAuthMethodGCP{
 		Name:     name,
@@ -358,6 +376,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundRegions, boundRegions)
 	common.GetAkeylessPtr(&body.BoundLabels, boundLabels)
 	common.GetAkeylessPtr(&body.NewName, name)
+	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
 	_, _, err := client.UpdateAuthMethodGCP(ctx).Body(body).Execute()
 	if err != nil {

@@ -10,22 +10,23 @@ import (
 )
 
 const (
-	GITHUB_INSTALL_ID   = 1234
-	GITHUB_INSTALL_REPO = "XXXXXXXX"
-	GITHUB_APP_ID       = 1234
-	GITHUB_APP_KEY      = "XXXXXXXX"
-	GITLAB_TOKEN        = "XXXXXXXX"
-	GCP_KEY             = "XXXXXXXX"
-	GCP_SA_EMAIL        = "XXXXXXXX"
-	GCP_TOKEN_SCOPES    = "XXXXXXXX"
-	KEY                 = "XXXXXXXX"
-	PRODUCER_NAME       = "terraform-tests/mysql_for_rs_test"
-	MYSQL_USERNAME      = "XXXXXXXX"
-	MYSQL_PASSWORD      = "XXXXXXXX"
-	MYSQL_HOST          = "127.0.0.1"
-	MYSQL_PORT          = "3306"
-	MYSQL_DBNAME        = "XXXXXXXX"
-	K8S_HOST            = "https://kubernetes.docker.internal:6443"
+	GITHUB_INSTALL_ID           = 1234
+	GITHUB_INSTALL_ORGANIZATION = "XXXXXXXX"
+	GITHUB_INSTALL_REPO         = "XXXXXXXX"
+	GITHUB_APP_ID               = 1234
+	GITHUB_APP_KEY              = "XXXXXXXX"
+	GITLAB_TOKEN                = "XXXXXXXX"
+	GCP_KEY                     = "XXXXXXXX"
+	GCP_SA_EMAIL                = "XXXXXXXX"
+	GCP_TOKEN_SCOPES            = "XXXXXXXX"
+	KEY                         = "XXXXXXXX"
+	PRODUCER_NAME               = "terraform-tests/mysql_for_rs_test"
+	MYSQL_USERNAME              = "XXXXXXXX"
+	MYSQL_PASSWORD              = "XXXXXXXX"
+	MYSQL_HOST                  = "127.0.0.1"
+	MYSQL_PORT                  = "3306"
+	MYSQL_DBNAME                = "XXXXXXXX"
+	K8S_HOST                    = "https://kubernetes.docker.internal:6443"
 )
 
 var (
@@ -86,7 +87,7 @@ func TestK8sProducerResource(t *testing.T) {
 		}
 	`, name, itemPath, K8S_HOST, K8S_CERT, K8S_TOKEN)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestGithubProducerResource(t *testing.T) {
@@ -101,7 +102,7 @@ func TestGithubProducerResource(t *testing.T) {
 			installation_id 		= %v
 			token_permissions 		= %v
 			github_app_id 			= %v
-			github_app_private_key 	= "%v"
+			github_app_private_key	= "%v"
 		}
 	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_TOKEN_PERM, GITHUB_APP_ID, GITHUB_APP_KEY)
 
@@ -115,7 +116,7 @@ func TestGithubProducerResource(t *testing.T) {
 		}
 	`, name, itemPath, GITHUB_INSTALL_REPO, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestGitlabProducerResource(t *testing.T) {
@@ -158,7 +159,7 @@ func TestGitlabProducerResource(t *testing.T) {
 		}
 	`, name, itemPath, GITLAB_TOKEN)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestCustomProducerResource(t *testing.T) {
@@ -188,7 +189,7 @@ func TestCustomProducerResource(t *testing.T) {
 		}
 	`, name, itemPath)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestMySqlProducerResource(t *testing.T) {
@@ -215,7 +216,7 @@ func TestMySqlProducerResource(t *testing.T) {
 		}
 	`, name, itemPath, mysql_attr)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestGcpProducerResource(t *testing.T) {
@@ -247,7 +248,7 @@ func TestGcpProducerResource(t *testing.T) {
 		}
 	`, name, itemPath, GCP_SA_EMAIL, GCP_TOKEN_SCOPES, GCP_KEY)
 
-	tesItemResource(t, config, configUpdate, itemPath)
+	testItemResource(t, itemPath, config, configUpdate)
 }
 
 func TestRotatedSecretResource(t *testing.T) {
@@ -309,7 +310,7 @@ func TestRotatedSecretResource(t *testing.T) {
 		}
 	`, targetName, targetPath, db_attr, user, password, rsName, rsPath, targetPath, targetName, targetName, KEY, targetName)
 
-	tesItemResource(t, config, configUpdate, rsPath)
+	testItemResource(t, rsPath, config, configUpdate)
 
 	deleteProducer(client, token)
 }
