@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -86,6 +87,11 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+			},
 		},
 	}
 }
@@ -108,6 +114,7 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	ttl := d.Get("ttl").(int)
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodCreateUniversalIdentity{
 		Name:  name,
@@ -121,6 +128,7 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	common.GetAkeylessPtr(&body.DenyInheritance, denyInheritance)
 	common.GetAkeylessPtr(&body.Ttl, ttl)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	rOut, _, err := client.AuthMethodCreateUniversalIdentity(ctx).Body(body).Execute()
 	if err != nil {
@@ -234,6 +242,13 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 		}
 	}
 
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -257,6 +272,7 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	ttl := d.Get("ttl").(int)
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodUpdateUniversalIdentity{
 		Name:  name,
@@ -271,6 +287,7 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	common.GetAkeylessPtr(&body.Ttl, ttl)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.AuthMethodUpdateUniversalIdentity(ctx).Body(body).Execute()
 	if err != nil {

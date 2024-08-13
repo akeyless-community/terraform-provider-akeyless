@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -120,6 +121,11 @@ func resourceAuthMethodGcp() *schema.Resource {
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+			},
 		},
 	}
 }
@@ -152,6 +158,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	boundLabels := common.ExpandStringList(boundLabelsSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodCreateGcp{
 		Name:     name,
@@ -170,6 +177,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundRegions, boundRegions)
 	common.GetAkeylessPtr(&body.BoundLabels, boundLabels)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	rOut, _, err := client.AuthMethodCreateGcp(ctx).Body(body).Execute()
 	if err != nil {
@@ -325,6 +333,13 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -358,6 +373,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	boundLabels := common.ExpandStringList(boundLabelsSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodUpdateGcp{
 		Name:     name,
@@ -377,6 +393,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundLabels, boundLabels)
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.AuthMethodUpdateGcp(ctx).Body(body).Execute()
 	if err != nil {

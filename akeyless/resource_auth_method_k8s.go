@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -113,6 +114,11 @@ func resourceAuthMethodK8s() *schema.Resource {
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+			},
 		},
 	}
 }
@@ -141,6 +147,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodCreateK8s{
 		Name:  name,
@@ -158,6 +165,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PublicKey, publicKey)
 	common.GetAkeylessPtr(&body.GenKey, genKey)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	rOut, _, err := client.AuthMethodCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
@@ -310,6 +318,13 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -338,6 +353,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodUpdateK8s{
 		Name:  name,
@@ -355,6 +371,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GenKey, "false")
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.AuthMethodUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {

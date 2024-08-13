@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -135,6 +136,11 @@ func resourceAuthMethodCert() *schema.Resource {
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+			},
 		},
 	}
 }
@@ -173,6 +179,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	certificateData = base64.StdEncoding.EncodeToString([]byte(certificateData))
 
@@ -195,6 +202,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundExtensions, boundExtensions)
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	rOut, res, err := client.AuthMethodCreateCert(ctx).Body(body).Execute()
 	if err != nil {
@@ -292,6 +300,12 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 		}
 		if accessInfo.AuditLogsClaims != nil {
 			err = d.Set("audit_logs_claims", *accessInfo.AuditLogsClaims)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.DeleteProtection != nil {
+			err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
 			if err != nil {
 				return err
 			}
@@ -405,6 +419,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodUpdateCert{
 		Name:             name,
@@ -426,6 +441,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundExtensions, boundExtensions)
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.AuthMethodUpdateCert(ctx).Body(body).Execute()
 	if err != nil {

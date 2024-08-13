@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -149,6 +150,11 @@ func resourceAuthMethodAzureAd() *schema.Resource {
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+			},
 		},
 	}
 }
@@ -188,6 +194,7 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	boundResourceId := common.ExpandStringList(boundResourceIdSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodCreateAzureAD{
 		Name:          name,
@@ -210,6 +217,7 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.BoundResourceNames, boundResourceNames)
 	common.GetAkeylessPtr(&body.BoundResourceId, boundResourceId)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	rOut, _, err := client.AuthMethodCreateAzureAD(ctx).Body(body).Execute()
 	if err != nil {
@@ -380,6 +388,13 @@ func resourceAuthMethodAzureAdRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -420,6 +435,7 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	boundResourceId := common.ExpandStringList(boundResourceIdSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodUpdateAzureAD{
 		Name:          name,
@@ -443,6 +459,7 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.BoundResourceId, boundResourceId)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.AuthMethodUpdateAzureAD(ctx).Body(body).Execute()
 	if err != nil {

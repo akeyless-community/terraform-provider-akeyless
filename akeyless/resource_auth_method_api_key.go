@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -74,6 +75,11 @@ func resourceAuthMethodApiKey() *schema.Resource {
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+			},
 		},
 	}
 }
@@ -93,6 +99,7 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	jwtTtl := d.Get("jwt_ttl").(int)
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodCreateApiKey{
 		Name:  name,
@@ -103,6 +110,7 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	rOut, _, err := client.AuthMethodCreateApiKey(ctx).Body(body).Execute()
 	if err != nil {
@@ -207,6 +215,13 @@ func resourceAuthMethodApiKeyRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -227,6 +242,7 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	jwtTtl := d.Get("jwt_ttl").(int)
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodUpdateApiKey{
 		Name:  name,
@@ -238,6 +254,7 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.AuthMethodUpdateApiKey(ctx).Body(body).Execute()
 	if err != nil {
