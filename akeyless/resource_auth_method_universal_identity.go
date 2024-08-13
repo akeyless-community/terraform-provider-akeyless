@@ -109,7 +109,7 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.CreateAuthMethodUniversalIdentity{
+	body := akeyless_api.AuthMethodCreateUniversalIdentity{
 		Name:  name,
 		Token: &token,
 	}
@@ -122,7 +122,7 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	common.GetAkeylessPtr(&body.Ttl, ttl)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
-	rOut, _, err := client.CreateAuthMethodUniversalIdentity(ctx).Body(body).Execute()
+	rOut, _, err := client.AuthMethodCreateUniversalIdentity(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -151,12 +151,12 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -258,7 +258,7 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.UpdateAuthMethodUniversalIdentity{
+	body := akeyless_api.AuthMethodUpdateUniversalIdentity{
 		Name:  name,
 		Token: &token,
 	}
@@ -272,7 +272,7 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 
-	_, _, err := client.UpdateAuthMethodUniversalIdentity(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateUniversalIdentity(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -292,13 +292,13 @@ func resourceAuthMethodUniversalIdentityDelete(d *schema.ResourceData, m interfa
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

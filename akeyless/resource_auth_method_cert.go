@@ -176,7 +176,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
 	certificateData = base64.StdEncoding.EncodeToString([]byte(certificateData))
 
-	body := akeyless_api.CreateAuthMethodCert{
+	body := akeyless_api.AuthMethodCreateCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -196,7 +196,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
-	rOut, res, err := client.CreateAuthMethodCert(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodCreateCert(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -231,12 +231,12 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -406,7 +406,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.UpdateAuthMethodCert{
+	body := akeyless_api.AuthMethodUpdateCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -427,7 +427,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
-	_, _, err := client.UpdateAuthMethodCert(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateCert(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
@@ -447,13 +447,13 @@ func resourceAuthMethodCertDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

@@ -94,7 +94,7 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.CreateAuthMethod{
+	body := akeyless_api.AuthMethodCreateApiKey{
 		Name:  name,
 		Token: &token,
 	}
@@ -104,7 +104,7 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
-	rOut, _, err := client.CreateAuthMethod(ctx).Body(body).Execute()
+	rOut, _, err := client.AuthMethodCreateApiKey(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to create Secret: %v", string(apiErr.Body()))
@@ -140,12 +140,12 @@ func resourceAuthMethodApiKeyRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -228,7 +228,7 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.UpdateAuthMethod{
+	body := akeyless_api.AuthMethodUpdateApiKey{
 		Name:  name,
 		Token: &token,
 	}
@@ -239,7 +239,7 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
-	_, _, err := client.UpdateAuthMethod(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateApiKey(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
@@ -259,13 +259,13 @@ func resourceAuthMethodApiKeyDelete(d *schema.ResourceData, m interface{}) error
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

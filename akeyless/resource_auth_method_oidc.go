@@ -137,7 +137,7 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.CreateAuthMethodOIDC{
+	body := akeyless_api.AuthMethodCreateOIDC{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -154,7 +154,7 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RequiredScopesPrefix, requiredScopesPrefix)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
-	rOut, _, err := client.CreateAuthMethodOIDC(ctx).Body(body).Execute()
+	rOut, _, err := client.AuthMethodCreateOIDC(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -184,12 +184,12 @@ func resourceAuthMethodOidcRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -326,7 +326,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.UpdateAuthMethodOIDC{
+	body := akeyless_api.AuthMethodUpdateOIDC{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -344,7 +344,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 
-	_, _, err := client.UpdateAuthMethodOIDC(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateOIDC(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -364,13 +364,13 @@ func resourceAuthMethodOidcDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

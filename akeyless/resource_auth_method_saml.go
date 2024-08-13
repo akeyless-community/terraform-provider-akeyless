@@ -116,7 +116,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.CreateAuthMethodSAML{
+	body := akeyless_api.AuthMethodCreateSAML{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -130,7 +130,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
-	rOut, _, err := client.CreateAuthMethodSAML(ctx).Body(body).Execute()
+	rOut, _, err := client.AuthMethodCreateSAML(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -160,12 +160,12 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -278,7 +278,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.UpdateAuthMethodSAML{
+	body := akeyless_api.AuthMethodUpdateSAML{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -293,7 +293,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 
-	_, _, err := client.UpdateAuthMethodSAML(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateSAML(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -313,13 +313,13 @@ func resourceAuthMethodSamlDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

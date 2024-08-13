@@ -153,7 +153,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.CreateAuthMethodGCP{
+	body := akeyless_api.AuthMethodCreateGcp{
 		Name:     name,
 		Type:     gcptype,
 		Audience: audience,
@@ -171,7 +171,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundLabels, boundLabels)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
-	rOut, _, err := client.CreateAuthMethodGCP(ctx).Body(body).Execute()
+	rOut, _, err := client.AuthMethodCreateGcp(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -201,12 +201,12 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -359,7 +359,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 
-	body := akeyless_api.UpdateAuthMethodGCP{
+	body := akeyless_api.AuthMethodUpdateGcp{
 		Name:     name,
 		Type:     gcptype,
 		Audience: audience,
@@ -378,7 +378,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 
-	_, _, err := client.UpdateAuthMethodGCP(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateGcp(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -398,13 +398,13 @@ func resourceAuthMethodGcpDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}
