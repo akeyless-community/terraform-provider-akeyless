@@ -29,6 +29,7 @@ OIDC Auth Method Resource
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `client_id` (String) Client ID
 - `client_secret` (String) Client Secret
+- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `issuer` (String) Issuer URL
 - `jwt_ttl` (Number) Creds expiration time in minutes
