@@ -32,21 +32,18 @@ func resourceAuthMethodOauth2() *schema.Resource {
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
 				Default:     "0",
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A CIDR whitelist with the IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"force_sub_claims": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
@@ -58,13 +55,11 @@ func resourceAuthMethodOauth2() *schema.Resource {
 			},
 			"jwks_uri": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.",
 			},
 			"jwks_json_data": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The JSON Web Key Set (JWKS) containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization serve, in base64 format.",
 			},
@@ -75,28 +70,19 @@ func resourceAuthMethodOauth2() *schema.Resource {
 			},
 			"bound_client_ids": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "The clients ids that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Issuer URL",
 			},
 			"audience": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The audience in the JWT",
-			},
-			"access_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Auth Method access ID",
 			},
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
@@ -108,6 +94,12 @@ func resourceAuthMethodOauth2() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
+			},
+			"access_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Auth Method access ID",
 			},
 		},
 	}

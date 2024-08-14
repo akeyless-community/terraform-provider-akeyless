@@ -32,21 +32,18 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
 				Default:     0,
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A CIDR whitelist with the IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"force_sub_claims": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
@@ -58,28 +55,19 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 			},
 			"deny_rotate": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Deny from the token to rotate",
 			},
 			"deny_inheritance": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "Deny from root to create children",
 			},
 			"ttl": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Token ttl (in minutes)",
 				Default:     60,
-			},
-			"access_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Auth Method access ID",
 			},
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
@@ -91,6 +79,12 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
+			},
+			"access_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Auth Method access ID",
 			},
 		},
 	}

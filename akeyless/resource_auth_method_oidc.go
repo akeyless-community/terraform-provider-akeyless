@@ -32,21 +32,18 @@ func resourceAuthMethodOidc() *schema.Resource {
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
 				Default:     "0",
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A CIDR whitelist with the IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"force_sub_claims": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
@@ -58,19 +55,16 @@ func resourceAuthMethodOidc() *schema.Resource {
 			},
 			"issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Issuer URL",
 			},
 			"client_id": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Client ID",
 			},
 			"client_secret": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Client Secret",
 			},
@@ -81,7 +75,6 @@ func resourceAuthMethodOidc() *schema.Resource {
 			},
 			"allowed_redirect_uri": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "Allowed redirect URIs after the authentication (default is https://console.akeyless.io/login-oidc to enable OIDC via Akeyless Console and  http://127.0.0.1:* to enable OIDC via akeyless CLI)",
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -97,12 +90,6 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 				Description: "A prefix to add to all required-scopes when requesting them from the oidc server (for example, azure's Application ID URI)",
 			},
-			"access_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Auth Method access ID",
-			},
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -113,6 +100,12 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
+			},
+			"access_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Auth Method access ID",
 			},
 		},
 	}
