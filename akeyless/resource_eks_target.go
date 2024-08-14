@@ -101,7 +101,7 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless_api.CreateEKSTarget{
+	body := akeyless_api.TargetCreateEks{
 		Name:               name,
 		EksClusterName:     eksClusterName,
 		EksClusterEndpoint: eksClusterEndpoint,
@@ -115,7 +115,7 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.CreateEKSTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetCreateEks(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -138,12 +138,12 @@ func resourceEksTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetTargetDetails{
+	body := akeyless_api.TargetGetDetails{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetTargetDetails(ctx).Body(body).Execute()
+	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -234,7 +234,7 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless_api.UpdateEKSTarget{
+	body := akeyless_api.TargetUpdateEks{
 		Name:               name,
 		EksClusterName:     eksClusterName,
 		EksClusterEndpoint: eksClusterEndpoint,
@@ -248,7 +248,7 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.UpdateEKSTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetUpdateEks(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -268,13 +268,13 @@ func resourceEksTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteTarget{
+	deleteItem := akeyless_api.TargetDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteTarget(ctx).Body(deleteItem).Execute()
+	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

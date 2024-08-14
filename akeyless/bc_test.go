@@ -412,12 +412,12 @@ func checkTargetDescriptionRemotely(path, expDescription string) resource.TestCh
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless_api.GetTargetDetails{
+		gsvBody := akeyless_api.TargetGetDetails{
 			Name:  path,
 			Token: &token,
 		}
 
-		out, _, err := client.GetTargetDetails(context.Background()).Body(gsvBody).Execute()
+		out, _, err := client.TargetGetDetails(context.Background()).Body(gsvBody).Execute()
 		if err != nil {
 			return err
 		}

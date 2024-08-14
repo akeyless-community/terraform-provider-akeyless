@@ -98,7 +98,7 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	privateKeyPassword := d.Get("private_key_password").(string)
 	key := d.Get("key").(string)
 
-	body := akeyless_api.CreateSSHTarget{
+	body := akeyless_api.TargetCreateSsh{
 		Name:  name,
 		Token: &token,
 	}
@@ -111,7 +111,7 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PrivateKeyPassword, privateKeyPassword)
 	common.GetAkeylessPtr(&body.Key, key)
 
-	_, _, err := client.CreateSSHTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetCreateSsh(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -134,12 +134,12 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetTargetDetails{
+	body := akeyless_api.TargetGetDetails{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetTargetDetails(ctx).Body(body).Execute()
+	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -223,7 +223,7 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	privateKeyPassword := d.Get("private_key_password").(string)
 	key := d.Get("key").(string)
 
-	body := akeyless_api.UpdateSSHTarget{
+	body := akeyless_api.TargetUpdateSsh{
 		Name:  name,
 		Token: &token,
 	}
@@ -236,7 +236,7 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PrivateKeyPassword, privateKeyPassword)
 	common.GetAkeylessPtr(&body.Key, key)
 
-	_, _, err := client.UpdateSSHTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetUpdateSsh(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -256,13 +256,13 @@ func resourceSSHTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteTarget{
+	deleteItem := akeyless_api.TargetDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteTarget(ctx).Body(deleteItem).Execute()
+	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

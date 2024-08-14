@@ -72,7 +72,7 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless_api.CreateArtifactoryTarget{
+	body := akeyless_api.TargetCreateArtifactory{
 		Name:                 name,
 		BaseUrl:              baseUrl,
 		ArtifactoryAdminName: artifactoryAdminName,
@@ -82,7 +82,7 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.CreateArtifactoryTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetCreateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -105,12 +105,12 @@ func resourceArtifactoryTargetRead(d *schema.ResourceData, m interface{}) error 
 
 	path := d.Id()
 
-	body := akeyless_api.GetTargetDetails{
+	body := akeyless_api.TargetGetDetails{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetTargetDetails(ctx).Body(body).Execute()
+	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -172,7 +172,7 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless_api.UpdateArtifactoryTarget{
+	body := akeyless_api.TargetUpdateArtifactory{
 		Name:                 name,
 		BaseUrl:              baseUrl,
 		ArtifactoryAdminName: artifactoryAdminName,
@@ -182,7 +182,7 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.UpdateArtifactoryTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetUpdateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -202,13 +202,13 @@ func resourceArtifactoryTargetDelete(d *schema.ResourceData, m interface{}) erro
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteTarget{
+	deleteItem := akeyless_api.TargetDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteTarget(ctx).Body(deleteItem).Execute()
+	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

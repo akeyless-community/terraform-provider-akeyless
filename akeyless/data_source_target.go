@@ -104,13 +104,13 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	showVersions := d.Get("show_versions").(bool)
 
-	body := akeyless_api.GetTarget{
+	body := akeyless_api.TargetGet{
 		Name:  name,
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.ShowVersions, showVersions)
 
-	rOut, res, err := client.GetTarget(ctx).Body(body).Execute()
+	rOut, res, err := client.TargetGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
