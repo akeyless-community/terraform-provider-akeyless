@@ -1,0 +1,87 @@
+name: Reusable Git Issues Jira Automation Pipeline
+on:
+  workflow_call:
+    inputs:
+      caller_repo_name:
+        type: string
+
+env:
+  AKEYLESS_JIRA_BASE_URL: ${{ secrets.AKEYLESS_JIRA_BASE_URL }}
+  AKEYLESS_JIRA_USER_EMAIL: ${{ secrets.AKEYLESS_JIRA_USER_EMAIL }}
+  AKEYLESS_JIRA_ISSUE_TOKEN: ${{ secrets.AKEYLESS_JIRA_ISSUE_TOKEN }}
+  caller_repo_name: ${{ inputs.caller_repo_name }}
+
+jobs:
+  git-issues-jira-automation:
+    name: ${{ inputs.caller_repo_name }}-git-issues-jira-automation
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout terraform-provider-akeyless code
+        uses: actions/checkout@v4
+        with:
+          repository: akeyless-community/terraform-provider-akeyless
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Akeyless jira
+        uses: atlassian/gajira-login@master
+        env:
+          JIRA_BASE_URL: ${{ secrets.AKEYLESS_JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.AKEYLESS_JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.AKEYLESS_JIRA_ISSUE_TOKEN }}
+
+      - name: Generate Git Issue Event Description For Jira
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: .github/scripts/git_issues/generate_jira_issue_data.sh
+
+      - name: Find Existing Jira issue
+        if: env.jira_issue_exist == 'true'
+        uses: atlassian/gajira-find-issue-key@v3
+        with:
+          string: ${{ env.akeyless_jira_issue }}
+
+      - name: Create Jira issue
+        if: env.jira_issue_exist == 'false' && github.event.action == 'opened'
+        id: create-jira-issue
+        uses: atlassian/gajira-create@v3
+        with:
+          project: ASM
+          issuetype: Bug-Field
+          summary: ${{ env.jira_issue_summary }}
+          description: ${{ env.jira_description }}
+          fields: ${{ env.jira_fields }}
+
+      - name: Log created issue
+        if: steps.create-jira-issue.outcome == 'success'
+        run: echo "Jira Issue ${{ steps.create-jira-issue.outputs.issue }} was created"
+
+      - name: Add Comment On Jira issue
+        if: env.jira_issue_exist == 'true' && (github.event_name == 'issue_comment' || (github.event_name == 'issues' && github.event.action == 'closed'))
+        uses: atlassian/gajira-comment@v3
+        with:
+          issue: ${{ env.akeyless_jira_issue }}
+          comment: ${{ env.jira_description }}
+
+      - name: Prepare Slack Message On Success
+        id: slack-message-success-creator
+        run: |
+          SLACK_MESSAGE="${jira_description}
+          *Jira Ticket*: https://akeyless.atlassian.net/browse/${{steps.create-jira-issue.outputs.issue}}"
+          delimiter="$(openssl rand -hex 8)"
+          echo "slack-message<<${delimiter}" >> $GITHUB_ENV
+          echo "${SLACK_MESSAGE//$/%0A}" >> $GITHUB_ENV
+          echo "${delimiter}" >> $GITHUB_ENV
+
+      - name: Slack Success Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: 'operations'
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_TITLE: 'New Git Issue Created'
+          SLACK_MESSAGE: '${{ env.slack-message }}'
+          SLACK_USERNAME: githubBot
+          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          MSG_MINIMAL: true
+          SLACK_FOOTER: GitHub Issue To Jira Automation
