@@ -1,0 +1,1 @@
+terraform import akeyless_static_secret.example /full-secret-path/and-name-in-akeyless
