@@ -1,0 +1,1 @@
+terraform import akeyless_auth_method_saml.example /full-auth-method-saml-path/and-name-in-akeyless
