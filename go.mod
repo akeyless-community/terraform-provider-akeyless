@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/akeylesslabs/akeyless-go-cloud-id v0.3.5
-	github.com/akeylesslabs/akeyless-go/v4 v4.2.0
+	github.com/akeylesslabs/akeyless-go/v4 v4.2.3
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
@@ -80,7 +80,7 @@ require (
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
+	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect

@@ -105,27 +105,29 @@ func resourceRole() *schema.Resource {
 			},
 			"audit_access": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.",
 			},
 			"analytics_access": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
 			},
 			"gw_analytics_access": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
 			},
 			"sra_reports_access": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.",
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this role, [true/false]",
+				Default:     "false",
 			},
 		},
 	}
@@ -144,6 +146,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	analyticsAccess := d.Get("analytics_access").(string)
 	gwAnalyticsAccess := d.Get("gw_analytics_access").(string)
 	sraReportsAccess := d.Get("sra_reports_access").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	var apiErr akeyless_api.GenericOpenAPIError
 	body := akeyless_api.CreateRole{
@@ -155,6 +158,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	common.GetAkeylessPtr(&body.AnalyticsAccess, analyticsAccess)
 	common.GetAkeylessPtr(&body.GwAnalyticsAccess, gwAnalyticsAccess)
 	common.GetAkeylessPtr(&body.SraReportsAccess, sraReportsAccess)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.CreateRole(ctx).Body(body).Execute()
 	if err != nil {
@@ -231,20 +235,6 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	rules := role.Rules
-	if rules == nil {
-		return nil
-	}
-	if rules.PathRules != nil {
-		rulesSet := d.Get("rules").(*schema.Set)
-		if len(rulesSet.List()) != 0 {
-			err := readRules(d, *rules.PathRules)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	if role.RoleAuthMethodsAssoc != nil {
 		assocsSet := d.Get("assoc_auth_method").(*schema.Set)
 		if len(assocsSet.List()) != 0 {
@@ -252,6 +242,25 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	if role.Rules != nil {
+		if role.Rules.PathRules != nil {
+			rulesSet := d.Get("rules").(*schema.Set)
+			if len(rulesSet.List()) != 0 {
+				err := readRules(d, *role.Rules.PathRules)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	if role.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*role.DeleteProtection))
+		if err != nil {
+			return err
 		}
 	}
 
@@ -323,10 +332,11 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	accessRulesNewValues := getNewAccessRules(d)
 	accessRulesOldValues := saveRoleAccessRuleOldValues(rules.PathRules)
 	description := d.Get("description").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
-	err, ok = updateRoleAccessRules(ctx, name, description, accessRulesNewValues, m)
+	err, ok = updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesNewValues, m)
 	if !ok {
-		errInner, okInner := updateRoleAccessRules(ctx, name, description, accessRulesOldValues, m)
+		errInner, okInner := updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesOldValues, m)
 		if !okInner {
 			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
 		}
@@ -808,7 +818,7 @@ func getNewAccessRules(d *schema.ResourceData) []interface{} {
 	return accessRules
 }
 
-func updateRoleAccessRules(ctx context.Context, name, description string,
+func updateRoleAccessRules(ctx context.Context, name, description, deleteProtection string,
 	accessRules []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(providerMeta)
@@ -841,6 +851,7 @@ func updateRoleAccessRules(ctx context.Context, name, description string,
 		SraReportsAccess:  akeyless_api.PtrString(sraReportsAccess),
 	}
 	common.GetAkeylessPtr(&updateBody.Description, description)
+	common.GetAkeylessPtr(&updateBody.DeleteProtection, deleteProtection)
 
 	var apiErr akeyless_api.GenericOpenAPIError
 	_, _, err := client.UpdateRole(ctx).Body(updateBody).Execute()

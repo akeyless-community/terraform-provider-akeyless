@@ -29,6 +29,7 @@ Kubernetes Auth Method Resource
 - `bound_namespaces` (Set of String) A list of namespaces that the access is restricted to
 - `bound_pod_names` (Set of String) A list of pod names that the access is restricted to
 - `bound_sa_names` (Set of String) A list of service account names that the access is restricted to
+- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `gen_key` (String) If this flag is set to true, there is no need to manually provide a public key for the Kubernetes Auth Method, and instead, a key pair, will be generated as part of the command and the private part of the key will be returned (the private key is required for the K8S Auth Config in the Akeyless Gateway)
 - `jwt_ttl` (Number) Creds expiration time in minutes

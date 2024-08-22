@@ -26,20 +26,22 @@ func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 	path := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "%v" {
-			name = "%v"
-			access_expires = 10000
-			bound_ips = ["1.1.1.0/32"]
-			force_sub_claims = true
-			jwt_ttl = 42
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			access_expires 		= 10000
+			bound_ips 			= ["1.1.1.0/32"]
+			force_sub_claims 	= true
+			jwt_ttl 			= 42
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "true"
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "%v" {
-			name = "%v"
-			access_expires = 10001
-			bound_ips = ["1.1.4.0/32"]
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			access_expires 		= 10001
+			bound_ips 			= ["1.1.4.0/32"]
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "false"
 		}
 	`, name, path)
 
@@ -67,18 +69,20 @@ func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 	path := testPath("path_auth_method_aws_iam")
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_aws_iam" "%v" {
-			name = "%v"
-			jwt_ttl = 42
-			bound_aws_account_id = ["516111111111"]
-            audit_logs_claims = ["eee","kk"]
+			name 					= "%v"
+			jwt_ttl 				= 42
+			bound_aws_account_id 	= ["516111111111"]
+            audit_logs_claims 		= ["eee","kk"]
+			delete_protection 		= "true"
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_aws_iam" "%v" {
-			name = "%v"
-			bound_aws_account_id = ["516111111111"]
-			bound_ips = ["1.1.1.0/32"]
-            audit_logs_claims = ["eee","kk"]
+			name 					= "%v"
+			bound_aws_account_id 	= ["516111111111"]
+			bound_ips 				= ["1.1.1.0/32"]
+            audit_logs_claims 		= ["eee","kk"]
+			delete_protection 		= "false"
 		}
 	`, name, path)
 
@@ -106,20 +110,22 @@ func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
 	path := testPath("path_auth_method_azure_ad")
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_azure_ad" "%v" {
-			name = "%v"
-			jwt_ttl = 42
-			bound_tenant_id = "my-tenant-id"
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			jwt_ttl 			= 42
+			bound_tenant_id 	= "my-tenant-id"
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "true"
 		}
 	`, name, path)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_azure_ad" "%v" {
-			name = "%v"
-			bound_tenant_id = "my-tenant-id"
-			bound_ips = ["1.1.1.0/32"]
-			issuer = "https://sts.windows.net/sdfjskfjsdkcsjnc"
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			bound_tenant_id 	= "my-tenant-id"
+			bound_ips 			= ["1.1.1.0/32"]
+			issuer 				= "https://sts.windows.net/sdfjskfjsdkcsjnc"
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "false"
 		}
 	`, name, path)
 
@@ -155,7 +161,8 @@ func TestAuthMethodCertResource(t *testing.T) {
 			jwt_ttl 			= 42
 			certificate_data 	= "%v"
 			unique_identifier 	= "email"
-            audit_logs_claims = ["eee","kk"]
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "true"
 		}
 	`, name, path, cert)
 
@@ -165,7 +172,8 @@ func TestAuthMethodCertResource(t *testing.T) {
 			certificate_data 	= "%v"
 			unique_identifier 	= "uid"
 			bound_ips 			= ["1.1.1.0/32"]
-            audit_logs_claims = ["eee","kk"]
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "false"
 		}
 	`, name, path, cert)
 
@@ -181,22 +189,24 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 	path := testPath("path_auth_method_gcp")
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_gcp" "%v" {
-			name = "%v"
-			jwt_ttl = 42
-			service_account_creds_data = "%v"
-			bound_service_accounts = ["%v"]
-			type = "gce"
-            audit_logs_claims = ["eee","kk"]
+			name 						= "%v"
+			jwt_ttl 					= 42
+			service_account_creds_data 	= "%v"
+			bound_service_accounts 		= ["%v"]
+			type 						= "gce"
+            audit_logs_claims 			= ["eee","kk"]
+			delete_protection 			= "true"
 		}
 	`, name, path, os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT"), os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC"))
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_gcp" "%v" {
-			name = "%v"
-			service_account_creds_data = "%v"
-			bound_service_accounts = ["%v"]
-			type = "gce"
-			bound_ips = ["1.1.1.0/32"]
+			name 						= "%v"
+			service_account_creds_data 	= "%v"
+			bound_service_accounts 		= ["%v"]
+			type 						= "gce"
+			bound_ips 					= ["1.1.1.0/32"]
+			delete_protection 			= "false"
 		}
 	`, name, path, os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT"), os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC"))
 
@@ -224,21 +234,23 @@ func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
 	path := testPath("auth_method_K8s_test")
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_k8s" "%v" {
-			name = "%v"
-			access_expires = 1638741817
-			jwt_ttl = 42
-			bound_ips = ["1.1.4.0/32"]
-			bound_pod_names = ["mypod1", "mypod2"]
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			access_expires 		= 1638741817
+			jwt_ttl 			= 42
+			bound_ips 			= ["1.1.4.0/32"]
+			bound_pod_names 	= ["mypod1", "mypod2"]
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "true"
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_k8s" "%v" {
-			name = "%v"
-			access_expires = 1638741817
-			bound_ips = ["1.1.4.0/32"]
-			bound_pod_names = ["mypod1", "mypod3"]
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			access_expires 		= 1638741817
+			bound_ips 			= ["1.1.4.0/32"]
+			bound_pod_names 	= ["mypod1", "mypod3"]
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "false"
 		}
 	`, name, path)
 
@@ -266,22 +278,24 @@ func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
 	path := testPath("auth_method_oauth2")
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_oauth2" "%v" {
-			name = "%v"
-			jwt_ttl = 42
-			unique_identifier = "email"
-			jwks_uri = "https://test.wixpress.com"
-			access_expires = 1638741817
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			jwt_ttl 			= 42
+			unique_identifier 	= "email"
+			jwks_uri 			= "https://test.wixpress.com"
+			access_expires 		= 1638741817
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "true"
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_oauth2" "%v" {
-			name = "%v"
-			unique_identifier = "babab"
-			jwks_uri = "https://test.wixpress.com"
-			bound_ips = ["1.1.1.0/32"]
-			access_expires = 1638741817
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			unique_identifier 	= "babab"
+			jwks_uri 			= "https://test.wixpress.com"
+			bound_ips 			= ["1.1.1.0/32"]
+			access_expires 		= 1638741817
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "false"
 		}
 	`, name, path)
 
@@ -309,28 +323,30 @@ func TestAuthMethodOidcResourceCreateNew(t *testing.T) {
 	path := testPath("auth_method_oidc")
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_oidc" "%v" {
-			name = "%v"
-			jwt_ttl = 42
-			unique_identifier = "email"
-			client_secret = "test-client-secret"
-			issuer = "https://dev-9yl2unqy.us.auth0.com/"
-			client_id = "trst-ci"
-			access_expires = 1638741817
-			required_scopes = ["email", "profile"]
-			required_scopes_prefix = "devops"
+			name 					= "%v"
+			jwt_ttl 				= 42
+			unique_identifier 		= "email"
+			client_secret 			= "test-client-secret"
+			issuer 					= "https://dev-9yl2unqy.us.auth0.com/"
+			client_id 				= "trst-ci"
+			access_expires 			= 1638741817
+			required_scopes 		= ["email", "profile"]
+			required_scopes_prefix 	= "devops"
+			delete_protection 		= "true"
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_oidc" "%v" {
-			name = "%v"
-			unique_identifier = "email2"
-			client_secret = "test-client-secret2"
-			issuer = "https://dev-9yl2unqy.us.auth0.com/"
-			client_id = "trst-ci2"
-			bound_ips = ["1.1.1.0/32"]
-			required_scopes = ["id"]
-			required_scopes_prefix = "rnd"
-            audit_logs_claims = ["eee","kk"]
+			name 					= "%v"
+			unique_identifier 		= "email2"
+			client_secret 			= "test-client-secret2"
+			issuer 					= "https://dev-9yl2unqy.us.auth0.com/"
+			client_id 				= "trst-ci2"
+			bound_ips 				= ["1.1.1.0/32"]
+			required_scopes 		= ["id"]
+			required_scopes_prefix 	= "rnd"
+            audit_logs_claims 		= ["eee","kk"]
+			delete_protection 		= "false"
 		}
 	`, name, path)
 
@@ -360,21 +376,23 @@ func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_saml" "%v" {
-			name = "%v"
-			jwt_ttl = 42
-			idp_metadata_url = "https://dev-1111.okta.com/app/abc12345/sso/saml/metadata"
-			unique_identifier = "email"
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			jwt_ttl 			= 42
+			idp_metadata_url 	= "https://dev-1111.okta.com/app/abc12345/sso/saml/metadata"
+			unique_identifier 	= "email"
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "true"
 		}
 	`, name, path)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_saml" "%v" {
 			name = "%v"
-			idp_metadata_url = "https://dev-1111.okta.com/app/abc12345/sso/saml/metadata"
-			unique_identifier = "email"
-			bound_ips = ["1.1.1.0/32"]
-            audit_logs_claims = ["eee","kk"]
+			idp_metadata_url 	= "https://dev-1111.okta.com/app/abc12345/sso/saml/metadata"
+			unique_identifier 	= "email"
+			bound_ips 			= ["1.1.1.0/32"]
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "false"
 		}
 	`, name, path)
 
@@ -404,20 +422,20 @@ func TestAuthMethodSAMLWithXmlResourceCreateNew(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_saml" "%v" {
-			name = "%v"
-			idp_metadata_xml_data = "<ss>cccc<ss>"
-			unique_identifier = "email"
-            audit_logs_claims = ["eee","kk"]
+			name 					= "%v"
+			idp_metadata_xml_data 	= "<ss>cccc<ss>"
+			unique_identifier 		= "email"
+            audit_logs_claims 		= ["eee","kk"]
 		}
 	`, name, path)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_saml" "%v" {
-			name = "%v"
-			idp_metadata_xml_data = "<ss>ddddd<ss>"
-			unique_identifier = "email"
-			bound_ips = ["1.1.1.0/32"]
-            audit_logs_claims = ["eee","kk"]
+			name 					= "%v"
+			idp_metadata_xml_data 	= "<ss>ddddd<ss>"
+			unique_identifier 		= "email"
+			bound_ips 				= ["1.1.1.0/32"]
+            audit_logs_claims 		= ["eee","kk"]
 		}
 	`, name, path)
 
@@ -445,19 +463,21 @@ func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
 	path := testPath("auth_method_universal_identity")
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_universal_identity" "%v" {
-			name = "%v"
-			jwt_ttl = 42
-			deny_inheritance = true
-			ttl = 120
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			jwt_ttl 			= 42
+			deny_inheritance 	= true
+			ttl 				= 120
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "true"
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_universal_identity" "%v" {
-			name = "%v"
-			deny_inheritance = false
-			bound_ips = ["1.1.1.0/32"]
-            audit_logs_claims = ["eee","kk"]
+			name 				= "%v"
+			deny_inheritance 	= false
+			bound_ips 			= ["1.1.1.0/32"]
+            audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "false"
 		}
 	`, name, path)
 

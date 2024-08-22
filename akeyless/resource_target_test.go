@@ -447,12 +447,12 @@ func checkTargetExistsRemotelyprod(path string) resource.TestCheckFunc {
 		client := *testAccProvider.Meta().(providerMeta).client
 		token := *testAccProvider.Meta().(providerMeta).token
 
-		gsvBody := akeyless_api.GetTarget{
+		gsvBody := akeyless_api.TargetGet{
 			Name:  path,
 			Token: &token,
 		}
 
-		_, _, err := client.GetTarget(context.Background()).Body(gsvBody).Execute()
+		_, _, err := client.TargetGet(context.Background()).Body(gsvBody).Execute()
 		if err != nil {
 			return err
 		}

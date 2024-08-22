@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -37,28 +38,24 @@ func resourceAuthMethodCert() *schema.Resource {
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
 				Default:     "0",
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A comma-separated CIDR block list to allow client access",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"gw_bound_ips": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A comma-separated CIDR block list as a trusted Gateway entity",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"force_sub_claims": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
@@ -70,70 +67,67 @@ func resourceAuthMethodCert() *schema.Resource {
 			},
 			"certificate_data": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The certificate data in base64, if no file was provided.",
 			},
 			"bound_common_names": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of names. At least one must exist in the Common Name. Supports globbing.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"bound_dns_sans": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of DNS names. At least one must exist in the SANs. Supports globbing.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"bound_email_sans": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of Email Addresses. At least one must exist in the SANs. Supports globbing.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"bound_uri_sans": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of URIs. At least one must exist in the SANs. Supports globbing.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"bound_organizational_units": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of Organizational Units names. At least one must exist in the OU field.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"bound_extensions": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of extensions formatted as 'oid:value'. Expects the extension value to be some type of ASN1 encoded string. All values much match. Supports globbing on 'value'.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"revoked_cert_ids": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of revoked cert ids",
 				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"access_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Auth Method access ID",
 			},
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
+			},
+			"access_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Auth Method access ID",
 			},
 		},
 	}
@@ -173,10 +167,11 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
 	certificateData = base64.StdEncoding.EncodeToString([]byte(certificateData))
 
-	body := akeyless_api.CreateAuthMethodCert{
+	body := akeyless_api.AuthMethodCreateCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -195,8 +190,9 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundExtensions, boundExtensions)
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	rOut, res, err := client.CreateAuthMethodCert(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodCreateCert(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -231,12 +227,12 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -292,6 +288,12 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 		}
 		if accessInfo.AuditLogsClaims != nil {
 			err = d.Set("audit_logs_claims", *accessInfo.AuditLogsClaims)
+			if err != nil {
+				return err
+			}
+		}
+		if rOut.DeleteProtection != nil {
+			err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
 			if err != nil {
 				return err
 			}
@@ -405,8 +407,9 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	revokedCertIds := common.ExpandStringList(revokedCertIdsSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless_api.UpdateAuthMethodCert{
+	body := akeyless_api.AuthMethodUpdateCert{
 		Name:             name,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
@@ -426,8 +429,9 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundExtensions, boundExtensions)
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.UpdateAuthMethodCert(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateCert(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
@@ -447,13 +451,13 @@ func resourceAuthMethodCertDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

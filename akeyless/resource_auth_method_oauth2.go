@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -31,21 +32,18 @@ func resourceAuthMethodOauth2() *schema.Resource {
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
 				Default:     "0",
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A CIDR whitelist with the IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"force_sub_claims": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
@@ -57,13 +55,11 @@ func resourceAuthMethodOauth2() *schema.Resource {
 			},
 			"jwks_uri": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.",
 			},
 			"jwks_json_data": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The JSON Web Key Set (JWKS) containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization serve, in base64 format.",
 			},
@@ -74,34 +70,36 @@ func resourceAuthMethodOauth2() *schema.Resource {
 			},
 			"bound_client_ids": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "The clients ids that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"issuer": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "Issuer URL",
 			},
 			"audience": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The audience in the JWT",
-			},
-			"access_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Auth Method access ID",
 			},
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
+			},
+			"access_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Auth Method access ID",
 			},
 		},
 	}
@@ -129,8 +127,9 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	audience := d.Get("audience").(string)
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless_api.CreateAuthMethodOAuth2{
+	body := akeyless_api.AuthMethodCreateOauth2{
 		Name:             name,
 		JwksUri:          jwksUri,
 		UniqueIdentifier: uniqueIdentifier,
@@ -145,8 +144,9 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Audience, audience)
 	common.GetAkeylessPtr(&body.JwksJsonData, jwksJsonData)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	rOut, _, err := client.CreateAuthMethodOAuth2(ctx).Body(body).Execute()
+	rOut, _, err := client.AuthMethodCreateOauth2(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -176,12 +176,12 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -283,6 +283,13 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -310,8 +317,9 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	audience := d.Get("audience").(string)
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless_api.UpdateAuthMethodOAuth2{
+	body := akeyless_api.AuthMethodUpdateOauth2{
 		Name:             name,
 		JwksUri:          jwksUri,
 		UniqueIdentifier: uniqueIdentifier,
@@ -327,8 +335,9 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.JwksJsonData, jwksJsonData)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.UpdateAuthMethodOAuth2(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateOauth2(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -348,13 +357,13 @@ func resourceAuthMethodOauth2Delete(d *schema.ResourceData, m interface{}) error
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

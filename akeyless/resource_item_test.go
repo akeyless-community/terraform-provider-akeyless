@@ -16,10 +16,10 @@ import (
 func TestDfcKeyRsaResource(t *testing.T) {
 	t.Parallel()
 
-	_, cert := generateCertForTest(t, 1024)
-
 	name := "test_rsa_key"
 	itemPath := testPath(name)
+
+	cert := generateCertForTestWithKey(t, 1024, itemPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {

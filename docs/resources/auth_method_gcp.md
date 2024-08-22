@@ -32,6 +32,7 @@ GCE Auth Method Resource
 - `bound_regions` (Set of String) GCE only. A list of regions. GCE instances must belong to any of the provided regions in order to authenticate. For multiple values repeat this flag.
 - `bound_service_accounts` (Set of String) A list of Service Accounts. Clients must belong to any of the provided service accounts in order to authenticate. For multiple values repeat this flag.
 - `bound_zones` (Set of String) GCE only. A list of zones. GCE instances must belong to any of the provided zones in order to authenticate. For multiple values repeat this flag.
+- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `jwt_ttl` (Number) Creds expiration time in minutes
 - `service_account_creds_data` (String) Service Account creds data, base64 encoded

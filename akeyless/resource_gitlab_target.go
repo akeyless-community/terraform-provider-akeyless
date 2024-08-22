@@ -74,7 +74,7 @@ func resourceGitlabTargetCreate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 
-	body := akeyless_api.CreateGitlabTarget{
+	body := akeyless_api.TargetCreateGitlab{
 		Name:  name,
 		Token: &token,
 	}
@@ -84,7 +84,7 @@ func resourceGitlabTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 
-	_, _, err := client.CreateGitlabTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetCreateGitlab(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -107,12 +107,12 @@ func resourceGitlabTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetTargetDetails{
+	body := akeyless_api.TargetGetDetails{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetTargetDetails(ctx).Body(body).Execute()
+	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -177,7 +177,7 @@ func resourceGitlabTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 
-	body := akeyless_api.UpdateGitlabTarget{
+	body := akeyless_api.TargetUpdateGitlab{
 		Name:  name,
 		Token: &token,
 	}
@@ -187,7 +187,7 @@ func resourceGitlabTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 
-	_, _, err := client.UpdateGitlabTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetUpdateGitlab(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -207,13 +207,13 @@ func resourceGitlabTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteTarget{
+	deleteItem := akeyless_api.TargetDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteTarget(ctx).Body(deleteItem).Execute()
+	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

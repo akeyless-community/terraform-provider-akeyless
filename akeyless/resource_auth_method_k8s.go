@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -31,21 +32,18 @@ func resourceAuthMethodK8s() *schema.Resource {
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
 				Default:     0,
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A CIDR whitelist with the IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"force_sub_claims": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
@@ -57,49 +55,32 @@ func resourceAuthMethodK8s() *schema.Resource {
 			},
 			"gen_key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "If this flag is set to true, there is no need to manually provide a public key for the Kubernetes Auth Method, and instead, a key pair, will be generated as part of the command and the private part of the key will be returned (the private key is required for the K8S Auth Config in the Akeyless Gateway)",
 				Default:     "true",
 			},
 			"audience": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The audience in the Kubernetes JWT that the access is restricted to",
 			},
 			"bound_sa_names": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of service account names that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"bound_pod_names": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of pod names that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"bound_namespaces": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A list of namespaces that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"access_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Auth Method access ID",
-			},
-			"private_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The generated private key",
 			},
 			"public_key": {
 				Type:        schema.TypeString,
@@ -112,6 +93,22 @@ func resourceAuthMethodK8s() *schema.Resource {
 				Optional:    true,
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
+			},
+			"access_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Auth Method access ID",
+			},
+			"private_key": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The generated private key",
 			},
 		},
 	}
@@ -141,8 +138,9 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless_api.CreateAuthMethodK8S{
+	body := akeyless_api.AuthMethodCreateK8s{
 		Name:  name,
 		Token: &token,
 	}
@@ -158,8 +156,9 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PublicKey, publicKey)
 	common.GetAkeylessPtr(&body.GenKey, genKey)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	rOut, _, err := client.CreateAuthMethodK8S(ctx).Body(body).Execute()
+	rOut, _, err := client.AuthMethodCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -181,11 +180,11 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if publicKey == "" {
-		body := akeyless_api.GetAuthMethod{
+		body := akeyless_api.AuthMethodGet{
 			Name:  name,
 			Token: &token,
 		}
-		rOut, _, err := client.GetAuthMethod(ctx).Body(body).Execute()
+		rOut, _, err := client.AuthMethodGet(ctx).Body(body).Execute()
 		if err == nil {
 			if rOut.AccessInfo.K8sAccessRules.PubKey != nil {
 				err = d.Set("public_key", *rOut.AccessInfo.K8sAccessRules.PubKey)
@@ -211,12 +210,12 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -310,6 +309,13 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -338,8 +344,9 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless_api.UpdateAuthMethodK8S{
+	body := akeyless_api.AuthMethodUpdateK8s{
 		Name:  name,
 		Token: &token,
 	}
@@ -355,8 +362,9 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GenKey, "false")
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.UpdateAuthMethodK8S(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -376,13 +384,13 @@ func resourceAuthMethodK8sDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}
