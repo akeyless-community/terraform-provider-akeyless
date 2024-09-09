@@ -1,11 +1,8 @@
 # Akeyless Terraform Provider
 <p align="middle">
-<a href="https://terraform.io">
-    <img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" alt="Terraform logo" title="Terraform" height="50" />
-</a>  
     <br/>
 <a href="https://www.akeyless.io/">
-    <img src="https://www.akeyless.io/wp-content/uploads/2021/03/akeyless-logo-black-transparent.png" alt="Akeyless logo" title="Akeyless" width="250"/>
+    <img src="https://akeylesscli.s3.us-east-2.amazonaws.com/images/akeyless_dark_logo.png" alt="Akeyless logo" title="Akeyless" width="250"/>
 </a>
 </p>
 
