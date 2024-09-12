@@ -300,7 +300,7 @@ func getProviderMeta() (*providerMeta, error) {
 	}
 	token := authOut.GetToken()
 
-	return &providerMeta{client, &token}, nil
+	return &providerMeta{client: client, token: &token}, nil
 }
 
 func prepareClient(t *testing.T) (*akeyless_api.V2ApiService, string) {

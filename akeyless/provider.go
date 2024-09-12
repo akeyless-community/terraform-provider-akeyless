@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
@@ -341,26 +342,6 @@ func Provider() *schema.Provider {
 	}
 }
 
-func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	apiGwAddress := d.Get("api_gateway_address").(string)
-
-	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
-		Servers: []akeyless_api.ServerConfiguration{
-			{
-				URL: apiGwAddress,
-			},
-		},
-		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
-	}).V2Api
-
-	token, err := getProviderToken(ctx, d, client)
-	if err != nil {
-		diagnostic := diag.Diagnostics{{Severity: diag.Error, Summary: err.Error()}}
-		return "", diagnostic
-	}
-	return providerMeta{client, &token}, nil
-}
-
 func getProviderToken(ctx context.Context, d *schema.ResourceData, client *akeyless_api.V2ApiService) (string, error) {
 
 	tokenLogin := d.Get("token_login").([]interface{})
@@ -526,8 +507,10 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 }
 
 type providerMeta struct {
-	client *akeyless_api.V2ApiService
-	token  *string
+	client        *akeyless_api.V2ApiService
+	token         *string
+	clientOnce    sync.Once
+	clientInitErr error
 }
 
 func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, error) {
@@ -606,4 +589,49 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 	}
 
 	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")
+}
+
+func getProviderClient(ctx context.Context, d *schema.ResourceData) *akeyless_api.V2ApiService {
+	apiGwAddress := d.Get("api_gateway_address").(string)
+
+	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
+		Servers: []akeyless_api.ServerConfiguration{
+			{
+				URL: apiGwAddress,
+			},
+		},
+		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
+	}).V2Api
+
+	return client
+}
+
+func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+
+	client := getProviderClient(ctx, d)
+
+	token, err := getProviderToken(ctx, d, client)
+	if err != nil {
+		diagnostic := diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error()}}
+		return nil, diagnostic
+	}
+	return &providerMeta{client: client, token: &token}, nil
+}
+
+// Lazy initialization for the token. Relevant if initial auth failed.
+// e.g. if 1st provider set a gateway for 2nd provider,
+// so, the 2nd provider can't auth yet. It will auth when used at first time by resource.
+func (p *providerMeta) getToken(ctx context.Context, d *schema.ResourceData) (string, error) {
+
+	if p.token != nil && *p.token != "" {
+		return *p.token, nil
+	}
+
+	// create t-token only once per provider
+	p.clientOnce.Do(func() {
+		token, err := getProviderToken(ctx, d, p.client)
+		p.token = &token
+		p.clientInitErr = err
+	})
+	return *p.token, p.clientInitErr
 }
