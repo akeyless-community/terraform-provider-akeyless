@@ -61,12 +61,17 @@ func resourceK8sTarget() *schema.Resource {
 }
 
 func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
 	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
@@ -84,7 +89,7 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.TargetCreateK8s(ctx).Body(body).Execute()
+	_, _, err = client.TargetCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -98,12 +103,16 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -162,12 +171,17 @@ func resourceK8sTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
 	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
@@ -185,7 +199,7 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.TargetUpdateK8s(ctx).Body(body).Execute()
+	_, _, err = client.TargetUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -199,9 +213,14 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -210,8 +229,7 @@ func resourceK8sTargetDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
+	_, _, err = client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

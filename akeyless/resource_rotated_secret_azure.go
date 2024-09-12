@@ -113,12 +113,17 @@ func resourceRotatedSecretAzure() *schema.Resource {
 }
 
 func resourceRotatedSecretAzureCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	description := d.Get("description").(string)
@@ -157,7 +162,7 @@ func resourceRotatedSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.Username, username)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 
-	_, _, err := client.RotatedSecretCreateAzure(ctx).Body(body).Execute()
+	_, _, err = client.RotatedSecretCreateAzure(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
@@ -171,12 +176,16 @@ func resourceRotatedSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceRotatedSecretAzureRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -329,12 +338,17 @@ func resourceRotatedSecretAzureRead(d *schema.ResourceData, m interface{}) error
 
 func resourceRotatedSecretAzureUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	passwordLength := d.Get("password_length").(string)

@@ -82,12 +82,17 @@ func dataSourceGetKubeExecCreds() *schema.Resource {
 }
 
 func dataSourceGetKubeExecCredsRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	certIssuerName := d.Get("cert_issuer_name").(string)
 	keyDataBase64 := d.Get("key_data_base64").(string)
 	commonName := d.Get("common_name").(string)

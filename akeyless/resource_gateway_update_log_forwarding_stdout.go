@@ -48,7 +48,7 @@ func resourceGatewayUpdateLogForwardingStdout() *schema.Resource {
 
 func resourceGatewayUpdateLogForwardingStdoutRead(d *schema.ResourceData, m interface{}) error {
 
-	rOut, err := getGwLogForwardingConfig(m)
+	rOut, err := getGwLogForwardingConfig(d, m)
 	if err != nil {
 		return err
 	}
@@ -76,12 +76,17 @@ func resourceGatewayUpdateLogForwardingStdoutRead(d *schema.ResourceData, m inte
 }
 
 func resourceGatewayUpdateLogForwardingStdoutUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
@@ -93,7 +98,7 @@ func resourceGatewayUpdateLogForwardingStdoutUpdate(d *schema.ResourceData, m in
 	common.GetAkeylessPtr(&body.OutputFormat, outputFormat)
 	common.GetAkeylessPtr(&body.PullInterval, pullInterval)
 
-	_, _, err := client.GatewayUpdateLogForwardingStdout(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateLogForwardingStdout(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
@@ -111,7 +116,7 @@ func resourceGatewayUpdateLogForwardingStdoutUpdate(d *schema.ResourceData, m in
 
 func resourceGatewayUpdateLogForwardingStdoutImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	rOut, err := getGwLogForwardingConfig(m)
+	rOut, err := getGwLogForwardingConfig(d, m)
 	if err != nil {
 		return nil, err
 	}

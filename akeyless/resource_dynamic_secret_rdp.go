@@ -126,12 +126,17 @@ func resourceDynamicSecretRdp() *schema.Resource {
 }
 
 func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	rdpUserGroups := d.Get("rdp_user_groups").(string)
@@ -173,7 +178,7 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessAllowExternalUser, secureAccessAllowExternalUser)
 
-	_, _, err := client.DynamicSecretCreateRdp(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretCreateRdp(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -187,12 +192,16 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretRdpRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -284,12 +293,17 @@ func resourceDynamicSecretRdpRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	rdpUserGroups := d.Get("rdp_user_groups").(string)
@@ -331,7 +345,7 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessAllowExternalUser, secureAccessAllowExternalUser)
 
-	_, _, err := client.DynamicSecretUpdateRdp(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretUpdateRdp(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))

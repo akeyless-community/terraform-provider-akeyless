@@ -152,12 +152,17 @@ func resourceDynamicSecretAws() *schema.Resource {
 }
 
 func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	awsAccessKeyId := d.Get("aws_access_key_id").(string)
@@ -206,7 +211,7 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretCreateAws(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretCreateAws(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -220,12 +225,16 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretAwsRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -347,12 +356,17 @@ func resourceDynamicSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	awsAccessKeyId := d.Get("aws_access_key_id").(string)
@@ -401,7 +415,7 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretUpdateAws(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretUpdateAws(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))

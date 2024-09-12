@@ -138,12 +138,17 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 }
 
 func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	postgresqlDbName := d.Get("postgresql_db_name").(string)
@@ -189,7 +194,7 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretCreatePostgreSql(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretCreatePostgreSql(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -203,12 +208,16 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 }
 
 func resourceDynamicSecretPostgresqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -312,12 +321,17 @@ func resourceDynamicSecretPostgresqlRead(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	postgresqlDbName := d.Get("postgresql_db_name").(string)
@@ -363,7 +377,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretUpdatePostgreSql(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretUpdatePostgreSql(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))

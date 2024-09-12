@@ -66,7 +66,7 @@ func resourceGatewayUpdateLogForwardingSumologic() *schema.Resource {
 
 func resourceGatewayUpdateLogForwardingSumologicRead(d *schema.ResourceData, m interface{}) error {
 
-	rOut, err := getGwLogForwardingConfig(m)
+	rOut, err := getGwLogForwardingConfig(d, m)
 	if err != nil {
 		return err
 	}
@@ -116,12 +116,17 @@ func resourceGatewayUpdateLogForwardingSumologicRead(d *schema.ResourceData, m i
 }
 
 func resourceGatewayUpdateLogForwardingSumologicUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
@@ -139,7 +144,7 @@ func resourceGatewayUpdateLogForwardingSumologicUpdate(d *schema.ResourceData, m
 	common.GetAkeylessPtr(&body.SumologicTags, sumologicTags)
 	common.GetAkeylessPtr(&body.Host, host)
 
-	_, _, err := client.GatewayUpdateLogForwardingSumologic(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateLogForwardingSumologic(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
@@ -157,7 +162,7 @@ func resourceGatewayUpdateLogForwardingSumologicUpdate(d *schema.ResourceData, m
 
 func resourceGatewayUpdateLogForwardingSumologicImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	rOut, err := getGwLogForwardingConfig(m)
+	rOut, err := getGwLogForwardingConfig(d, m)
 	if err != nil {
 		return nil, err
 	}

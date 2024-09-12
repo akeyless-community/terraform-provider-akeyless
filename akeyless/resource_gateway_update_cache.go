@@ -60,7 +60,7 @@ func resourceGatewayUpdateCache() *schema.Resource {
 
 func resourceGatewayUpdateCacheRead(d *schema.ResourceData, m interface{}) error {
 
-	rOut, err := getGwCacheConfig(m)
+	rOut, err := getGwCacheConfig(d, m)
 	if err != nil {
 		return err
 	}
@@ -100,12 +100,17 @@ func resourceGatewayUpdateCacheRead(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceGatewayUpdateCacheUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	enableCache := d.Get("enable_cache").(string)
 	staleTimeout := d.Get("stale_timeout").(string)
 	enableProactive := d.Get("enable_proactive").(string)
@@ -121,7 +126,7 @@ func resourceGatewayUpdateCacheUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MinimumFetchInterval, minimumFetchInterval)
 	common.GetAkeylessPtr(&body.BackupInterval, backupInterval)
 
-	_, _, err := client.GatewayUpdateCache(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateCache(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update cache settings: %v", string(apiErr.Body()))
@@ -139,7 +144,7 @@ func resourceGatewayUpdateCacheUpdate(d *schema.ResourceData, m interface{}) err
 
 func resourceGatewayUpdateCacheImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	rOut, err := getGwCacheConfig(m)
+	rOut, err := getGwCacheConfig(d, m)
 	if err != nil {
 		return nil, err
 	}
@@ -178,13 +183,16 @@ func resourceGatewayUpdateCacheImport(d *schema.ResourceData, m interface{}) ([]
 	return []*schema.ResourceData{d}, nil
 }
 
-func getGwCacheConfig(m interface{}) (akeyless_api.CacheConfigPart, error) {
+func getGwCacheConfig(d *schema.ResourceData, m interface{}) (akeyless_api.CacheConfigPart, error) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
 
 	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return akeyless_api.CacheConfigPart{}, fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	body := akeyless_api.GatewayGetCache{
 		Token: &token,

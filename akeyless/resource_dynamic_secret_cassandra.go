@@ -99,12 +99,17 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 }
 
 func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	cassandraHosts := d.Get("cassandra_hosts").(string)
@@ -137,7 +142,7 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
-	_, _, err := client.DynamicSecretCreateCassandra(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretCreateCassandra(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -151,12 +156,16 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 }
 
 func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -252,12 +261,17 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 }
 
 func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	cassandraHosts := d.Get("cassandra_hosts").(string)
@@ -290,7 +304,7 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
-	_, _, err := client.DynamicSecretUpdateCassandra(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretUpdateCassandra(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))

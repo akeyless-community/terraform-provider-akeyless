@@ -144,12 +144,17 @@ func resourceRotatedSecret() *schema.Resource {
 }
 
 func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	description := d.Get("description").(string)
@@ -192,7 +197,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UserAttribute, userAttribute)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 
-	_, _, err := client.CreateRotatedSecret(ctx).Body(body).Execute()
+	_, _, err = client.CreateRotatedSecret(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -206,12 +211,16 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -383,12 +392,17 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
@@ -460,9 +474,14 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRotatedSecretDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -471,8 +490,7 @@ func resourceRotatedSecretDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
+	_, _, err = client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

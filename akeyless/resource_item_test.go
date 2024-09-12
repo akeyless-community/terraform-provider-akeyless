@@ -479,8 +479,8 @@ func testGatewayAllowedAccessResource(t *testing.T, input *TestGatewayAllowedAcc
 
 func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.DescribeItem{
 			Name:         path,
@@ -498,8 +498,8 @@ func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 
 func checkGatewayAllowedAccessExistsAndValidateDetails(t *testing.T, allowedAccessName, permissions, emailSubClaims string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		ctx := context.Background()
 

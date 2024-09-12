@@ -36,14 +36,18 @@ func dataSourceStaticSecret() *schema.Resource {
 }
 
 func dataSourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Get("path").(string)
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 	gsvBody := akeyless_api.GetSecretValue{
 		Names: []string{path},
 		Token: &token,

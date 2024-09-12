@@ -56,12 +56,17 @@ func resourceAssocRoleAm() *schema.Resource {
 }
 
 func resourceAssocRoleAmCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	roleName := d.Get("role_name").(string)
 	amName := d.Get("am_name").(string)
 	caseSensitive := d.Get("case_sensitive").(string)
@@ -159,12 +164,17 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't update association: %v", err)
 	}
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	subClaims := d.Get("sub_claims").(map[string]interface{})
 	sc := make(map[string]string, len(subClaims))
 	for k, v := range subClaims {
@@ -195,9 +205,14 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAssocRoleAmDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	id := d.Id()
 
@@ -206,7 +221,6 @@ func resourceAssocRoleAmDelete(d *schema.ResourceData, m interface{}) error {
 		AssocId: id,
 	}
 
-	ctx := context.Background()
 	var apiErr akeyless_api.GenericOpenAPIError
 
 	_, res, err := client.DeleteRoleAssociation(ctx).Body(deleteItem).Execute()

@@ -37,9 +37,14 @@ func dataSourceSecret() *schema.Resource {
 }
 
 func dataSourceSecretRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Get("path").(string)
 
@@ -48,7 +53,6 @@ func dataSourceSecretRead(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 
-	ctx := context.Background()
 	var apiErr akeyless_api.GenericOpenAPIError
 
 	itemOut, _, err := client.DescribeItem(ctx).Body(itemBody).Execute()

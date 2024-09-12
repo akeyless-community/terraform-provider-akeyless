@@ -69,12 +69,17 @@ func resourceAwsTarget() *schema.Resource {
 }
 
 func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	accessKeyId := d.Get("access_key_id").(string)
 	accessKey := d.Get("access_key").(string)
@@ -96,7 +101,7 @@ func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.TargetCreateAws(ctx).Body(body).Execute()
+	_, _, err = client.TargetCreateAws(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -110,12 +115,17 @@ func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	path := d.Id()
 
 	body := akeyless_api.TargetGetDetails{
@@ -189,12 +199,17 @@ func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	accessKeyId := d.Get("access_key_id").(string)
@@ -216,7 +231,7 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
 
-	_, _, err := client.TargetUpdateAws(ctx).Body(body).Execute()
+	_, _, err = client.TargetUpdateAws(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -230,9 +245,14 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAwsTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -241,8 +261,7 @@ func resourceAwsTargetDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
+	_, _, err = client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

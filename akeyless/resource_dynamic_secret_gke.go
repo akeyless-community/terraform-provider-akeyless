@@ -108,12 +108,17 @@ func resourceDynamicSecretGke() *schema.Resource {
 }
 
 func resourceDynamicSecretGkeCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
@@ -150,7 +155,7 @@ func resourceDynamicSecretGkeCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretCreateGke(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretCreateGke(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -164,12 +169,16 @@ func resourceDynamicSecretGkeCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretGkeRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -257,12 +266,17 @@ func resourceDynamicSecretGkeRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDynamicSecretGkeUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
@@ -299,7 +313,7 @@ func resourceDynamicSecretGkeUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretUpdateGke(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretUpdateGke(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))

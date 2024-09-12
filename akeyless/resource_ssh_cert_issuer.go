@@ -108,12 +108,17 @@ func resourceSSHCertIssuer() *schema.Resource {
 }
 
 func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
 	allowedUsers := d.Get("allowed_users").(string)
@@ -151,7 +156,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessUseInternalBastion, secureAccessUseInternalBastion)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
-	_, _, err := client.CreateSSHCertIssuer(ctx).Body(body).Execute()
+	_, _, err = client.CreateSSHCertIssuer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to create ssh cert issuer: %v", string(apiErr.Body()))
@@ -165,12 +170,16 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -253,12 +262,17 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
 	allowedUsers := d.Get("allowed_users").(string)
@@ -319,9 +333,14 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHCertIssuerDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -330,8 +349,7 @@ func resourceSSHCertIssuerDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
+	_, _, err = client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

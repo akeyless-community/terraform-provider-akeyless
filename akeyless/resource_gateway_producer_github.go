@@ -86,12 +86,17 @@ func resourceProducerGithub() *schema.Resource {
 }
 
 func resourceProducerGithubCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
 	installationRepository := d.Get("installation_repository").(string)
@@ -117,7 +122,7 @@ func resourceProducerGithubCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
 
-	_, _, err := client.GatewayCreateProducerGithub(ctx).Body(body).Execute()
+	_, _, err = client.GatewayCreateProducerGithub(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -131,12 +136,16 @@ func resourceProducerGithubCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -226,12 +235,17 @@ func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
 	installationRepository := d.Get("installation_repository").(string)
@@ -257,7 +271,7 @@ func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
 
-	_, _, err := client.GatewayUpdateProducerGithub(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateProducerGithub(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -271,9 +285,14 @@ func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGithubDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -282,8 +301,7 @@ func resourceProducerGithubDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.GatewayDeleteProducer(ctx).Body(deleteItem).Execute()
+	_, _, err = client.GatewayDeleteProducer(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

@@ -88,7 +88,7 @@ func resourceGatewayUpdateLogForwardingSplunk() *schema.Resource {
 
 func resourceGatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m interface{}) error {
 
-	rOut, err := getGwLogForwardingConfig(m)
+	rOut, err := getGwLogForwardingConfig(d, m)
 	if err != nil {
 		return err
 	}
@@ -162,12 +162,17 @@ func resourceGatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m inte
 }
 
 func resourceGatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
@@ -193,7 +198,7 @@ func resourceGatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m in
 	common.GetAkeylessPtr(&body.EnableTls, enableTls)
 	common.GetAkeylessPtr(&body.TlsCertificate, tlsCertificate)
 
-	_, _, err := client.GatewayUpdateLogForwardingSplunk(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateLogForwardingSplunk(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
@@ -211,7 +216,7 @@ func resourceGatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m in
 
 func resourceGatewayUpdateLogForwardingSplunkImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	rOut, err := getGwLogForwardingConfig(m)
+	rOut, err := getGwLogForwardingConfig(d, m)
 	if err != nil {
 		return nil, err
 	}

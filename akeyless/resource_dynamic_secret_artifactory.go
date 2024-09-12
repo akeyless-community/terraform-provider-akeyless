@@ -81,12 +81,17 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 }
 
 func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
 	artifactoryTokenAudience := d.Get("artifactory_token_audience").(string)
@@ -113,7 +118,7 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
-	_, _, err := client.DynamicSecretCreateArtifactory(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretCreateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create dynamic secret: %v", string(apiErr.Body()))
@@ -127,12 +132,16 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 }
 
 func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -217,12 +226,17 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 }
 
 func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
 	artifactoryTokenAudience := d.Get("artifactory_token_audience").(string)
@@ -249,7 +263,7 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
-	_, _, err := client.DynamicSecretUpdateArtifactory(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretUpdateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))

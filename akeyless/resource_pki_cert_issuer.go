@@ -173,12 +173,17 @@ func resourcePKICertIssuer() *schema.Resource {
 }
 
 func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
 	ttl := d.Get("ttl").(string)
@@ -242,7 +247,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
-	_, _, err := client.CreatePKICertIssuer(ctx).Body(body).Execute()
+	_, _, err = client.CreatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to create pki cert issuer: %v", string(apiErr.Body()))
@@ -256,12 +261,16 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -475,12 +484,17 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
 	ttl := d.Get("ttl").(string)
@@ -568,9 +582,14 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePKICertIssuerDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -579,8 +598,7 @@ func resourcePKICertIssuerDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
+	_, _, err = client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

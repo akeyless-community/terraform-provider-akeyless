@@ -42,12 +42,17 @@ func dataSourceTokenize() *schema.Resource {
 }
 
 func dataSourceTokenizeRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	tokenizerName := d.Get("tokenizer_name").(string)
 	plaintext := d.Get("plaintext").(string)
 	tweak := d.Get("tweak").(string)

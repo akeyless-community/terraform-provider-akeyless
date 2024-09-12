@@ -123,12 +123,17 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 }
 
 func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	redshiftDbName := d.Get("redshift_db_name").(string)
@@ -166,7 +171,7 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
-	_, _, err := client.DynamicSecretCreateRedshift(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretCreateRedshift(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -180,12 +185,16 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -283,12 +292,17 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	redshiftDbName := d.Get("redshift_db_name").(string)
@@ -326,7 +340,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
-	_, _, err := client.DynamicSecretUpdateRedshift(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretUpdateRedshift(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))

@@ -29,14 +29,18 @@ func dataSourceRole() *schema.Resource {
 }
 
 func dataSourceRoleRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	name := d.Get("name").(string)
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 	body := akeyless_api.GetRole{
 		Name:  name,
 		Token: &token,

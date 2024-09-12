@@ -152,12 +152,17 @@ func resourceDynamicSecretK8s() *schema.Resource {
 }
 
 func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
@@ -210,7 +215,7 @@ func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.DynamicSecretCreateK8s(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Producer: %v", string(apiErr.Body()))
@@ -224,12 +229,16 @@ func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretK8sRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -346,12 +355,17 @@ func resourceDynamicSecretK8sRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
@@ -404,7 +418,7 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.DynamicSecretUpdateK8s(ctx).Body(body).Execute()
+	_, _, err = client.DynamicSecretUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update Producer: %v", string(apiErr.Body()))

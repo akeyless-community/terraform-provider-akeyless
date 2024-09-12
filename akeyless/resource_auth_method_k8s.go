@@ -115,12 +115,17 @@ func resourceAuthMethodK8s() *schema.Resource {
 }
 
 func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	publicKey := d.Get("public_key").(string)
@@ -201,12 +206,16 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -246,7 +255,7 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	rOutAcc, err := getAccountSettings(m)
+	rOutAcc, err := getAccountSettings(d, m)
 	if err != nil {
 		return err
 	}
@@ -322,12 +331,17 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	publicKey := d.Get("public_key").(string)
@@ -364,7 +378,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.AuthMethodUpdateK8s(ctx).Body(body).Execute()
+	_, _, err = client.AuthMethodUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -378,9 +392,14 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodK8sDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -389,8 +408,7 @@ func resourceAuthMethodK8sDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
+	_, _, err = client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

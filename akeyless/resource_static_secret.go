@@ -129,9 +129,14 @@ func resourceStaticSecret() *schema.Resource {
 }
 
 func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Get("path").(string)
 	value := d.Get("value").(string)
@@ -152,7 +157,6 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	tagsList := common.ExpandStringList(tags.List())
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 	body := akeyless_api.CreateSecret{
 		Name:           path,
 		Value:          value,
@@ -174,7 +178,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
 
-	_, _, err := client.CreateSecret(ctx).Body(body).Execute()
+	_, _, err = client.CreateSecret(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -212,14 +216,18 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 	gsvBody := akeyless_api.GetSecretValue{
 		Names: []string{path},
 		Token: &token,
@@ -298,12 +306,16 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Get("path").(string)
 
@@ -329,7 +341,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		common.GetAkeylessPtr(&body.Format, format)
 		common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-		_, _, err := client.UpdateSecretVal(ctx).Body(body).Execute()
+		_, _, err = client.UpdateSecretVal(ctx).Body(body).Execute()
 		if err != nil {
 			if errors.As(err, &apiErr) {
 				return fmt.Errorf("can't update Secret: %v", string(apiErr.Body()))
@@ -415,9 +427,14 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -426,8 +443,7 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
+	_, _, err = client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

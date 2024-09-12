@@ -82,12 +82,17 @@ func resourceSSHTarget() *schema.Resource {
 }
 
 func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	host := d.Get("host").(string)
@@ -111,7 +116,7 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PrivateKeyPassword, privateKeyPassword)
 	common.GetAkeylessPtr(&body.Key, key)
 
-	_, _, err := client.TargetCreateSsh(ctx).Body(body).Execute()
+	_, _, err = client.TargetCreateSsh(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -125,12 +130,16 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -207,12 +216,17 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	host := d.Get("host").(string)
@@ -236,7 +250,7 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PrivateKeyPassword, privateKeyPassword)
 	common.GetAkeylessPtr(&body.Key, key)
 
-	_, _, err := client.TargetUpdateSsh(ctx).Body(body).Execute()
+	_, _, err = client.TargetUpdateSsh(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -250,9 +264,14 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -261,8 +280,7 @@ func resourceSSHTargetDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
+	_, _, err = client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}
