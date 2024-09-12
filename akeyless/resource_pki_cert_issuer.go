@@ -32,8 +32,8 @@ func resourcePKICertIssuer() *schema.Resource {
 			},
 			"signer_key_name": {
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A key to sign the certificate with",
+				Optional:    true,
+				Description: "A key to sign the certificate with, required in Private CA mode",
 			},
 			"ttl": {
 				Type:        schema.TypeString,

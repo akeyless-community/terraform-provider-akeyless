@@ -18,7 +18,6 @@ PKI Cert Issuer  resource
 ### Required
 
 - `name` (String) PKI certificate issuer name
-- `signer_key_name` (String) A key to sign the certificate with
 - `ttl` (String) The maximum requested Time To Live for issued certificate by default in seconds, supported formats are s,m,h,d. In case of Public CA, this is based on the CA target's supported maximum TTLs
 
 ### Optional
@@ -46,6 +45,7 @@ PKI Cert Issuer  resource
 - `protect_certificates` (Boolean) Whether to protect generated certificates from deletion
 - `province` (String) A comma-separated list of provinces that will be set in the issued certificate
 - `server_flag` (Boolean) If set, certificates will be flagged for server auth use
+- `signer_key_name` (String) A key to sign the certificate with, required in Private CA mode
 - `street_address` (String) A comma-separated list of street addresses that will be set in the issued certificate
 - `tags` (Set of String) List of the tags attached to this key
 
