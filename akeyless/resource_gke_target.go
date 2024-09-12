@@ -81,12 +81,17 @@ func resourceGkeTarget() *schema.Resource {
 }
 
 func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
 	gkeClusterEndpoint := d.Get("gke_cluster_endpoint").(string)
@@ -110,7 +115,7 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.TargetCreateGke(ctx).Body(body).Execute()
+	_, _, err = client.TargetCreateGke(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -124,12 +129,16 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -206,12 +215,17 @@ func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
 	gkeClusterEndpoint := d.Get("gke_cluster_endpoint").(string)
@@ -235,7 +249,7 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.TargetUpdateGke(ctx).Body(body).Execute()
+	_, _, err = client.TargetUpdateGke(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -249,9 +263,14 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGkeTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -260,8 +279,7 @@ func resourceGkeTargetDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
+	_, _, err = client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

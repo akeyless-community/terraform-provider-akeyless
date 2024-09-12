@@ -91,12 +91,17 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 }
 
 func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
@@ -144,12 +149,16 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 }
 
 func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -196,7 +205,7 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 		}
 	}
 
-	rOutAcc, err := getAccountSettings(m)
+	rOutAcc, err := getAccountSettings(d, m)
 	if err != nil {
 		return err
 	}
@@ -249,12 +258,17 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 }
 
 func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
@@ -283,7 +297,7 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.AuthMethodUpdateUniversalIdentity(ctx).Body(body).Execute()
+	_, _, err = client.AuthMethodUpdateUniversalIdentity(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -297,9 +311,14 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 }
 
 func resourceAuthMethodUniversalIdentityDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -308,8 +327,7 @@ func resourceAuthMethodUniversalIdentityDelete(d *schema.ResourceData, m interfa
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
+	_, _, err = client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

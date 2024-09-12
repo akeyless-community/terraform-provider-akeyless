@@ -127,12 +127,17 @@ func resourceProducerRedshift() *schema.Resource {
 }
 
 func resourceProducerRedshiftCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	redshiftDbName := d.Get("redshift_db_name").(string)
@@ -166,7 +171,7 @@ func resourceProducerRedshiftCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
-	_, _, err := client.GatewayCreateProducerRedshift(ctx).Body(body).Execute()
+	_, _, err = client.GatewayCreateProducerRedshift(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -180,12 +185,16 @@ func resourceProducerRedshiftCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceProducerRedshiftRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -277,12 +286,17 @@ func resourceProducerRedshiftRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerRedshiftUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	redshiftDbName := d.Get("redshift_db_name").(string)
@@ -316,7 +330,7 @@ func resourceProducerRedshiftUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
-	_, _, err := client.GatewayUpdateProducerRedshift(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateProducerRedshift(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -330,9 +344,14 @@ func resourceProducerRedshiftUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceProducerRedshiftDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -341,8 +360,7 @@ func resourceProducerRedshiftDelete(d *schema.ResourceData, m interface{}) error
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.GatewayDeleteProducer(ctx).Body(deleteItem).Execute()
+	_, _, err = client.GatewayDeleteProducer(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

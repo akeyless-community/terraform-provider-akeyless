@@ -319,9 +319,14 @@ func resourceAuthMethodCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -330,8 +335,7 @@ func resourceAuthMethodDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err = client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}
@@ -340,12 +344,16 @@ func resourceAuthMethodDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Get("path").(string)
 
@@ -387,10 +395,14 @@ func resourceAuthMethodImport(d *schema.ResourceData, m interface{}) ([]*schema.
 }
 
 func createAuthMethod(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
 	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var boundIpsList []string
 
@@ -628,12 +640,16 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func getAccountSettings(m interface{}) (*akeyless_api.GetAccountSettingsCommandOutput, error) {
-	provider := m.(providerMeta)
+func getAccountSettings(d *schema.ResourceData, m interface{}) (*akeyless_api.GetAccountSettingsCommandOutput, error) {
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
 
 	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return nil, fmt.Errorf("failed to authenticate: %w", err)
+	}
+
 	bodyAcc := akeyless_api.GetAccountSettings{
 		Token: &token,
 	}

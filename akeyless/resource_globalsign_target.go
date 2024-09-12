@@ -86,12 +86,17 @@ func resourceGlobalsignTarget() *schema.Resource {
 }
 
 func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
@@ -119,7 +124,7 @@ func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.TargetCreateGlobalSign(ctx).Body(body).Execute()
+	_, _, err = client.TargetCreateGlobalSign(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to create target: %v", string(apiErr.Body()))
@@ -133,12 +138,16 @@ func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceGlobalsignTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -239,12 +248,17 @@ func resourceGlobalsignTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
@@ -272,7 +286,7 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.TargetUpdateGlobalSign(ctx).Body(body).Execute()
+	_, _, err = client.TargetUpdateGlobalSign(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to update target: %v", string(apiErr.Body()))
@@ -286,9 +300,14 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceGlobalsignTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -297,8 +316,7 @@ func resourceGlobalsignTargetDelete(d *schema.ResourceData, m interface{}) error
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
+	_, _, err = client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

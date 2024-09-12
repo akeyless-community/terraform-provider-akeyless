@@ -100,12 +100,17 @@ func dataSourceGatewayGetK8sAuthConfig() *schema.Resource {
 }
 
 func dataSourceGatewayGetK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 
 	body := akeyless_api.GatewayGetK8SAuthConfig{

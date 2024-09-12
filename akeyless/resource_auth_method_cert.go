@@ -135,12 +135,17 @@ func resourceAuthMethodCert() *schema.Resource {
 
 func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -218,12 +223,16 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -260,7 +269,7 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 
-		rOutAcc, err := getAccountSettings(m)
+		rOutAcc, err := getAccountSettings(d, m)
 		if err != nil {
 			return err
 		}
@@ -375,12 +384,17 @@ func isBase64Encoded(data string) bool {
 
 func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -431,7 +445,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.AuthMethodUpdateCert(ctx).Body(body).Execute()
+	_, _, err = client.AuthMethodUpdateCert(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
@@ -445,9 +459,14 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodCertDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -456,8 +475,7 @@ func resourceAuthMethodCertDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
+	_, _, err = client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

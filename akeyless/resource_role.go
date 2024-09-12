@@ -134,9 +134,13 @@ func resourceRole() *schema.Resource {
 }
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (ret diag.Diagnostics) {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("failed to authenticate: %v", err))}
+	}
 	warn := diag.Diagnostics{}
 	ok := true
 
@@ -160,7 +164,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	common.GetAkeylessPtr(&body.SraReportsAccess, sraReportsAccess)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.CreateRole(ctx).Body(body).Execute()
+	_, _, err = client.CreateRole(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create Role: %v", string(apiErr.Body())))}
@@ -185,14 +189,14 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	assocsSet := d.Get("assoc_auth_method").(*schema.Set)
 	assocAuthMethod := assocsSet.List()
-	err, ok = addRoleAssocs(ctx, name, assocAuthMethod, m)
+	err, ok = addRoleAssocs(ctx, name, assocAuthMethod, d, m)
 	if !ok {
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
 
 	rulesSet := d.Get("rules").(*schema.Set)
 	roleRules := rulesSet.List()
-	err, ok = addRoleRules(ctx, name, roleRules, m)
+	err, ok = addRoleRules(ctx, name, roleRules, d, m)
 	if !ok {
 		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
 	}
@@ -289,13 +293,13 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 		assocsToAdd, assosToUpdateNew := extractAssocsToCreateAndUpdate(assocAuthMethodNewValues, assocAuthMethodOldValues)
 		assocsToDelete, assocToRewrite := extractAssocsToCreateAndUpdate(assocAuthMethodOldValues, assocAuthMethodNewValues)
 
-		err, ok = assocRoleAuthMethod(ctx, name, assocsToDelete, assocsToAdd, assosToUpdateNew, m)
+		err, ok = assocRoleAuthMethod(ctx, name, assocsToDelete, assocsToAdd, assosToUpdateNew, d, m)
 		if !ok {
 			return err
 		}
 		defer func() {
 			if !ok {
-				err, _ = assocRoleAuthMethod(ctx, name, assocsToAdd, assocsToDelete, assocToRewrite, m)
+				err, _ = assocRoleAuthMethod(ctx, name, assocsToAdd, assocsToDelete, assocToRewrite, d, m)
 				if err != nil {
 					err = fmt.Errorf("fatal error, can't delete new role association after bad update: %v", err)
 				}
@@ -316,10 +320,10 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	rulesToAdd := extractRulesToSet(roleRulesNewValues, roleRulesOldValues)
 	rulesToDelete := extractRulesToSet(roleRulesOldValues, roleRulesNewValues)
 
-	err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, m)
+	err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, d, m)
 	defer func() {
 		if !ok {
-			err, _ := setRoleRules(ctx, name, rulesToAdd, rulesToDelete, m)
+			err, _ := setRoleRules(ctx, name, rulesToAdd, rulesToDelete, d, m)
 			if err != nil {
 				log.Fatal(fmt.Printf("fatal error, can't delete new role rules after bad update: %v", err))
 			}
@@ -334,9 +338,9 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	err, ok = updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesNewValues, m)
+	err, ok = updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesNewValues, d, m)
 	if !ok {
-		errInner, okInner := updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesOldValues, m)
+		errInner, okInner := updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesOldValues, d, m)
 		if !okInner {
 			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
 		}
@@ -350,10 +354,15 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 }
 
 func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
 	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
+
 	name := d.Id()
 
 	deleteRole := akeyless_api.DeleteRole{
@@ -409,12 +418,16 @@ func resourceRoleImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 }
 
 func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless_api.Role, error) {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return akeyless_api.Role{}, fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	body := akeyless_api.GetRole{
 		Name:  name,
@@ -567,21 +580,21 @@ func extractRulesToSet(newRules, oldRules []interface{}) []interface{} {
 	return toSet
 }
 
-func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDelete, assocAuthMethodToAdd, assocAuthMethodToUpdate []interface{}, m interface{}) (error, bool) {
+func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDelete, assocAuthMethodToAdd, assocAuthMethodToUpdate []interface{}, d *schema.ResourceData, m interface{}) (error, bool) {
 	var err error
 	var ok bool
 
-	err, ok = deleteRoleAssocs(ctx, assocAuthMethodToDelete, m)
+	err, ok = deleteRoleAssocs(ctx, assocAuthMethodToDelete, d, m)
 	if !ok {
 		return err, ok
 	}
 
-	err, ok = addRoleAssocs(ctx, name, assocAuthMethodToAdd, m)
+	err, ok = addRoleAssocs(ctx, name, assocAuthMethodToAdd, d, m)
 	if !ok {
 		return err, ok
 	}
 
-	err, ok = updateRoleAssocs(ctx, assocAuthMethodToUpdate, m)
+	err, ok = updateRoleAssocs(ctx, assocAuthMethodToUpdate, d, m)
 	if !ok {
 		return err, ok
 	}
@@ -589,11 +602,15 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDele
 	return nil, true
 }
 
-func deleteRoleAssocs(ctx context.Context, assocs []interface{}, m interface{}) (error, bool) {
+func deleteRoleAssocs(ctx context.Context, assocs []interface{}, d *schema.ResourceData, m interface{}) (error, bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err), false
+	}
 
 	for _, v := range assocs {
 		var apiErr akeyless_api.GenericOpenAPIError
@@ -616,11 +633,15 @@ func deleteRoleAssocs(ctx context.Context, assocs []interface{}, m interface{}) 
 	return nil, true
 }
 
-func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface{}, m interface{}) (error, bool) {
+func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface{}, d *schema.ResourceData, m interface{}) (error, bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err), false
+	}
 
 	for _, v := range assocAuthMethod {
 		assoc := v.(map[string]interface{})
@@ -657,11 +678,15 @@ func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface
 	return nil, true
 }
 
-func updateRoleAssocs(ctx context.Context, assocAuthMethods []interface{}, m interface{}) (error, bool) {
+func updateRoleAssocs(ctx context.Context, assocAuthMethods []interface{}, d *schema.ResourceData, m interface{}) (error, bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err), false
+	}
 
 	for _, v := range assocAuthMethods {
 		assoc := v.(map[string]interface{})
@@ -697,16 +722,16 @@ func updateRoleAssocs(ctx context.Context, assocAuthMethods []interface{}, m int
 	return nil, true
 }
 
-func setRoleRules(ctx context.Context, name string, rulesToDelete, rulesToAdd []interface{}, m interface{}) (error, bool) {
+func setRoleRules(ctx context.Context, name string, rulesToDelete, rulesToAdd []interface{}, d *schema.ResourceData, m interface{}) (error, bool) {
 	var err error
 	var ok bool
 
-	err, ok = deleteRoleRules(ctx, name, rulesToDelete, m)
+	err, ok = deleteRoleRules(ctx, name, rulesToDelete, d, m)
 	if !ok {
 		return err, ok
 	}
 
-	err, ok = addRoleRules(ctx, name, rulesToAdd, m)
+	err, ok = addRoleRules(ctx, name, rulesToAdd, d, m)
 	if !ok {
 		return err, ok
 	}
@@ -714,11 +739,15 @@ func setRoleRules(ctx context.Context, name string, rulesToDelete, rulesToAdd []
 	return nil, true
 }
 
-func deleteRoleRules(ctx context.Context, name string, rules []interface{}, m interface{}) (err error, ok bool) {
+func deleteRoleRules(ctx context.Context, name string, rules []interface{}, d *schema.ResourceData, m interface{}) (err error, ok bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err), false
+	}
 
 	for _, v := range rules {
 		ruleMap := v.(map[string]interface{})
@@ -744,12 +773,16 @@ func deleteRoleRules(ctx context.Context, name string, rules []interface{}, m in
 	return nil, true
 }
 
-func addRoleRules(ctx context.Context, name string, roleRules []interface{}, m interface{}) (error, bool) {
+func addRoleRules(ctx context.Context, name string, roleRules []interface{}, d *schema.ResourceData, m interface{}) (error, bool) {
 	var warn error
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err), false
+	}
 
 	for _, v := range roleRules {
 		roles := v.(map[string]interface{})
@@ -772,7 +805,7 @@ func addRoleRules(ctx context.Context, name string, roleRules []interface{}, m i
 			Token:      &token,
 		}
 
-		_, _, err := client.SetRoleRule(ctx).Body(setRoleRule).Execute()
+		_, _, err = client.SetRoleRule(ctx).Body(setRoleRule).Execute()
 		if err != nil {
 			if errors.As(err, &apiErr) {
 				return fmt.Errorf("can't set rules: %v", string(apiErr.Body())), false
@@ -819,11 +852,15 @@ func getNewAccessRules(d *schema.ResourceData) []interface{} {
 }
 
 func updateRoleAccessRules(ctx context.Context, name, description, deleteProtection string,
-	accessRules []interface{}, m interface{}) (error, bool) {
+	accessRules []interface{}, d *schema.ResourceData, m interface{}) (error, bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err), false
+	}
 
 	var auditAccess, analyticsAccess, gwAnalyticsAccess, sraReportsAccess string
 	for _, rule := range accessRules {
@@ -854,7 +891,7 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 	common.GetAkeylessPtr(&updateBody.DeleteProtection, deleteProtection)
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	_, _, err := client.UpdateRole(ctx).Body(updateBody).Execute()
+	_, _, err = client.UpdateRole(ctx).Body(updateBody).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("%v", string(apiErr.Body())), false

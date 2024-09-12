@@ -138,12 +138,17 @@ func resourceProducerRdp() *schema.Resource {
 }
 
 func resourceProducerRdpCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	rdpUserGroups := d.Get("rdp_user_groups").(string)
@@ -183,7 +188,7 @@ func resourceProducerRdpCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessAllowExternalUser, secureAccessAllowExternalUser)
 
-	_, _, err := client.GatewayCreateProducerRdp(ctx).Body(body).Execute()
+	_, _, err = client.GatewayCreateProducerRdp(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -197,12 +202,16 @@ func resourceProducerRdpCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerRdpRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 	body := akeyless_api.GatewayGetProducer{
@@ -293,12 +302,17 @@ func resourceProducerRdpRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerRdpUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	rdpUserGroups := d.Get("rdp_user_groups").(string)
@@ -338,7 +352,7 @@ func resourceProducerRdpUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessAllowExternalUser, secureAccessAllowExternalUser)
 
-	_, _, err := client.GatewayUpdateProducerRdp(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateProducerRdp(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -352,9 +366,14 @@ func resourceProducerRdpUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerRdpDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -363,8 +382,7 @@ func resourceProducerRdpDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.GatewayDeleteProducer(ctx).Body(deleteItem).Execute()
+	_, _, err = client.GatewayDeleteProducer(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

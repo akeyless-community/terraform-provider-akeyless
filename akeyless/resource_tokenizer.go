@@ -98,12 +98,17 @@ func resourceTokenizer() *schema.Resource {
 }
 
 func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	tokenizerType := d.Get("tokenizer_type").(string)
 	templateType := d.Get("template_type").(string)
@@ -134,7 +139,7 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.CreateTokenizer(ctx).Body(body).Execute()
+	_, _, err = client.CreateTokenizer(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create tokenizer: %v", string(apiErr.Body()))
@@ -148,12 +153,16 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -279,12 +288,17 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't update: %v", err)
 	}
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	tagSet := d.Get("tag").(*schema.Set)
@@ -322,9 +336,14 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceTokenizerDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -333,8 +352,7 @@ func resourceTokenizerDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
+	_, _, err = client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

@@ -94,12 +94,17 @@ func resourceK8sAuthConfig() *schema.Resource {
 }
 
 func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	accessId := d.Get("access_id").(string)
 	signingKey := d.Get("signing_key").(string)
@@ -131,7 +136,7 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RancherApiKey, rancherApiKey)
 	common.GetAkeylessPtr(&body.RancherClusterId, rancherClusterId)
 
-	_, _, err := client.GatewayCreateK8SAuthConfig(ctx).Body(body).Execute()
+	_, _, err = client.GatewayCreateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -145,12 +150,16 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -252,12 +261,17 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	accessId := d.Get("access_id").(string)
 	signingKey := d.Get("signing_key").(string)
@@ -289,7 +303,7 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RancherApiKey, rancherApiKey)
 	common.GetAkeylessPtr(&body.RancherClusterId, rancherClusterId)
 
-	_, _, err := client.GatewayUpdateK8SAuthConfig(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -303,9 +317,14 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sAuthConfigDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -314,8 +333,7 @@ func resourceK8sAuthConfigDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.GatewayDeleteK8SAuthConfig(ctx).Body(deleteItem).Execute()
+	_, _, err = client.GatewayDeleteK8SAuthConfig(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

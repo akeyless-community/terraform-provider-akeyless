@@ -69,7 +69,7 @@ func resourceGatewayUpdateLogForwardingGoogleChronicle() *schema.Resource {
 
 func resourceGatewayUpdateLogForwardingGoogleChronicleRead(d *schema.ResourceData, m interface{}) error {
 
-	rOut, err := getGwLogForwardingConfig(m)
+	rOut, err := getGwLogForwardingConfig(d, m)
 	if err != nil {
 		return err
 	}
@@ -125,12 +125,17 @@ func resourceGatewayUpdateLogForwardingGoogleChronicleRead(d *schema.ResourceDat
 }
 
 func resourceGatewayUpdateLogForwardingGoogleChronicleUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
@@ -150,7 +155,7 @@ func resourceGatewayUpdateLogForwardingGoogleChronicleUpdate(d *schema.ResourceD
 	common.GetAkeylessPtr(&body.Region, region)
 	common.GetAkeylessPtr(&body.LogType, logType)
 
-	_, _, err := client.GatewayUpdateLogForwardingGoogleChronicle(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateLogForwardingGoogleChronicle(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
@@ -168,7 +173,7 @@ func resourceGatewayUpdateLogForwardingGoogleChronicleUpdate(d *schema.ResourceD
 
 func resourceGatewayUpdateLogForwardingGoogleChronicleImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	rOut, err := getGwLogForwardingConfig(m)
+	rOut, err := getGwLogForwardingConfig(d, m)
 	if err != nil {
 		return nil, err
 	}

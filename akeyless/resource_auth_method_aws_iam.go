@@ -123,12 +123,17 @@ func resourceAuthMethodAwsIam() *schema.Resource {
 }
 
 func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
@@ -192,12 +197,16 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -246,7 +255,7 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	rOutAcc, err := getAccountSettings(m)
+	rOutAcc, err := getAccountSettings(d, m)
 	if err != nil {
 		return err
 	}
@@ -329,12 +338,17 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
@@ -380,7 +394,7 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.AuthMethodUpdateAwsIam(ctx).Body(body).Execute()
+	_, _, err = client.AuthMethodUpdateAwsIam(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -394,9 +408,14 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodAwsIamDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -405,8 +424,7 @@ func resourceAuthMethodAwsIamDelete(d *schema.ResourceData, m interface{}) error
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
+	_, _, err = client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

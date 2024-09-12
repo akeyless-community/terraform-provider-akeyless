@@ -358,7 +358,7 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 		diagnostic := diag.Diagnostics{{Severity: diag.Error, Summary: err.Error()}}
 		return "", diagnostic
 	}
-	return providerMeta{client, &token}, nil
+	return &providerMeta{client, &token}, nil
 }
 
 func getProviderToken(ctx context.Context, d *schema.ResourceData, client *akeyless_api.V2ApiService) (string, error) {
@@ -606,4 +606,9 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 	}
 
 	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")
+}
+
+func (p *providerMeta) getToken(ctx context.Context, d *schema.ResourceData) (string, error) {
+
+	return *p.token, nil
 }

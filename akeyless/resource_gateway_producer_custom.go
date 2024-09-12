@@ -96,12 +96,17 @@ func resourceProducerCustom() *schema.Resource {
 }
 
 func resourceProducerCustomCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
 	revokeSyncUrl := d.Get("revoke_sync_url").(string)
@@ -130,7 +135,7 @@ func resourceProducerCustomCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
 	common.GetAkeylessPtr(&body.AdminRotationIntervalDays, adminRotationIntervalDays)
 
-	_, _, err := client.GatewayCreateProducerCustom(ctx).Body(body).Execute()
+	_, _, err = client.GatewayCreateProducerCustom(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
@@ -144,12 +149,16 @@ func resourceProducerCustomCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerCustomRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 
@@ -237,12 +246,17 @@ func resourceProducerCustomRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerCustomUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
 	revokeSyncUrl := d.Get("revoke_sync_url").(string)
@@ -271,7 +285,7 @@ func resourceProducerCustomUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
 	common.GetAkeylessPtr(&body.AdminRotationIntervalDays, adminRotationIntervalDays)
 
-	_, _, err := client.GatewayUpdateProducerCustom(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateProducerCustom(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
@@ -285,9 +299,14 @@ func resourceProducerCustomUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerCustomDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -296,8 +315,7 @@ func resourceProducerCustomDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.GatewayDeleteProducer(ctx).Body(deleteItem).Execute()
+	_, _, err = client.GatewayDeleteProducer(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

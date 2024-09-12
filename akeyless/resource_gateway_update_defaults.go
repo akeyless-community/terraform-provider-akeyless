@@ -60,7 +60,7 @@ func resourceGatewayUpdateDefaults() *schema.Resource {
 
 func resourceGatewayUpdateDefaultsRead(d *schema.ResourceData, m interface{}) error {
 
-	rOut, err := getGwDefaultsConfig(m)
+	rOut, err := getGwDefaultsConfig(d, m)
 	if err != nil {
 		return err
 	}
@@ -101,12 +101,17 @@ func resourceGatewayUpdateDefaultsRead(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceGatewayUpdateDefaultsUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	samlAccessId := d.Get("saml_access_id").(string)
 	oidcAccessId := d.Get("oidc_access_id").(string)
 	certAccessId := d.Get("cert_access_id").(string)
@@ -122,7 +127,7 @@ func resourceGatewayUpdateDefaultsUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.EventOnStatusChange, eventOnStatusChange)
 
-	_, _, err := client.GatewayUpdateDefaults(ctx).Body(body).Execute()
+	_, _, err = client.GatewayUpdateDefaults(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't update defaults settings: %v", string(apiErr.Body()))
@@ -140,7 +145,7 @@ func resourceGatewayUpdateDefaultsUpdate(d *schema.ResourceData, m interface{}) 
 
 func resourceGatewayUpdateDefaultsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	rOut, err := getGwDefaultsConfig(m)
+	rOut, err := getGwDefaultsConfig(d, m)
 	if err != nil {
 		return nil, err
 	}
@@ -180,13 +185,16 @@ func resourceGatewayUpdateDefaultsImport(d *schema.ResourceData, m interface{}) 
 	return []*schema.ResourceData{d}, nil
 }
 
-func getGwDefaultsConfig(m interface{}) (akeyless_api.GatewayGetDefaultsOutput, error) {
+func getGwDefaultsConfig(d *schema.ResourceData, m interface{}) (akeyless_api.GatewayGetDefaultsOutput, error) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
 
 	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return akeyless_api.GatewayGetDefaultsOutput{}, fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	body := akeyless_api.GatewayGetDefaults{
 		Token: &token,

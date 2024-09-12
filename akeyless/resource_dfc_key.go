@@ -116,12 +116,17 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
 	description := d.Get("description").(string)
@@ -278,12 +283,17 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to update: %w", err)
 	}
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	tagSet := d.Get("tags").(*schema.Set)
@@ -323,9 +333,14 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDfcKeyDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	path := d.Id()
 
@@ -336,8 +351,7 @@ func resourceDfcKeyDelete(d *schema.ResourceData, m interface{}) error {
 		DeleteInDays:      akeyless_api.PtrInt64(-1),
 	}
 
-	ctx := context.Background()
-	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
+	_, _, err = client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}
@@ -363,12 +377,16 @@ func resourceDfcKeyImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 }
 
 func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless_api.Item, error) {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
-	token := *provider.token
+
+	ctx := context.Background()
+	token, err := provider.getToken(ctx, d)
+	if err != nil {
+		return nil, fmt.Errorf("failed to authenticate: %w", err)
+	}
 
 	var apiErr akeyless_api.GenericOpenAPIError
-	ctx := context.Background()
 
 	path := d.Id()
 	if path == "" {
