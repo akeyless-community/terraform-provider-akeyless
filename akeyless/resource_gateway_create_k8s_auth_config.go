@@ -89,7 +89,7 @@ func resourceK8sAuthConfig() *schema.Resource {
 				Optional:    true,
 				Description: "The cluster id as define in rancher (relevant for rancher only)",
 			},
-			"use_gw_service_account": {
+			"use_local_ca_jwt": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Use the GW's service account",
@@ -134,7 +134,7 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	clusterApiType := d.Get("cluster_api_type").(string)
 	rancherApiKey := d.Get("rancher_api_key").(string)
 	rancherClusterId := d.Get("rancher_cluster_id").(string)
-	useGwServiceAccount := d.Get("use_gw_service_account").(bool)
+	useGwServiceAccount := d.Get("use_local_ca_jwt").(bool)
 	k8sAuthType := d.Get("k8s_auth_type").(string)
 	k8sClientCertificate := d.Get("k8s_client_certificate").(string)
 	k8sClientKey := d.Get("k8s_client_key").(string)
@@ -275,7 +275,7 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.UseLocalCaJwt != nil {
-		err = d.Set("use_gw_service_account", *rOut.UseLocalCaJwt)
+		err = d.Set("use_local_ca_jwt", *rOut.UseLocalCaJwt)
 		if err != nil {
 			return err
 		}
@@ -324,7 +324,7 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	clusterApiType := d.Get("cluster_api_type").(string)
 	rancherApiKey := d.Get("rancher_api_key").(string)
 	rancherClusterId := d.Get("rancher_cluster_id").(string)
-	useGwServiceAccount := d.Get("use_gw_service_account").(bool)
+	useGwServiceAccount := d.Get("use_local_ca_jwt").(bool)
 	k8sAuthType := d.Get("k8s_auth_type").(string)
 	k8sClientCertificate := d.Get("k8s_client_certificate").(string)
 	k8sClientKey := d.Get("k8s_client_key").(string)
