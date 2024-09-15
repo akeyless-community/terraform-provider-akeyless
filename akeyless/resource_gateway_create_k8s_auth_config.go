@@ -89,6 +89,27 @@ func resourceK8sAuthConfig() *schema.Resource {
 				Optional:    true,
 				Description: "The cluster id as define in rancher (relevant for rancher only)",
 			},
+			"use_gw_service_account": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Use the GW's service account",
+			},
+			"k8s_auth_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Native K8S auth type, [token/certificate]. (relevant for native_k8s only)",
+				Default:     "token",
+			},
+			"k8s_client_certificate": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Content of the k8 client certificate (PEM format) in a Base64 format (relevant for native_k8s only)",
+			},
+			"k8s_client_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Content of the k8 client private key (PEM format) in a Base64 format (relevant for native_k8s only)",
+			},
 		},
 	}
 }
@@ -113,6 +134,10 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	clusterApiType := d.Get("cluster_api_type").(string)
 	rancherApiKey := d.Get("rancher_api_key").(string)
 	rancherClusterId := d.Get("rancher_cluster_id").(string)
+	useGwServiceAccount := d.Get("use_gw_service_account").(bool)
+	k8sAuthType := d.Get("k8s_auth_type").(string)
+	k8sClientCertificate := d.Get("k8s_client_certificate").(string)
+	k8sClientKey := d.Get("k8s_client_key").(string)
 
 	body := akeyless_api.GatewayCreateK8SAuthConfig{
 		Name:     name,
@@ -130,6 +155,10 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ClusterApiType, clusterApiType)
 	common.GetAkeylessPtr(&body.RancherApiKey, rancherApiKey)
 	common.GetAkeylessPtr(&body.RancherClusterId, rancherClusterId)
+	common.GetAkeylessPtr(&body.UseGwServiceAccount, useGwServiceAccount)
+	common.GetAkeylessPtr(&body.K8sAuthType, k8sAuthType)
+	common.GetAkeylessPtr(&body.K8sClientCertificate, k8sClientCertificate)
+	common.GetAkeylessPtr(&body.K8sClientKey, k8sClientKey)
 
 	_, _, err := client.GatewayCreateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
@@ -245,6 +274,30 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.UseLocalCaJwt != nil {
+		err = d.Set("use_gw_service_account", *rOut.UseLocalCaJwt)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.K8sAuthType != nil {
+		err = d.Set("k8s_auth_type", *rOut.K8sAuthType)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.K8sClientCertData != nil {
+		err = d.Set("k8s_client_certificate", *rOut.K8sClientCertData)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.K8sClientKeyData != nil {
+		err = d.Set("k8s_client_key", *rOut.K8sClientKeyData)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -271,6 +324,10 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	clusterApiType := d.Get("cluster_api_type").(string)
 	rancherApiKey := d.Get("rancher_api_key").(string)
 	rancherClusterId := d.Get("rancher_cluster_id").(string)
+	useGwServiceAccount := d.Get("use_gw_service_account").(bool)
+	k8sAuthType := d.Get("k8s_auth_type").(string)
+	k8sClientCertificate := d.Get("k8s_client_certificate").(string)
+	k8sClientKey := d.Get("k8s_client_key").(string)
 
 	body := akeyless_api.GatewayUpdateK8SAuthConfig{
 		Name:     name,
@@ -288,6 +345,10 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ClusterApiType, clusterApiType)
 	common.GetAkeylessPtr(&body.RancherApiKey, rancherApiKey)
 	common.GetAkeylessPtr(&body.RancherClusterId, rancherClusterId)
+	common.GetAkeylessPtr(&body.UseGwServiceAccount, useGwServiceAccount)
+	common.GetAkeylessPtr(&body.K8sAuthType, k8sAuthType)
+	common.GetAkeylessPtr(&body.K8sClientCertificate, k8sClientCertificate)
+	common.GetAkeylessPtr(&body.K8sClientKey, k8sClientKey)
 
 	_, _, err := client.GatewayUpdateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
