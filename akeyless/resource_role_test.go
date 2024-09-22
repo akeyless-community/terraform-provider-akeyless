@@ -614,8 +614,8 @@ func TestRoleResourceWithFewAssocs(t *testing.T) {
 
 func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rulesNum int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
@@ -651,8 +651,8 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rule
 }
 func checkAssocExistsRemotely(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
@@ -674,8 +674,8 @@ func checkAssocExistsRemotely(t *testing.T, roleName, authMethodPath string) res
 
 func checkAssocExistsRemotely2(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
@@ -704,8 +704,8 @@ func checkAssocExistsRemotely2(t *testing.T, roleName, authMethodPath string) re
 
 func checkAddRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
@@ -731,8 +731,8 @@ func checkUpdateRoleRemotely(t *testing.T, roleName string, rulesNum int) resour
 }
 func checkUpdateRole(t *testing.T, roleName string, accnum, rulesNum int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,
@@ -751,8 +751,8 @@ func checkUpdateRole(t *testing.T, roleName string, accnum, rulesNum int) resour
 
 func checkRemoveRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,

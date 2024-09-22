@@ -61,8 +61,8 @@ func TestStaticResource(t *testing.T) {
 
 func checkSecretExistsRemotely(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.GetSecretValue{
 			Names: []string{path},

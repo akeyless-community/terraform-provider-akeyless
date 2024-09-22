@@ -354,8 +354,8 @@ func testItemDescriptionBC(t *testing.T, steps []configDescriptionTest,
 
 func checkItemDescriptionRemotely(path, expDescription string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.DescribeItem{
 			Name:         path,
@@ -409,8 +409,8 @@ func testTargetDescriptionBC(t *testing.T, steps []configDescriptionTest,
 
 func checkTargetDescriptionRemotely(path, expDescription string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.TargetGetDetails{
 			Name:  path,
@@ -471,8 +471,8 @@ func testRoleDescriptionBC(t *testing.T, steps []configDescriptionTest,
 
 func checkRoleDescriptionRemotely(roleName, expDescription string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.GetRole{
 			Name:  roleName,

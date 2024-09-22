@@ -444,8 +444,8 @@ func tesTargetResource(t *testing.T, config, configUpdate, secretPath string) {
 
 func checkTargetExistsRemotelyprod(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.TargetGet{
 			Name:  path,
