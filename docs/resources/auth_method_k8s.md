@@ -22,7 +22,6 @@ Kubernetes Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `access_id` (String) Auth Method access ID
 - `audience` (String) The audience in the Kubernetes JWT that the access is restricted to
 - `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
@@ -33,11 +32,12 @@ Kubernetes Auth Method Resource
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `gen_key` (String) If this flag is set to true, there is no need to manually provide a public key for the Kubernetes Auth Method, and instead, a key pair, will be generated as part of the command and the private part of the key will be returned (the private key is required for the K8S Auth Config in the Akeyless Gateway)
 - `jwt_ttl` (Number) Creds expiration time in minutes
-- `private_key` (String) The generated private key
 - `public_key` (String) The generated public key
 
 ### Read-Only
 
+- `access_id` (String) Auth Method access ID
 - `id` (String) The ID of this resource.
+- `private_key` (String) The generated private key
 
 
