@@ -17,21 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type loginType string
-
 // default: public API Gateway
 const publicApi = "https://api.akeyless.io"
-
-const (
-	ApiKeyLogin  loginType = "api_key_login"
-	AwsIAMLogin  loginType = "aws_iam_login"
-	GcpIAMLogin  loginType = "gcp_login"
-	AzureADLogin loginType = "azure_ad_login"
-	JwtLogin     loginType = "jwt_login"
-	EmailLogin   loginType = "email_login"
-	UidLogin     loginType = "uid_login"
-	CertLogin    loginType = "cert_login"
-)
 
 // Provider returns Akeyless Terraform provider
 func Provider() *schema.Provider {
@@ -43,174 +30,15 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_GATEWAY", publicApi),
 				Description: "Origin URL of the API Gateway server. This is a URL with a scheme, a hostname and a port.",
 			},
-			"api_key_login": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using API-Key.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_id": {
-							Type:        schema.TypeString,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_ACCESS_ID", nil),
-						},
-						"access_key": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_ACCESS_KEY", nil),
-						},
-					},
-				},
-			},
-			"aws_iam_login": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using AWS-IAM authentication credentials.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"gcp_login": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"audience": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"azure_ad_login": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using Azure Active Directory authentication.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"jwt_login": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"jwt": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_JWT", nil),
-						},
-					},
-				},
-			},
-			"email_login": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using email and password.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"admin_email": {
-							Type:        schema.TypeString,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_EMAIL", nil),
-						},
-						"admin_password": {
-							Type:        schema.TypeString,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_PASSWORD", nil),
-						},
-					},
-				},
-			},
-			"uid_login": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using Universal Identity authentication.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"uid_token": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_UID", nil),
-						},
-					},
-				},
-			},
-			"cert_login": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using Certificate authentication.  The Certificate and the Private key can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_CERT and AKEYLESS_AUTH_KEY.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"cert_file_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"cert_data": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_CERT", nil),
-						},
-						"key_file_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"key_data": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_KEY", nil),
-						},
-					},
-				},
-			},
-			"token_login": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A configuration block, described below, that attempts to authenticate using akeyless token. The token can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_TOKEN.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"token": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_TOKEN", nil),
-						},
-					},
-				},
-			},
+			"api_key_login":  apiKeyLoginSchema,
+			"aws_iam_login":  awsIamLoginSchema,
+			"gcp_login":      gcpLoginSchema,
+			"azure_ad_login": azureAdLoginSchema,
+			"jwt_login":      jwtLoginSchema,
+			"email_login":    emailLoginSchema,
+			"uid_login":      uidLoginSchema,
+			"cert_login":     certLoginSchema,
+			"token_login":    tokenLoginSchema,
 		},
 		//ConfigureFunc: configureProvider,
 		ConfigureContextFunc: configureProvider,
@@ -319,6 +147,7 @@ func Provider() *schema.Provider {
 			"akeyless_tokenizer":                               resourceTokenizer(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
+			"akeyless_auth":               dataSourceAuth(),
 			"akeyless_static_secret":      dataSourceStaticSecret(),
 			"akeyless_secret":             dataSourceSecret(),
 			"akeyless_auth_method":        dataSourceAuthMethod(),
@@ -607,15 +436,15 @@ func getProviderClient(ctx context.Context, d *schema.ResourceData) *akeyless_ap
 }
 
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	var diagnostic diag.Diagnostics
 
 	client := getProviderClient(ctx, d)
 
 	token, err := getProviderToken(ctx, d, client)
 	if err != nil {
-		diagnostic := diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error()}}
-		return nil, diagnostic
+		diagnostic = diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error() + " this is warning"}}
 	}
-	return &providerMeta{client: client, token: &token}, nil
+	return &providerMeta{client: client, token: &token}, diagnostic
 }
 
 // Lazy initialization for the token. Relevant if initial auth failed.
@@ -623,15 +452,5 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 // so, the 2nd provider can't auth yet. It will auth when used at first time by resource.
 func (p *providerMeta) getToken(ctx context.Context, d *schema.ResourceData) (string, error) {
 
-	if p.token != nil && *p.token != "" {
-		return *p.token, nil
-	}
-
-	// create t-token only once per provider
-	p.clientOnce.Do(func() {
-		token, err := getProviderToken(ctx, d, p.client)
-		p.token = &token
-		p.clientInitErr = err
-	})
-	return *p.token, p.clientInitErr
+	return *p.token, nil
 }
