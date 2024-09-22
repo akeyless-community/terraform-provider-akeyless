@@ -121,7 +121,7 @@ func resourceAuthMethodGcp() *schema.Resource {
 }
 
 func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -190,7 +190,7 @@ func resourceAuthMethodGcpCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -336,7 +336,7 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -399,7 +399,7 @@ func resourceAuthMethodGcpUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodGcpDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

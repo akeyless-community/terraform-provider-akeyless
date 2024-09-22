@@ -93,7 +93,7 @@ func resourceProducerCassandra() *schema.Resource {
 }
 
 func resourceProducerCassandraCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -139,7 +139,7 @@ func resourceProducerCassandraCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceProducerCassandraRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -228,7 +228,7 @@ func resourceProducerCassandraRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceProducerCassandraUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -277,7 +277,7 @@ func resourceProducerCassandraUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceProducerCassandraDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

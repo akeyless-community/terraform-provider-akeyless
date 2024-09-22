@@ -82,7 +82,7 @@ func resourceSSHTarget() *schema.Resource {
 }
 
 func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -125,7 +125,7 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -207,7 +207,7 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -250,7 +250,7 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSSHTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

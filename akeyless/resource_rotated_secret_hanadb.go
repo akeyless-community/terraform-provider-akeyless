@@ -98,7 +98,7 @@ func resourceRotatedSecretHanaDb() *schema.Resource {
 }
 
 func resourceRotatedSecretHanaDbCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceRotatedSecretHanaDbRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -288,7 +288,7 @@ func resourceRotatedSecretHanaDbRead(d *schema.ResourceData, m interface{}) erro
 
 func resourceRotatedSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

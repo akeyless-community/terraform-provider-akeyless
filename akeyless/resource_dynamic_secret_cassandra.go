@@ -99,7 +99,7 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 }
 
 func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -151,7 +151,7 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 }
 
 func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -252,7 +252,7 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 }
 
 func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

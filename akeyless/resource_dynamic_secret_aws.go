@@ -152,7 +152,7 @@ func resourceDynamicSecretAws() *schema.Resource {
 }
 
 func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -220,7 +220,7 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretAwsRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -347,7 +347,7 @@ func resourceDynamicSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

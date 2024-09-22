@@ -89,7 +89,7 @@ func resourceProducerArtifactory() *schema.Resource {
 }
 
 func resourceProducerArtifactoryCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -135,7 +135,7 @@ func resourceProducerArtifactoryCreate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceProducerArtifactoryRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -225,7 +225,7 @@ func resourceProducerArtifactoryRead(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceProducerArtifactoryUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -271,7 +271,7 @@ func resourceProducerArtifactoryUpdate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceProducerArtifactoryDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

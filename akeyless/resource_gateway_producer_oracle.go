@@ -111,7 +111,7 @@ func resourceProducerOracle() *schema.Resource {
 }
 
 func resourceProducerOracleCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -163,7 +163,7 @@ func resourceProducerOracleCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerOracleRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -270,7 +270,7 @@ func resourceProducerOracleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerOracleUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -322,7 +322,7 @@ func resourceProducerOracleUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerOracleDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

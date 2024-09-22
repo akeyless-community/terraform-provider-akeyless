@@ -134,7 +134,7 @@ func resourceRole() *schema.Resource {
 }
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (ret diag.Diagnostics) {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 	warn := diag.Diagnostics{}
@@ -350,7 +350,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 }
 
 func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 	ctx := context.Background()
@@ -409,7 +409,7 @@ func resourceRoleImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 }
 
 func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless_api.Role, error) {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -591,7 +591,7 @@ func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDele
 
 func deleteRoleAssocs(ctx context.Context, assocs []interface{}, m interface{}) (error, bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -618,7 +618,7 @@ func deleteRoleAssocs(ctx context.Context, assocs []interface{}, m interface{}) 
 
 func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface{}, m interface{}) (error, bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -659,7 +659,7 @@ func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface
 
 func updateRoleAssocs(ctx context.Context, assocAuthMethods []interface{}, m interface{}) (error, bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -716,7 +716,7 @@ func setRoleRules(ctx context.Context, name string, rulesToDelete, rulesToAdd []
 
 func deleteRoleRules(ctx context.Context, name string, rules []interface{}, m interface{}) (err error, ok bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -747,7 +747,7 @@ func deleteRoleRules(ctx context.Context, name string, rules []interface{}, m in
 func addRoleRules(ctx context.Context, name string, roleRules []interface{}, m interface{}) (error, bool) {
 	var warn error
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -821,7 +821,7 @@ func getNewAccessRules(d *schema.ResourceData) []interface{} {
 func updateRoleAccessRules(ctx context.Context, name, description, deleteProtection string,
 	accessRules []interface{}, m interface{}) (error, bool) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

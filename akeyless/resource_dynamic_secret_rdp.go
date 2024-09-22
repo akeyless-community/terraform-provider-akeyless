@@ -126,7 +126,7 @@ func resourceDynamicSecretRdp() *schema.Resource {
 }
 
 func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -187,7 +187,7 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretRdpRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -284,7 +284,7 @@ func resourceDynamicSecretRdpRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

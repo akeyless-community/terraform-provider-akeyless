@@ -69,7 +69,7 @@ func resourceAzureTarget() *schema.Resource {
 }
 
 func resourceAzureTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -108,7 +108,7 @@ func resourceAzureTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAzureTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -178,7 +178,7 @@ func resourceAzureTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAzureTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -217,7 +217,7 @@ func resourceAzureTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAzureTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

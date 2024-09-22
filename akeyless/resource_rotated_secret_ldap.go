@@ -110,7 +110,7 @@ func resourceRotatedSecretLdap() *schema.Resource {
 }
 
 func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -166,7 +166,7 @@ func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -319,7 +319,7 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 
 func resourceRotatedSecretLdapUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -81,7 +81,7 @@ func resourceGkeTarget() *schema.Resource {
 }
 
 func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -124,7 +124,7 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -206,7 +206,7 @@ func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -249,7 +249,7 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGkeTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

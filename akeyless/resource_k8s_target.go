@@ -61,7 +61,7 @@ func resourceK8sTarget() *schema.Resource {
 }
 
 func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -98,7 +98,7 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -162,7 +162,7 @@ func resourceK8sTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -199,7 +199,7 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceK8sTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

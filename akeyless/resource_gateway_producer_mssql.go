@@ -146,7 +146,7 @@ func resourceProducerMssql() *schema.Resource {
 }
 
 func resourceProducerMssqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -207,7 +207,7 @@ func resourceProducerMssqlCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMssqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -310,7 +310,7 @@ func resourceProducerMssqlRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMssqlUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -371,7 +371,7 @@ func resourceProducerMssqlUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMssqlDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -56,7 +56,7 @@ func resourceGatewayAllowedAccess() *schema.Resource {
 }
 
 func resourceGatewayAllowedAccessCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -96,7 +96,7 @@ func resourceGatewayAllowedAccessCreate(d *schema.ResourceData, m interface{}) e
 }
 
 func resourceGatewayAllowedAccessRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -163,7 +163,7 @@ func resourceGatewayAllowedAccessRead(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceGatewayAllowedAccessUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -203,7 +203,7 @@ func resourceGatewayAllowedAccessUpdate(d *schema.ResourceData, m interface{}) e
 }
 
 func resourceGatewayAllowedAccessDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

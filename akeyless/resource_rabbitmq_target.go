@@ -61,7 +61,7 @@ func resourceRabbitmqTarget() *schema.Resource {
 }
 
 func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -98,7 +98,7 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRabbitmqTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -162,7 +162,7 @@ func resourceRabbitmqTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -199,7 +199,7 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRabbitmqTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

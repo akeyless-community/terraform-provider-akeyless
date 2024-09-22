@@ -98,7 +98,7 @@ func resourceRotatedSecretOracle() *schema.Resource {
 }
 
 func resourceRotatedSecretOracleCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceRotatedSecretOracleRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -288,7 +288,7 @@ func resourceRotatedSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 
 func resourceRotatedSecretOracleUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

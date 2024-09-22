@@ -101,7 +101,7 @@ func resourceDynamicSecretGcp() *schema.Resource {
 }
 
 func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -153,7 +153,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -266,7 +266,7 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
