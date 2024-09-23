@@ -26,6 +26,7 @@ AWS API Key Auth Method Resource
 - `access_key` (String, Sensitive) Auth Method access key
 - `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
+- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `jwt_ttl` (Number) Creds expiration time in minutes
 

@@ -35,6 +35,7 @@ Azure Active Directory Auth Method Resource
 - `bound_rg_id` (Set of String) A list of resource groups that the access is restricted to
 - `bound_spid` (Set of String) A list of service principal IDs that the access is restricted to
 - `bound_sub_id` (Set of String) A list of subscription ids that the access is restricted to
+- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `issuer` (String) Issuer URL
 - `jwks_uri` (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.

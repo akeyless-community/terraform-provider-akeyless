@@ -78,6 +78,7 @@ output "demo-role" {
 - `analytics_access` (String) Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
 - `assoc_auth_method` (Block Set, Deprecated) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
 - `audit_access` (String) Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.
+- `delete_protection` (String) Protection from accidental deletion of this role, [true/false]
 - `description` (String) Description of the object
 - `gw_analytics_access` (String) Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
 - `rules` (Block Set) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
@@ -117,4 +118,10 @@ Optional:
 
 - `rule_type` (String) item-rule, target-rule, role-rule, auth-method-rule
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import akeyless_role.example /full-role-path/and-name-in-akeyless
+```

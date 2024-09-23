@@ -100,7 +100,7 @@ func resourceZerosslTargetCreate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless_api.CreateZeroSSLTarget{
+	body := akeyless_api.TargetCreateZeroSSL{
 		Name:         name,
 		ApiKey:       apiKey,
 		ImapUsername: imapUsername,
@@ -114,7 +114,7 @@ func resourceZerosslTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.CreateZeroSSLTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetCreateZeroSSL(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to create target: %v", string(apiErr.Body()))
@@ -137,12 +137,12 @@ func resourceZerosslTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetTargetDetails{
+	body := akeyless_api.TargetGetDetails{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetTargetDetails(ctx).Body(body).Execute()
+	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -245,7 +245,7 @@ func resourceZerosslTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 
-	body := akeyless_api.UpdateZeroSSLTarget{
+	body := akeyless_api.TargetUpdateZeroSSL{
 		Name:         name,
 		ApiKey:       apiKey,
 		ImapUsername: imapUsername,
@@ -259,7 +259,7 @@ func resourceZerosslTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.UpdateZeroSSLTarget(ctx).Body(body).Execute()
+	_, _, err := client.TargetUpdateZeroSSL(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to update target: %v", string(apiErr.Body()))
@@ -279,13 +279,13 @@ func resourceZerosslTargetDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteTarget{
+	deleteItem := akeyless_api.TargetDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteTarget(ctx).Body(deleteItem).Execute()
+	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

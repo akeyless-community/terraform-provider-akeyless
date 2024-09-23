@@ -64,6 +64,30 @@ func generateCertForTest(t *testing.T, size int) (string, string) {
 	return keyBase64, certBase64
 }
 
+func generateCertForTestWithKey(t *testing.T, size int, keyName string) string {
+
+	key, err := rsa.GenerateKey(rand.Reader, size)
+	require.NoError(t, err)
+
+	cert := x509.Certificate{
+		SerialNumber:          big.NewInt(1),
+		Subject:               pkix.Name{CommonName: keyName},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(time.Hour),
+		IsCA:                  true,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		BasicConstraintsValid: true,
+	}
+
+	signedCertBytes, err := x509.CreateCertificate(rand.Reader, &cert, &cert, &key.PublicKey, key)
+	require.NoError(t, err)
+
+	certPem := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: signedCertBytes})
+
+	return base64.StdEncoding.EncodeToString(certPem)
+}
+
 func generateKey(size int) string {
 	key, _ := rsa.GenerateKey(rand.Reader, size)
 	return createPrivateKeyBase64(key)

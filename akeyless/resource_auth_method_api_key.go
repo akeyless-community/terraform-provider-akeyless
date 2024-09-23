@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -31,21 +32,18 @@ func resourceAuthMethodApiKey() *schema.Resource {
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
-				Required:    false,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
 				Default:     "0",
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "A CIDR whitelist with the IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"force_sub_claims": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Description: "enforce role-association must include sub claims",
 			},
@@ -55,24 +53,28 @@ func resourceAuthMethodApiKey() *schema.Resource {
 				Description: "Creds expiration time in minutes",
 				Default:     0,
 			},
-			"access_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Auth Method access ID",
-			},
-			"access_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Auth Method access key",
-				Sensitive:   true,
-			},
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Subclaims to include in audit logs",
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
+			},
+			"access_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Auth Method access ID",
+			},
+			"access_key": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Auth Method access key",
+				Sensitive:   true,
 			},
 		},
 	}
@@ -93,8 +95,9 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	jwtTtl := d.Get("jwt_ttl").(int)
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless_api.CreateAuthMethod{
+	body := akeyless_api.AuthMethodCreateApiKey{
 		Name:  name,
 		Token: &token,
 	}
@@ -103,8 +106,9 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	rOut, _, err := client.CreateAuthMethod(ctx).Body(body).Execute()
+	rOut, _, err := client.AuthMethodCreateApiKey(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to create Secret: %v", string(apiErr.Body()))
@@ -140,12 +144,12 @@ func resourceAuthMethodApiKeyRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	body := akeyless_api.GetAuthMethod{
+	body := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GetAuthMethod(ctx).Body(body).Execute()
+	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
@@ -207,6 +211,13 @@ func resourceAuthMethodApiKeyRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -227,8 +238,9 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	jwtTtl := d.Get("jwt_ttl").(int)
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
 
-	body := akeyless_api.UpdateAuthMethod{
+	body := akeyless_api.AuthMethodUpdateApiKey{
 		Name:  name,
 		Token: &token,
 	}
@@ -238,8 +250,9 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.UpdateAuthMethod(ctx).Body(body).Execute()
+	_, _, err := client.AuthMethodUpdateApiKey(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
@@ -259,13 +272,13 @@ func resourceAuthMethodApiKeyDelete(d *schema.ResourceData, m interface{}) error
 
 	path := d.Id()
 
-	deleteItem := akeyless_api.DeleteAuthMethod{
+	deleteItem := akeyless_api.AuthMethodDelete{
 		Token: &token,
 		Name:  path,
 	}
 
 	ctx := context.Background()
-	_, _, err := client.DeleteAuthMethod(ctx).Body(deleteItem).Execute()
+	_, _, err := client.AuthMethodDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

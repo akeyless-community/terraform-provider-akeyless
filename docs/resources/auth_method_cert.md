@@ -33,6 +33,7 @@ Cert Auth Method Resource
 - `bound_organizational_units` (Set of String) A list of Organizational Units names. At least one must exist in the OU field.
 - `bound_uri_sans` (Set of String) A list of URIs. At least one must exist in the SANs. Supports globbing.
 - `certificate_data` (String) The certificate data in base64, if no file was provided.
+- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `gw_bound_ips` (Set of String) A comma-separated CIDR block list as a trusted Gateway entity
 - `jwt_ttl` (Number) Creds expiration time in minutes
