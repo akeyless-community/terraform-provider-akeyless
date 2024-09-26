@@ -145,7 +145,7 @@ func resourceDynamicSecretMongo() *schema.Resource {
 }
 
 func resourceDynamicSecretMongoCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -214,7 +214,7 @@ func resourceDynamicSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceDynamicSecretMongoRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -342,7 +342,7 @@ func resourceDynamicSecretMongoRead(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

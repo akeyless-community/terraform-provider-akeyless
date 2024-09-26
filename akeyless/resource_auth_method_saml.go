@@ -96,7 +96,7 @@ func resourceAuthMethodSaml() *schema.Resource {
 }
 
 func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -153,7 +153,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -267,7 +267,7 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -318,7 +318,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodSamlDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -81,7 +81,7 @@ func resourceAuthMethodApiKey() *schema.Resource {
 }
 
 func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -135,7 +135,7 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodApiKeyRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -224,7 +224,7 @@ func resourceAuthMethodApiKeyRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -266,7 +266,7 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodApiKeyDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

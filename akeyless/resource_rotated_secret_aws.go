@@ -103,7 +103,7 @@ func resourceRotatedSecretAws() *schema.Resource {
 }
 
 func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -157,7 +157,7 @@ func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRotatedSecretAwsRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -303,7 +303,7 @@ func resourceRotatedSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

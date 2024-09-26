@@ -110,7 +110,7 @@ func resourceDynamicSecretOracle() *schema.Resource {
 }
 
 func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -166,7 +166,7 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -279,7 +279,7 @@ func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

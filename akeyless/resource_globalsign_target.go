@@ -86,7 +86,7 @@ func resourceGlobalsignTarget() *schema.Resource {
 }
 
 func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -133,7 +133,7 @@ func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceGlobalsignTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -239,7 +239,7 @@ func resourceGlobalsignTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -286,7 +286,7 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceGlobalsignTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

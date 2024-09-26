@@ -133,7 +133,7 @@ func resourceDynamicSecretMssql() *schema.Resource {
 }
 
 func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -196,7 +196,7 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceDynamicSecretMssqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -299,7 +299,7 @@ func resourceDynamicSecretMssqlRead(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

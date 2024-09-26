@@ -23,7 +23,6 @@ GCE Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `access_id` (String) Auth Method access ID
 - `audience` (String) The audience to verify in the JWT received by the client
 - `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
@@ -39,6 +38,7 @@ GCE Auth Method Resource
 
 ### Read-Only
 
+- `access_id` (String) Auth Method access ID
 - `id` (String) The ID of this resource.
 
 

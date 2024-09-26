@@ -123,7 +123,7 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 }
 
 func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -180,7 +180,7 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -283,7 +283,7 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

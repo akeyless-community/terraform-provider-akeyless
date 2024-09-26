@@ -23,7 +23,6 @@ Cert Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `access_id` (String) Auth Method access ID
 - `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_common_names` (Set of String) A list of names. At least one must exist in the Common Name. Supports globbing.
 - `bound_dns_sans` (Set of String) A list of DNS names. At least one must exist in the SANs. Supports globbing.
@@ -41,6 +40,7 @@ Cert Auth Method Resource
 
 ### Read-Only
 
+- `access_id` (String) Auth Method access ID
 - `id` (String) The ID of this resource.
 
 

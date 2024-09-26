@@ -98,7 +98,7 @@ func resourceRotatedSecretRedis() *schema.Resource {
 }
 
 func resourceRotatedSecretRedisCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretRedisCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceRotatedSecretRedisRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -288,7 +288,7 @@ func resourceRotatedSecretRedisRead(d *schema.ResourceData, m interface{}) error
 
 func resourceRotatedSecretRedisUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

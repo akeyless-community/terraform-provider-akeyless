@@ -152,7 +152,7 @@ func resourceGatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m inte
 
 func resourceGatewayUpdateLogForwardingSyslogUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -268,7 +268,7 @@ func resourceGatewayUpdateLogForwardingSyslogImport(d *schema.ResourceData, m in
 
 func getGwLogForwardingConfig(m interface{}) (akeyless_api.LogForwardingConfigPart, error) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

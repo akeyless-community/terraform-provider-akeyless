@@ -138,7 +138,7 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 }
 
 func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -203,7 +203,7 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 }
 
 func resourceDynamicSecretPostgresqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -312,7 +312,7 @@ func resourceDynamicSecretPostgresqlRead(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

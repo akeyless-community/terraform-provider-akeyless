@@ -319,7 +319,7 @@ func resourceAuthMethodCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -340,7 +340,7 @@ func resourceAuthMethodDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -387,7 +387,7 @@ func resourceAuthMethodImport(d *schema.ResourceData, m interface{}) ([]*schema.
 }
 
 func createAuthMethod(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 	ctx := context.Background()
@@ -629,7 +629,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 }
 
 func getAccountSettings(m interface{}) (*akeyless_api.GetAccountSettingsCommandOutput, error) {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

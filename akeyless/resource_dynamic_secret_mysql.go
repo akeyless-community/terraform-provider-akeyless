@@ -150,7 +150,7 @@ func resourceDynamicSecretMysql() *schema.Resource {
 }
 
 func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -219,7 +219,7 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -346,7 +346,7 @@ func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

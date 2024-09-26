@@ -120,7 +120,7 @@ func resourceDynamicSecretEks() *schema.Resource {
 }
 
 func resourceDynamicSecretEksCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -180,7 +180,7 @@ func resourceDynamicSecretEksCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretEksRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -285,7 +285,7 @@ func resourceDynamicSecretEksRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDynamicSecretEksUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

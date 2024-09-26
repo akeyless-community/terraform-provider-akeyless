@@ -50,7 +50,7 @@ func resourceWebTarget() *schema.Resource {
 }
 
 func resourceWebTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -83,7 +83,7 @@ func resourceWebTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceWebTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -135,7 +135,7 @@ func resourceWebTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceWebTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -168,7 +168,7 @@ func resourceWebTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceWebTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

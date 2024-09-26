@@ -98,7 +98,7 @@ func resourceRotatedSecretCassandra() *schema.Resource {
 }
 
 func resourceRotatedSecretCassandraCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretCassandraCreate(d *schema.ResourceData, m interface{})
 }
 
 func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -288,7 +288,7 @@ func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 
 func resourceRotatedSecretCassandraUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

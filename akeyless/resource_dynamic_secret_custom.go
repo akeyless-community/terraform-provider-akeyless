@@ -87,7 +87,7 @@ func resourceDynamicSecretCustom() *schema.Resource {
 }
 
 func resourceDynamicSecretCustomCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -135,7 +135,7 @@ func resourceDynamicSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceDynamicSecretCustomRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -228,7 +228,7 @@ func resourceDynamicSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceDynamicSecretCustomUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -37,7 +37,7 @@ func dataSourceSecret() *schema.Resource {
 }
 
 func dataSourceSecretRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

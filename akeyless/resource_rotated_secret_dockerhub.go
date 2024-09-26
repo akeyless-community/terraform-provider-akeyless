@@ -86,7 +86,7 @@ func resourceRotatedSecretDockerHub() *schema.Resource {
 }
 
 func resourceRotatedSecretDockerHubCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -132,7 +132,7 @@ func resourceRotatedSecretDockerHubCreate(d *schema.ResourceData, m interface{})
 }
 
 func resourceRotatedSecretDockerHubRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -223,7 +223,7 @@ func resourceRotatedSecretDockerHubRead(d *schema.ResourceData, m interface{}) e
 
 func resourceRotatedSecretDockerHubUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -23,7 +23,6 @@ AWS IAM Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `access_id` (String) Auth Method access ID
 - `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_arn` (Set of String) A list of full arns that the access is restricted to
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
@@ -39,6 +38,7 @@ AWS IAM Auth Method Resource
 
 ### Read-Only
 
+- `access_id` (String) Auth Method access ID
 - `id` (String) The ID of this resource.
 
 

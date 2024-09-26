@@ -98,7 +98,7 @@ func resourceRotatedSecretPostgreSql() *schema.Resource {
 }
 
 func resourceRotatedSecretPostgreSqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretPostgreSqlCreate(d *schema.ResourceData, m interface{}
 }
 
 func resourceRotatedSecretPostgreSqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -288,7 +288,7 @@ func resourceRotatedSecretPostgreSqlRead(d *schema.ResourceData, m interface{}) 
 
 func resourceRotatedSecretPostgreSqlUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -161,7 +161,7 @@ func resourceProducerMongo() *schema.Resource {
 }
 
 func resourceProducerMongoCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -228,7 +228,7 @@ func resourceProducerMongoCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMongoRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -355,7 +355,7 @@ func resourceProducerMongoRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMongoUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -422,7 +422,7 @@ func resourceProducerMongoUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMongoDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
