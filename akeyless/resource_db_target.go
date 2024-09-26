@@ -135,7 +135,7 @@ func resourceDbTarget() *schema.Resource {
 }
 
 func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -202,7 +202,7 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -364,7 +364,7 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -431,7 +431,7 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDbTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

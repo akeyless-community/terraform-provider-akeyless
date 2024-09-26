@@ -145,8 +145,8 @@ func TestAuthMethodGCPResourceCreate(t *testing.T) {
 
 func checkMethodExistsRemotely(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := *testAccProvider.Meta().(providerMeta).client
-		token := *testAccProvider.Meta().(providerMeta).token
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
 
 		gsvBody := akeyless_api.GetAuthMethod{
 			Name:  path,

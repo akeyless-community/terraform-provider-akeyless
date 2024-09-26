@@ -130,7 +130,7 @@ func resourceDynamicSecretAzure() *schema.Resource {
 }
 
 func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -192,7 +192,7 @@ func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceDynamicSecretAzureRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -308,7 +308,7 @@ func resourceDynamicSecretAzureRead(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

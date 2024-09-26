@@ -81,7 +81,7 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 }
 
 func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -127,7 +127,7 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 }
 
 func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -217,7 +217,7 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 }
 
 func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -127,7 +127,7 @@ func resourceProducerRedshift() *schema.Resource {
 }
 
 func resourceProducerRedshiftCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -180,7 +180,7 @@ func resourceProducerRedshiftCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceProducerRedshiftRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -277,7 +277,7 @@ func resourceProducerRedshiftRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerRedshiftUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -330,7 +330,7 @@ func resourceProducerRedshiftUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceProducerRedshiftDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

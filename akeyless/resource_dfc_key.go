@@ -116,7 +116,7 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -278,7 +278,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to update: %w", err)
 	}
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -323,7 +323,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDfcKeyDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -363,7 +363,7 @@ func resourceDfcKeyImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 }
 
 func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless_api.Item, error) {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

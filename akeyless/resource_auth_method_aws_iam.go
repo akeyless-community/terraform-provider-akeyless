@@ -123,7 +123,7 @@ func resourceAuthMethodAwsIam() *schema.Resource {
 }
 
 func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -192,7 +192,7 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -329,7 +329,7 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -394,7 +394,7 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodAwsIamDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

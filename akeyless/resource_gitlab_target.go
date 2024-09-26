@@ -61,7 +61,7 @@ func resourceGitlabTarget() *schema.Resource {
 }
 
 func resourceGitlabTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -98,7 +98,7 @@ func resourceGitlabTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGitlabTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -164,7 +164,7 @@ func resourceGitlabTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGitlabTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -201,7 +201,7 @@ func resourceGitlabTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceGitlabTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -98,7 +98,7 @@ func resourceRotatedSecretWindows() *schema.Resource {
 }
 
 func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) e
 }
 
 func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -282,7 +282,7 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 
 func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

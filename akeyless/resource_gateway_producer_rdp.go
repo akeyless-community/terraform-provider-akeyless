@@ -138,7 +138,7 @@ func resourceProducerRdp() *schema.Resource {
 }
 
 func resourceProducerRdpCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -197,7 +197,7 @@ func resourceProducerRdpCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerRdpRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -293,7 +293,7 @@ func resourceProducerRdpRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerRdpUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -352,7 +352,7 @@ func resourceProducerRdpUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerRdpDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

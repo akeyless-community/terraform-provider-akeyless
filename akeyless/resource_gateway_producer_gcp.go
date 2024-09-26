@@ -102,7 +102,7 @@ func resourceProducerGcp() *schema.Resource {
 }
 
 func resourceProducerGcpCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -154,7 +154,7 @@ func resourceProducerGcpCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGcpRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -267,7 +267,7 @@ func resourceProducerGcpRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGcpUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -319,7 +319,7 @@ func resourceProducerGcpUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGcpDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

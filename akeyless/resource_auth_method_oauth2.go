@@ -106,7 +106,7 @@ func resourceAuthMethodOauth2() *schema.Resource {
 }
 
 func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -167,7 +167,7 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -296,7 +296,7 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -351,7 +351,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthMethodOauth2Delete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

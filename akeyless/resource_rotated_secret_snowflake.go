@@ -98,7 +98,7 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 }
 
 func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 }
 
 func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -288,7 +288,7 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 
 func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

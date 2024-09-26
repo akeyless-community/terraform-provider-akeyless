@@ -101,7 +101,7 @@ func resourceGatewayUpdateDefaultsRead(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceGatewayUpdateDefaultsUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -182,7 +182,7 @@ func resourceGatewayUpdateDefaultsImport(d *schema.ResourceData, m interface{}) 
 
 func getGwDefaultsConfig(m interface{}) (akeyless_api.GatewayGetDefaultsOutput, error) {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

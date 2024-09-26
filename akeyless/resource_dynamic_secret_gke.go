@@ -108,7 +108,7 @@ func resourceDynamicSecretGke() *schema.Resource {
 }
 
 func resourceDynamicSecretGkeCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -164,7 +164,7 @@ func resourceDynamicSecretGkeCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceDynamicSecretGkeRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -257,7 +257,7 @@ func resourceDynamicSecretGkeRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDynamicSecretGkeUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

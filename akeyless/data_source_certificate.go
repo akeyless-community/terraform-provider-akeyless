@@ -48,7 +48,7 @@ func dataSourceCertificate() *schema.Resource {
 }
 
 func dataSourceGetCertificateValueRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

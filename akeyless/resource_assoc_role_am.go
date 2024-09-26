@@ -56,7 +56,7 @@ func resourceAssocRoleAm() *schema.Resource {
 }
 
 func resourceAssocRoleAmCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -159,7 +159,7 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't update association: %v", err)
 	}
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -195,7 +195,7 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAssocRoleAmDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

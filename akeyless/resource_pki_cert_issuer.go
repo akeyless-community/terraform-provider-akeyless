@@ -173,7 +173,7 @@ func resourcePKICertIssuer() *schema.Resource {
 }
 
 func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -256,7 +256,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -475,7 +475,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -568,7 +568,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePKICertIssuerDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

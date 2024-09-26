@@ -98,7 +98,7 @@ func resourceTokenizer() *schema.Resource {
 }
 
 func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -148,7 +148,7 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -279,7 +279,7 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't update: %v", err)
 	}
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -322,7 +322,7 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceTokenizerDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

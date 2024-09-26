@@ -107,7 +107,7 @@ func resourceDynamicSecretGitlab() *schema.Resource {
 }
 
 func resourceDynamicSecretGitlabCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -161,7 +161,7 @@ func resourceDynamicSecretGitlabCreate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceDynamicSecretGitlabRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -273,7 +273,7 @@ func resourceDynamicSecretGitlabRead(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceDynamicSecretGitlabUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

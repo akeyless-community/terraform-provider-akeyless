@@ -138,7 +138,7 @@ func resourceProducerPostgresql() *schema.Resource {
 }
 
 func resourceProducerPostgresqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -197,7 +197,7 @@ func resourceProducerPostgresqlCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceProducerPostgresqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -294,7 +294,7 @@ func resourceProducerPostgresqlRead(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceProducerPostgresqlUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -353,7 +353,7 @@ func resourceProducerPostgresqlUpdate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceProducerPostgresqlDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

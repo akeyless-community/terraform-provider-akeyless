@@ -129,7 +129,7 @@ func resourceStaticSecret() *schema.Resource {
 }
 
 func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -212,7 +212,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -298,7 +298,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -415,7 +415,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
