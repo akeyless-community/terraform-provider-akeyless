@@ -439,7 +439,7 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	token, err := getProviderToken(ctx, d, client)
 	if err != nil {
-		diagnostic = diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error() + " this is warning"}}
+		diagnostic = diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error()}}
 	}
 	return &providerMeta{client: client, token: &token}, diagnostic
 }
