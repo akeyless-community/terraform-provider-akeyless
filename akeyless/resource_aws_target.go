@@ -69,7 +69,7 @@ func resourceAwsTarget() *schema.Resource {
 }
 
 func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -110,7 +110,7 @@ func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -189,7 +189,7 @@ func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -230,7 +230,7 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAwsTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -76,7 +76,7 @@ func resourceGatewayUpdateLogForwardingStdoutRead(d *schema.ResourceData, m inte
 }
 
 func resourceGatewayUpdateLogForwardingStdoutUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

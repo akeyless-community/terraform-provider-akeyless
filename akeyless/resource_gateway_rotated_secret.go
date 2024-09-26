@@ -144,7 +144,7 @@ func resourceRotatedSecret() *schema.Resource {
 }
 
 func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -206,7 +206,7 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -383,7 +383,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -460,7 +460,7 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceRotatedSecretDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

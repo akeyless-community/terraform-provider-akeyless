@@ -135,7 +135,7 @@ func resourceAuthMethodCert() *schema.Resource {
 
 func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -218,7 +218,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -375,7 +375,7 @@ func isBase64Encoded(data string) bool {
 
 func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -445,7 +445,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodCertDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

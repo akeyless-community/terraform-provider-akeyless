@@ -103,7 +103,7 @@ func resourceRotatedSecretSsh() *schema.Resource {
 }
 
 func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -157,7 +157,7 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -295,7 +295,7 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

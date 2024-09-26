@@ -159,7 +159,7 @@ func resourceGatewayUpdateLogForwardingAwsS3Read(d *schema.ResourceData, m inter
 }
 
 func resourceGatewayUpdateLogForwardingAwsS3Update(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

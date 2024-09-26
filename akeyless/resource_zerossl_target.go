@@ -83,7 +83,7 @@ func resourceZerosslTarget() *schema.Resource {
 }
 
 func resourceZerosslTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -128,7 +128,7 @@ func resourceZerosslTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceZerosslTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -228,7 +228,7 @@ func resourceZerosslTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceZerosslTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -273,7 +273,7 @@ func resourceZerosslTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceZerosslTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

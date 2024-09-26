@@ -113,7 +113,7 @@ func resourceRotatedSecretAzure() *schema.Resource {
 }
 
 func resourceRotatedSecretAzureCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -171,7 +171,7 @@ func resourceRotatedSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceRotatedSecretAzureRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -329,7 +329,7 @@ func resourceRotatedSecretAzureRead(d *schema.ResourceData, m interface{}) error
 
 func resourceRotatedSecretAzureUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

@@ -115,7 +115,7 @@ func resourceAuthMethodK8s() *schema.Resource {
 }
 
 func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -201,7 +201,7 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -322,7 +322,7 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -378,7 +378,7 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceAuthMethodK8sDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

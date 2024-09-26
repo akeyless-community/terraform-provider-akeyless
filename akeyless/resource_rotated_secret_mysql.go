@@ -98,7 +98,7 @@ func resourceRotatedSecretMySql() *schema.Resource {
 }
 
 func resourceRotatedSecretMySqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretMySqlCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceRotatedSecretMySqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -288,7 +288,7 @@ func resourceRotatedSecretMySqlRead(d *schema.ResourceData, m interface{}) error
 
 func resourceRotatedSecretMySqlUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

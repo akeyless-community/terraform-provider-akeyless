@@ -146,7 +146,7 @@ func resourceProducerMysql() *schema.Resource {
 }
 
 func resourceProducerMysqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -207,7 +207,7 @@ func resourceProducerMysqlCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMysqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -316,7 +316,7 @@ func resourceProducerMysqlRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMysqlUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -377,7 +377,7 @@ func resourceProducerMysqlUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerMysqlDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

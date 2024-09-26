@@ -86,7 +86,7 @@ func resourceProducerGithub() *schema.Resource {
 }
 
 func resourceProducerGithubCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -131,7 +131,7 @@ func resourceProducerGithubCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -226,7 +226,7 @@ func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -271,7 +271,7 @@ func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerGithubDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

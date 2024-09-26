@@ -81,7 +81,7 @@ func resourceDynamicSecretGithub() *schema.Resource {
 }
 
 func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -128,7 +128,7 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -233,7 +233,7 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

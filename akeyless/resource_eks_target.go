@@ -84,7 +84,7 @@ func resourceEksTarget() *schema.Resource {
 }
 
 func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -129,7 +129,7 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceEksTargetRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -217,7 +217,7 @@ func resourceEksTargetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -262,7 +262,7 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceEksTargetDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

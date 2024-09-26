@@ -98,7 +98,7 @@ func resourceRotatedSecretMsSql() *schema.Resource {
 }
 
 func resourceRotatedSecretMsSqlCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretMsSqlCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceRotatedSecretMsSqlRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -288,7 +288,7 @@ func resourceRotatedSecretMsSqlRead(d *schema.ResourceData, m interface{}) error
 
 func resourceRotatedSecretMsSqlUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

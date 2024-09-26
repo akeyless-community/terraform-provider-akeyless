@@ -102,7 +102,7 @@ func resourceRotatedSecretGcp() *schema.Resource {
 }
 
 func resourceRotatedSecretGcpCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -156,7 +156,7 @@ func resourceRotatedSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceRotatedSecretGcpRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -300,7 +300,7 @@ func resourceRotatedSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceRotatedSecretGcpUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

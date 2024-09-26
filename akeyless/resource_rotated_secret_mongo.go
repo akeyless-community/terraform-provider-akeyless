@@ -98,7 +98,7 @@ func resourceRotatedSecretMongo() *schema.Resource {
 }
 
 func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -150,7 +150,7 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -288,7 +288,7 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 
 func resourceRotatedSecretMongoUpdate(d *schema.ResourceData, m interface{}) error {
 
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

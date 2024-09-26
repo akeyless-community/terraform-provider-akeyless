@@ -96,7 +96,7 @@ func resourceProducerCustom() *schema.Resource {
 }
 
 func resourceProducerCustomCreate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -144,7 +144,7 @@ func resourceProducerCustomCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerCustomRead(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -237,7 +237,7 @@ func resourceProducerCustomRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerCustomUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
@@ -285,7 +285,7 @@ func resourceProducerCustomUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceProducerCustomDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

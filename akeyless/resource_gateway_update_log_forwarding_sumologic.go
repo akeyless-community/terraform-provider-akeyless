@@ -116,7 +116,7 @@ func resourceGatewayUpdateLogForwardingSumologicRead(d *schema.ResourceData, m i
 }
 
 func resourceGatewayUpdateLogForwardingSumologicUpdate(d *schema.ResourceData, m interface{}) error {
-	provider := m.(providerMeta)
+	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 

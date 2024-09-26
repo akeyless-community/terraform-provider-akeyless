@@ -23,7 +23,6 @@ Azure Active Directory Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `access_id` (String) Auth Method access ID
 - `audience` (String) The audience in the JWT
 - `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bound_group_id` (Set of String) A list of group ids that the access is restricted to
@@ -43,6 +42,7 @@ Azure Active Directory Auth Method Resource
 
 ### Read-Only
 
+- `access_id` (String) Auth Method access ID
 - `id` (String) The ID of this resource.
 
 
