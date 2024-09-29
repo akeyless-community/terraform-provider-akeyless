@@ -461,7 +461,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if pki.ExpirationEvents != nil {
-				err := d.Set("expiration_event_in", readExpirationEventInParam(*pki.ExpirationEvents))
+				err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(*pki.ExpirationEvents))
 				if err != nil {
 					return err
 				}
@@ -603,14 +603,4 @@ func resourcePKICertIssuerImport(d *schema.ResourceData, m interface{}) ([]*sche
 	}
 
 	return []*schema.ResourceData{d}, nil
-}
-
-func readExpirationEventInParam(expirationEvents []akeyless_api.CertificateExpirationEvent) []string {
-	var expirationEventsList []string
-	for _, e := range expirationEvents {
-		seconds := e.GetSecondsBefore()
-		days := seconds / 60 / 60 / 24
-		expirationEventsList = append(expirationEventsList, strconv.FormatInt(days, 10))
-	}
-	return expirationEventsList
 }

@@ -547,3 +547,60 @@ func ExtractLogForwardingFormat(isJson bool) string {
 	}
 	return "text"
 }
+
+func ReadExpirationEventInParam(expirationEvents []akeyless_api.CertificateExpirationEvent) []string {
+	var expirationEventsList []string
+	for _, e := range expirationEvents {
+		seconds := e.GetSecondsBefore()
+		days := seconds / 60 / 60 / 24
+		expirationEventsList = append(expirationEventsList, strconv.FormatInt(days, 10))
+	}
+	return expirationEventsList
+}
+
+func ReadRotationEventInParam(expirationEvents []akeyless_api.NextAutoRotationEvent) []string {
+	var expirationEventsList []string
+	for _, e := range expirationEvents {
+		seconds := e.GetSecondsBefore()
+		days := seconds / 60 / 60 / 24
+		expirationEventsList = append(expirationEventsList, strconv.FormatInt(days, 10))
+	}
+	return expirationEventsList
+}
+
+func UpdateRotationSettings(d *schema.ResourceData, name string, token string, client akeyless_api.V2ApiService) error {
+	var apiErr akeyless_api.GenericOpenAPIError
+	ctx := context.Background()
+
+	if d.HasChanges("auto_rotate", "rotation_interval", "rotation_event_in") {
+		autoRotate := d.Get("auto_rotate").(string)
+		autoRotateBool, err := strconv.ParseBool(autoRotate)
+		if err != nil {
+			return fmt.Errorf("failed to parse bool of auto rotate %s: %w", autoRotate, err)
+		}
+		rotationInterval := d.Get("rotation_interval").(string)
+		rotationIntervalInt, err := strconv.Atoi(rotationInterval)
+		if err != nil {
+			return fmt.Errorf("failed to parse int of rotation interval %s: %w", rotationInterval, err)
+		}
+		rotationEventInSet := d.Get("rotation_event_in").(*schema.Set)
+		rotationEventInList := ExpandStringList(rotationEventInSet.List())
+
+		rotationSettingsBody := akeyless_api.UpdateRotationSettings{
+			Name:  name,
+			Token: &token,
+		}
+		GetAkeylessPtr(&rotationSettingsBody.AutoRotate, autoRotateBool)
+		GetAkeylessPtr(&rotationSettingsBody.RotationInterval, rotationIntervalInt)
+		GetAkeylessPtr(&rotationSettingsBody.RotationEventIn, rotationEventInList)
+
+		_, _, err = client.UpdateRotationSettings(ctx).Body(rotationSettingsBody).Execute()
+		if err != nil {
+			if errors.As(err, &apiErr) {
+				return fmt.Errorf("failed to update rotation settings: %v", string(apiErr.Body()))
+			}
+			return fmt.Errorf("failed to update rotation settings: %w", err)
+		}
+	}
+	return nil
+}
