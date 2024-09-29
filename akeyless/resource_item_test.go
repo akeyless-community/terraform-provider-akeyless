@@ -36,6 +36,8 @@ func TestDfcKeyRsaResource(t *testing.T) {
 			certificate_province 				= "prov1"
 			tags        						= ["t1","t2"]
 			delete_protection 					= true
+			certificate_format = "der"
+			expiration_event_in = ["20"]
 		}
 	`, name, itemPath)
 
@@ -54,6 +56,8 @@ func TestDfcKeyRsaResource(t *testing.T) {
 			certificate_province 				= "prov1"
 			cert_data_base64 					= "%v"
 			tags        						= ["t1","t3"]
+			certificate_format = "der"
+			expiration_event_in = ["21"]
 		}
 	`, name, itemPath, cert)
 
@@ -70,6 +74,11 @@ func TestDfcKeyAesResource(t *testing.T) {
 			name = "%v"
 			tags     = ["t1", "t2"]
 			alg = "AES128SIV"
+			certificate_format = "der"
+			auto_rotate = "true"
+			rotation_interval = "7"
+			rotation_event_in = ["10"]
+			expiration_event_in = ["20"]
 		}
 	`, name, itemPath)
 
@@ -78,6 +87,11 @@ func TestDfcKeyAesResource(t *testing.T) {
 			name = "%v"	
 			tags     = ["t1", "t3"]
 			alg = "AES128SIV"
+			certificate_format = "der"
+			auto_rotate = "true"
+			rotation_interval = "9"
+			rotation_event_in = ["4"]
+			expiration_event_in = ["15"]
 		}
 	`, name, itemPath)
 
@@ -117,7 +131,19 @@ func TestClassicKey(t *testing.T) {
 		resource "akeyless_classic_key" "%v" {
 			name 		= "%v"
 			alg 		= "RSA2048"
+			generate_self_signed_certificate 	= true
+			certificate_ttl 					= 60
+			certificate_common_name 			= "cn1"
+			certificate_organization 			= "org1"
+			certificate_country 				= "cntry1"
+			certificate_locality 				= "local1"
+			certificate_province 				= "prov1"
 			tags 		= ["aaaa", "bbbb"]
+			certificate_format = "der"
+			auto_rotate = "true"
+			rotation_interval = "9"
+			rotation_event_in = ["4"]
+			expiration_event_in = ["15"]
 		}
 	`, name, itemPath)
 
@@ -125,8 +151,48 @@ func TestClassicKey(t *testing.T) {
 		resource "akeyless_classic_key" "%v" {
 			name 		= "%v"	
 			alg 		= "RSA2048"
+			generate_self_signed_certificate 	= true
+			certificate_ttl 					= 60
+			certificate_common_name 			= "cn1"
+			certificate_organization 			= "org1"
+			certificate_country 				= "cntry1"
+			certificate_locality 				= "local1"
+			certificate_province 				= "prov1"
 			tags 		= ["cccc", "dddd"]
 			description = "abcd"
+			certificate_format = "der"
+			auto_rotate = "true"
+			rotation_interval = "9"
+			rotation_event_in = ["4"]
+			expiration_event_in = ["14"]
+		}
+	`, name, itemPath)
+
+	testItemResource(t, itemPath, config, configUpdate)
+}
+
+func TestClassicGpgKey(t *testing.T) {
+
+	t.Skip("not authorized to create producer on public gateway")
+	t.Parallel()
+
+	name := "test_classic_gpg_key"
+	itemPath := testPath(name)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"
+			alg			= "GPG"
+			gpg_alg 	= "RSA2048"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"	
+			alg			= "GPG"
+			gpg_alg 	= "RSA2048"
+			description = "GPG"
 		}
 	`, name, itemPath)
 

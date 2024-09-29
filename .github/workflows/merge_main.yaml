@@ -1,8 +1,6 @@
 name: Merge Main
 
 on:
-  workflow_dispatch:
-  deployment:
   push:
     branches:
       - master

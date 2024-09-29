@@ -1,7 +1,6 @@
 name: Validate Release
 
 on:
-  deployment:
   pull_request:
 
 
