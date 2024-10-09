@@ -147,6 +147,7 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_auth":               dataSourceAuth(),
+			"akeyless_items":              dataSourceItems(),
 			"akeyless_static_secret":      dataSourceStaticSecret(),
 			"akeyless_secret":             dataSourceSecret(),
 			"akeyless_auth_method":        dataSourceAuthMethod(),
