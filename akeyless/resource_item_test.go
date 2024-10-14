@@ -88,7 +88,7 @@ func TestDfcKeyAesResource(t *testing.T) {
 	t.Parallel()
 
 	name := "test_dfc_key"
-	itemPath := testPath("path_dfc_key123")
+	itemPath := testPath("path_dfc_key")
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"
@@ -178,9 +178,7 @@ func TestClassicKey(t *testing.T) {
 			certificate_province 				= "prov1"
 			tags 		= ["aaaa", "bbbb"]
 			certificate_format = "der"
-			auto_rotate = "true"
-			rotation_interval = "9"
-			rotation_event_in = ["4"]
+			auto_rotate = "false"
 			expiration_event_in = ["15"]
 		}
 	`, name, itemPath)
@@ -219,13 +217,13 @@ func TestClassicKey(t *testing.T) {
 			certificate_locality 				= "local1"
 			certificate_province 				= "prov1"
 			tags 		= ["cccc", "dddd"]
-			description = "abcd"
+			description = "efgh"
 			cert_file_data = "%v"
 			certificate_format = "der"
 			auto_rotate = "true"
-			rotation_interval = "9"
-			rotation_event_in = ["4"]
-			expiration_event_in = ["14"]
+			rotation_interval = "8"
+			rotation_event_in = ["5"]
+			expiration_event_in = ["11"]
 		}
 	`, name, itemPath, certDer)
 
@@ -234,7 +232,7 @@ func TestClassicKey(t *testing.T) {
 
 func TestClassicGpgKey(t *testing.T) {
 
-	t.Skip("not authorized to create producer on public gateway")
+	t.Skip("not authorized to create classic key on public gateway")
 	t.Parallel()
 
 	name := "test_classic_gpg_key"

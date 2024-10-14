@@ -3,6 +3,8 @@ package akeyless
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"net/http"
@@ -56,6 +58,7 @@ func resourceClassicKey() *schema.Resource {
 			"cert_file_data": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "PEM Certificate in a Base64 format.",
 			},
 			"gpg_alg": {
@@ -368,6 +371,41 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	exportBody := akeyless_api.ExportClassicKey{
+		Name:            path,
+		Token:           &token,
+		ExportPublicKey: akeyless_api.PtrBool(true),
+	}
+
+	item, res, err := client.ExportClassicKey(ctx).Body(exportBody).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			if res.StatusCode == http.StatusNotFound {
+				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+				d.SetId("")
+				return nil
+			}
+			return fmt.Errorf("failed to get the classic-key: %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("failed to get the classic-key: %w", err)
+	}
+
+	if item.CertificatePem != nil && *item.CertificatePem != "" {
+		cert := *item.CertificatePem
+		if strings.HasPrefix(cert, "-----BEGIN CERTIFICATE-----") {
+			if d.Get("certificate_format") == "pem" {
+				cert = base64.StdEncoding.EncodeToString([]byte(cert))
+			} else {
+				pemBlock, _ := pem.Decode([]byte(cert))
+				cert = base64.StdEncoding.EncodeToString(pemBlock.Bytes)
+			}
+		}
+		err = d.Set("cert_file_data", cert)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -391,33 +429,29 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tagList := common.ExpandStringList(tagsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
-	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
-	expirationEventInList := common.ExpandStringList(expirationEventInSet.List())
+	autoRotate := d.Get("auto_rotate").(string)
+	rotationInterval := d.Get("rotation_interval").(string)
+	rotationEventInSet := d.Get("rotation_event_in").(*schema.Set)
+	rotationEventInList := common.ExpandStringList(rotationEventInSet.List())
 
-	body := akeyless_api.UpdateItem{
-		Name:  name,
-		Token: &token,
-	}
-	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
-	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventInList)
+	if d.HasChange("expiration_event_in") {
+		expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
+		expirationEventInList := common.ExpandStringList(expirationEventInSet.List())
 
-	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
-	if err == nil {
-		if len(add) > 0 {
-			common.GetAkeylessPtr(&body.AddTag, add)
+		body := akeyless_api.UpdateItem{
+			Name:  name,
+			Token: &token,
 		}
-		if len(remove) > 0 {
-			common.GetAkeylessPtr(&body.RmTag, remove)
-		}
-	}
+		//common.GetAkeylessPtr(&body.Description, description)
+		common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventInList)
 
-	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update classic-key: %v", string(apiErr.Body()))
+		_, _, err = client.UpdateItem(ctx).Body(body).Execute()
+		if err != nil {
+			if errors.As(err, &apiErr) {
+				return fmt.Errorf("failed to update classic-key: %v", string(apiErr.Body()))
+			}
+			return fmt.Errorf("failed to update classic-key: %w", err)
 		}
-		return fmt.Errorf("failed to update classic-key: %w", err)
 	}
 
 	if d.HasChanges("cert_file_data", "certificate_format") {
@@ -441,11 +475,33 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 
 	}
 
-	if d.HasChanges("auto_rotate", "rotation_interval", "rotation_event_in") {
-		err = updateRotationSettings(d, name, token, client)
-		if err != nil {
-			return err
+	body := akeyless_api.GatewayUpdateItem{
+		Name:  name,
+		Type:  "classic-key",
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
+	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
+	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventInList)
+
+	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
+	if err == nil {
+		if len(add) > 0 {
+			common.GetAkeylessPtr(&body.AddTag, add)
 		}
+		if len(remove) > 0 {
+			common.GetAkeylessPtr(&body.RmTag, remove)
+		}
+	}
+
+	_, _, err = client.GatewayUpdateItem(ctx).Body(body).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			return fmt.Errorf("failed to update the classic-key: %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("failed to update the classic-key: %w", err)
 	}
 
 	d.SetId(name)
@@ -505,6 +561,6 @@ func validateClassicKeyUpdateParams(d *schema.ResourceData) error {
 		"generate_self_signed_certificate", "certificate_ttl",
 		"certificate_common_name", "certificate_organization",
 		"certificate_country", "certificate_locality", "certificate_province",
-		"conf_file_data"}
+		"conf_file_data", "protection_key_name", "key_data"}
 	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }
