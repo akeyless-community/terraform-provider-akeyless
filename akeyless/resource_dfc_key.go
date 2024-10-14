@@ -252,13 +252,6 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.Certificates != nil {
-		cert := base64.StdEncoding.EncodeToString([]byte(*rOut.Certificates))
-		err = d.Set("cert_data_base64", cert)
-		if err != nil {
-			return err
-		}
-	}
 	if rOut.DeleteProtection != nil {
 		err := d.Set("delete_protection", *rOut.DeleteProtection)
 		if err != nil {
@@ -343,6 +336,17 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 	}
+	// needs to be after reading certificate format
+	if rOut.Certificates != nil {
+		cert := *rOut.Certificates
+		if d.Get("certificate_format") == "der" {
+			cert = base64.StdEncoding.EncodeToString([]byte(cert))
+		}
+		err = d.Set("cert_data_base64", cert)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -367,6 +371,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	tagSet := d.Get("tags").(*schema.Set)
 	tagList := common.ExpandStringList(tagSet.List())
 	certData := d.Get("cert_data_base64").(string)
+	certificateFormat := d.Get("certificate_format").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventInList := common.ExpandStringList(expirationEventInSet.List())
@@ -377,6 +382,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.CertFileData, certData)
+	common.GetAkeylessPtr(&body.CertificateFormat, certificateFormat)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventInList)
 
@@ -398,9 +404,11 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to update key: %w", err)
 	}
 
-	err = common.UpdateRotationSettings(d, name, token, client)
-	if err != nil {
-		return err
+	if d.HasChanges("auto_rotate", "rotation_interval", "rotation_event_in") {
+		err = updateRotationSettings(d, name, token, client)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(name)
@@ -514,6 +522,41 @@ func validateDfcKeyUpdateParams(d *schema.ResourceData) error {
 		"generate_self_signed_certificate", "certificate_ttl",
 		"certificate_common_name", "certificate_organization",
 		"certificate_country", "certificate_locality", "certificate_province",
-		"conf_file_data", "certificate_format"}
+		"conf_file_data"}
 	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
+}
+
+func updateRotationSettings(d *schema.ResourceData, name string, token string, client akeyless_api.V2ApiService) error {
+	var apiErr akeyless_api.GenericOpenAPIError
+	ctx := context.Background()
+
+	autoRotate := d.Get("auto_rotate").(string)
+	autoRotateBool, err := strconv.ParseBool(autoRotate)
+	if err != nil {
+		return fmt.Errorf("failed to parse bool of auto rotate %s: %w", autoRotate, err)
+	}
+	rotationInterval := d.Get("rotation_interval").(string)
+	rotationIntervalInt, err := strconv.Atoi(rotationInterval)
+	if err != nil {
+		return fmt.Errorf("failed to parse int of rotation interval %s: %w", rotationInterval, err)
+	}
+	rotationEventInSet := d.Get("rotation_event_in").(*schema.Set)
+	rotationEventInList := common.ExpandStringList(rotationEventInSet.List())
+
+	rotationSettingsBody := akeyless_api.UpdateRotationSettings{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&rotationSettingsBody.AutoRotate, autoRotateBool)
+	common.GetAkeylessPtr(&rotationSettingsBody.RotationInterval, rotationIntervalInt)
+	common.GetAkeylessPtr(&rotationSettingsBody.RotationEventIn, rotationEventInList)
+
+	_, _, err = client.UpdateRotationSettings(ctx).Body(rotationSettingsBody).Execute()
+	if err != nil {
+		if errors.As(err, &apiErr) {
+			return fmt.Errorf("failed to update rotation settings: %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("failed to update rotation settings: %w", err)
+	}
+	return nil
 }

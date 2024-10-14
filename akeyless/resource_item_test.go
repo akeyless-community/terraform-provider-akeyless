@@ -19,7 +19,7 @@ func TestDfcKeyRsaResource(t *testing.T) {
 	name := "test_rsa_key"
 	itemPath := testPath(name)
 
-	cert := generateCertForTestWithKey(t, 1024, itemPath)
+	certPem, _ := generateCertForTestWithKey(t, 1024, itemPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
@@ -56,26 +56,47 @@ func TestDfcKeyRsaResource(t *testing.T) {
 			certificate_province 				= "prov1"
 			cert_data_base64 					= "%v"
 			tags        						= ["t1","t3"]
+			certificate_format = "pem"
+			expiration_event_in = ["21"]
+		}
+	`, name, itemPath, certPem)
+
+	configUpdate2 := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "%v" {
+			name 								= "%v"
+			alg 								= "RSA1024"
+			description 						= "bbbb"
+			split_level 						= 2
+			generate_self_signed_certificate 	= true
+			certificate_ttl 					= 60
+			certificate_common_name 			= "cn1"
+			certificate_organization 			= "org1"
+			certificate_country 				= "cntry1"
+			certificate_locality 				= "local1"
+			certificate_province 				= "prov1"
+			cert_data_base64 					= "%v"
+			tags        						= ["t1","t3"]
 			certificate_format = "der"
 			expiration_event_in = ["21"]
 		}
-	`, name, itemPath, cert)
+	`, name, itemPath, certPem)
 
-	testItemResource(t, itemPath, config, configUpdate)
+	testItemResource(t, itemPath, config, configUpdate, configUpdate2)
 }
 
 func TestDfcKeyAesResource(t *testing.T) {
 	t.Parallel()
 
 	name := "test_dfc_key"
-	itemPath := testPath("path_dfc_key12")
+	itemPath := testPath("path_dfc_key123")
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "%v" {
 			name = "%v"
 			tags     = ["t1", "t2"]
 			alg = "AES128SIV"
-			certificate_format = "der"
+			certificate_format = "pem"
 			auto_rotate = "true"
+            split_level = "2"
 			rotation_interval = "7"
 			rotation_event_in = ["10"]
 			expiration_event_in = ["20"]
@@ -89,13 +110,28 @@ func TestDfcKeyAesResource(t *testing.T) {
 			alg = "AES128SIV"
 			certificate_format = "der"
 			auto_rotate = "true"
-			rotation_interval = "9"
-			rotation_event_in = ["4"]
+            split_level = "2"
+			rotation_interval = "7"
+			rotation_event_in = ["10"]
 			expiration_event_in = ["15"]
 		}
 	`, name, itemPath)
 
-	testItemResource(t, itemPath, config, configUpdate)
+	configUpdate2 := fmt.Sprintf(`
+		resource "akeyless_dfc_key" "%v" {
+			name = "%v"	
+			tags     = ["t1", "t3"]
+			alg = "AES128SIV"
+			certificate_format = "pem"
+			auto_rotate = "true"
+            split_level = "2"
+			rotation_interval = "7"
+			rotation_event_in = ["10"]
+			expiration_event_in = ["15"]
+		}
+	`, name, itemPath)
+
+	testItemResource(t, itemPath, config, configUpdate, configUpdate2)
 }
 
 func TestRsaPublicResource(t *testing.T) {
@@ -121,11 +157,13 @@ func TestRsaPublicResource(t *testing.T) {
 
 func TestClassicKey(t *testing.T) {
 
-	t.Skip("not authorized to create producer on public gateway")
+	t.Skip("not authorized to create classic key on public gateway")
 	t.Parallel()
 
 	name := "test_classic_key"
 	itemPath := testPath(name)
+
+	certPem, certDer := generateCertForTestWithKey(t, 1024, itemPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_classic_key" "%v" {
@@ -160,15 +198,38 @@ func TestClassicKey(t *testing.T) {
 			certificate_province 				= "prov1"
 			tags 		= ["cccc", "dddd"]
 			description = "abcd"
+			cert_file_data = "%v"
+			certificate_format = "pem"
+			auto_rotate = "true"
+			rotation_interval = "9"
+			rotation_event_in = ["4"]
+			expiration_event_in = ["14"]
+		}
+	`, name, itemPath, certPem)
+
+	configUpdate2 := fmt.Sprintf(`
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"	
+			alg 		= "RSA2048"
+			generate_self_signed_certificate 	= true
+			certificate_ttl 					= 60
+			certificate_common_name 			= "cn1"
+			certificate_organization 			= "org1"
+			certificate_country 				= "cntry1"
+			certificate_locality 				= "local1"
+			certificate_province 				= "prov1"
+			tags 		= ["cccc", "dddd"]
+			description = "abcd"
+			cert_file_data = "%v"
 			certificate_format = "der"
 			auto_rotate = "true"
 			rotation_interval = "9"
 			rotation_event_in = ["4"]
 			expiration_event_in = ["14"]
 		}
-	`, name, itemPath)
+	`, name, itemPath, certDer)
 
-	testItemResource(t, itemPath, config, configUpdate)
+	testItemResource(t, itemPath, config, configUpdate, configUpdate2)
 }
 
 func TestClassicGpgKey(t *testing.T) {

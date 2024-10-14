@@ -79,7 +79,6 @@ func resourceClassicKey() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "TTL in days for the generated certificate. Required only for generate-self-signed-certificate.",
-				Default:     0,
 			},
 			"certificate_common_name": {
 				Type:        schema.TypeString,
@@ -213,9 +212,9 @@ func resourceClassicKeyCreate(d *schema.ResourceData, m interface{}) error {
 	_, _, err := client.CreateClassicKey(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't create classic-key: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return fmt.Errorf("can't create classic-key: %v", err)
 	}
 
 	d.SetId(name)
@@ -246,9 +245,9 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("failed to get key: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to get classic-key: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("failed to get key: %w", err)
+		return fmt.Errorf("failed to get classic-key: %w", err)
 	}
 
 	if rOut.ItemTags != nil {
@@ -312,7 +311,7 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
-			if certTemplateInfo.Ttl != nil {
+			if certTemplateInfo.Ttl != nil && *certTemplateInfo.Ttl != 0 {
 				err := d.Set("certificate_ttl", *certTemplateInfo.Ttl)
 				if err != nil {
 					return err
@@ -416,14 +415,37 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update key: %v", string(apiErr.Body()))
+			return fmt.Errorf("failed to update classic-key: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("failed to update key: %w", err)
+		return fmt.Errorf("failed to update classic-key: %w", err)
 	}
 
-	err = common.UpdateRotationSettings(d, name, token, client)
-	if err != nil {
-		return err
+	if d.HasChanges("cert_file_data", "certificate_format") {
+		certFileData := d.Get("cert_file_data").(string)
+		certificateFormat := d.Get("certificate_format").(string)
+
+		body := akeyless_api.UpdateClassicKeyCertificate{
+			Name:  name,
+			Token: &token,
+		}
+		common.GetAkeylessPtr(&body.CertFileData, certFileData)
+		common.GetAkeylessPtr(&body.CertificateFormat, certificateFormat)
+
+		_, _, err = client.UpdateClassicKeyCertificate(ctx).Body(body).Execute()
+		if err != nil {
+			if errors.As(err, &apiErr) {
+				return fmt.Errorf("failed to update classic-key certificate: %v", string(apiErr.Body()))
+			}
+			return fmt.Errorf("failed to update classic-key certificate: %w", err)
+		}
+
+	}
+
+	if d.HasChanges("auto_rotate", "rotation_interval", "rotation_event_in") {
+		err = updateRotationSettings(d, name, token, client)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(name)
@@ -483,6 +505,6 @@ func validateClassicKeyUpdateParams(d *schema.ResourceData) error {
 		"generate_self_signed_certificate", "certificate_ttl",
 		"certificate_common_name", "certificate_organization",
 		"certificate_country", "certificate_locality", "certificate_province",
-		"conf_file_data", "certificate_format"}
+		"conf_file_data"}
 	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }

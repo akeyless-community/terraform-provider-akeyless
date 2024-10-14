@@ -64,7 +64,7 @@ func generateCertForTest(t *testing.T, size int) (string, string) {
 	return keyBase64, certBase64
 }
 
-func generateCertForTestWithKey(t *testing.T, size int, keyName string) string {
+func generateCertForTestWithKey(t *testing.T, size int, keyName string) (string, string) {
 
 	key, err := rsa.GenerateKey(rand.Reader, size)
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func generateCertForTestWithKey(t *testing.T, size int, keyName string) string {
 
 	certPem := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: signedCertBytes})
 
-	return base64.StdEncoding.EncodeToString(certPem)
+	return base64.StdEncoding.EncodeToString(certPem), base64.StdEncoding.EncodeToString(signedCertBytes)
 }
 
 func generateKey(size int) string {
