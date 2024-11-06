@@ -547,3 +547,23 @@ func ExtractLogForwardingFormat(isJson bool) string {
 	}
 	return "text"
 }
+
+func ReadExpirationEventInParam(expirationEvents []akeyless_api.CertificateExpirationEvent) []string {
+	var expirationEventsList []string
+	for _, e := range expirationEvents {
+		seconds := e.GetSecondsBefore()
+		days := seconds / 60 / 60 / 24
+		expirationEventsList = append(expirationEventsList, strconv.FormatInt(days, 10))
+	}
+	return expirationEventsList
+}
+
+func ReadRotationEventInParam(expirationEvents []akeyless_api.NextAutoRotationEvent) []string {
+	var expirationEventsList []string
+	for _, e := range expirationEvents {
+		seconds := e.GetSecondsBefore()
+		days := seconds / 60 / 60 / 24
+		expirationEventsList = append(expirationEventsList, strconv.FormatInt(days, 10))
+	}
+	return expirationEventsList
+}
