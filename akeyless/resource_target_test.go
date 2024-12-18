@@ -130,6 +130,37 @@ func TestWebTargetResource(t *testing.T) {
 	tesTargetResource(t, config, configUpdate, secretPath)
 }
 
+func TestWindowsTargetResource(t *testing.T) {
+	secretName := "windows123"
+	secretPath := testPath("windows_target1")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_windows" "%v" {
+       		name        = "%v"
+       		hostname    = "127.0.0.1"
+       		username    = "admin"
+       		password    = "password"
+       		domain      = "domain"
+       		port        = "5986"
+       		max_versions = "5"
+      	}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_windows" "%v" {
+       		name        = "%v"
+       		hostname    = "127.0.0.2"
+       		username    = "superadmin"
+       		password    = "mypassword"
+       		domain      = "mydomain"
+       		port        = "1000"
+       		description = "test my description"
+       		max_versions = "10"
+      	}
+	`, secretName, secretPath)
+
+	tesTargetResource(t, config, configUpdate, secretPath)
+}
+
 func TestSSHTargetResource(t *testing.T) {
 	secretName := "ssh123"
 	secretPath := testPath("ssh_target1")
@@ -253,6 +284,32 @@ func TestK8sTargetResource(t *testing.T) {
 			k8s_cluster_endpoint 	= "https://akakad.com"
 			k8s_cluster_ca_cert 	= "YmxpYmxp"
 			k8s_cluster_token 		= "YmxpYmxp"
+		}
+	`, secretName, secretPath)
+
+	tesTargetResource(t, config, configUpdate, secretPath)
+
+}
+
+func TestLinkedTargetResource(t *testing.T) {
+	secretName := "linked-target"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "www.test1.com;test,aaa.com;fff"
+			type 		= "mysql"
+			description = "aaa"
+		}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,www.test1.com;test"
+			type 		= "mssql"
+			description = "bbb"
 		}
 	`, secretName, secretPath)
 
