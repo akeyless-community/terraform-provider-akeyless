@@ -273,6 +273,7 @@ func TestPkiResource(t *testing.T) {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
 			ttl                   	= "50"
+			gw_cluster_url 			= "http://localhost:8000"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domains"
 			allowed_uri_sans      	= "uri_sans"
@@ -284,6 +285,7 @@ func TestPkiResource(t *testing.T) {
 			client_flag           	= true
 			code_signing_flag     	= true
 			key_usage             	= "KeyAgreement,KeyEncipherment"
+			critical_key_usage    	= "false"
 			organizational_units  	= "org1"
 			country               	= "coun1"
 			locality              	= "loca1"
@@ -291,7 +293,15 @@ func TestPkiResource(t *testing.T) {
 			street_address        	= "stre1"
 			postal_code           	= "post1"
 			protect_certificates  	= true
+			is_ca                   = true
+			enable_acme             = false
 			expiration_event_in   	= ["1"]
+			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value2\"],\"1.2.3.4.6\":[\"value3\",\"value4\"]}"
+			allow_copy_ext_from_csr = true
+			create_public_crl	 	= true
+			create_private_crl	 	= true
+			auto_renew			 	= true
+			scheduled_renew			= 5
 			description           	= "desc1"
 			tags     			  	= ["t1", "t2"]
 			delete_protection     	= "true"
@@ -303,6 +313,7 @@ func TestPkiResource(t *testing.T) {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
 			ttl                   	= "51s"
+			gw_cluster_url 			= "http://localhost:8000"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domain1,domain2"
 			allowed_uri_sans      	= "uri_san1,uri_san2"
@@ -314,6 +325,7 @@ func TestPkiResource(t *testing.T) {
 			client_flag           	= false
 			code_signing_flag     	= false
 			key_usage             	= "DigitalSignature"
+			critical_key_usage    	= "true"
 			organizational_units  	= "org1,org2"
 			country               	= "coun2"
 			locality              	= "loca2"
@@ -321,7 +333,15 @@ func TestPkiResource(t *testing.T) {
 			street_address        	= "stre2"
 			postal_code           	= "post2"
 			protect_certificates  	= false
+			is_ca                   = false
+			enable_acme             = false
 			expiration_event_in   	= []
+			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value5\"]}"
+			allow_copy_ext_from_csr = false
+			create_public_crl	 	= false
+			create_private_crl	 	= false
+			auto_renew			 	= false
+			scheduled_renew			= 6
 			description           	= "desc2"
 			tags     			  	= ["t1", "t3"]
 		}
