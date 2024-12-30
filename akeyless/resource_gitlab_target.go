@@ -87,9 +87,9 @@ func resourceGitlabTargetCreate(d *schema.ResourceData, m interface{}) error {
 	_, _, err := client.TargetCreateGitlab(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return fmt.Errorf("can't create Target: %v", err)
 	}
 
 	d.SetId(name)
