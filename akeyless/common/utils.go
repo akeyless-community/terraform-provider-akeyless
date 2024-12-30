@@ -567,29 +567,3 @@ func ReadRotationEventInParam(expirationEvents []akeyless_api.NextAutoRotationEv
 	}
 	return expirationEventsList
 }
-
-func GetAttribute(attributes *map[string]map[string]interface{}, outerKey, innerKey string) (string, error) {
-	if attributes == nil {
-		return "", fmt.Errorf("attributes map is nil")
-	}
-
-	// Access the outer map
-	outerMap, ok := (*attributes)[outerKey]
-	if !ok {
-		return "", fmt.Errorf("key '%s' not found in attributes", outerKey)
-	}
-
-	// Access the inner map
-	value, ok := outerMap[innerKey]
-	if !ok {
-		return "", fmt.Errorf("key '%s' not found in inner map '%s'", innerKey, outerKey)
-	}
-
-	// Assert the value is an integer
-	fValue, ok := value.(float64) // JSON numbers are unmarshalled as float64
-	if !ok {
-		return "", fmt.Errorf("value of '%s' is not a number", innerKey)
-	}
-
-	return strconv.Itoa(int(fValue)), nil
-}

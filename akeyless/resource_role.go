@@ -181,9 +181,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	common.GetAkeylessPtr(&body.EventForwardersAccess, eventForwardersAccess)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	a, b, err := client.CreateRole(ctx).Body(body).Execute()
-	a = a
-	b = b
+	_, _, err := client.CreateRole(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create Role: %v", string(apiErr.Body())))}
@@ -783,10 +781,10 @@ func addRoleRules(ctx context.Context, name string, roleRules []interface{}, m i
 		capability := getCapability(roles["capability"])
 		path := roles["path"].(string)
 		ruleType := roles["rule_type"].(string)
-		if ruleType == "search-rule" || ruleType == "reports-rule" || ruleType == "gw-reports-rule" || ruleType == "sra_reports_access" || ruleType == "usage_reports_access" || ruleType == "event_center_access" || ruleType == "event_forwarders_access" {
+		if ruleType == "search-rule" || ruleType == "reports-rule" {
 			warnMsgToAppend := "Deprecated: rule types 'search-rule and reports-rule' are deprecated and will be removed, please use 'audit_access' or 'analytics_access' instead"
 			warn = fmt.Errorf("%v. %v", warn, warnMsgToAppend)
-		} else if ruleType != "item-rule" && ruleType != "role-rule" && ruleType != "target-rule" && ruleType != "auth-method-rule" && ruleType != "sra-rule" {
+		} else if !isValidRuleType(ruleType) {
 			return fmt.Errorf("wrong rule types"), false
 		}
 
@@ -1023,8 +1021,8 @@ func generateEmptyAccessRulesSet() []interface{} {
 	return []interface{}{searchRule, reportsRule, gwReportsRule, sraReportsRule, UsageReportRule, eventRule, eventForwarderRule}
 }
 
-func isAccessRule(roleType string) bool {
-	return roleType == "search-rule" || roleType == "reports-rule" || roleType == "gw-reports-rule" || roleType == "sra-reports-rule" || roleType == "usage-reports-rule" || roleType == "event-rule" || roleType == "event-forwarder-rule"
+func isAccessRule(ruleType string) bool {
+	return ruleType == "search-rule" || ruleType == "reports-rule" || ruleType == "gw-reports-rule" || ruleType == "sra-reports-rule" || ruleType == "usage-reports-rule" || ruleType == "event-rule" || ruleType == "event-forwarder-rule"
 }
 
 func setAccessRuleField(d *schema.ResourceData, roleType, rolePath string) error {
@@ -1102,4 +1100,18 @@ func isRulesEqual(rule1, rule2 map[string]interface{}) bool {
 	rule2Type := rule2["rule_type"].(string)
 
 	return rule1Cap == rule2Cap && rule1Path == rule2Path && rule1Type == rule2Type
+}
+
+func isValidRuleType(ruleType string) bool {
+	validRuleTypes := []string{
+		"item-rule", "role-rule", "target-rule", "auth-method-rule", "sra-rule",
+		"gw-reports-rule", "sra_reports_access", "usage_reports_access",
+		"event_center_access", "event_forwarders_access",
+	}
+	for _, validType := range validRuleTypes {
+		if ruleType == validType {
+			return true
+		}
+	}
+	return false
 }

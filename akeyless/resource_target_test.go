@@ -141,7 +141,6 @@ func TestWindowsTargetResource(t *testing.T) {
        		password    = "password"
        		domain      = "domain"
        		port        = "5986"
-       		max_versions = "5"
       	}
 	`, secretName, secretPath)
 
@@ -151,10 +150,8 @@ func TestWindowsTargetResource(t *testing.T) {
        		hostname    = "127.0.0.2"
        		username    = "superadmin"
        		password    = "mypassword"
-       		domain      = "mydomain"
        		port        = "1000"
        		description = "test my description"
-       		max_versions = "10"
       	}
 	`, secretName, secretPath)
 
@@ -313,7 +310,43 @@ func TestLinkedTargetResource(t *testing.T) {
 		}
 	`, secretName, secretPath)
 
-	tesTargetResource(t, config, configUpdate, secretPath)
+	configUpdate2 := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,"
+			type 		= "mssql"
+			description = "bbb"
+		}
+	`, secretName, secretPath)
+
+	configUpdate3 := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,www.test3.com;"
+			type 		= "mssql"
+			description = "bbb"
+		}
+	`, secretName, secretPath)
+
+	configUpdate4 := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,www.test4"
+			type 		= "mssql"
+			description = "bbb"
+		}
+	`, secretName, secretPath)
+
+	configUpdate5 := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,www.test4;"
+			type 		= "mssql"
+			description = "bbb"
+		}
+	`, secretName, secretPath)
+
+	testTargetResource(t, secretPath, config, configUpdate, configUpdate2, configUpdate3, configUpdate4, configUpdate5)
 
 }
 
@@ -477,6 +510,23 @@ func TestGlobalSignTargetResource(t *testing.T) {
 	`, targetName, targetPath)
 
 	tesTargetResource(t, config, configUpdate, targetPath)
+}
+
+func testTargetResource(t *testing.T, secretPath string, configs ...string) {
+	steps := make([]resource.TestStep, len(configs))
+	for i, config := range configs {
+		steps[i] = resource.TestStep{
+			Config: config,
+			Check: resource.ComposeTestCheckFunc(
+				checkTargetExistsRemotelyprod(secretPath),
+			),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps:             steps,
+	})
 }
 
 func tesTargetResource(t *testing.T, config, configUpdate, secretPath string) {

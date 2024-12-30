@@ -66,6 +66,7 @@ func resourceWindowsTarget() *schema.Resource {
 			"certificate": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)",
 			},
 			"key": {
@@ -77,11 +78,6 @@ func resourceWindowsTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the object",
-			},
-			"max_versions": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Set the maximum number of versions, limited by the account settings defaults.",
 			},
 		},
 	}
@@ -104,7 +100,6 @@ func resourceWindowsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	certificate := d.Get("certificate").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
-	maxVersion := d.Get("max_versions").(string)
 
 	body := akeyless_api.TargetCreateWindows{
 		Name:     name,
@@ -119,7 +114,6 @@ func resourceWindowsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Certificate, certificate)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.MaxVersions, maxVersion)
 
 	_, _, err := client.TargetCreateWindows(ctx).Body(body).Execute()
 	if err != nil {
@@ -215,15 +209,6 @@ func resourceWindowsTargetRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.Target.Attributes != nil {
-		maxVersions, err := common.GetAttribute(rOut.Target.Attributes, "general", "max_versions")
-		if err == nil {
-			err = d.Set("max_versions", maxVersions)
-			if err != nil {
-				return err
-			}
-		}
-	}
 
 	d.SetId(path)
 
@@ -247,7 +232,6 @@ func resourceWindowsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	certificate := d.Get("certificate").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
-	maxVersions := d.Get("max_versions").(string)
 
 	body := akeyless_api.TargetUpdateWindows{
 		Name:     name,
@@ -262,7 +246,6 @@ func resourceWindowsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Certificate, certificate)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
 	_, _, err := client.TargetUpdateWindows(ctx).Body(body).Execute()
 	if err != nil {

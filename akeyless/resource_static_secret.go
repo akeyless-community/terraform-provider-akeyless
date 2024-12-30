@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"strconv"
-
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"net/http"
 )
 
 func resourceStaticSecret() *schema.Resource {
@@ -74,6 +72,7 @@ func resourceStaticSecret() *schema.Resource {
 			"custom_field": {
 				Type:        schema.TypeMap,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
@@ -86,11 +85,6 @@ func resourceStaticSecret() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
-			},
-			"max_versions": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Set the maximum number of versions, limited by the account settings defaults.",
 			},
 			"protection_key": {
 				Type:        schema.TypeString,
@@ -179,7 +173,6 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	customField := d.Get("custom_field").(map[string]interface{})
 	ProtectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
-	maxVersions := d.Get("max_versions").(string)
 	description := d.Get("description").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessSshCreds := d.Get("secure_access_ssh_creds").(string)
@@ -212,7 +205,6 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Password, password)
 	common.GetAkeylessPtr(&body.Username, username)
 	common.GetAkeylessPtr(&body.CustomField, customField)
-	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessSshCreds, secureAccessSshCreds)
@@ -345,12 +337,6 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
-			if staticSecretInfo.MaxVersions != nil {
-				err := d.Set("max_versions", strconv.Itoa(int(*staticSecretInfo.MaxVersions)))
-				if err != nil {
-					return err
-				}
-			}
 		}
 	}
 
@@ -448,7 +434,6 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
 	description := d.Get("description").(string)
-	maxVersions := d.Get("max_versions").(string)
 
 	secureAccessHost := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHostList := common.ExpandStringList(secureAccessHost.List())
@@ -476,7 +461,6 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	common.GetAkeylessPtr(&bodyItem.Description, description)
-	common.GetAkeylessPtr(&bodyItem.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCreds, secureAccessSshCreds)

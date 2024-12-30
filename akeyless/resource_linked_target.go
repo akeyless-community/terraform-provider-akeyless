@@ -119,7 +119,7 @@ func resourceLinkedTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.Value.LinkedTargetDetails.Hosts != nil {
-		err = d.Set("hosts", getLinkedHosts(d.Get("hosts").(string), rOut.Value.LinkedTargetDetails.Hosts))
+		err = d.Set("hosts", getLinkedHosts(d.Get("hosts").(string), *rOut.Value.LinkedTargetDetails.Hosts))
 		if err != nil {
 			return err
 		}
@@ -152,9 +152,9 @@ func resourceLinkedTargetRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func getLinkedHosts(currentHosts string, hosts *map[string]string) string {
+func getLinkedHosts(currentHosts string, hosts map[string]string) string {
 	currentHostsMap := convertHostStringToMap(currentHosts)
-	if reflect.DeepEqual(currentHostsMap, *hosts) {
+	if reflect.DeepEqual(currentHostsMap, hosts) {
 		return currentHosts
 	}
 
@@ -168,17 +168,19 @@ func convertHostStringToMap(hostsStr string) map[string]string {
 		hostDescArr := strings.SplitN(hostDesc, ";", 2)
 		if len(hostDescArr) == 2 {
 			hostsMap[hostDescArr[0]] = hostDescArr[1]
+		} else {
+			hostsMap[hostDescArr[0]] = ""
 		}
 	}
 	return hostsMap
 }
 
-func convertHostsMapToString(hosts *map[string]string) string {
+func convertHostsMapToString(hosts map[string]string) string {
 	var hostsStr string
-	for host, desc := range *hosts {
+	for host, desc := range hosts {
 		hostsStr += host + ";" + desc + ","
 	}
-	hostsStr, _ = strings.CutSuffix(hostsStr, ",")
+	hostsStr = strings.TrimSuffix(hostsStr, ",")
 
 	return hostsStr
 }

@@ -64,7 +64,6 @@ func TestStaticPasswordResource(t *testing.T) {
 			tags 				= ["t1", "t2"]
 			description 		= "my password"
             keep_prev_version	= "true"
-			max_versions		= 5
 		}
 	`, secretName, secretPath)
 
@@ -81,7 +80,6 @@ func TestStaticPasswordResource(t *testing.T) {
 			tags 				= ["t5"]
 			description 		= "my updated password"
             keep_prev_version	= "false"
-			max_versions		= 7
 		}
 	`, secretName, secretPath)
 
