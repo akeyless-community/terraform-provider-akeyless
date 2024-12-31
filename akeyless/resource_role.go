@@ -1103,15 +1103,11 @@ func isRulesEqual(rule1, rule2 map[string]interface{}) bool {
 }
 
 func isValidRuleType(ruleType string) bool {
-	validRuleTypes := []string{
-		"item-rule", "role-rule", "target-rule", "auth-method-rule", "sra-rule",
-		"gw-reports-rule", "sra_reports_access", "usage_reports_access",
-		"event_center_access", "event_forwarders_access",
+	validRuleTypes := map[string]struct{}{
+		"item-rule": {}, "role-rule": {}, "target-rule": {}, "auth-method-rule": {}, "sra-rule": {},
 	}
-	for _, validType := range validRuleTypes {
-		if ruleType == validType {
-			return true
-		}
+	if _, valid := validRuleTypes[ruleType]; valid {
+		return true
 	}
 	return false
 }

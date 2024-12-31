@@ -80,7 +80,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "own"
-			usage_reports_access = "all"
 			
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -115,7 +114,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
-			usage_reports_access = "all"
 			event_center_access = "all"
 			event_forwarders_access = "all"
 			  
@@ -152,7 +150,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
-			usage_reports_access = "all"
 			event_center_access = "all"
 			event_forwarders_access = "none"
 
@@ -170,25 +167,25 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 5),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 8),
+					checkAddRoleRemotely(t, rolePath, 7),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 7),
+					checkUpdateRoleRemotely(t, rolePath, 6),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 5),
+					checkRemoveRoleRemotely(t, rolePath, 4),
 				),
 			},
 		},
@@ -644,7 +641,7 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rule
 		rules := res.GetRules()
 
 		if common.IsLocalEnv() {
-			rulesNum -= 1
+			rulesNum--
 		}
 
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
@@ -732,7 +729,7 @@ func checkAddRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.
 		rules := res.GetRules()
 
 		if common.IsLocalEnv() {
-			rulesNum -= 1
+			rulesNum--
 		}
 
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
@@ -763,7 +760,7 @@ func checkUpdateRole(t *testing.T, roleName string, accnum, rulesNum int) resour
 		rules := res.GetRules()
 
 		if common.IsLocalEnv() {
-			rulesNum -= 1
+			rulesNum--
 		}
 
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
@@ -788,7 +785,7 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string, rulesNum int) resour
 		rules := res.GetRules()
 
 		if common.IsLocalEnv() {
-			rulesNum -= 1
+			rulesNum--
 		}
 
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
