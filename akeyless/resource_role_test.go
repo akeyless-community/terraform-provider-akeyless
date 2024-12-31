@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"net/http"
 	"strings"
 	"testing"
@@ -169,25 +170,25 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 5),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 7),
+					checkAddRoleRemotely(t, rolePath, 8),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 6),
+					checkUpdateRoleRemotely(t, rolePath, 7),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 4),
+					checkRemoveRoleRemotely(t, rolePath, 5),
 				),
 			},
 		},
@@ -312,25 +313,25 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 4),
+					checkAddRoleRemotely(t, rolePath, 5),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 3),
+					checkUpdateRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 2),
+					checkRemoveRoleRemotely(t, rolePath, 3),
 				),
 			},
 		},
@@ -405,19 +406,19 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath1, 2),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath1, 3),
 				),
 			},
 			{
 				Config: configAddAssoc,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 1),
+					checkAddRoleRemotely(t, rolePath, 2),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 2),
+					checkRemoveRoleRemotely(t, rolePath, 3),
 				),
 			},
 		},
@@ -641,6 +642,11 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rule
 		}
 
 		rules := res.GetRules()
+
+		if common.IsLocalEnv() {
+			rulesNum -= 1
+		}
+
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
 
 		exists := false
@@ -725,6 +731,10 @@ func checkAddRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
 
+		if common.IsLocalEnv() {
+			rulesNum -= 1
+		}
+
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
 
 		return nil
@@ -751,6 +761,11 @@ func checkUpdateRole(t *testing.T, roleName string, accnum, rulesNum int) resour
 		assert.NoError(t, err)
 		assert.Equal(t, accnum, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
+
+		if common.IsLocalEnv() {
+			rulesNum -= 1
+		}
+
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
 
 		return nil
@@ -771,6 +786,11 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string, rulesNum int) resour
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
+
+		if common.IsLocalEnv() {
+			rulesNum -= 1
+		}
+
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
 
 		return nil

@@ -871,7 +871,7 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 	client := *provider.client
 	token := *provider.token
 
-	var auditAccess, analyticsAccess, gwAnalyticsAccess, sraReportsAccess, usageReportsAccess, eventCenterAccess, eventForwardersAccess string
+	var auditAccess, analyticsAccess, gwAnalyticsAccess, sraReportsAccess, usageReportsAccess, eventCenterAccess, eventForwardersAccess = "none", "none", "none", "none", "none", "none", "none"
 	for _, rule := range accessRules {
 		ruleType := rule.(map[string]interface{})["rule_type"].(string)
 		rulePath := convertPathNameWithNoneOption(rule.(map[string]interface{})["path"].(string))

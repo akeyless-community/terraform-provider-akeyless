@@ -341,7 +341,7 @@ func TestPkiResource(t *testing.T) {
 }
 
 func TestPkiResourceWithLocalGw(t *testing.T) {
-	//t.Skip("not supported on public gateway")
+	t.Skip("not supported on public gateway")
 	t.Parallel()
 
 	keyPath := testPath("test-dfc-for-pki-with-gw")
