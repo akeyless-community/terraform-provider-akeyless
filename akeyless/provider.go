@@ -74,6 +74,8 @@ func Provider() *schema.Provider {
 			"akeyless_gateway_log_forwarding_stdout":           resourceGatewayUpdateLogForwardingStdout(),
 			"akeyless_gateway_log_forwarding_sumologic":        resourceGatewayUpdateLogForwardingSumologic(),
 			"akeyless_gateway_log_forwarding_syslog":           resourceGatewayUpdateLogForwardingSyslog(),
+			"akeyless_gateway_remote_access":                   resourceGatewayUpdateRemoteAccess(),
+			"akeyless_gateway_remote_access_rdp_recording":     resourceGatewayUpdateRemoteAccessRdpRecording(),
 			"akeyless_producer_custom":                         resourceProducerCustom(),
 			"akeyless_producer_rdp":                            resourceProducerRdp(),
 			"akeyless_producer_mongo":                          resourceProducerMongo(),
