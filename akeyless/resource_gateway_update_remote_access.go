@@ -181,10 +181,69 @@ func resourceGatewayUpdateRemoteAccessUpdate(d *schema.ResourceData, m interface
 
 func resourceGatewayUpdateRemoteAccessImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
-	err := resourceGatewayUpdateRemoteAccessRead(d, m)
+	rOut, err := getGwRemoteAccessConfig(m)
 	if err != nil {
 		return nil, err
 	}
+
+	globalConfig := rOut.Global
+	if globalConfig != nil {
+		if globalConfig.AllowedBastionUrls != nil {
+			err = d.Set("allowed_urls", strings.Join(*globalConfig.AllowedBastionUrls, ","))
+			if err != nil {
+				return nil, err
+			}
+		}
+		if globalConfig.LegacySigningAlg != nil {
+			err = d.Set("legacy_ssh_algorithm", strconv.FormatBool(*globalConfig.LegacySigningAlg))
+			if err != nil {
+				return nil, err
+			}
+		}
+		if globalConfig.RdpUsernameSubClaim != nil {
+			err = d.Set("rdp_target_configuration", *globalConfig.RdpUsernameSubClaim)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if globalConfig.SshUsernameSubClaim != nil {
+			err = d.Set("ssh_target_configuration", *globalConfig.SshUsernameSubClaim)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if rOut.SshBastion != nil {
+		if rOut.SshBastion.Kexalgs != nil {
+			err = d.Set("kexalgs", *rOut.SshBastion.Kexalgs)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if rOut.SshBastion.HideSessionRecording != nil {
+			err = d.Set("hide_session_recording", strconv.FormatBool(*rOut.SshBastion.HideSessionRecording))
+			if err != nil {
+				return nil, err
+			}
+		}
+
+	}
+
+	if rOut.WebBastion != nil {
+		webBastion := rOut.WebBastion
+		if webBastion.Guacamole != nil {
+			guacamole := webBastion.Guacamole
+			if guacamole.KeyboardLayout != nil {
+				err = d.Set("keyboard_layout", *rOut.WebBastion.Guacamole.KeyboardLayout)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
+	d.SetId(*rOut.ClusterId)
 
 	return []*schema.ResourceData{d}, nil
 }
