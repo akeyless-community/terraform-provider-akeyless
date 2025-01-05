@@ -180,7 +180,8 @@ func resourceGatewayUpdateRemoteAccessUpdate(d *schema.ResourceData, m interface
 }
 
 func resourceGatewayUpdateRemoteAccessImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-
+	// import here is not using read function as bool params strings have no default value therefore
+	// they will be set to empty string and won't be read in read function
 	rOut, err := getGwRemoteAccessConfig(m)
 	if err != nil {
 		return nil, err
