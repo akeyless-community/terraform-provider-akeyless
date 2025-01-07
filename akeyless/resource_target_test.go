@@ -130,6 +130,34 @@ func TestWebTargetResource(t *testing.T) {
 	tesTargetResource(t, config, configUpdate, secretPath)
 }
 
+func TestWindowsTargetResource(t *testing.T) {
+	secretName := "windows123"
+	secretPath := testPath("windows_target1")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_windows" "%v" {
+       		name        = "%v"
+       		hostname    = "127.0.0.1"
+       		username    = "admin"
+       		password    = "password"
+       		domain      = "domain"
+       		port        = "5986"
+      	}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_windows" "%v" {
+       		name        = "%v"
+       		hostname    = "127.0.0.2"
+       		username    = "superadmin"
+       		password    = "mypassword"
+       		port        = "1000"
+       		description = "test my description"
+      	}
+	`, secretName, secretPath)
+
+	tesTargetResource(t, config, configUpdate, secretPath)
+}
+
 func TestSSHTargetResource(t *testing.T) {
 	secretName := "ssh123"
 	secretPath := testPath("ssh_target1")
@@ -257,6 +285,68 @@ func TestK8sTargetResource(t *testing.T) {
 	`, secretName, secretPath)
 
 	tesTargetResource(t, config, configUpdate, secretPath)
+
+}
+
+func TestLinkedTargetResource(t *testing.T) {
+	secretName := "linked-target"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "www.test1.com;test,aaa.com;fff"
+			type 		= "mysql"
+			description = "aaa"
+		}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,www.test1.com;test"
+			type 		= "mssql"
+			description = "bbb"
+		}
+	`, secretName, secretPath)
+
+	configUpdate2 := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,"
+			type 		= "mssql"
+			description = "bbb"
+		}
+	`, secretName, secretPath)
+
+	configUpdate3 := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,www.test3.com;"
+			type 		= "mssql"
+			description = "bbb"
+		}
+	`, secretName, secretPath)
+
+	configUpdate4 := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,www.test4"
+			type 		= "mssql"
+			description = "bbb"
+		}
+	`, secretName, secretPath)
+
+	configUpdate5 := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name 					= "%v"
+			hosts	= "aaa.com;fff,www.test4;"
+			type 		= "mssql"
+			description = "bbb"
+		}
+	`, secretName, secretPath)
+
+	testTargetResource(t, secretPath, config, configUpdate, configUpdate2, configUpdate3, configUpdate4, configUpdate5)
 
 }
 
@@ -420,6 +510,23 @@ func TestGlobalSignTargetResource(t *testing.T) {
 	`, targetName, targetPath)
 
 	tesTargetResource(t, config, configUpdate, targetPath)
+}
+
+func testTargetResource(t *testing.T, secretPath string, configs ...string) {
+	steps := make([]resource.TestStep, len(configs))
+	for i, config := range configs {
+		steps[i] = resource.TestStep{
+			Config: config,
+			Check: resource.ComposeTestCheckFunc(
+				checkTargetExistsRemotelyprod(secretPath),
+			),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps:             steps,
+	})
 }
 
 func tesTargetResource(t *testing.T, config, configUpdate, secretPath string) {

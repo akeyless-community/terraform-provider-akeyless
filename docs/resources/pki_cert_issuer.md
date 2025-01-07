@@ -23,18 +23,26 @@ PKI Cert Issuer  resource
 ### Optional
 
 - `allow_any_name` (Boolean) If set, clients can request certificates for any CN
+- `allow_copy_ext_from_csr` (Boolean) If set, will allow copying the extra extensions from the csr file (if given)
 - `allow_subdomains` (Boolean) If set, clients can request certificates for subdomains and wildcard subdomains of the allowed domains
 - `allowed_domains` (String) A list of the allowed domains that clients can request to be included in the certificate (in a comma-delimited list)
+- `allowed_extra_extensions` (String) A json string that defines the allowed extra extensions for the pki cert issuer
 - `allowed_uri_sans` (String) A list of the allowed URIs that clients can request to be included in the certificate as part of the URI Subject Alternative Names (in a comma-delimited list)
+- `auto_renew` (Boolean) Automatically renew certificates before expiration
 - `ca_target` (String) The name of an existing CA target to attach this PKI Certificate Issuer to, required in Public CA mode
 - `client_flag` (Boolean) If set, certificates will be flagged for client auth use
 - `code_signing_flag` (Boolean) If set, certificates will be flagged for code signing use
 - `country` (String) A comma-separated list of countries that will be set in the issued certificate
+- `create_private_crl` (Boolean) Set this to allow the issuer will expose a CRL endpoint in the Gateway
+- `create_public_crl` (Boolean) Set this to allow the cert issuer will expose a public CRL endpoint
+- `critical_key_usage` (String) Mark key usage as critical [true/false]
 - `delete_protection` (Boolean) Protection from accidental deletion of this item, [true/false]
 - `description` (String) Description of the object
 - `destination_path` (String) A path in Akeyless which to save generated certificates
+- `enable_acme` (Boolean) If set, the cert issuer will support the acme protocol
 - `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified
 - `gw_cluster_url` (String) The GW cluster URL to issue the certificate from, required in Public CA mode
+- `is_ca` (Boolean) If set, the basic constraints extension will be added to certificate
 - `key_usage` (String) A comma-separated string or list of key usages
 - `locality` (String) A comma-separated list of localities that will be set in the issued certificate
 - `not_enforce_hostnames` (Boolean) If set, any names are allowed for CN and SANs in the certificate and not only a valid host name
@@ -44,6 +52,7 @@ PKI Cert Issuer  resource
 - `postal_code` (String) A comma-separated list of postal codes that will be set in the issued certificate
 - `protect_certificates` (Boolean) Whether to protect generated certificates from deletion
 - `province` (String) A comma-separated list of provinces that will be set in the issued certificate
+- `scheduled_renew` (Number) Number of days before expiration to renew certificates
 - `server_flag` (Boolean) If set, certificates will be flagged for server auth use
 - `signer_key_name` (String) A key to sign the certificate with, required in Private CA mode
 - `street_address` (String) A comma-separated list of street addresses that will be set in the issued certificate

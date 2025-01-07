@@ -567,3 +567,12 @@ func ReadRotationEventInParam(expirationEvents []akeyless_api.NextAutoRotationEv
 	}
 	return expirationEventsList
 }
+
+var gatewayURL = os.Getenv("AKEYLESS_GATEWAY")
+
+func IsLocalEnv() bool {
+	if gatewayURL == "http://localhost:8080/v2" || gatewayURL == "http://127.0.0.1:8080/v2" {
+		return true
+	}
+	return false
+}

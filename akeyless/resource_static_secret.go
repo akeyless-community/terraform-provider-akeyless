@@ -2,13 +2,13 @@ package akeyless
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"net/http"
 )
 
 func resourceStaticSecret() *schema.Resource {
@@ -28,9 +28,14 @@ func resourceStaticSecret() *schema.Resource {
 				ForceNew:    true,
 				Description: "The path where the secret will be stored.",
 			},
+			"type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Secret type [generic/password]",
+				Default:     "generic",
+			},
 			"value": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "The secret content.",
@@ -38,13 +43,38 @@ func resourceStaticSecret() *schema.Resource {
 			"format": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Secret format [text/json] (relevant only for type 'generic')",
+				Description: "Secret format [text/json/key-value] (relevant only for type 'generic')",
+				Default:     "text",
 			},
 			"multiline_value": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "The provided value is a multiline value (separated by '\n')",
+			},
+			"inject_url": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "List of URLs associated with the item (relevant only for type 'password')",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Password value (relevant only for type 'password')",
+			},
+			"username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Username value (relevant only for type 'password')",
+			},
+			"custom_field": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"version": {
 				Type:        schema.TypeInt,
@@ -70,7 +100,6 @@ func resourceStaticSecret() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Required:    false,
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
@@ -96,13 +125,13 @@ func resourceStaticSecret() *schema.Resource {
 				Type:        schema.TypeBool,
 				Required:    false,
 				Optional:    true,
-				Description: "Secure browser via Akeyless Web Access Bastion",
+				Description: "Secure browser via Akeyless's Secure Remote Access (SRA)",
 			},
 			"secure_access_bastion_issuer": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
@@ -134,8 +163,14 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	token := *provider.token
 
 	path := d.Get("path").(string)
+	secretType := d.Get("type").(string)
 	value := d.Get("value").(string)
 	format := d.Get("format").(string)
+	injectUrlSet := d.Get("inject_url").(*schema.Set)
+	injectUrl := common.ExpandStringList(injectUrlSet.List())
+	password := d.Get("password").(string)
+	username := d.Get("username").(string)
+	customField := d.Get("custom_field").(map[string]interface{})
 	ProtectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
 	description := d.Get("description").(string)
@@ -155,6 +190,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	body := akeyless_api.CreateSecret{
 		Name:           path,
+		Type:           &secretType,
 		Value:          value,
 		MultilineValue: akeyless_api.PtrBool(multilineValue),
 		Token:          &token,
@@ -165,6 +201,10 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Tags, tagsList)
 
 	common.GetAkeylessPtr(&body.Format, format)
+	common.GetAkeylessPtr(&body.InjectUrl, injectUrl)
+	common.GetAkeylessPtr(&body.Password, password)
+	common.GetAkeylessPtr(&body.Username, username)
+	common.GetAkeylessPtr(&body.CustomField, customField)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessSshCreds, secureAccessSshCreds)
@@ -250,8 +290,13 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	version := itemOut.LastVersion
+	secretType := itemOut.ItemSubType
+	err = d.Set("type", *secretType)
+	if err != nil {
+		return err
+	}
 
+	version := itemOut.LastVersion
 	err = d.Set("version", *version)
 	if err != nil {
 		return err
@@ -286,14 +331,51 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
+			if staticSecretInfo.Websites != nil {
+				err := d.Set("inject_url", *staticSecretInfo.Websites)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 
-	err = d.Set("value", gsvOut[path])
-	if err != nil {
-		return err
+	value := gsvOut[path]
+
+	stringValue, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("wrong value variable string type")
 	}
+
+	if *secretType == "generic" {
+		err = d.Set("value", stringValue)
+		if err != nil {
+			return err
+		}
+	} else {
+		var jsonValue map[string]interface{}
+		err = json.Unmarshal([]byte(stringValue), &jsonValue)
+		if err != nil {
+			return fmt.Errorf("can't convert secret password value")
+		}
+		err = d.Set("password", jsonValue["password"])
+		if err != nil {
+			return err
+		}
+		err = d.Set("username", jsonValue["username"])
+		if err != nil {
+			return err
+		}
+		delete(jsonValue, "username")
+		delete(jsonValue, "password")
+		err = d.Set("custom_field", jsonValue)
+		if err != nil {
+			return err
+		}
+	}
+
 	common.GetSraFromItem(d, itemOut)
+
 	return nil
 }
 
@@ -311,12 +393,17 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 
-	if d.HasChanges("value", "multiline_value", "protection_key", "format") {
+	if d.HasChanges("value", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field") {
 		value := d.Get("value").(string)
 		format := d.Get("format").(string)
 		protectionKey := d.Get("protection_key").(string)
 		multilineValue := d.Get("multiline_value").(bool)
 		keepPrevVersion := d.Get("keep_prev_version").(string)
+		injectUrlSet := d.Get("inject_url").(*schema.Set)
+		injectUrl := common.ExpandStringList(injectUrlSet.List())
+		username := d.Get("username").(string)
+		password := d.Get("password").(string)
+		customField := d.Get("custom_field").(map[string]interface{})
 
 		body := akeyless_api.UpdateSecretVal{
 			Name:      path,
@@ -328,6 +415,12 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 
 		common.GetAkeylessPtr(&body.Format, format)
 		common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+		common.GetAkeylessPtr(&body.InjectUrl, injectUrl)
+		common.GetAkeylessPtr(&body.Username, username)
+		common.GetAkeylessPtr(&body.Password, password)
+		if len(customField) > 0 {
+			common.GetAkeylessPtr(&body.CustomField, customField)
+		}
 
 		_, _, err := client.UpdateSecretVal(ctx).Body(body).Execute()
 		if err != nil {

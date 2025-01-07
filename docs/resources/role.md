@@ -80,9 +80,12 @@ output "demo-role" {
 - `audit_access` (String) Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.
 - `delete_protection` (String) Protection from accidental deletion of this role, [true/false]
 - `description` (String) Description of the object
+- `event_center_access` (String) Allow this role to view Event Center. Currently only 'none', 'own' and 'all' values are supported.
+- `event_forwarders_access` (String) Allow this role to manage Event Forwarders. Currently only 'none' and 'all' values are supported.
 - `gw_analytics_access` (String) Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
 - `rules` (Block Set) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
 - `sra_reports_access` (String) Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.
+- `usage_reports_access` (String) Allow this role to view Usage reports. Currently only 'none' and 'all' values are supported.
 
 ### Read-Only
 
@@ -111,12 +114,12 @@ Read-Only:
 
 Required:
 
-- `capability` (Set of String) List of the approved/denied capabilities in the path options: [read, create, update, delete, list, deny]
+- `capability` (Set of String) List of the approved/denied capabilities in the path options: [read, create, update, delete, list, deny] for sra-rule type: [allow_access, request_access, justify_access_only, approval_authority, upload_files, download_files]
 - `path` (String) The path the rule refers to
 
 Optional:
 
-- `rule_type` (String) item-rule, target-rule, role-rule, auth-method-rule
+- `rule_type` (String) item-rule, target-rule, role-rule, auth-method-rule, sra-rule
 
 ## Import
 

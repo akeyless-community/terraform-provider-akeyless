@@ -2,9 +2,12 @@ package akeyless
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -91,6 +94,12 @@ func resourcePKICertIssuer() *schema.Resource {
 				Description: "A comma-separated string or list of key usages",
 				Default:     "DigitalSignature,KeyAgreement,KeyEncipherment",
 			},
+			"critical_key_usage": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Mark key usage as critical [true/false]",
+				Default:     "true",
+			},
 			"organizational_units": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -157,11 +166,51 @@ func resourcePKICertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to protect generated certificates from deletion",
 			},
+			"is_ca": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set, the basic constraints extension will be added to certificate",
+			},
+			"enable_acme": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set, the cert issuer will support the acme protocol",
+			},
 			"expiration_event_in": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "How many days before the expiration of the certificate would you like to be notified",
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"allowed_extra_extensions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A json string that defines the allowed extra extensions for the pki cert issuer",
+			},
+			"allow_copy_ext_from_csr": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set, will allow copying the extra extensions from the csr file (if given)",
+			},
+			"create_public_crl": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Set this to allow the cert issuer will expose a public CRL endpoint",
+			},
+			"create_private_crl": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Set this to allow the issuer will expose a CRL endpoint in the Gateway",
+			},
+			"auto_renew": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Automatically renew certificates before expiration",
+			},
+			"scheduled_renew": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Number of days before expiration to renew certificates",
 			},
 			"delete_protection": {
 				Type:        schema.TypeBool,
@@ -192,6 +241,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	clientFlag := d.Get("client_flag").(bool)
 	codeSigningFlag := d.Get("code_signing_flag").(bool)
 	keyUsage := d.Get("key_usage").(string)
+	criticalKeyUsage := d.Get("critical_key_usage").(string)
 	organizationalUnits := d.Get("organizational_units").(string)
 	organizations := d.Get("organizations").(string)
 	country := d.Get("country").(string)
@@ -205,8 +255,16 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	gwClusterUrl := d.Get("gw_cluster_url").(string)
 	destinationPath := d.Get("destination_path").(string)
 	protectCertificates := d.Get("protect_certificates").(bool)
+	isCA := d.Get("is_ca").(bool)
+	enableACME := d.Get("enable_acme").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
+	allowedExtraExtensions := d.Get("allowed_extra_extensions").(string)
+	allowCopyExtFromCSR := d.Get("allow_copy_ext_from_csr").(bool)
+	createPublicCRL := d.Get("create_public_crl").(bool)
+	createPrivateCRL := d.Get("create_private_crl").(bool)
+	autoRenew := d.Get("auto_renew").(bool)
+	scheduledRenew := d.Get("scheduled_renew").(int)
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
@@ -226,6 +284,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ClientFlag, clientFlag)
 	common.GetAkeylessPtr(&body.CodeSigningFlag, codeSigningFlag)
 	common.GetAkeylessPtr(&body.KeyUsage, keyUsage)
+	common.GetAkeylessPtr(&body.CriticalKeyUsage, criticalKeyUsage)
 	common.GetAkeylessPtr(&body.OrganizationalUnits, organizationalUnits)
 	common.GetAkeylessPtr(&body.Organizations, organizations)
 	common.GetAkeylessPtr(&body.Country, country)
@@ -238,7 +297,15 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwClusterUrl, gwClusterUrl)
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)
+	common.GetAkeylessPtr(&body.IsCa, isCA)
+	common.GetAkeylessPtr(&body.EnableAcme, enableACME)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
+	common.GetAkeylessPtr(&body.AllowedExtraExtensions, allowedExtraExtensions)
+	common.GetAkeylessPtr(&body.AllowCopyExtFromCsr, allowCopyExtFromCSR)
+	common.GetAkeylessPtr(&body.CreatePublicCrl, createPublicCRL)
+	common.GetAkeylessPtr(&body.CreatePrivateCrl, createPrivateCRL)
+	common.GetAkeylessPtr(&body.AutoRenew, autoRenew)
+	common.GetAkeylessPtr(&body.ScheduledRenew, strconv.Itoa(scheduledRenew))
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
@@ -400,6 +467,12 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
+			if pki.NonCriticalKeyUsage != nil {
+				err := d.Set("critical_key_usage", strconv.FormatBool(!*pki.NonCriticalKeyUsage))
+				if err != nil {
+					return err
+				}
+			}
 			if pki.OrganizationUnitList != nil {
 				err := d.Set("organizational_units", strings.Join(*pki.OrganizationUnitList, ","))
 				if err != nil {
@@ -460,8 +533,60 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
+			if pki.IsCa != nil {
+				err := d.Set("is_ca", *pki.IsCa)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.AcmeEnabled != nil {
+				err := d.Set("enable_acme", *pki.AcmeEnabled)
+				if err != nil {
+					return err
+				}
+			}
 			if pki.ExpirationEvents != nil {
 				err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(*pki.ExpirationEvents))
+				if err != nil {
+					return err
+				}
+			}
+			if pki.AllowedExtraExtensions != nil {
+				extensions, err := getAllowedExtraExtensions(d.Get("allowed_extra_extensions").(string), *pki.AllowedExtraExtensions)
+				if err != nil {
+					return err
+				}
+				err = d.Set("allowed_extra_extensions", extensions)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.AllowCopyExtFromCsr != nil {
+				err := d.Set("allow_copy_ext_from_csr", *pki.AllowCopyExtFromCsr)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.CreatePublicCrl != nil {
+				err := d.Set("create_public_crl", *pki.CreatePublicCrl)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.CreatePrivateCrl != nil {
+				err := d.Set("create_private_crl", *pki.CreatePrivateCrl)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.AutoRenewCertificate != nil {
+				err := d.Set("auto_renew", *pki.AutoRenewCertificate)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.RenewBeforeExpirationInDays != nil {
+				err := d.Set("scheduled_renew", *pki.RenewBeforeExpirationInDays)
 				if err != nil {
 					return err
 				}
@@ -472,6 +597,59 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 	d.SetId(path)
 
 	return nil
+}
+
+func getAllowedExtraExtensions(currentAee string, aee map[string][]string) (string, error) {
+	currentAeeMap, err := convertStringToMapArr(currentAee)
+	if err != nil {
+		return "", err
+	}
+
+	if compareMaps(currentAeeMap, aee) {
+		return currentAee, nil
+	}
+
+	return convertMapArrToString(aee)
+}
+
+func convertStringToMapArr(str string) (map[string][]string, error) {
+	var m map[string][]string
+	err := json.Unmarshal([]byte(str), &m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func compareMaps(submitted, received map[string][]string) bool {
+	if len(submitted) != len(received) {
+		return false
+	}
+
+	for key, submittedValues := range submitted {
+		receivedValues, exists := received[key]
+		if !exists {
+			return false
+		}
+
+		// Sort both slices and compare them
+		sort.Strings(submittedValues)
+		sort.Strings(receivedValues)
+
+		if !reflect.DeepEqual(submittedValues, receivedValues) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func convertMapArrToString(m map[string][]string) (string, error) {
+	b, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
 
 func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
@@ -494,6 +672,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	clientFlag := d.Get("client_flag").(bool)
 	codeSigningFlag := d.Get("code_signing_flag").(bool)
 	keyUsage := d.Get("key_usage").(string)
+	criticalKeyUsage := d.Get("critical_key_usage").(string)
 	organizationalUnits := d.Get("organizational_units").(string)
 	organizations := d.Get("organizations").(string)
 	country := d.Get("country").(string)
@@ -506,8 +685,16 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	gwClusterUrl := d.Get("gw_cluster_url").(string)
 	destinationPath := d.Get("destination_path").(string)
 	protectCertificates := d.Get("protect_certificates").(bool)
+	isCA := d.Get("is_ca").(bool)
+	enableACME := d.Get("enable_acme").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
+	allowedExtraExtensions := d.Get("allowed_extra_extensions").(string)
+	allowCopyExtFromCSR := d.Get("allow_copy_ext_from_csr").(bool)
+	createPublicCRL := d.Get("create_public_crl").(bool)
+	createPrivateCRL := d.Get("create_private_crl").(bool)
+	autoRenew := d.Get("auto_renew").(bool)
+	scheduledRenew := d.Get("scheduled_renew").(int)
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
 
@@ -540,6 +727,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ClientFlag, clientFlag)
 	common.GetAkeylessPtr(&body.CodeSigningFlag, codeSigningFlag)
 	common.GetAkeylessPtr(&body.KeyUsage, keyUsage)
+	common.GetAkeylessPtr(&body.CriticalKeyUsage, criticalKeyUsage)
 	common.GetAkeylessPtr(&body.OrganizationalUnits, organizationalUnits)
 	common.GetAkeylessPtr(&body.Organizations, organizations)
 	common.GetAkeylessPtr(&body.Country, country)
@@ -549,8 +737,16 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PostalCode, postalCode)
 	common.GetAkeylessPtr(&body.GwClusterUrl, gwClusterUrl)
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
+	common.GetAkeylessPtr(&body.IsCa, isCA)
+	common.GetAkeylessPtr(&body.EnableAcme, enableACME)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
+	common.GetAkeylessPtr(&body.AllowedExtraExtensions, allowedExtraExtensions)
+	common.GetAkeylessPtr(&body.AllowCopyExtFromCsr, allowCopyExtFromCSR)
+	common.GetAkeylessPtr(&body.CreatePublicCrl, createPublicCRL)
+	common.GetAkeylessPtr(&body.CreatePrivateCrl, createPrivateCRL)
+	common.GetAkeylessPtr(&body.AutoRenew, autoRenew)
+	common.GetAkeylessPtr(&body.ScheduledRenew, strconv.Itoa(scheduledRenew))
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 

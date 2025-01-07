@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"net/http"
 	"strings"
 	"testing"
@@ -382,6 +383,7 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 					"groups" = "dogs,rats"
 				}
 			}
+			audit_access 		= "all"
 			  
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -633,6 +635,11 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rule
 		}
 
 		rules := res.GetRules()
+
+		if common.IsLocalEnv() {
+			rulesNum--
+		}
+
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
 
 		exists := false
@@ -717,6 +724,10 @@ func checkAddRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
 
+		if common.IsLocalEnv() {
+			rulesNum--
+		}
+
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
 
 		return nil
@@ -743,6 +754,11 @@ func checkUpdateRole(t *testing.T, roleName string, accnum, rulesNum int) resour
 		assert.NoError(t, err)
 		assert.Equal(t, accnum, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
+
+		if common.IsLocalEnv() {
+			rulesNum--
+		}
+
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
 
 		return nil
@@ -763,6 +779,11 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string, rulesNum int) resour
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
+
+		if common.IsLocalEnv() {
+			rulesNum--
+		}
+
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
 
 		return nil

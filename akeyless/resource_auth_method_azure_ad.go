@@ -208,9 +208,9 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	rOut, _, err := client.AuthMethodCreateAzureAD(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't create Auth Method: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return fmt.Errorf("can't create Auth Method: %v", err)
 	}
 
 	if rOut.AccessId != nil {

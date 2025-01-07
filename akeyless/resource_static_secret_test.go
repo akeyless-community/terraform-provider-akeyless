@@ -40,6 +40,53 @@ func TestStaticResource(t *testing.T) {
 		}
 	`, secretName, secretPath)
 
+	runStaticSecretTest(t, config, secretPath, configUpdate)
+}
+
+func TestStaticPasswordResource(t *testing.T) {
+
+	t.Parallel()
+
+	secretName := "test_password2"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path 				= "%v"
+			type 				= "password"
+			username 			= "user"
+			password 			= "abc"
+			inject_url 			= ["http://abc.com"]
+			custom_field		= {
+				"groups"  = "admins1",
+				"users"   = "user1",
+			}
+			tags 				= ["t1", "t2"]
+			description 		= "my password"
+            keep_prev_version	= "true"
+		}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path 				= "%v"
+			type 				= "password"
+			username 			= "user2"
+			password 			= "def"
+			inject_url 			= ["http://abc.com", "http://def.com"]
+			custom_field		= {
+				"groups"  = "admins2",
+			}
+			tags 				= ["t5"]
+			description 		= "my updated password"
+            keep_prev_version	= "false"
+		}
+	`, secretName, secretPath)
+
+	runStaticSecretTest(t, config, secretPath, configUpdate)
+}
+
+func runStaticSecretTest(t *testing.T, config string, secretPath string, configUpdate string) {
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
