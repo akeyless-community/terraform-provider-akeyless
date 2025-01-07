@@ -114,8 +114,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
-			event_center_access = "all"
-			event_forwarders_access = "all"
 			  
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -150,8 +148,6 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			}
 			audit_access 		= "all"
 			analytics_access 	= "all"
-			event_center_access = "all"
-			event_forwarders_access = "none"
 
 			depends_on = [
     			akeyless_auth_method.test_auth_method,
@@ -173,13 +169,13 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 7),
+					checkAddRoleRemotely(t, rolePath, 5),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 6),
+					checkUpdateRoleRemotely(t, rolePath, 5),
 				),
 			},
 			{
