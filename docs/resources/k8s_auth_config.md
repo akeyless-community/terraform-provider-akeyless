@@ -27,7 +27,7 @@ K8S Auth config
 - `k8s_auth_type` (String) Native K8S auth type, [token/certificate]. (relevant for native_k8s only)
 - `k8s_ca_cert` (String) The CA Certificate (base64 encoded) to use to call into the kubernetes API server
 - `k8s_client_certificate` (String) Content of the k8 client certificate (PEM format) in a Base64 format (relevant for native_k8s only)
-- `k8s_client_key` (String) Content of the k8 client private key (PEM format) in a Base64 format (relevant for native_k8s only)
+- `k8s_client_key` (String, Sensitive) Content of the k8 client private key (PEM format) in a Base64 format (relevant for native_k8s only)
 - `k8s_host` (String) The URL of the kubernetes API server
 - `k8s_issuer` (String) The Kubernetes JWT issuer name. If not set, this <kubernetes/serviceaccount> will be used by default.
 - `rancher_api_key` (String) The api key used to access the TokenReview API to validate other JWTs (relevant for rancher only)

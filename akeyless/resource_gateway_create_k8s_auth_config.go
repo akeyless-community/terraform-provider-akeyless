@@ -111,6 +111,7 @@ func resourceK8sAuthConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Content of the k8 client private key (PEM format) in a Base64 format (relevant for native_k8s only)",
+				Sensitive:   true,
 			},
 		},
 	}
