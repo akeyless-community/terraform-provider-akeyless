@@ -32,9 +32,6 @@ runs:
       run: |
         cd "${{ github.workspace }}/python/akeyless/.gen"
         python -m twine upload dist/*
-        
-#    - name: Publish Python package
-#      uses: pypa/gh-action-pypi-publish@release/v1
 
     - name: Release CDKTF-Python summary
       shell: bash
