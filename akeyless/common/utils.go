@@ -337,17 +337,13 @@ func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemTy
 	}
 
 	if s, ok := sra.GetHostOk(); ok {
-		if len(*s) == 1 && (*s)[0] == "" {
-			var emptyHost []string
-			err = d.Set("secure_access_host", emptyHost)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = d.Set("secure_access_host", s)
-			if err != nil {
-				return err
-			}
+		if s != nil && len(*s) == 1 && (*s)[0] == "" {
+			var emptyHostList []string
+			s = &emptyHostList
+		}
+		err = d.Set("secure_access_host", s)
+		if err != nil {
+			return err
 		}
 	}
 
