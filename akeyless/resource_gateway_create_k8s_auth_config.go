@@ -39,6 +39,7 @@ func resourceK8sAuthConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The private key (in base64 encoded of the PEM format) associated with the public key defined in the Kubernetes auth",
+				Sensitive:   true,
 			},
 			"token_exp": {
 				Type:        schema.TypeInt,
@@ -60,6 +61,7 @@ func resourceK8sAuthConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "A Kubernetes service account JWT used to access the TokenReview API to validate other JWTs. If not set, the JWT submitted in the authentication process will be used to access the Kubernetes TokenReview API.",
+				Sensitive:   true,
 			},
 			"k8s_issuer": {
 				Type:        schema.TypeString,
@@ -109,6 +111,7 @@ func resourceK8sAuthConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Content of the k8 client private key (PEM format) in a Base64 format (relevant for native_k8s only)",
+				Sensitive:   true,
 			},
 		},
 	}
