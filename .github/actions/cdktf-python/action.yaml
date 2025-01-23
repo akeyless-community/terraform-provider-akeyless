@@ -16,15 +16,13 @@ runs:
         python -m pip install --upgrade pip
         pip install poetry==1.4.2
 
-    - name: Build Python package
+    - name: Build and Publish Python package
       shell: bash
       run: |
         cd "${{ github.workspace }}/python/akeyless/.gen"
+        poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN_PASSWORD }}
         poetry build
-        cp -r ./ "${{ github.workspace }}/"
-
-    - name: Publish Python package
-      uses: pypa/gh-action-pypi-publish@release/v1
+        poetry publish
 
     - name: Release CDKTF-Python summary
       shell: bash
