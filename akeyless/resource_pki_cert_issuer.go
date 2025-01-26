@@ -305,7 +305,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.CreatePublicCrl, createPublicCRL)
 	common.GetAkeylessPtr(&body.CreatePrivateCrl, createPrivateCRL)
 	common.GetAkeylessPtr(&body.AutoRenew, autoRenew)
-	common.GetAkeylessPtr(&body.ScheduledRenew, strconv.Itoa(scheduledRenew))
+	common.GetAkeylessPtr(&body.ScheduledRenew, scheduledRenew)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
@@ -746,7 +746,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.CreatePublicCrl, createPublicCRL)
 	common.GetAkeylessPtr(&body.CreatePrivateCrl, createPrivateCRL)
 	common.GetAkeylessPtr(&body.AutoRenew, autoRenew)
-	common.GetAkeylessPtr(&body.ScheduledRenew, strconv.Itoa(scheduledRenew))
+	common.GetAkeylessPtr(&body.ScheduledRenew, scheduledRenew)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
