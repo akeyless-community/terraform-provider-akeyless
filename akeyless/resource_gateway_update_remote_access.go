@@ -11,16 +11,17 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceGatewayUpdateRemoteAccess() *schema.Resource {
 	return &schema.Resource{
-		Description: "Remote access config",
-		Create:      resourceGatewayUpdateRemoteAccessUpdate,
-		Read:        resourceGatewayUpdateRemoteAccessRead,
-		Update:      resourceGatewayUpdateRemoteAccessUpdate,
-		Delete:      resourceGatewayUpdateRemoteAccessUpdate,
+		Description:   "Remote access config",
+		Create:        resourceGatewayUpdateRemoteAccessUpdate,
+		Read:          resourceGatewayUpdateRemoteAccessRead,
+		Update:        resourceGatewayUpdateRemoteAccessUpdate,
+		DeleteContext: resourceGatewayUpdateRemoteAccessDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateRemoteAccessImport,
 		},
@@ -177,6 +178,11 @@ func resourceGatewayUpdateRemoteAccessUpdate(d *schema.ResourceData, m interface
 	}
 
 	return nil
+}
+
+func resourceGatewayUpdateRemoteAccessDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	return diag.Diagnostics{common.WarningDiagnostics("Destroying the Gateway configuration is not supported. To make changes, please update the configuration explicitly using the update endpoint or delete the Gateway cluster manually.")}
 }
 
 func resourceGatewayUpdateRemoteAccessImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {

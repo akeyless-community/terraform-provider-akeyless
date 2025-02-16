@@ -10,16 +10,17 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceGatewayUpdateCache() *schema.Resource {
 	return &schema.Resource{
-		Description: "Cache settings",
-		Create:      resourceGatewayUpdateCacheUpdate,
-		Read:        resourceGatewayUpdateCacheRead,
-		Update:      resourceGatewayUpdateCacheUpdate,
-		Delete:      resourceGatewayUpdateCacheUpdate,
+		Description:   "Cache settings",
+		Create:        resourceGatewayUpdateCacheUpdate,
+		Read:          resourceGatewayUpdateCacheRead,
+		Update:        resourceGatewayUpdateCacheUpdate,
+		DeleteContext: resourceGatewayUpdateCacheDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateCacheImport,
 		},
@@ -135,6 +136,11 @@ func resourceGatewayUpdateCacheUpdate(d *schema.ResourceData, m interface{}) err
 	}
 
 	return nil
+}
+
+func resourceGatewayUpdateCacheDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	return diag.Diagnostics{common.WarningDiagnostics("Destroying the Gateway configuration is not supported. To make changes, please update the configuration explicitly using the update endpoint or delete the Gateway cluster manually.")}
 }
 
 func resourceGatewayUpdateCacheImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {

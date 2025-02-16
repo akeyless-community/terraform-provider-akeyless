@@ -10,16 +10,17 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceGatewayUpdateLogForwardingLogzIo() *schema.Resource {
 	return &schema.Resource{
-		Description: "Log Forwarding config for logz-io",
-		Create:      resourceGatewayUpdateLogForwardingLogzIoUpdate,
-		Read:        resourceGatewayUpdateLogForwardingLogzIoRead,
-		Update:      resourceGatewayUpdateLogForwardingLogzIoUpdate,
-		Delete:      resourceGatewayUpdateLogForwardingLogzIoUpdate,
+		Description:   "Log Forwarding config for logz-io",
+		Create:        resourceGatewayUpdateLogForwardingLogzIoUpdate,
+		Read:          resourceGatewayUpdateLogForwardingLogzIoRead,
+		Update:        resourceGatewayUpdateLogForwardingLogzIoUpdate,
+		DeleteContext: resourceGatewayUpdateLogForwardingLogzIoDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLogForwardingLogzIoImport,
 		},
@@ -138,6 +139,11 @@ func resourceGatewayUpdateLogForwardingLogzIoUpdate(d *schema.ResourceData, m in
 	}
 
 	return nil
+}
+
+func resourceGatewayUpdateLogForwardingLogzIoDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	return diag.Diagnostics{common.WarningDiagnostics("Destroying the Gateway configuration is not supported. To make changes, please update the configuration explicitly using the update endpoint or delete the Gateway cluster manually.")}
 }
 
 func resourceGatewayUpdateLogForwardingLogzIoImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
