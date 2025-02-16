@@ -10,16 +10,17 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceGatewayUpdateLogForwardingGoogleChronicle() *schema.Resource {
 	return &schema.Resource{
-		Description: "Log Forwarding config for google-chronicle",
-		Create:      resourceGatewayUpdateLogForwardingGoogleChronicleUpdate,
-		Read:        resourceGatewayUpdateLogForwardingGoogleChronicleRead,
-		Update:      resourceGatewayUpdateLogForwardingGoogleChronicleUpdate,
-		Delete:      resourceGatewayUpdateLogForwardingGoogleChronicleUpdate,
+		Description:   "Log Forwarding config for google-chronicle",
+		Create:        resourceGatewayUpdateLogForwardingGoogleChronicleUpdate,
+		Read:          resourceGatewayUpdateLogForwardingGoogleChronicleRead,
+		Update:        resourceGatewayUpdateLogForwardingGoogleChronicleUpdate,
+		DeleteContext: resourceGatewayUpdateLogForwardingGoogleChronicleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLogForwardingGoogleChronicleImport,
 		},
@@ -164,6 +165,11 @@ func resourceGatewayUpdateLogForwardingGoogleChronicleUpdate(d *schema.ResourceD
 	}
 
 	return nil
+}
+
+func resourceGatewayUpdateLogForwardingGoogleChronicleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	return diag.Diagnostics{common.WarningDiagnostics("Destroying the Gateway configuration is not supported. To make changes, please update the configuration explicitly using the update endpoint or delete the Gateway cluster manually.")}
 }
 
 func resourceGatewayUpdateLogForwardingGoogleChronicleImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {

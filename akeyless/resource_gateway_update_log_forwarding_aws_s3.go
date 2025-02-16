@@ -10,16 +10,17 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceGatewayUpdateLogForwardingAwsS3() *schema.Resource {
 	return &schema.Resource{
-		Description: "Log Forwarding config for aws-s3",
-		Create:      resourceGatewayUpdateLogForwardingAwsS3Update,
-		Read:        resourceGatewayUpdateLogForwardingAwsS3Read,
-		Update:      resourceGatewayUpdateLogForwardingAwsS3Update,
-		Delete:      resourceGatewayUpdateLogForwardingAwsS3Update,
+		Description:   "Log Forwarding config for aws-s3",
+		Create:        resourceGatewayUpdateLogForwardingAwsS3Update,
+		Read:          resourceGatewayUpdateLogForwardingAwsS3Read,
+		Update:        resourceGatewayUpdateLogForwardingAwsS3Update,
+		DeleteContext: resourceGatewayUpdateLogForwardingAwsS3Delete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLogForwardingAwsS3Import,
 		},
@@ -204,6 +205,11 @@ func resourceGatewayUpdateLogForwardingAwsS3Update(d *schema.ResourceData, m int
 	}
 
 	return nil
+}
+
+func resourceGatewayUpdateLogForwardingAwsS3Delete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	return diag.Diagnostics{common.WarningDiagnostics("Destroying the Gateway configuration is not supported. To make changes, please update the configuration explicitly using the update endpoint or delete the Gateway cluster manually.")}
 }
 
 func resourceGatewayUpdateLogForwardingAwsS3Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {

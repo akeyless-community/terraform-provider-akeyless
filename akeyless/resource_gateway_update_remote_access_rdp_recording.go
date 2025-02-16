@@ -8,16 +8,17 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceGatewayUpdateRemoteAccessRdpRecording() *schema.Resource {
 	return &schema.Resource{
-		Description: "Remote access rdp recording config",
-		Create:      resourceGatewayUpdateRemoteAccessRdpRecordingUpdate,
-		Read:        resourceGatewayUpdateRemoteAccessRdpRecordingRead,
-		Update:      resourceGatewayUpdateRemoteAccessRdpRecordingUpdate,
-		Delete:      resourceGatewayUpdateRemoteAccessRdpRecordingUpdate,
+		Description:   "Remote access rdp recording config",
+		Create:        resourceGatewayUpdateRemoteAccessRdpRecordingUpdate,
+		Read:          resourceGatewayUpdateRemoteAccessRdpRecordingRead,
+		Update:        resourceGatewayUpdateRemoteAccessRdpRecordingUpdate,
+		DeleteContext: resourceGatewayUpdateRemoteAccessRdpRecordingDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateRemoteAccessRdpRecordingImport,
 		},
@@ -246,6 +247,11 @@ func resourceGatewayUpdateRemoteAccessRdpRecordingUpdate(d *schema.ResourceData,
 		d.SetId(id)
 	}
 	return nil
+}
+
+func resourceGatewayUpdateRemoteAccessRdpRecordingDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	return diag.Diagnostics{common.WarningDiagnostics("Destroying the Gateway configuration is not supported. To make changes, please update the configuration explicitly using the update endpoint or delete the Gateway cluster manually.")}
 }
 
 func resourceGatewayUpdateRemoteAccessRdpRecordingImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
