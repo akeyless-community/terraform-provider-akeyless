@@ -41,6 +41,8 @@ jobs:
       - name: python action
         if: matrix.language == 'python'
         uses: ./.github/actions/cdktf-python
+        with:
+          pypi_token: ${{ secrets.PYPI_API_TOKEN_PASSWORD }}
 
       - name: Slack Notification
         if: failure() || success()

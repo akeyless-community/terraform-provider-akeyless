@@ -1,6 +1,10 @@
 name: Python Package
 description: 'Python Package'
 
+inputs:
+  pypi_token:
+    description: 'PYPI API Token'
+    required: true
 runs:
   using: "composite"
 
@@ -20,7 +24,7 @@ runs:
       shell: bash
       run: |
         cd "${{ github.workspace }}/python/akeyless/.gen"
-        poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN_PASSWORD }}
+        poetry config pypi-token.pypi ${{ inputs.pypi_token }}
         poetry build
         poetry publish
 
