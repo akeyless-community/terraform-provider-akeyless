@@ -153,6 +153,13 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
 			},
+			"delete_protection": {
+				Type:        schema.TypeBool,
+				Required:    false,
+				Optional:    true,
+				Description: "Protect secret from deletion",
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -182,6 +189,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
@@ -189,11 +197,12 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	body := akeyless_api.CreateSecret{
-		Name:           path,
-		Type:           &secretType,
-		Value:          value,
-		MultilineValue: akeyless_api.PtrBool(multilineValue),
-		Token:          &token,
+		Name:             path,
+		Type:             &secretType,
+		Value:            value,
+		MultilineValue:   akeyless_api.PtrBool(multilineValue),
+		Token:            &token,
+		DeleteProtection: akeyless_api.PtrString(deleteProtection),
 	}
 	if ProtectionKey != "" {
 		body.ProtectionKey = akeyless_api.PtrString(ProtectionKey)
@@ -213,6 +222,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.CreateSecret(ctx).Body(body).Execute()
 	if err != nil {
@@ -320,6 +330,12 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if itemOut.DeleteProtection != nil {
+		err := d.Set("delete_protection", *itemOut.DeleteProtection)
+		if err != nil {
+			return err
+		}
+	}
 
 	info := itemOut.ItemGeneralInfo
 	if info != nil {
@@ -393,7 +409,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 
-	if d.HasChanges("value", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field") {
+	if d.HasChanges("value", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field", "delete") {
 		value := d.Get("value").(string)
 		format := d.Get("format").(string)
 		protectionKey := d.Get("protection_key").(string)
@@ -511,16 +527,30 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
+	ctx := context.Background()
 
 	path := d.Id()
+
+	item := akeyless_api.DescribeItem{
+		Name:  path,
+		Token: &token,
+	}
+
+	itemOut, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	if err != nil {
+		return err
+	}
+
+	if itemOut.DeleteProtection != nil && *itemOut.DeleteProtection {
+		return fmt.Errorf("secret '%s' is protect from deletion", path)
+	}
 
 	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}
 
-	ctx := context.Background()
-	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
+	_, _, err = client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}

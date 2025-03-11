@@ -3,6 +3,7 @@ package akeyless
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
@@ -123,4 +124,91 @@ func checkSecretExistsRemotely(path string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func TestStaticSecretDeleteProtection(t *testing.T) {
+
+	secretName := "test_protected_secret"
+	secretPath := testPath(secretName)
+
+	// Initial configuration with delete protection enabled
+	configWithProtection := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path               = "%v"
+			value              = "protected_value"
+			format             = "json"
+			tags               = ["protected"]
+			description        = "secret with delete protection"
+			keep_prev_version  = "true"
+			delete_protection  = "true"
+		}
+	`, secretName, secretPath)
+
+	// Configuration attempting to remove delete protection
+	configWithoutProtection := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path               = "%v"
+			value              = "protected_value"
+			format             = "json"
+			tags               = ["protected"]
+			description        = "secret without delete protection"
+			keep_prev_version  = "true"
+			delete_protection  = "false"
+		}
+	`, secretName, secretPath)
+
+	resource.ParallelTest(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: configWithProtection,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+				),
+			},
+			{
+				// Try to remove delete protection
+				Config:      configWithoutProtection,
+				ExpectError: regexp.MustCompile("cannot disable delete protection once enabled"),
+			},
+		},
+	})
+}
+
+func TestStaticSecretDeletionFailsWithProtection(t *testing.T) {
+
+	secretName := "test_protected_deletion"
+	secretPath := testPath(secretName)
+
+	// Secret with delete protection enabled
+	configWithProtection := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path               = "%v"
+			value              = "cannot_delete"
+			format             = "json"
+			tags               = ["protected"]
+			description        = "protected secret"
+			keep_prev_version  = "true"
+			delete_protection  = "true"
+		}
+	`, secretName, secretPath)
+
+	resource.ParallelTest(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: configWithProtection,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+				),
+			},
+			{
+				// Attempt to delete the secret
+				Destroy:     true,
+				ExpectError: regexp.MustCompile(fmt.Sprintf("secret '%s' is protect from deletion", secretName)),
+			},
+		},
+	})
 }
