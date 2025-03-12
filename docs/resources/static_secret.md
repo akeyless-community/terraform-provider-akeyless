@@ -46,7 +46,7 @@ resource "akeyless_static_secret" "secret" {
 ### Optional
 
 - `custom_field` (Map of String, Sensitive) Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')
-- `delete_protection` (Boolean) Protect secret from deletion
+- `delete_protection` (String) Protect secret from deletion
 - `description` (String) Description of the object
 - `format` (String) Secret format [text/json/key-value] (relevant only for type 'generic')
 - `inject_url` (Set of String) List of URLs associated with the item (relevant only for type 'password')
