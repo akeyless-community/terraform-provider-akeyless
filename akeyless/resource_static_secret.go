@@ -158,7 +158,7 @@ func resourceStaticSecret() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "Protect secret from deletion",
-				Computed:    true,
+				Default:     false,
 			},
 		},
 	}
@@ -197,12 +197,11 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	body := akeyless_api.CreateSecret{
-		Name:             path,
-		Type:             &secretType,
-		Value:            value,
-		MultilineValue:   akeyless_api.PtrBool(multilineValue),
-		Token:            &token,
-		DeleteProtection: akeyless_api.PtrString(deleteProtection),
+		Name:           path,
+		Type:           &secretType,
+		Value:          value,
+		MultilineValue: akeyless_api.PtrBool(multilineValue),
+		Token:          &token,
 	}
 	if ProtectionKey != "" {
 		body.ProtectionKey = akeyless_api.PtrString(ProtectionKey)
@@ -409,7 +408,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 
-	if d.HasChanges("value", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field", "delete") {
+	if d.HasChanges("value", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field") {
 		value := d.Get("value").(string)
 		format := d.Get("format").(string)
 		protectionKey := d.Get("protection_key").(string)
@@ -531,26 +530,12 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Id()
 
-	item := akeyless_api.DescribeItem{
-		Name:  path,
-		Token: &token,
-	}
-
-	itemOut, _, err := client.DescribeItem(ctx).Body(item).Execute()
-	if err != nil {
-		return err
-	}
-
-	if itemOut.DeleteProtection != nil && *itemOut.DeleteProtection {
-		return fmt.Errorf("secret '%s' is protect from deletion", path)
-	}
-
 	deleteItem := akeyless_api.DeleteItem{
 		Token: &token,
 		Name:  path,
 	}
 
-	_, _, err = client.DeleteItem(ctx).Body(deleteItem).Execute()
+	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
 	}
