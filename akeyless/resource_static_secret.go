@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
 )
 
 func resourceStaticSecret() *schema.Resource {
@@ -154,11 +155,10 @@ func resourceStaticSecret() *schema.Resource {
 				Computed:    true,
 			},
 			"delete_protection": {
-				Type:        schema.TypeBool,
+				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "Protect secret from deletion",
-				Default:     false,
 			},
 		},
 	}
