@@ -156,9 +156,9 @@ func resourceStaticSecret() *schema.Resource {
 			},
 			"delete_protection": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
-				Description: "Protect secret from deletion",
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
 			},
 		},
 	}
@@ -458,6 +458,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	bodyItem := akeyless_api.UpdateItem{
 		Name:    path,
@@ -484,6 +485,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&bodyItem.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCredsUser, secureAccessSshUser)
+	common.GetAkeylessPtr(&bodyItem.DeleteProtection, deleteProtection)
 
 	_, _, err = client.UpdateItem(ctx).Body(bodyItem).Execute()
 	if err != nil {
