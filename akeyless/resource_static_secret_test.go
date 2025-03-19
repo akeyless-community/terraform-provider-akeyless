@@ -25,7 +25,7 @@ func TestStaticResource(t *testing.T) {
 			tags 				= ["t1", "t2"]
 			description 		= "aaaa"
             keep_prev_version	= "true"
-			delete_protection  = "true"
+			delete_protection  	= "true"
 		}
 	`, secretName, secretPath)
 
@@ -38,7 +38,6 @@ func TestStaticResource(t *testing.T) {
 			secure_access_url 			= "http://abc.com"
 			tags 						= ["t1", "t3"]
 			description 				= "bbbb"
-			delete_protection  = "true"
 		}
 	`, secretName, secretPath)
 
@@ -66,7 +65,7 @@ func TestStaticPasswordResource(t *testing.T) {
 			tags 				= ["t1", "t2"]
 			description 		= "my password"
             keep_prev_version	= "true"
-			delete_protection  = "true"
+			delete_protection  	= "true"
 		}
 	`, secretName, secretPath)
 
@@ -83,7 +82,6 @@ func TestStaticPasswordResource(t *testing.T) {
 			tags 				= ["t5"]
 			description 		= "my updated password"
             keep_prev_version	= "false"
-			delete_protection  = "true"
 		}
 	`, secretName, secretPath)
 
