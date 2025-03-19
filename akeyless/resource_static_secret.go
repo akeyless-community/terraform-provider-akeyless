@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -324,13 +325,13 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err = d.Set("tags", *itemOut.ItemTags)
+		err := d.Set("tags", *itemOut.ItemTags)
 		if err != nil {
 			return err
 		}
 	}
 	if itemOut.DeleteProtection != nil {
-		err := d.Set("delete_protection", *itemOut.DeleteProtection)
+		err := d.Set("delete_protection", strconv.FormatBool(*itemOut.DeleteProtection))
 		if err != nil {
 			return err
 		}
