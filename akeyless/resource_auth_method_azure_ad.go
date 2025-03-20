@@ -319,56 +319,56 @@ func resourceAuthMethodAzureAdRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 	if rOut.AccessInfo.AzureAdAccessRules.BoundResourceTypes != nil {
-		err = d.Set("bound_resource_types", *rOut.AccessInfo.AzureAdAccessRules.BoundResourceTypes)
+		err = d.Set("bound_resource_types", rOut.AccessInfo.AzureAdAccessRules.BoundResourceTypes)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AzureAdAccessRules.BoundResourceNames != nil {
-		err = d.Set("bound_resource_names", *rOut.AccessInfo.AzureAdAccessRules.BoundResourceNames)
+		err = d.Set("bound_resource_names", rOut.AccessInfo.AzureAdAccessRules.BoundResourceNames)
 		if err != nil {
 			return err
 		}
 	}
 
 	if rOut.AccessInfo.AzureAdAccessRules.BoundServicePrincipalIds != nil {
-		err = d.Set("bound_spid", *rOut.AccessInfo.AzureAdAccessRules.BoundServicePrincipalIds)
+		err = d.Set("bound_spid", rOut.AccessInfo.AzureAdAccessRules.BoundServicePrincipalIds)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AzureAdAccessRules.BoundGroupIds != nil {
-		err = d.Set("bound_group_id", *rOut.AccessInfo.AzureAdAccessRules.BoundGroupIds)
+		err = d.Set("bound_group_id", rOut.AccessInfo.AzureAdAccessRules.BoundGroupIds)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AzureAdAccessRules.BoundSubscriptionIds != nil {
-		err = d.Set("bound_sub_id", *rOut.AccessInfo.AzureAdAccessRules.BoundSubscriptionIds)
+		err = d.Set("bound_sub_id", rOut.AccessInfo.AzureAdAccessRules.BoundSubscriptionIds)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AzureAdAccessRules.BoundResourceGroups != nil {
-		err = d.Set("bound_rg_id", *rOut.AccessInfo.AzureAdAccessRules.BoundResourceGroups)
+		err = d.Set("bound_rg_id", rOut.AccessInfo.AzureAdAccessRules.BoundResourceGroups)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AzureAdAccessRules.BoundResourceProviders != nil {
-		err = d.Set("bound_providers", *rOut.AccessInfo.AzureAdAccessRules.BoundResourceProviders)
+		err = d.Set("bound_providers", rOut.AccessInfo.AzureAdAccessRules.BoundResourceProviders)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AzureAdAccessRules.BoundResourceIds != nil {
-		err = d.Set("bound_resource_id", *rOut.AccessInfo.AzureAdAccessRules.BoundResourceIds)
+		err = d.Set("bound_resource_id", rOut.AccessInfo.AzureAdAccessRules.BoundResourceIds)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}

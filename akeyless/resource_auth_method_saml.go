@@ -242,13 +242,13 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.AccessInfo.SamlAccessRules.AllowedRedirectURIs != nil {
-		err = d.Set("allowed_redirect_uri", *rOut.AccessInfo.SamlAccessRules.AllowedRedirectURIs)
+		err = d.Set("allowed_redirect_uri", rOut.AccessInfo.SamlAccessRules.AllowedRedirectURIs)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}

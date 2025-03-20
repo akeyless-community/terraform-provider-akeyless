@@ -271,25 +271,25 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.AccessInfo.GcpAccessRules.BoundProjects != nil {
-		err = d.Set("bound_projects", *rOut.AccessInfo.GcpAccessRules.BoundProjects)
+		err = d.Set("bound_projects", rOut.AccessInfo.GcpAccessRules.BoundProjects)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.GcpAccessRules.BoundServiceAccounts != nil {
-		err = d.Set("bound_service_accounts", *rOut.AccessInfo.GcpAccessRules.BoundServiceAccounts)
+		err = d.Set("bound_service_accounts", rOut.AccessInfo.GcpAccessRules.BoundServiceAccounts)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.GcpAccessRules.BoundZones != nil {
-		err = d.Set("bound_zones", *rOut.AccessInfo.GcpAccessRules.BoundZones)
+		err = d.Set("bound_zones", rOut.AccessInfo.GcpAccessRules.BoundZones)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.GcpAccessRules.BoundRegions != nil {
-		err = d.Set("bound_regions", *rOut.AccessInfo.GcpAccessRules.BoundRegions)
+		err = d.Set("bound_regions", rOut.AccessInfo.GcpAccessRules.BoundRegions)
 		if err != nil {
 			return err
 		}
@@ -317,7 +317,7 @@ func resourceAuthMethodGcpRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}

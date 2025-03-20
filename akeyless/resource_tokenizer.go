@@ -255,7 +255,7 @@ func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemTags != nil {
-		err = d.Set("tag", *rOut.ItemTags)
+		err = d.Set("tag", rOut.ItemTags)
 		if err != nil {
 			return err
 		}

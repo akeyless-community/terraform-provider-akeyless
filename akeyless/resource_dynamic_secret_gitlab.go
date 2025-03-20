@@ -218,7 +218,7 @@ func resourceDynamicSecretGitlabRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.Tags != nil {
-		err = d.Set("tags", *rOut.Tags)
+		err = d.Set("tags", rOut.Tags)
 		if err != nil {
 			return err
 		}
@@ -243,7 +243,7 @@ func resourceDynamicSecretGitlabRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.GitlabTokenScope != nil {
-		err = d.Set("gitlab_token_scopes", strings.Join(*rOut.GitlabTokenScope, ","))
+		err = d.Set("gitlab_token_scopes", strings.Join(rOut.GitlabTokenScope, ","))
 		if err != nil {
 			return err
 		}

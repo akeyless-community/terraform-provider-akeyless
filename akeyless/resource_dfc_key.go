@@ -241,7 +241,7 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.ItemTags != nil {
-		err := d.Set("tags", *rOut.ItemTags)
+		err := d.Set("tags", rOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -324,13 +324,13 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if rOut.ItemGeneralInfo.ExpirationEvents != nil {
-			err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(*rOut.ItemGeneralInfo.ExpirationEvents))
+			err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(rOut.ItemGeneralInfo.ExpirationEvents))
 			if err != nil {
 				return err
 			}
 		}
 		if rOut.ItemGeneralInfo.NextRotationEvents != nil {
-			err := d.Set("rotation_event_in", common.ReadRotationEventInParam(*rOut.ItemGeneralInfo.NextRotationEvents))
+			err := d.Set("rotation_event_in", common.ReadRotationEventInParam(rOut.ItemGeneralInfo.NextRotationEvents))
 			if err != nil {
 				return err
 			}
@@ -487,7 +487,7 @@ func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless_api.Item, error
 		return nil, fmt.Errorf("failed to get key: %w", err)
 	}
 
-	return &rOut, nil
+	return rOut, nil
 }
 
 func encodeCertificate(cert string) (string, error) {

@@ -112,7 +112,7 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if role.RoleAuthMethodsAssoc != nil {
-		for _, acc := range *role.RoleAuthMethodsAssoc {
+		for _, acc := range role.RoleAuthMethodsAssoc {
 			if acc.AssocId != nil && *acc.AssocId == id {
 				if acc.AuthMethodName != nil {
 					err = common.SetDataByPrefixSlash(d, "am_name", *acc.AuthMethodName, d.Get("am_name").(string))
@@ -262,10 +262,10 @@ func resourceAssocRoleAmImport(d *schema.ResourceData, m interface{}) ([]*schema
 
 }
 
-func importByAuthMethod(d *schema.ResourceData, role akeyless_api.Role, amName string) ([]*schema.ResourceData, error) {
+func importByAuthMethod(d *schema.ResourceData, role *akeyless_api.Role, amName string) ([]*schema.ResourceData, error) {
 	id := d.Id()
 
-	assocs := *role.RoleAuthMethodsAssoc
+	assocs := role.RoleAuthMethodsAssoc
 	count := countRoleAmAssocs(assocs, amName)
 	if count == 0 {
 		return nil, fmt.Errorf("association %v was not found", id)
@@ -292,10 +292,10 @@ func importByAuthMethod(d *schema.ResourceData, role akeyless_api.Role, amName s
 	return nil, fmt.Errorf("association %v was not found", id)
 }
 
-func importByAssocId(d *schema.ResourceData, role akeyless_api.Role, assocId string) ([]*schema.ResourceData, error) {
+func importByAssocId(d *schema.ResourceData, role *akeyless_api.Role, assocId string) ([]*schema.ResourceData, error) {
 	id := d.Id()
 
-	for _, acc := range *role.RoleAuthMethodsAssoc {
+	for _, acc := range role.RoleAuthMethodsAssoc {
 		if acc.AssocId != nil && *acc.AssocId == assocId {
 			err := fillAssocFields(d, acc)
 			if err != nil {

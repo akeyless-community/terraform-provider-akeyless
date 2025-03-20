@@ -254,7 +254,7 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.ItemTags != nil {
-		err = d.Set("tags", *rOut.ItemTags)
+		err = d.Set("tags", rOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -358,13 +358,13 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if rOut.ItemGeneralInfo.ExpirationEvents != nil {
-			err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(*rOut.ItemGeneralInfo.ExpirationEvents))
+			err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(rOut.ItemGeneralInfo.ExpirationEvents))
 			if err != nil {
 				return err
 			}
 		}
 		if rOut.ItemGeneralInfo.NextRotationEvents != nil {
-			err := d.Set("rotation_event_in", common.ReadRotationEventInParam(*rOut.ItemGeneralInfo.NextRotationEvents))
+			err := d.Set("rotation_event_in", common.ReadRotationEventInParam(rOut.ItemGeneralInfo.NextRotationEvents))
 			if err != nil {
 				return err
 			}

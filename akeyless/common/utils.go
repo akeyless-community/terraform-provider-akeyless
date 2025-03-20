@@ -170,14 +170,14 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 	}
 }
 
-func GetTargetName(itemTargetsAssoc *[]akeyless_api.ItemTargetAssociation) string {
+func GetTargetName(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string {
 	if itemTargetsAssoc == nil {
 		return ""
 	}
-	if len(*itemTargetsAssoc) == 0 {
+	if len(itemTargetsAssoc) == 0 {
 		return ""
 	}
-	targets := *itemTargetsAssoc
+	targets := itemTargetsAssoc
 	if len(targets) == 1 {
 		if targets[0].TargetName == nil {
 			return ""
@@ -248,7 +248,7 @@ func GetSraWithDescribeItem(d *schema.ResourceData, path, token string, client a
 	return GetSraFromItem(d, itemOut)
 }
 
-func GetSraFromItem(d *schema.ResourceData, item akeyless_api.Item) error {
+func GetSraFromItem(d *schema.ResourceData, item *akeyless_api.Item) error {
 
 	if item.GetItemGeneralInfo().SecureRemoteAccessDetails == nil {
 		return nil
@@ -337,8 +337,8 @@ func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemTy
 	}
 
 	if s, ok := sra.GetHostOk(); ok {
-		if s != nil && len(*s) == 1 && (*s)[0] == "" {
-			s = &[]string{}
+		if s != nil && len(s) == 1 && (s)[0] == "" {
+			s = []string{}
 		}
 		err = d.Set("secure_access_host", s)
 		if err != nil {

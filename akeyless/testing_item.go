@@ -179,7 +179,7 @@ func createProtectionKey(t *testing.T, name string) {
 	}
 }
 
-func getRsaPublicKey(t *testing.T, name string) akeyless_api.GetRSAPublicOutput {
+func getRsaPublicKey(t *testing.T, name string) *akeyless_api.GetRSAPublicOutput {
 	client, token := prepareClient(t)
 
 	body := akeyless_api.GetRSAPublic{
@@ -199,11 +199,11 @@ func createPkiCertIssuer(t *testing.T, keyName, issuerName, destPath, cn, uriSan
 	client, token := prepareClient(t)
 
 	body := akeyless_api.CreatePKICertIssuer{
-		Name:          issuerName,
-		SignerKeyName: keyName,
-		Token:         &token,
-		Ttl:           "300",
+		Name:  issuerName,
+		Token: &token,
+		Ttl:   "300",
 	}
+	common.GetAkeylessPtr(&body.SignerKeyName, keyName)
 	common.GetAkeylessPtr(&body.DestinationPath, destPath)
 	common.GetAkeylessPtr(&body.ClientFlag, true)
 	common.GetAkeylessPtr(&body.AllowedDomains, cn)
@@ -264,9 +264,9 @@ func deleteItems(t *testing.T, path string) {
 	client, token := prepareClient(t)
 
 	gsvBody := akeyless_api.DeleteItems{
-		Path:  path,
 		Token: &token,
 	}
+	common.GetAkeylessPtr(&gsvBody.Path, path)
 
 	_, _, err := client.DeleteItems(context.Background()).Body(gsvBody).Execute()
 	require.NoError(t, err)

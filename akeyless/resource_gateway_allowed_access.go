@@ -151,7 +151,7 @@ func resourceGatewayAllowedAccessRead(d *schema.ResourceData, m interface{}) err
 		}
 	}
 	if rOut.Permissions != nil {
-		err = d.Set("permissions", strings.Join(*rOut.Permissions, ","))
+		err = d.Set("permissions", strings.Join(rOut.Permissions, ","))
 		if err != nil {
 			return err
 		}

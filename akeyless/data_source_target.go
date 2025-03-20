@@ -169,7 +169,7 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ClientPermissions != nil {
-		err := d.Set("client_permissions", *rOut.ClientPermissions)
+		err := d.Set("client_permissions", rOut.ClientPermissions)
 		if err != nil {
 			return err
 		}

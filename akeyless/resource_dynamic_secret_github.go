@@ -221,7 +221,7 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.GithubInstallationTokenRepositories != nil {
-		err = d.Set("token_repositories", *rOut.GithubInstallationTokenRepositories)
+		err = d.Set("token_repositories", rOut.GithubInstallationTokenRepositories)
 		if err != nil {
 			return err
 		}
