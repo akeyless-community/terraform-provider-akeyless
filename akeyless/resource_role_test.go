@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"net/http"
 	"strings"
 	"testing"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
