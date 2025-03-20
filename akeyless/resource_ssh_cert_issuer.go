@@ -207,13 +207,13 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		if rOut.CertificateIssueDetails.SshCertIssuerDetails != nil {
 			ssh := rOut.CertificateIssueDetails.SshCertIssuerDetails
 			if ssh.AllowedUsers != nil {
-				err = d.Set("allowed_users", strings.Join(*ssh.AllowedUsers, ","))
+				err = d.Set("allowed_users", strings.Join(ssh.AllowedUsers, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if ssh.Principals != nil {
-				err = d.Set("principals", strings.Join(*ssh.Principals, ","))
+				err = d.Set("principals", strings.Join(ssh.Principals, ","))
 				if err != nil {
 					return err
 				}
@@ -240,7 +240,7 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemTags != nil {
-		err = d.Set("tags", *rOut.ItemTags)
+		err = d.Set("tags", rOut.ItemTags)
 		if err != nil {
 			return err
 		}

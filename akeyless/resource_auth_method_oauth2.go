@@ -131,13 +131,13 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 
 	body := akeyless_api.AuthMethodCreateOauth2{
 		Name:             name,
-		JwksUri:          jwksUri,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
 	}
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwksUri, jwksUri)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.BoundClientIds, boundClientIds)
 	common.GetAkeylessPtr(&body.Issuer, issuer)
@@ -270,14 +270,14 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.AccessInfo.Oauth2AccessRules.BoundClientsId != nil {
-		err = d.Set("bound_client_ids", *rOut.AccessInfo.Oauth2AccessRules.BoundClientsId)
+		err = d.Set("bound_client_ids", rOut.AccessInfo.Oauth2AccessRules.BoundClientsId)
 		if err != nil {
 			return err
 		}
 	}
 
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}
@@ -321,13 +321,13 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 
 	body := akeyless_api.AuthMethodUpdateOauth2{
 		Name:             name,
-		JwksUri:          jwksUri,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
 	}
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwksUri, jwksUri)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.BoundClientIds, boundClientIds)
 	common.GetAkeylessPtr(&body.Issuer, issuer)

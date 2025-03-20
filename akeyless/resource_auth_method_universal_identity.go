@@ -230,7 +230,7 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 		}
 	}
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}

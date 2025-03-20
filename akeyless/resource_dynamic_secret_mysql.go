@@ -252,7 +252,7 @@ func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.Tags != nil {
-		err = d.Set("tags", *rOut.Tags)
+		err = d.Set("tags", rOut.Tags)
 		if err != nil {
 			return err
 		}

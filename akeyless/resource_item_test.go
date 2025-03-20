@@ -740,7 +740,7 @@ func checkGatewayAllowedAccessExistsAndValidateDetails(t *testing.T, allowedAcce
 		require.NoError(t, err)
 
 		// Validate Gateway allowed access Permissions
-		require.ElementsMatch(t, *output.Permissions, strings.Split(permissions, ","), "permissions is not as expected")
+		require.ElementsMatch(t, output.Permissions, strings.Split(permissions, ","), "permissions is not as expected")
 
 		// Validate Gateway allowed access Sub-Claims
 		emailSubClaimsString, ok := (*output.SubClaims)["email"]

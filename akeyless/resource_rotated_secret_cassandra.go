@@ -189,7 +189,7 @@ func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err := d.Set("tags", *itemOut.ItemTags)
+		err := d.Set("tags", itemOut.ItemTags)
 		if err != nil {
 			return err
 		}

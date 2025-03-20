@@ -186,7 +186,7 @@ func resourceGatewayUpdateDefaultsImport(d *schema.ResourceData, m interface{}) 
 	return []*schema.ResourceData{d}, nil
 }
 
-func getGwDefaultsConfig(m interface{}) (akeyless_api.GatewayGetDefaultsOutput, error) {
+func getGwDefaultsConfig(m interface{}) (*akeyless_api.GatewayGetDefaultsOutput, error) {
 
 	provider := m.(*providerMeta)
 	client := *provider.client
@@ -202,9 +202,9 @@ func getGwDefaultsConfig(m interface{}) (akeyless_api.GatewayGetDefaultsOutput, 
 	if err != nil {
 		var apiErr akeyless_api.GenericOpenAPIError
 		if errors.As(err, &apiErr) {
-			return akeyless_api.GatewayGetDefaultsOutput{}, fmt.Errorf("can't get defaults settings: %v", string(apiErr.Body()))
+			return &akeyless_api.GatewayGetDefaultsOutput{}, fmt.Errorf("can't get defaults settings: %v", string(apiErr.Body()))
 		}
-		return akeyless_api.GatewayGetDefaultsOutput{}, fmt.Errorf("can't get defaults settings: %w", err)
+		return &akeyless_api.GatewayGetDefaultsOutput{}, fmt.Errorf("can't get defaults settings: %w", err)
 	}
 
 	return rOut, nil

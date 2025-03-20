@@ -214,7 +214,7 @@ func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.GithubInstallationTokenRepositories != nil {
-		err = d.Set("token_repositories", *rOut.GithubInstallationTokenRepositories)
+		err = d.Set("token_repositories", rOut.GithubInstallationTokenRepositories)
 		if err != nil {
 			return err
 		}

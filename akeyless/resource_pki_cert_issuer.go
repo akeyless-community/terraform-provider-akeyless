@@ -363,7 +363,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemTags != nil {
-		err := d.Set("tags", *rOut.ItemTags)
+		err := d.Set("tags", rOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -375,7 +375,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemTargetsAssoc != nil {
-		assocs := *rOut.ItemTargetsAssoc
+		assocs := rOut.ItemTargetsAssoc
 		if len(assocs) > 0 {
 			assoc := assocs[0]
 			if assoc.TargetName != nil {
@@ -408,13 +408,13 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 			pki := certDetails.PkiCertIssuerDetails
 
 			if pki.AllowedDomainsList != nil {
-				err := d.Set("allowed_domains", strings.Join(*pki.AllowedDomainsList, ","))
+				err := d.Set("allowed_domains", strings.Join(pki.AllowedDomainsList, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.AllowedUriSans != nil {
-				err := d.Set("allowed_uri_sans", strings.Join(*pki.AllowedUriSans, ","))
+				err := d.Set("allowed_uri_sans", strings.Join(pki.AllowedUriSans, ","))
 				if err != nil {
 					return err
 				}
@@ -462,7 +462,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if pki.KeyUsageList != nil {
-				err := d.Set("key_usage", strings.Join(*pki.KeyUsageList, ","))
+				err := d.Set("key_usage", strings.Join(pki.KeyUsageList, ","))
 				if err != nil {
 					return err
 				}
@@ -474,43 +474,43 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if pki.OrganizationUnitList != nil {
-				err := d.Set("organizational_units", strings.Join(*pki.OrganizationUnitList, ","))
+				err := d.Set("organizational_units", strings.Join(pki.OrganizationUnitList, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.OrganizationList != nil {
-				err := d.Set("organizations", strings.Join(*pki.OrganizationList, ","))
+				err := d.Set("organizations", strings.Join(pki.OrganizationList, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.Country != nil {
-				err := d.Set("country", strings.Join(*pki.Country, ","))
+				err := d.Set("country", strings.Join(pki.Country, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.Locality != nil {
-				err := d.Set("locality", strings.Join(*pki.Locality, ","))
+				err := d.Set("locality", strings.Join(pki.Locality, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.Province != nil {
-				err := d.Set("province", strings.Join(*pki.Province, ","))
+				err := d.Set("province", strings.Join(pki.Province, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.StreetAddress != nil {
-				err := d.Set("street_address", strings.Join(*pki.StreetAddress, ","))
+				err := d.Set("street_address", strings.Join(pki.StreetAddress, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if pki.PostalCode != nil {
-				err := d.Set("postal_code", strings.Join(*pki.PostalCode, ","))
+				err := d.Set("postal_code", strings.Join(pki.PostalCode, ","))
 				if err != nil {
 					return err
 				}
@@ -546,7 +546,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if pki.ExpirationEvents != nil {
-				err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(*pki.ExpirationEvents))
+				err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(pki.ExpirationEvents))
 				if err != nil {
 					return err
 				}
@@ -699,10 +699,9 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	deleteProtection := d.Get("delete_protection").(bool)
 
 	body := akeyless_api.UpdatePKICertIssuer{
-		Name:          name,
-		SignerKeyName: signerKeyName,
-		Ttl:           ttl,
-		Token:         &token,
+		Name:  name,
+		Ttl:   ttl,
+		Token: &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagsList, client)
 	if err == nil {

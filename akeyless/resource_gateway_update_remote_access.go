@@ -80,7 +80,7 @@ func resourceGatewayUpdateRemoteAccessRead(d *schema.ResourceData, m interface{}
 	globalConfig := rOut.Global
 	if globalConfig != nil {
 		if globalConfig.AllowedBastionUrls != nil && d.Get("allowed_urls").(string) != common.UseExisting {
-			err = d.Set("allowed_urls", strings.Join(*globalConfig.AllowedBastionUrls, ","))
+			err = d.Set("allowed_urls", strings.Join(globalConfig.AllowedBastionUrls, ","))
 			if err != nil {
 				return err
 			}
@@ -197,7 +197,7 @@ func resourceGatewayUpdateRemoteAccessImport(d *schema.ResourceData, m interface
 	globalConfig := rOut.Global
 	if globalConfig != nil {
 		if globalConfig.AllowedBastionUrls != nil {
-			err = d.Set("allowed_urls", strings.Join(*globalConfig.AllowedBastionUrls, ","))
+			err = d.Set("allowed_urls", strings.Join(globalConfig.AllowedBastionUrls, ","))
 			if err != nil {
 				return nil, err
 			}
@@ -256,7 +256,7 @@ func resourceGatewayUpdateRemoteAccessImport(d *schema.ResourceData, m interface
 	return []*schema.ResourceData{d}, nil
 }
 
-func getGwRemoteAccessConfig(m interface{}) (akeyless_api.BastionConfigReplyObj, error) {
+func getGwRemoteAccessConfig(m interface{}) (*akeyless_api.BastionConfigReplyObj, error) {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -271,9 +271,9 @@ func getGwRemoteAccessConfig(m interface{}) (akeyless_api.BastionConfigReplyObj,
 	if err != nil {
 		var apiErr akeyless_api.GenericOpenAPIError
 		if errors.As(err, &apiErr) {
-			return akeyless_api.BastionConfigReplyObj{}, fmt.Errorf("can't get remote access config: %v", string(apiErr.Body()))
+			return &akeyless_api.BastionConfigReplyObj{}, fmt.Errorf("can't get remote access config: %v", string(apiErr.Body()))
 		}
-		return akeyless_api.BastionConfigReplyObj{}, fmt.Errorf("can't get remote access config: %v", err)
+		return &akeyless_api.BastionConfigReplyObj{}, fmt.Errorf("can't get remote access config: %v", err)
 	}
 	return rOut, nil
 }
