@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// todo
+
 const accountDefKey = "account-def-secrets-key"
 
 func ExpandStringList(configured []interface{}) []string {
