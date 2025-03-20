@@ -1,5 +1,7 @@
 module github.com/akeylesslabs/terraform-provider-akeyless
 
+godebug x509negativeserial=1
+
 go 1.24
 
 require (
