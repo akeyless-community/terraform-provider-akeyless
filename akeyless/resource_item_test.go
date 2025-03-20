@@ -532,16 +532,16 @@ func TestSshCertResource(t *testing.T) {
 		}
 
 		resource "akeyless_ssh_cert_issuer" "%v" {
-			name = "%v"
-			ttl = "290"
-			signer_key_name = "/terraform-tests/test_ssh_key"
-			tags     = ["t1", "t3"]
-			allowed_users = "aaaa2,fffff"
-			secure_access_enable = "true"
-			secure_access_host = ["1.1.1.1", "2.2.2.2"]
-			secure_access_bastion_api = "https://my.bastion:9901"
-			secure_access_bastion_ssh = "my.bastion1:22"
-			secure_access_ssh_creds_user = "aaaa2"
+			name 							= "%v"
+			ttl 							= "290"
+			signer_key_name 				= "/terraform-tests/test_ssh_key"
+			tags     						= ["t1", "t3"]
+			allowed_users 					= "aaaa2,fffff"
+			secure_access_enable 			= "true"
+			secure_access_host 				= ["1.1.1.1", "2.2.2.2"]
+			secure_access_bastion_api 		= "https://my.bastion:9901"
+			secure_access_bastion_ssh 		= "my.bastion1:22"
+			secure_access_ssh_creds_user 	= "aaaa2"
 
 			depends_on = [
     			akeyless_dfc_key.key_ssh,

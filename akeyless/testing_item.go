@@ -224,6 +224,7 @@ func createSshCertIssuer(t *testing.T, keyName, issuerName, users string) {
 		Ttl:           300,
 	}
 	common.GetAkeylessPtr(&body.AllowedUsers, users)
+	common.GetAkeylessPtr(&body.ExternalUsername, "false")
 
 	_, res, err := client.CreateSSHCertIssuer(context.Background()).Body(body).Execute()
 	require.NoError(t, handleError(res, err), "failed to create ssh cert issuer for test")
