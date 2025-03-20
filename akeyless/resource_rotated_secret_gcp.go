@@ -270,24 +270,27 @@ func resourceRotatedSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 
 	value, ok := rOut["value"]
 	if ok {
-		switch rotatorType {
-		case common.ServiceAccountRotator:
-			if saKey, ok := value["service_account_key_base64"]; ok {
-				err := d.Set("gcp_key", saKey.(string))
-				if err != nil {
-					return err
+		value, ok := value.(map[string]interface{})
+		if ok {
+			switch rotatorType {
+			case common.ServiceAccountRotator:
+				if saKey, ok := value["service_account_key_base64"]; ok {
+					err := d.Set("gcp_key", saKey.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-			if saEmail, ok := value["service_account_email"]; ok {
-				err := d.Set("gcp_service_account_email", saEmail.(string))
-				if err != nil {
-					return err
+				if saEmail, ok := value["service_account_email"]; ok {
+					err := d.Set("gcp_service_account_email", saEmail.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-			if saKeyId, ok := value["service_account_key_id"]; ok {
-				err := d.Set("gcp_service_account_key_id", saKeyId.(string))
-				if err != nil {
-					return err
+				if saKeyId, ok := value["service_account_key_id"]; ok {
+					err := d.Set("gcp_service_account_key_id", saKeyId.(string))
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}

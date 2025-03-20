@@ -224,10 +224,13 @@ func resourceRotatedSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 
 	value, ok := rOut["value"]
 	if ok {
-		if payload, ok := value["payload"]; ok {
-			err := d.Set("custom_payload", payload.(string))
-			if err != nil {
-				return err
+		value, ok := value.(map[string]interface{})
+		if ok {
+			if payload, ok := value["payload"]; ok {
+				err := d.Set("custom_payload", payload.(string))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
