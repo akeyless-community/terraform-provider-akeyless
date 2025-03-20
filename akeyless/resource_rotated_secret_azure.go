@@ -285,38 +285,41 @@ func resourceRotatedSecretAzureRead(d *schema.ResourceData, m interface{}) error
 
 	value, ok := rOut["value"]
 	if ok {
-		switch rotatorType {
-		case common.UserPassRotator:
-			if username, ok := value["username"]; ok {
-				err := d.Set("username", username.(string))
-				if err != nil {
-					return err
+		value, ok := value.(map[string]interface{})
+		if ok {
+			switch rotatorType {
+			case common.UserPassRotator:
+				if username, ok := value["username"]; ok {
+					err := d.Set("username", username.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-		case common.ApiKeyRotator:
-			if username, ok := value["username"]; ok {
-				err := d.Set("api_id", username.(string))
-				if err != nil {
-					return err
+			case common.ApiKeyRotator:
+				if username, ok := value["username"]; ok {
+					err := d.Set("api_id", username.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-			if password, ok := value["password"]; ok {
-				err := d.Set("api_key", password.(string))
-				if err != nil {
-					return err
+				if password, ok := value["password"]; ok {
+					err := d.Set("api_key", password.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-			if appId, ok := value["application_id"]; ok {
-				err := d.Set("app_id", appId.(string))
-				if err != nil {
-					return err
+				if appId, ok := value["application_id"]; ok {
+					err := d.Set("app_id", appId.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-		case common.StorageAccountRotator:
-			if username, ok := value["username"]; ok {
-				err := d.Set("storage_account_key_name", username.(string))
-				if err != nil {
-					return err
+			case common.StorageAccountRotator:
+				if username, ok := value["username"]; ok {
+					err := d.Set("storage_account_key_name", username.(string))
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}

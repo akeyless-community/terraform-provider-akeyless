@@ -16,8 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const accountDefKey = "account-def-secrets-key"
-
 func ExpandStringList(configured []interface{}) []string {
 	vs := make([]string, 0, len(configured))
 	for _, v := range configured {
@@ -187,7 +185,7 @@ func GetTargetName(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string
 	names := make([]string, 0)
 	for _, t := range targets {
 		if t.TargetName != nil {
-			names = append(names)
+			names = append(names, *t.TargetName)
 		}
 	}
 	return strings.Join(names, ",")
@@ -337,7 +335,7 @@ func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemTy
 	}
 
 	if s, ok := sra.GetHostOk(); ok {
-		if s != nil && len(s) == 1 && (s)[0] == "" {
+		if len(s) == 1 && (s)[0] == "" {
 			s = []string{}
 		}
 		err = d.Set("secure_access_host", s)
