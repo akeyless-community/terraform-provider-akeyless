@@ -5,8 +5,8 @@ godebug x509negativeserial=1
 go 1.24
 
 require (
+	github.com/akeylesslabs/akeyless-go v1.0.0
 	github.com/akeylesslabs/akeyless-go-cloud-id v0.3.5
-	github.com/akeylesslabs/akeyless-go/v4 v4.3.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
@@ -104,3 +104,5 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/akeylesslabs/akeyless-go => github.com/akeylesslabs/akeyless-go/v4 v4.3.0
