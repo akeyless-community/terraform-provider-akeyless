@@ -56,6 +56,16 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 			*a = akeyless_api.PtrString(v)
 			return
 		}
+	case *[]string:
+		a := ptr.(*[]string)
+		if v, ok := val.(string); ok {
+			*a = []string{v}
+			return
+		}
+		if v, ok := val.([]string); ok {
+			*a = v
+			return
+		}
 	case **[]string:
 		a := ptr.(**[]string)
 		if v, ok := val.(string); ok {
