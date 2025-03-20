@@ -643,7 +643,7 @@ func TestCsrDataSource(t *testing.T) {
 func TestCertificateDataSource(t *testing.T) {
 
 	// create certificate
-	key, cert := generateCertForTest(t, 512)
+	key, cert := generateCertForTest(t, 2048)
 
 	certificateName := "test-certificate-data"
 	certificatePath := testPath(certificateName)
