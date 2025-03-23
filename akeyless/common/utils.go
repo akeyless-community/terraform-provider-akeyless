@@ -179,13 +179,12 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 }
 
 func GetTargetName(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string {
-	if itemTargetsAssoc == nil {
-		return ""
-	}
+
 	if len(itemTargetsAssoc) == 0 {
 		return ""
 	}
 	targets := itemTargetsAssoc
+
 	if len(targets) == 1 {
 		if targets[0].TargetName == nil {
 			return ""

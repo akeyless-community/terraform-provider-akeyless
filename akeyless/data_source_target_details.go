@@ -145,6 +145,8 @@ func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, ta
 		return extractGlobalsignAtlasTargetDetails(details.GlobalsignAtlasTargetDetails)
 	case details.GlobalsignTargetDetails != nil:
 		return extractGlobalsignTargetDetails(details.GlobalsignTargetDetails)
+	case details.HashiVaultTargetDetails != nil:
+		return extractHashiTargetDetails(details.HashiVaultTargetDetails)
 	case details.LdapTargetDetails != nil:
 		return extractLdapTargetDetails(details.LdapTargetDetails)
 	case details.LinkedTargetDetails != nil:
@@ -528,6 +530,27 @@ func extractGlobalsignTargetDetails(details *akeyless_api.GlobalSignGCCTargetDet
 	}
 
 	value, err := buildTargetDetailsVal(m, "globalsign_target_details")
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func extractHashiTargetDetails(details *akeyless_api.HashiVaultTargetDetails) (map[string]string, error) {
+
+	m := make(map[string]interface{})
+
+	if details.VaultUrl != nil {
+		m["vault_url"] = *details.VaultUrl
+	}
+	if details.VaultToken != nil {
+		m["vault_token"] = *details.VaultToken
+	}
+	if details.VaultNamespaces != nil {
+		m["vault_namespaces"] = *details.VaultNamespaces
+	}
+
+	value, err := buildTargetDetailsVal(m, "hashi_target_details")
 	if err != nil {
 		return nil, err
 	}

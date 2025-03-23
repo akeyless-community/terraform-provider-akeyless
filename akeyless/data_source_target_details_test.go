@@ -752,6 +752,7 @@ var createTargetByTypeMap = map[string]createTargetFunc{
 	"gke_target_details":              createGkeTarget,
 	"globalsign_atlas_target_details": createGlobalSignAtlasTarget,
 	"globalsign_target_details":       createGlobalSignTarget,
+	"hashi_target_details":            createHashiTarget,
 	"ldap_target_details":             createLdapTarget,
 	"linked_target_details":           createLinkedTarget,
 	"mongo_db_target_details":         createMongoDbTarget,
@@ -1007,6 +1008,26 @@ func createGlobalSignTarget(t *testing.T, name string, details map[string]interf
 	common.GetAkeylessPtr(&body.Timeout, details["timeout"])
 
 	_, resp, err := client.CreateGlobalSignTarget(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(resp, err))
+}
+
+func createHashiTarget(t *testing.T, name string, details map[string]interface{}) {
+
+	p, err := getProviderMeta()
+	require.NoError(t, err)
+
+	client := p.client
+	token := *p.token
+
+	body := akeyless_api.CreateHashiVaultTarget{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.HashiUrl, details["vault_url"])
+	common.GetAkeylessPtr(&body.VaultToken, details["vault_token"])
+	common.GetAkeylessPtr(&body.Namespace, details["vault_namespaces"])
+
+	_, resp, err := client.CreateHashiVaultTarget(context.Background()).Body(body).Execute()
 	require.NoError(t, handleError(resp, err))
 }
 
