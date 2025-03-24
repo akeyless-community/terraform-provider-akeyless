@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -104,6 +105,12 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Protection from accidental deletion of this auth method, [true/false]",
+			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
 				Required:    false,
@@ -158,7 +165,7 @@ func resourceStaticSecret() *schema.Resource {
 	}
 }
 
-func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
+func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -171,7 +178,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	injectUrl := common.ExpandStringList(injectUrlSet.List())
 	password := d.Get("password").(string)
 	username := d.Get("username").(string)
-	customField := d.Get("custom_field").(map[string]interface{})
+	customField := d.Get("custom_field").(map[string]any)
 	ProtectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
 	description := d.Get("description").(string)
@@ -183,6 +190,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
@@ -214,6 +222,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.CreateSecret(ctx).Body(body).Execute()
 	if err != nil {
@@ -252,7 +261,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
+func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -316,7 +325,13 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err = d.Set("tags", itemOut.ItemTags)
+		err := d.Set("tags", itemOut.ItemTags)
+		if err != nil {
+			return err
+		}
+	}
+	if itemOut.DeleteProtection != nil {
+		err := d.Set("delete_protection", strconv.FormatBool(*itemOut.DeleteProtection))
 		if err != nil {
 			return err
 		}
@@ -354,7 +369,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	} else {
-		var jsonValue map[string]interface{}
+		var jsonValue map[string]any
 		err = json.Unmarshal([]byte(stringValue), &jsonValue)
 		if err != nil {
 			return fmt.Errorf("can't convert secret password value")
@@ -380,7 +395,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -404,7 +419,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		injectUrl := common.ExpandStringList(injectUrlSet.List())
 		username := d.Get("username").(string)
 		password := d.Get("password").(string)
-		customField := d.Get("custom_field").(map[string]interface{})
+		customField := d.Get("custom_field").(map[string]any)
 
 		body := akeyless_api.UpdateSecretVal{
 			Name:      path,
@@ -444,6 +459,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	bodyItem := akeyless_api.UpdateItem{
 		Name:    path,
@@ -470,6 +486,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&bodyItem.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCredsUser, secureAccessSshUser)
+	common.GetAkeylessPtr(&bodyItem.DeleteProtection, deleteProtection)
 
 	_, _, err = client.UpdateItem(ctx).Body(bodyItem).Execute()
 	if err != nil {
@@ -508,10 +525,11 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
+func resourceStaticSecretDelete(d *schema.ResourceData, m any) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
+	ctx := context.Background()
 
 	path := d.Id()
 
@@ -520,7 +538,6 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 		Name:  path,
 	}
 
-	ctx := context.Background()
 	_, _, err := client.DeleteItem(ctx).Body(deleteItem).Execute()
 	if err != nil {
 		return err
@@ -529,7 +546,7 @@ func resourceStaticSecretDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceStaticSecretImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceStaticSecretImport(d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
 
 	id := d.Id()
 
