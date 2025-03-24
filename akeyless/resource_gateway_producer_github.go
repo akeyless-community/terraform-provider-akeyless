@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -214,7 +214,7 @@ func resourceProducerGithubRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.GithubInstallationTokenRepositories != nil {
-		err = d.Set("token_repositories", *rOut.GithubInstallationTokenRepositories)
+		err = d.Set("token_repositories", rOut.GithubInstallationTokenRepositories)
 		if err != nil {
 			return err
 		}

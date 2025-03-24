@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/stretchr/testify/require"
 )
@@ -179,7 +179,7 @@ func createProtectionKey(t *testing.T, name string) {
 	}
 }
 
-func getRsaPublicKey(t *testing.T, name string) akeyless_api.GetRSAPublicOutput {
+func getRsaPublicKey(t *testing.T, name string) *akeyless_api.GetRSAPublicOutput {
 	client, token := prepareClient(t)
 
 	body := akeyless_api.GetRSAPublic{
@@ -199,11 +199,11 @@ func createPkiCertIssuer(t *testing.T, keyName, issuerName, destPath, cn, uriSan
 	client, token := prepareClient(t)
 
 	body := akeyless_api.CreatePKICertIssuer{
-		Name:          issuerName,
-		SignerKeyName: keyName,
-		Token:         &token,
-		Ttl:           "300",
+		Name:  issuerName,
+		Token: &token,
+		Ttl:   "300",
 	}
+	common.GetAkeylessPtr(&body.SignerKeyName, keyName)
 	common.GetAkeylessPtr(&body.DestinationPath, destPath)
 	common.GetAkeylessPtr(&body.ClientFlag, true)
 	common.GetAkeylessPtr(&body.AllowedDomains, cn)
@@ -224,6 +224,7 @@ func createSshCertIssuer(t *testing.T, keyName, issuerName, users string) {
 		Ttl:           300,
 	}
 	common.GetAkeylessPtr(&body.AllowedUsers, users)
+	common.GetAkeylessPtr(&body.ExternalUsername, "false")
 
 	_, res, err := client.CreateSSHCertIssuer(context.Background()).Body(body).Execute()
 	require.NoError(t, handleError(res, err), "failed to create ssh cert issuer for test")
@@ -264,9 +265,9 @@ func deleteItems(t *testing.T, path string) {
 	client, token := prepareClient(t)
 
 	gsvBody := akeyless_api.DeleteItems{
-		Path:  path,
 		Token: &token,
 	}
+	common.GetAkeylessPtr(&gsvBody.Path, path)
 
 	_, _, err := client.DeleteItems(context.Background()).Body(gsvBody).Execute()
 	require.NoError(t, err)
