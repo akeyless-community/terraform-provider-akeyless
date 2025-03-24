@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -405,10 +405,10 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 	if len(apiKeyAuthMethod) == 1 {
 		body := akeyless_api.CreateAuthMethod{
 			Name:          path,
-			BoundIps:      &boundIpsList,
 			AccessExpires: &accessExpires,
 			Token:         &token,
 		}
+		common.GetAkeylessPtr(&body.BoundIps, boundIpsList)
 		apiKey, _, err := client.CreateAuthMethod(ctx).Body(body).Execute()
 		if err != nil {
 			return err
@@ -435,13 +435,13 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 		uniqueIdentifier := saml["unique_identifier"].(string)
 		body := akeyless_api.CreateAuthMethodSAML{
 			Name:               path,
-			BoundIps:           &boundIpsList,
 			AccessExpires:      &accessExpires,
 			IdpMetadataUrl:     akeyless_api.PtrString(idpMetadataUrl),
 			IdpMetadataXmlData: akeyless_api.PtrString(idpMetadataXmlData),
 			UniqueIdentifier:   uniqueIdentifier,
 			Token:              &token,
 		}
+		common.GetAkeylessPtr(&body.BoundIps, boundIpsList)
 		apiKey, _, err := client.CreateAuthMethodSAML(ctx).Body(body).Execute()
 		if err != nil {
 			return err
@@ -477,17 +477,18 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 
 		body := akeyless_api.CreateAuthMethodAWSIAM{
 			Name:              path,
-			BoundIps:          &boundIpsList,
 			AccessExpires:     &accessExpires,
 			StsUrl:            akeyless_api.PtrString(stsURL),
 			BoundAwsAccountId: boundAwsAccountIdList,
-			BoundArn:          &boundArnList,
-			BoundRoleName:     &boundRoleNameList,
-			BoundUserId:       &boundUserIDList,
-			BoundUserName:     &boundUserNameList,
-			BoundResourceId:   &boundResourceIDList,
 			Token:             &token,
 		}
+		common.GetAkeylessPtr(&body.BoundIps, boundIpsList)
+		common.GetAkeylessPtr(&body.BoundArn, boundArnList)
+		common.GetAkeylessPtr(&body.BoundRoleName, boundRoleNameList)
+		common.GetAkeylessPtr(&body.BoundUserId, boundUserIDList)
+		common.GetAkeylessPtr(&body.BoundUserName, boundUserNameList)
+		common.GetAkeylessPtr(&body.BoundResourceId, boundResourceIDList)
+
 		apiKey, _, err := client.CreateAuthMethodAWSIAM(ctx).Body(body).Execute()
 		if err != nil {
 			return err
@@ -533,23 +534,24 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 		boundResourceIDList := common.ExpandStringList(boundResourceID.List())
 
 		body := akeyless_api.CreateAuthMethodAzureAD{
-			Name:               path,
-			AccessExpires:      &accessExpires,
-			BoundIps:           &boundIpsList,
-			BoundTenantId:      boundTenantId,
-			BoundSpid:          &boundSpidList,
-			BoundGroupId:       &boundGroupIDList,
-			BoundSubId:         &boundSubIDList,
-			BoundRgId:          &boundRgIDList,
-			BoundProviders:     &boundProvidersList,
-			BoundResourceTypes: &boundResourceTypesList,
-			BoundResourceNames: &boundResourceNamesList,
-			BoundResourceId:    &boundResourceIDList,
-			JwksUri:            akeyless_api.PtrString(jwksUri),
-			Audience:           akeyless_api.PtrString(audience),
-			Issuer:             akeyless_api.PtrString(issuer),
-			Token:              &token,
+			Name:          path,
+			AccessExpires: &accessExpires,
+			BoundTenantId: boundTenantId,
+			JwksUri:       akeyless_api.PtrString(jwksUri),
+			Audience:      akeyless_api.PtrString(audience),
+			Issuer:        akeyless_api.PtrString(issuer),
+			Token:         &token,
 		}
+		common.GetAkeylessPtr(&body.BoundIps, boundIpsList)
+		common.GetAkeylessPtr(&body.BoundSpid, boundSpidList)
+		common.GetAkeylessPtr(&body.BoundGroupId, boundGroupIDList)
+		common.GetAkeylessPtr(&body.BoundSubId, boundSubIDList)
+		common.GetAkeylessPtr(&body.BoundRgId, boundRgIDList)
+		common.GetAkeylessPtr(&body.BoundProviders, boundProvidersList)
+		common.GetAkeylessPtr(&body.BoundResourceTypes, boundResourceTypesList)
+		common.GetAkeylessPtr(&body.BoundResourceNames, boundResourceNamesList)
+		common.GetAkeylessPtr(&body.BoundResourceId, boundResourceIDList)
+
 		apiKey, _, err := client.CreateAuthMethodAzureAD(ctx).Body(body).Execute()
 		if err != nil {
 			return err
@@ -569,12 +571,12 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 		serviceAccountCredsData := gcp["service_account_creds_data"].(string)
 		body := akeyless_api.CreateAuthMethodGCP{
 			Name:                    path,
-			BoundIps:                &boundIpsList,
 			AccessExpires:           &accessExpires,
 			Audience:                audience,
 			ServiceAccountCredsData: akeyless_api.PtrString(serviceAccountCredsData),
 			Token:                   &token,
 		}
+		common.GetAkeylessPtr(&body.BoundIps, boundIpsList)
 
 		iam := gcp["iam"].([]interface{})
 		if len(iam) == 1 {
@@ -583,7 +585,7 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 				if iamObj["bound_service_accounts"] != nil {
 					boundServiceAccounts := iamObj["bound_service_accounts"].(*schema.Set)
 					boundServiceAccountsList := common.ExpandStringList(boundServiceAccounts.List())
-					body.BoundServiceAccounts = &boundServiceAccountsList
+					body.BoundServiceAccounts = boundServiceAccountsList
 				}
 			}
 			body.Type = "iam"
@@ -596,17 +598,17 @@ func createAuthMethod(d *schema.ResourceData, m interface{}) error {
 				if gceObj["bound_zones"] != nil {
 					boundZones := gceObj["bound_zones"].(*schema.Set)
 					boundZonesList := common.ExpandStringList(boundZones.List())
-					body.BoundZones = &boundZonesList
+					body.BoundZones = boundZonesList
 				}
 				if gceObj["bound_regions"] != nil {
 					boundRegions := gceObj["bound_regions"].(*schema.Set)
 					boundRegionsList := common.ExpandStringList(boundRegions.List())
-					body.BoundRegions = &boundRegionsList
+					body.BoundRegions = boundRegionsList
 				}
 				if gceObj["bound_labels"] != nil {
 					boundLabels := gceObj["bound_labels"].(*schema.Set)
 					boundLabelsList := common.ExpandStringList(boundLabels.List())
-					body.BoundLabels = &boundLabelsList
+					body.BoundLabels = boundLabelsList
 				}
 			}
 			body.Type = "gce"
@@ -646,7 +648,7 @@ func getAccountSettings(m interface{}) (*akeyless_api.GetAccountSettingsCommandO
 		return nil, fmt.Errorf("failed to get account settings: %w", err)
 	}
 
-	return &rOut, nil
+	return rOut, nil
 }
 
 func extractAccountJwtTtlDefault(acc *akeyless_api.GetAccountSettingsCommandOutput) int64 {

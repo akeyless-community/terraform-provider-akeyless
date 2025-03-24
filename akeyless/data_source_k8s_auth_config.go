@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -187,7 +187,7 @@ func dataSourceGatewayGetK8sAuthConfigRead(d *schema.ResourceData, m interface{}
 		}
 	}
 	if rOut.K8sPubKeysPem != nil {
-		err = d.Set("k8s_pub_keys_pem", *rOut.K8sPubKeysPem)
+		err = d.Set("k8s_pub_keys_pem", rOut.K8sPubKeysPem)
 		if err != nil {
 			return err
 		}

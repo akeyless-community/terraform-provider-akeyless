@@ -11,12 +11,10 @@ import (
 	"strings"
 	"time"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-const accountDefKey = "account-def-secrets-key"
 
 func ExpandStringList(configured []interface{}) []string {
 	vs := make([]string, 0, len(configured))
@@ -56,6 +54,16 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 		if v, ok := val.(string); ok {
 			a := ptr.(**string)
 			*a = akeyless_api.PtrString(v)
+			return
+		}
+	case *[]string:
+		a := ptr.(*[]string)
+		if v, ok := val.(string); ok {
+			*a = []string{v}
+			return
+		}
+		if v, ok := val.([]string); ok {
+			*a = v
 			return
 		}
 	case **[]string:
@@ -170,14 +178,14 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 	}
 }
 
-func GetTargetName(itemTargetsAssoc *[]akeyless_api.ItemTargetAssociation) string {
+func GetTargetName(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string {
 	if itemTargetsAssoc == nil {
 		return ""
 	}
-	if len(*itemTargetsAssoc) == 0 {
+	if len(itemTargetsAssoc) == 0 {
 		return ""
 	}
-	targets := *itemTargetsAssoc
+	targets := itemTargetsAssoc
 	if len(targets) == 1 {
 		if targets[0].TargetName == nil {
 			return ""
@@ -187,7 +195,7 @@ func GetTargetName(itemTargetsAssoc *[]akeyless_api.ItemTargetAssociation) strin
 	names := make([]string, 0)
 	for _, t := range targets {
 		if t.TargetName != nil {
-			names = append(names)
+			names = append(names, *t.TargetName)
 		}
 	}
 	return strings.Join(names, ",")
@@ -248,7 +256,7 @@ func GetSraWithDescribeItem(d *schema.ResourceData, path, token string, client a
 	return GetSraFromItem(d, itemOut)
 }
 
-func GetSraFromItem(d *schema.ResourceData, item akeyless_api.Item) error {
+func GetSraFromItem(d *schema.ResourceData, item *akeyless_api.Item) error {
 
 	if item.GetItemGeneralInfo().SecureRemoteAccessDetails == nil {
 		return nil
@@ -337,8 +345,8 @@ func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemTy
 	}
 
 	if s, ok := sra.GetHostOk(); ok {
-		if s != nil && len(*s) == 1 && (*s)[0] == "" {
-			s = &[]string{}
+		if len(s) == 1 && (s)[0] == "" {
+			s = []string{}
 		}
 		err = d.Set("secure_access_host", s)
 		if err != nil {

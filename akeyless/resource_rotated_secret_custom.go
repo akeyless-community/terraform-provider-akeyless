@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -166,7 +166,7 @@ func resourceRotatedSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err = d.Set("tags", *itemOut.ItemTags)
+		err = d.Set("tags", itemOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -222,12 +222,15 @@ func resourceRotatedSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
-	value, ok := rOut["value"]
+	val, ok := rOut["value"]
 	if ok {
-		if payload, ok := value["payload"]; ok {
-			err := d.Set("custom_payload", payload.(string))
-			if err != nil {
-				return err
+		value, ok := val.(map[string]any)
+		if ok {
+			if payload, ok := value["payload"]; ok {
+				err := d.Set("custom_payload", payload.(string))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

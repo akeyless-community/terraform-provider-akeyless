@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -272,7 +272,7 @@ func resourceGatewayUpdateLogForwardingSyslogImport(d *schema.ResourceData, m in
 	return []*schema.ResourceData{d}, nil
 }
 
-func getGwLogForwardingConfig(m interface{}) (akeyless_api.LogForwardingConfigPart, error) {
+func getGwLogForwardingConfig(m interface{}) (*akeyless_api.LogForwardingConfigPart, error) {
 
 	provider := m.(*providerMeta)
 	client := *provider.client
@@ -288,9 +288,9 @@ func getGwLogForwardingConfig(m interface{}) (akeyless_api.LogForwardingConfigPa
 	if err != nil {
 		var apiErr akeyless_api.GenericOpenAPIError
 		if errors.As(err, &apiErr) {
-			return akeyless_api.LogForwardingConfigPart{}, fmt.Errorf("can't get log forwarding settings: %v", string(apiErr.Body()))
+			return &akeyless_api.LogForwardingConfigPart{}, fmt.Errorf("can't get log forwarding settings: %v", string(apiErr.Body()))
 		}
-		return akeyless_api.LogForwardingConfigPart{}, fmt.Errorf("can't get log forwarding settings: %w", err)
+		return &akeyless_api.LogForwardingConfigPart{}, fmt.Errorf("can't get log forwarding settings: %w", err)
 	}
 
 	return rOut, nil
