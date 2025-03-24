@@ -50,12 +50,6 @@ func resourceSSHCertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "Signed certificates with principal, e.g example_role1,example_role2",
 			},
-			"external_username": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Externally provided username [true/false]",
-				Default:     "false",
-			},
 			"extensions": {
 				Type:        schema.TypeMap,
 				Optional:    true,
@@ -126,7 +120,6 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	externalUsername := d.Get("external_username").(string)
 	description := d.Get("description").(string)
 	tagSet := d.Get("tags").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
@@ -148,7 +141,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
-	common.GetAkeylessPtr(&body.ExternalUsername, externalUsername)
+	common.GetAkeylessPtr(&body.ExternalUsername, "false")
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
@@ -232,12 +225,6 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
-			if ssh.IsExternallyProvidedUser != nil {
-				err := d.Set("external_username", strconv.FormatBool(*ssh.IsExternallyProvidedUser))
-				if err != nil {
-					return err
-				}
-			}
 		}
 	}
 
@@ -279,7 +266,6 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	ttl := d.Get("ttl").(int)
 	principals := d.Get("principals").(string)
 	extensions := d.Get("extensions").(map[string]interface{})
-	externalUsername := d.Get("external_username").(string)
 	description := d.Get("description").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessBastionApi := d.Get("secure_access_bastion_api").(string)
@@ -311,7 +297,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
-	common.GetAkeylessPtr(&body.ExternalUsername, externalUsername)
+	common.GetAkeylessPtr(&body.ExternalUsername, "false")
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionApi, secureAccessBastionApi)
