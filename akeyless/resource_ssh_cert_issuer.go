@@ -148,7 +148,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
-	common.GetAkeylessPtr(&body.ExternalUsername, externalUsername)
+	common.GetAkeylessPtr(&body.ExternalUsername, "false")
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
@@ -311,7 +311,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
-	common.GetAkeylessPtr(&body.ExternalUsername, externalUsername)
+	common.GetAkeylessPtr(&body.ExternalUsername, "false")
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionApi, secureAccessBastionApi)

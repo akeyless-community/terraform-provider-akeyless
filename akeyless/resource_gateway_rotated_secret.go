@@ -326,22 +326,21 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	value, ok := rOut["value"]
+	val, ok := rOut["value"]
 	if ok {
-		var val map[string]interface{}
-		val, ok = value.(map[string]interface{})
+		value, ok := val.(map[string]any)
 		if ok {
 			if rotatorType == "custom" {
-				err = d.Set("custom_payload", fmt.Sprintf("%v", val["payload"]))
+				err = d.Set("custom_payload", fmt.Sprintf("%v", value["payload"]))
 				if err != nil {
 					return err
 				}
 			} else if rotatorType == "ldap" {
-				ldapPayloadInBytes, err := json.Marshal(val["ldap_payload"])
+				ldapPayloadInBytes, err := json.Marshal(value["ldap_payload"])
 				if err != nil {
 					return err
 				}
-				var ldapPayload map[string]interface{}
+				var ldapPayload map[string]any
 				err = json.Unmarshal(ldapPayloadInBytes, &ldapPayload)
 				if err != nil {
 					return err
@@ -355,20 +354,20 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			} else if rotatorType == "password" {
-				err = d.Set("rotated_username", fmt.Sprintf("%v", val["username"]))
+				err = d.Set("rotated_username", fmt.Sprintf("%v", value["username"]))
 				if err != nil {
 					return err
 				}
-				err = d.Set("rotated_password", fmt.Sprintf("%v", val["password"]))
+				err = d.Set("rotated_password", fmt.Sprintf("%v", value["password"]))
 				if err != nil {
 					return err
 				}
 			} else if rotatorType == "api-key" {
-				err = d.Set("api_id", fmt.Sprintf("%v", val["username"]))
+				err = d.Set("api_id", fmt.Sprintf("%v", value["username"]))
 				if err != nil {
 					return err
 				}
-				err = d.Set("api_key", fmt.Sprintf("%v", val["password"]))
+				err = d.Set("api_key", fmt.Sprintf("%v", value["password"]))
 				if err != nil {
 					return err
 				}
