@@ -262,9 +262,9 @@ func resourceRotatedSecretPostgreSqlRead(d *schema.ResourceData, m interface{}) 
 		}
 	}
 
-	value, ok := rOut["value"]
+	val, ok := rOut["value"]
 	if ok {
-		value, ok := value.(map[string]interface{})
+		value, ok := val.(map[string]any)
 		if ok {
 			switch rotatorType {
 			case common.UserPassRotator:
