@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -1061,12 +1061,12 @@ func createK8sTarget(t *testing.T, name string, details map[string]interface{}) 
 	token := *p.token
 
 	body := akeyless_api.CreateNativeK8STarget{
-		Name:               name,
-		Token:              &token,
-		K8sClusterEndpoint: details["cluster_endpoint"].(string),
-		K8sClusterCaCert:   details["cluster_ca_cert"].(string),
-		K8sClusterToken:    details["bearer_token"].(string),
+		Name:  name,
+		Token: &token,
 	}
+	common.GetAkeylessPtr(&body.K8sClusterEndpoint, details["cluster_endpoint"].(string))
+	common.GetAkeylessPtr(&body.K8sClusterCaCert, details["cluster_ca_cert"].(string))
+	common.GetAkeylessPtr(&body.K8sClusterToken, details["bearer_token"].(string))
 
 	_, resp, err := client.CreateNativeK8STarget(context.Background()).Body(body).Execute()
 	require.NoError(t, handleError(resp, err))

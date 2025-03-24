@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -254,7 +254,7 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.ItemTags != nil {
-		err = d.Set("tags", *rOut.ItemTags)
+		err = d.Set("tags", rOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -358,13 +358,13 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if rOut.ItemGeneralInfo.ExpirationEvents != nil {
-			err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(*rOut.ItemGeneralInfo.ExpirationEvents))
+			err := d.Set("expiration_event_in", common.ReadExpirationEventInParam(rOut.ItemGeneralInfo.ExpirationEvents))
 			if err != nil {
 				return err
 			}
 		}
 		if rOut.ItemGeneralInfo.NextRotationEvents != nil {
-			err := d.Set("rotation_event_in", common.ReadRotationEventInParam(*rOut.ItemGeneralInfo.NextRotationEvents))
+			err := d.Set("rotation_event_in", common.ReadRotationEventInParam(rOut.ItemGeneralInfo.NextRotationEvents))
 			if err != nil {
 				return err
 			}

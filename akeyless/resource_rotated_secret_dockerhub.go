@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -165,7 +165,7 @@ func resourceRotatedSecretDockerHubRead(d *schema.ResourceData, m interface{}) e
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err = d.Set("tags", *itemOut.ItemTags)
+		err = d.Set("tags", itemOut.ItemTags)
 		if err != nil {
 			return err
 		}

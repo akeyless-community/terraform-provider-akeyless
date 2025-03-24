@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	"net/http"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
 )
 
 func resourceStaticSecret() *schema.Resource {
@@ -315,7 +316,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err = d.Set("tags", *itemOut.ItemTags)
+		err = d.Set("tags", itemOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -332,7 +333,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if staticSecretInfo.Websites != nil {
-				err := d.Set("inject_url", *staticSecretInfo.Websites)
+				err := d.Set("inject_url", staticSecretInfo.Websites)
 				if err != nil {
 					return err
 				}
