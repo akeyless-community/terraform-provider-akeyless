@@ -3,9 +3,7 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go"
@@ -71,7 +69,6 @@ func resourceUscCreate(d *schema.ResourceData, m any) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetToAssociate := d.Get("target_to_associate").(string)
@@ -93,12 +90,9 @@ func resourceUscCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.CreateUSC(ctx).Body(body).Execute()
+	_, resp, err := client.CreateUSC(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create USC: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create usc: %v", err)
+		return common.HandleError("can't create usc", resp, err)
 	}
 
 	d.SetId(name)
@@ -111,7 +105,6 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -121,17 +114,9 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 		Token: &token,
 	}
 
-	rOut, res, err := client.DescribeItem(ctx).Body(body).Execute()
+	rOut, resp, err := client.DescribeItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get usc: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get usc: %v", err)
+		return common.HandleReadError(d, "can't get usc", resp, err)
 	}
 
 	if rOut.ItemMetadata != nil {
@@ -198,7 +183,6 @@ func resourceUscUpdate(d *schema.ResourceData, m any) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -224,12 +208,9 @@ func resourceUscUpdate(d *schema.ResourceData, m any) error {
 		}
 	}
 
-	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update USC: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update usc: %v", err)
+		return common.HandleError("can't update usc", resp, err)
 	}
 
 	d.SetId(name)
