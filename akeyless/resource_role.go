@@ -946,23 +946,21 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 func extractAssocValues(assocs []akeyless_api.RoleAuthMethodAssociation) []interface{} {
 	var assocValues []interface{}
 
-	if assocs != nil {
-		for _, assoc := range assocs {
-			assocMap := make(map[string]interface{})
-			assocMap["assoc_id"] = *assoc.AssocId
-			assocMap["am_name"] = *assoc.AuthMethodName
-			assocMap["access_id"] = *assoc.AuthMethodAccessId
-			assocMap["case_sensitive"] = strconv.FormatBool(*assoc.SubClaimsCaseSensitive)
+	for _, assoc := range assocs {
+		assocMap := make(map[string]interface{})
+		assocMap["assoc_id"] = *assoc.AssocId
+		assocMap["am_name"] = *assoc.AuthMethodName
+		assocMap["access_id"] = *assoc.AuthMethodAccessId
+		assocMap["case_sensitive"] = strconv.FormatBool(*assoc.SubClaimsCaseSensitive)
 
-			sc := *assoc.AuthMethodSubClaims
-			subClaims := make(map[string]interface{})
-			for key, value := range sc {
-				subClaims[key] = strings.Join(value, ",")
-			}
-			assocMap["sub_claims"] = subClaims
-
-			assocValues = append(assocValues, assocMap)
+		sc := *assoc.AuthMethodSubClaims
+		subClaims := make(map[string]interface{})
+		for key, value := range sc {
+			subClaims[key] = strings.Join(value, ",")
 		}
+		assocMap["sub_claims"] = subClaims
+
+		assocValues = append(assocValues, assocMap)
 	}
 
 	return assocValues
@@ -1010,15 +1008,13 @@ func saveRoleAccessRuleOldValues(roleRules []akeyless_api.PathRule) []interface{
 
 	var roleRulesOldValues = generateEmptyAccessRulesSet()
 
-	if roleRules != nil {
-		for _, rule := range roleRules {
-			rType := *rule.Type
-			if isAccessRule(rType) {
-				for i, val := range roleRulesOldValues {
-					if val.(map[string]interface{})["rule_type"] == rType {
-						roleRulesOldValues[i].(map[string]interface{})["capability"] = rule.Capabilities
-						roleRulesOldValues[i].(map[string]interface{})["path"] = *rule.Path
-					}
+	for _, rule := range roleRules {
+		rType := *rule.Type
+		if isAccessRule(rType) {
+			for i, val := range roleRulesOldValues {
+				if val.(map[string]interface{})["rule_type"] == rType {
+					roleRulesOldValues[i].(map[string]interface{})["capability"] = rule.Capabilities
+					roleRulesOldValues[i].(map[string]interface{})["path"] = *rule.Path
 				}
 			}
 		}
