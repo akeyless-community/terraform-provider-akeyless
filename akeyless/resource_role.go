@@ -16,8 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var restrictedRules []map[string]string
-
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Role Resource",
@@ -99,6 +97,27 @@ func resourceRole() *schema.Resource {
 							Optional:    true,
 							Description: "item-rule, target-rule, role-rule, auth-method-rule, sra-rule",
 							Default:     "item-rule",
+						},
+					},
+				},
+			},
+			"restricted_rules": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capability": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"path": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"rule_type": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -223,10 +242,36 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return warn
 }
 
-func initRestrictedRules(d *schema.ResourceData, name string, m interface{}) error {
+func extractRestrictedRules(d *schema.ResourceData) []map[string]any {
+
+	restrictedRules := make([]map[string]any, 0)
+
+	restrictedRulesSet := d.Get("restricted_rules").(*schema.Set)
+	restrictedRulesI := restrictedRulesSet.List()
+
+	for _, restrictedRuleI := range restrictedRulesI {
+		rule := restrictedRuleI.(map[string]any)
+		restrictedRules = append(restrictedRules, rule)
+	}
+
+	return restrictedRules
+}
+
+func setRestrictedRules(d *schema.ResourceData, restrictedRules []map[string]any) error {
+	rulesList := make([]interface{}, 0)
+	for _, rule := range restrictedRules {
+		rulesList = append(rulesList, rule)
+	}
+	return d.Set("restricted_rules", rulesList)
+}
+
+func initRestrictedRules(d *schema.ResourceData, name string, m any) error {
+
+	var restrictedRules []map[string]any
+
 	role, err := getRole(d, name, m)
 	if err != nil {
-		return fmt.Errorf("can't get old role: %v", err)
+		return fmt.Errorf("can't get old role: %w", err)
 	}
 
 	rules := role.Rules
@@ -234,18 +279,15 @@ func initRestrictedRules(d *schema.ResourceData, name string, m interface{}) err
 		return nil
 	}
 
-	if rules.PathRules != nil {
-		rules := rules.PathRules
-		for _, ruleSrc := range rules {
-			rule := make(map[string]string)
-			rule["path"] = *ruleSrc.Path
-			rule["rule_type"] = *ruleSrc.Type
-			rule["capability"] = strings.Join(ruleSrc.Capabilities, ",")
-			restrictedRules = append(restrictedRules, rule)
-		}
+	for _, ruleSrc := range rules.PathRules {
+		rule := make(map[string]any)
+		rule["path"] = *ruleSrc.Path
+		rule["rule_type"] = *ruleSrc.Type
+		rule["capability"] = ruleSrc.Capabilities
+		restrictedRules = append(restrictedRules, rule)
 	}
 
-	return nil
+	return setRestrictedRules(d, restrictedRules)
 }
 
 func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
@@ -334,8 +376,8 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 
 	roleRulesOldValues := extractRoleRuleOldValues(rules.PathRules)
 
-	rulesToAdd := extractRulesToSet(roleRulesNewValues, roleRulesOldValues)
-	rulesToDelete := extractRulesToSet(roleRulesOldValues, roleRulesNewValues)
+	rulesToAdd := extractRulesToSet(d, roleRulesNewValues, roleRulesOldValues)
+	rulesToDelete := extractRulesToSet(d, roleRulesOldValues, roleRulesNewValues)
 
 	err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, m)
 	defer func() {
@@ -479,6 +521,7 @@ func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 			}
 		} else {
 			isRestrictedRule := false
+			restrictedRules := extractRestrictedRules(d)
 			for _, restrictedRule := range restrictedRules {
 				if *ruleSrc.Type == restrictedRule["rule_type"] &&
 					*ruleSrc.Path == restrictedRule["path"] {
@@ -572,7 +615,7 @@ func extractAssocsToCreateAndUpdate(newAssocs, oldAssocs []interface{}) ([]inter
 	return toAdd, toUpdate
 }
 
-func extractRulesToSet(newRules, oldRules []any) []any {
+func extractRulesToSet(d *schema.ResourceData, newRules, oldRules []any) []any {
 	var toSet []any
 
 	for _, newRuleI := range newRules {
@@ -581,7 +624,7 @@ func extractRulesToSet(newRules, oldRules []any) []any {
 		if isAccessRule(newRule["rule_type"].(string)) {
 			continue // set only regular rules
 		}
-		if isRestrictedRule(newRule) {
+		if isRestrictedRule(d, newRule) {
 			continue // restricted rules can't be removed
 		}
 		if isRuleExistsInOldRules(newRule, oldRules) {
@@ -595,7 +638,8 @@ func extractRulesToSet(newRules, oldRules []any) []any {
 }
 
 // check if a given rule is restricted (can't be removed/updated)
-func isRestrictedRule(rule map[string]any) bool {
+func isRestrictedRule(d *schema.ResourceData, rule map[string]any) bool {
+	restrictedRules := extractRestrictedRules(d)
 	for _, restrictedRule := range restrictedRules {
 		if rule["rule_type"] == restrictedRule["rule_type"] &&
 			rule["path"] == restrictedRule["path"] {
