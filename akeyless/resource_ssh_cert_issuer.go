@@ -50,12 +50,6 @@ func resourceSSHCertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "Signed certificates with principal, e.g example_role1,example_role2",
 			},
-			"external_username": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Externally provided username [true/false]",
-				Default:     "false",
-			},
 			"extensions": {
 				Type:        schema.TypeMap,
 				Optional:    true,
@@ -227,12 +221,6 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 			}
 			if ssh.Extensions != nil {
 				err := d.Set("extensions", *ssh.Extensions)
-				if err != nil {
-					return err
-				}
-			}
-			if ssh.IsExternallyProvidedUser != nil {
-				err := d.Set("external_username", strconv.FormatBool(*ssh.IsExternallyProvidedUser))
 				if err != nil {
 					return err
 				}
