@@ -21,7 +21,7 @@ func ExpandStringList(configured []interface{}) []string {
 	for _, v := range configured {
 		val, ok := v.(string)
 		if ok && val != "" {
-			vs = append(vs, v.(string))
+			vs = append(vs, val)
 		}
 	}
 	return vs
@@ -509,6 +509,13 @@ func ReadAndEncodeFile(fileName string) (string, error) {
 
 func Base64Encode(input string) string {
 	return base64.StdEncoding.EncodeToString([]byte(input))
+}
+
+func EnsureLeadingSlash(path string) string {
+	if !strings.HasPrefix(path, "/") {
+		return "/" + path
+	}
+	return path
 }
 
 func SetDataByPrefixSlash(d *schema.ResourceData, key, returnedValue, existValue string) error {

@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const RULE_PATH = "/terraform-tests/*"
+const RULE_PATH = "terraform-tests/*"
 
 func TestRoleResourceBasic(t *testing.T) {
 	rolePath := testPath("test_role_resource")
