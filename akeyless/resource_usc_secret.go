@@ -275,19 +275,40 @@ func resourceUscSecretImport(d *schema.ResourceData, m any) ([]*schema.ResourceD
 		return nil, err
 	}
 
-	item := akeyless_api.UscGet{
+	targetType, err := getItemTargetType(d, m)
+	if err != nil {
+		return nil, err
+	}
+	if targetType == common.TargetTypeGcp {
+		return nil, fmt.Errorf("usc secret import is not supported for gcp target")
+	}
+
+	body := akeyless_api.UscGet{
 		UscName:  uscName,
 		SecretId: secretName,
 		Token:    &token,
 	}
 
 	ctx := context.Background()
-	_, _, err = client.UscGet(ctx).Body(item).Execute()
+	rOut, _, err := client.UscGet(ctx).Body(body).Execute()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("usc secret not found: %w", err)
 	}
 
 	d.SetId(buildUscSecretId(uscName, secretName))
+
+	err = d.Set("usc_name", uscName)
+	if err != nil {
+		return nil, err
+	}
+	err = d.Set("secret_name", secretName)
+	if err != nil {
+		return nil, err
+	}
+	err = d.Set("secret_id", rOut.GetId())
+	if err != nil {
+		return nil, err
+	}
 
 	return []*schema.ResourceData{d}, nil
 }
