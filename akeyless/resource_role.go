@@ -571,25 +571,48 @@ func extractAssocsToCreateAndUpdate(newAssocs, oldAssocs []interface{}) ([]inter
 	return toAdd, toUpdate
 }
 
-func extractRulesToSet(newRules, oldRules []interface{}) []interface{} {
-	var toSet []interface{}
+func extractRulesToSet(newRules, oldRules []any) []any {
+	var toSet []any
 
-	for _, newRule := range newRules {
-		ruleExists := false
-		if !isAccessRule(newRule.(map[string]interface{})["rule_type"].(string)) {
-			for _, oldRule := range oldRules {
-				if isRulesEqual(newRule.(map[string]interface{}), oldRule.(map[string]interface{})) {
-					ruleExists = true
-					break
-				}
-			}
-			if !ruleExists {
-				toSet = append(toSet, newRule.(map[string]interface{}))
-			}
+	for _, newRuleI := range newRules {
+		newRule := newRuleI.(map[string]any)
+
+		if isAccessRule(newRule["rule_type"].(string)) {
+			continue // set only regular rules
 		}
+		if isRestrictedRule(newRule) {
+			continue // restricted rules can't be removed
+		}
+		if isRuleExistsInOldRules(newRule, oldRules) {
+			continue // rule already exists - redundant to add it
+		}
+
+		toSet = append(toSet, newRule)
 	}
 
 	return toSet
+}
+
+// check if a given rule is restricted (can't be removed/updated)
+func isRestrictedRule(rule map[string]any) bool {
+	for _, restrictedRule := range restrictedRules {
+		if rule["rule_type"] == restrictedRule["rule_type"] &&
+			rule["path"] == restrictedRule["path"] {
+			return true
+		}
+	}
+	return false
+}
+
+// check if a given rule is equal to another rule (same path, type, and capabilities)
+func isRuleExistsInOldRules(newRule map[string]any, oldRules []interface{}) bool {
+	for _, oldRuleI := range oldRules {
+		oldRule := oldRuleI.(map[string]any)
+		if isRulesEqual(newRule, oldRule) {
+			return true
+		}
+	}
+	return false
 }
 
 func assocRoleAuthMethod(ctx context.Context, name string, assocAuthMethodToDelete, assocAuthMethodToAdd, assocAuthMethodToUpdate []interface{}, m interface{}) (error, bool) {
@@ -971,7 +994,8 @@ func extractRoleRuleOldValues(roleRules *[]akeyless_api.PathRule) []interface{} 
 	var roleRulesOldValues []interface{}
 
 	if roleRules != nil {
-		for _, val := range *roleRules {
+		rules := *roleRules
+		for _, val := range rules {
 			rulesMap := make(map[string]interface{})
 
 			rulesMap["capability"] = *val.Capabilities
