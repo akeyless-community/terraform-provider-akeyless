@@ -480,7 +480,8 @@ func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 		} else {
 			isRestrictedRule := false
 			for _, restrictedRule := range restrictedRules {
-				if *ruleSrc.Path == restrictedRule["path"] {
+				if *ruleSrc.Type == restrictedRule["rule_type"] &&
+					*ruleSrc.Path == restrictedRule["path"] {
 					isRestrictedRule = true
 					break
 				}
