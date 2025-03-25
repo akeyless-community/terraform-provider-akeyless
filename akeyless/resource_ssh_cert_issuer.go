@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -141,6 +141,7 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
+	common.GetAkeylessPtr(&body.ExternalUsername, "false")
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
@@ -192,14 +193,14 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to get value: %w", err)
 	}
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", *rOut.DeleteProtection)
+		err := d.Set("delete_protection", *rOut.DeleteProtection)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.CertificateIssueDetails != nil {
 		if rOut.CertificateIssueDetails.MaxTtl != nil {
-			err = d.Set("ttl", *rOut.CertificateIssueDetails.MaxTtl)
+			err := d.Set("ttl", *rOut.CertificateIssueDetails.MaxTtl)
 			if err != nil {
 				return err
 			}
@@ -207,19 +208,19 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		if rOut.CertificateIssueDetails.SshCertIssuerDetails != nil {
 			ssh := rOut.CertificateIssueDetails.SshCertIssuerDetails
 			if ssh.AllowedUsers != nil {
-				err = d.Set("allowed_users", strings.Join(*ssh.AllowedUsers, ","))
+				err := d.Set("allowed_users", strings.Join(ssh.AllowedUsers, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if ssh.Principals != nil {
-				err = d.Set("principals", strings.Join(*ssh.Principals, ","))
+				err := d.Set("principals", strings.Join(ssh.Principals, ","))
 				if err != nil {
 					return err
 				}
 			}
 			if ssh.Extensions != nil {
-				err = d.Set("extensions", *ssh.Extensions)
+				err := d.Set("extensions", *ssh.Extensions)
 				if err != nil {
 					return err
 				}
@@ -228,7 +229,7 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.CertIssuerSignerKeyName != nil {
-		err = d.Set("signer_key_name", *rOut.CertIssuerSignerKeyName)
+		err := d.Set("signer_key_name", *rOut.CertIssuerSignerKeyName)
 		if err != nil {
 			return err
 		}
@@ -240,7 +241,7 @@ func resourceSSHCertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ItemTags != nil {
-		err = d.Set("tags", *rOut.ItemTags)
+		err := d.Set("tags", rOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -296,6 +297,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Principals, principals)
 	common.GetAkeylessPtr(&body.Extensions, extensions)
+	common.GetAkeylessPtr(&body.ExternalUsername, "false")
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionApi, secureAccessBastionApi)

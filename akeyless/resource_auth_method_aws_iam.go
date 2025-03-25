@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -262,7 +262,7 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.AccessInfo.AwsIamAccessRules.AccountId != nil {
-		err = d.Set("bound_aws_account_id", *rOut.AccessInfo.AwsIamAccessRules.AccountId)
+		err = d.Set("bound_aws_account_id", rOut.AccessInfo.AwsIamAccessRules.AccountId)
 		if err != nil {
 			return err
 		}
@@ -274,43 +274,43 @@ func resourceAuthMethodAwsIamRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.AccessInfo.AwsIamAccessRules.Arn != nil {
-		err = d.Set("bound_arn", *rOut.AccessInfo.AwsIamAccessRules.Arn)
+		err = d.Set("bound_arn", rOut.AccessInfo.AwsIamAccessRules.Arn)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AwsIamAccessRules.RoleName != nil {
-		err = d.Set("bound_role_name", *rOut.AccessInfo.AwsIamAccessRules.RoleName)
+		err = d.Set("bound_role_name", rOut.AccessInfo.AwsIamAccessRules.RoleName)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AwsIamAccessRules.RoleId != nil {
-		err = d.Set("bound_role_id", *rOut.AccessInfo.AwsIamAccessRules.RoleId)
+		err = d.Set("bound_role_id", rOut.AccessInfo.AwsIamAccessRules.RoleId)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AwsIamAccessRules.ResourceId != nil {
-		err = d.Set("bound_resource_id", *rOut.AccessInfo.AwsIamAccessRules.ResourceId)
+		err = d.Set("bound_resource_id", rOut.AccessInfo.AwsIamAccessRules.ResourceId)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AwsIamAccessRules.UserName != nil {
-		err = d.Set("bound_user_name", *rOut.AccessInfo.AwsIamAccessRules.UserName)
+		err = d.Set("bound_user_name", rOut.AccessInfo.AwsIamAccessRules.UserName)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AwsIamAccessRules.UserId != nil {
-		err = d.Set("bound_user_id", *rOut.AccessInfo.AwsIamAccessRules.UserId)
+		err = d.Set("bound_user_id", rOut.AccessInfo.AwsIamAccessRules.UserId)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}

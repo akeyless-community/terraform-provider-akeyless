@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -65,7 +65,6 @@ func dataSourceGetRotatedSecretValueRead(d *schema.ResourceData, m interface{}) 
 				return nil
 			}
 			err = json.Unmarshal(apiErr.Body(), &rOut)
-			err = nil
 			if err != nil {
 				return fmt.Errorf("can't get value: %v %v", err, string(apiErr.Body()))
 			}

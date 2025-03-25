@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
@@ -532,16 +532,16 @@ func TestSshCertResource(t *testing.T) {
 		}
 
 		resource "akeyless_ssh_cert_issuer" "%v" {
-			name = "%v"
-			ttl = "290"
-			signer_key_name = "/terraform-tests/test_ssh_key"
-			tags     = ["t1", "t3"]
-			allowed_users = "aaaa2,fffff"
-			secure_access_enable = "true"
-			secure_access_host = ["1.1.1.1", "2.2.2.2"]
-			secure_access_bastion_api = "https://my.bastion:9901"
-			secure_access_bastion_ssh = "my.bastion1:22"
-			secure_access_ssh_creds_user = "aaaa2"
+			name 							= "%v"
+			ttl 							= "290"
+			signer_key_name 				= "/terraform-tests/test_ssh_key"
+			tags     						= ["t1", "t3"]
+			allowed_users 					= "aaaa2,fffff"
+			secure_access_enable 			= "true"
+			secure_access_host 				= ["1.1.1.1", "2.2.2.2"]
+			secure_access_bastion_api 		= "https://my.bastion:9901"
+			secure_access_bastion_ssh 		= "my.bastion1:22"
+			secure_access_ssh_creds_user 	= "aaaa2"
 
 			depends_on = [
     			akeyless_dfc_key.key_ssh,
@@ -643,7 +643,7 @@ func TestCsrDataSource(t *testing.T) {
 func TestCertificateDataSource(t *testing.T) {
 
 	// create certificate
-	key, cert := generateCertForTest(t, 512)
+	key, cert := generateCertForTest(t, 2048)
 
 	certificateName := "test-certificate-data"
 	certificatePath := testPath(certificateName)
@@ -740,7 +740,7 @@ func checkGatewayAllowedAccessExistsAndValidateDetails(t *testing.T, allowedAcce
 		require.NoError(t, err)
 
 		// Validate Gateway allowed access Permissions
-		require.ElementsMatch(t, *output.Permissions, strings.Split(permissions, ","), "permissions is not as expected")
+		require.ElementsMatch(t, output.Permissions, strings.Split(permissions, ","), "permissions is not as expected")
 
 		// Validate Gateway allowed access Sub-Claims
 		emailSubClaimsString, ok := (*output.SubClaims)["email"]

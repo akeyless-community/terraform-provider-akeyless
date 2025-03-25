@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -235,12 +235,12 @@ func initRestrictedRules(d *schema.ResourceData, name string, m interface{}) err
 	}
 
 	if rules.PathRules != nil {
-		rules := *rules.PathRules
+		rules := rules.PathRules
 		for _, ruleSrc := range rules {
 			rule := make(map[string]string)
 			rule["path"] = *ruleSrc.Path
 			rule["rule_type"] = *ruleSrc.Type
-			rule["capability"] = strings.Join(*ruleSrc.Capabilities, ",")
+			rule["capability"] = strings.Join(ruleSrc.Capabilities, ",")
 			restrictedRules = append(restrictedRules, rule)
 		}
 	}
@@ -270,7 +270,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 		if role.Rules.PathRules != nil {
 			rulesSet := d.Get("rules").(*schema.Set)
 			if len(rulesSet.List()) != 0 {
-				err := readRules(d, *role.Rules.PathRules)
+				err := readRules(d, role.Rules.PathRules)
 				if err != nil {
 					return err
 				}
@@ -416,7 +416,7 @@ func resourceRoleImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 		return nil, nil
 	}
 
-	err = readRules(d, *rules.PathRules)
+	err = readRules(d, rules.PathRules)
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +429,7 @@ func resourceRoleImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 	return []*schema.ResourceData{d}, nil
 }
 
-func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless_api.Role, error) {
+func getRole(d *schema.ResourceData, name string, m interface{}) (*akeyless_api.Role, error) {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -447,16 +447,16 @@ func getRole(d *schema.ResourceData, name string, m interface{}) (akeyless_api.R
 			if res.StatusCode == http.StatusNotFound {
 				// The secret was deleted outside of the current Terraform workspace, so invalidate this resource
 				d.SetId("")
-				return akeyless_api.Role{}, nil
+				return &akeyless_api.Role{}, nil
 			}
-			return akeyless_api.Role{}, fmt.Errorf("can't get Role value: %v", string(apiErr.Body()))
+			return &akeyless_api.Role{}, fmt.Errorf("can't get Role value: %v", string(apiErr.Body()))
 		}
-		return akeyless_api.Role{}, fmt.Errorf("can't get Role value: %v", err)
+		return &akeyless_api.Role{}, fmt.Errorf("can't get Role value: %v", err)
 	}
 	return role, nil
 }
 
-func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc *[]akeyless_api.RoleAuthMethodAssociation) error {
+func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc []akeyless_api.RoleAuthMethodAssociation) error {
 
 	roleAuthMethodsAssoc := extractAssocValues(authMethodsAssoc)
 
@@ -488,7 +488,7 @@ func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 			if !isRestrictedRule {
 				rolesDst := make(map[string]interface{})
 
-				capabilities := *ruleSrc.Capabilities
+				capabilities := ruleSrc.Capabilities
 				if *ruleSrc.Type == "sra-rule" {
 					capabilities = convertSraCapabilities(capabilities)
 				}
@@ -943,11 +943,11 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 	return nil, true
 }
 
-func extractAssocValues(assocs *[]akeyless_api.RoleAuthMethodAssociation) []interface{} {
+func extractAssocValues(assocs []akeyless_api.RoleAuthMethodAssociation) []interface{} {
 	var assocValues []interface{}
 
 	if assocs != nil {
-		for _, assoc := range *assocs {
+		for _, assoc := range assocs {
 			assocMap := make(map[string]interface{})
 			assocMap["assoc_id"] = *assoc.AssocId
 			assocMap["am_name"] = *assoc.AuthMethodName
@@ -990,36 +990,33 @@ func cleanEmptyAssocs(d *schema.ResourceData) error {
 	return nil
 }
 
-func extractRoleRuleOldValues(roleRules *[]akeyless_api.PathRule) []interface{} {
+func extractRoleRuleOldValues(roleRules []akeyless_api.PathRule) []interface{} {
 	var roleRulesOldValues []interface{}
 
-	if roleRules != nil {
-		rules := *roleRules
-		for _, val := range rules {
-			rulesMap := make(map[string]interface{})
+	for _, val := range roleRules {
+		rulesMap := make(map[string]interface{})
 
-			rulesMap["capability"] = *val.Capabilities
-			rulesMap["path"] = *val.Path
-			rulesMap["rule_type"] = *val.Type
+		rulesMap["capability"] = val.Capabilities
+		rulesMap["path"] = *val.Path
+		rulesMap["rule_type"] = *val.Type
 
-			roleRulesOldValues = append(roleRulesOldValues, rulesMap)
-		}
+		roleRulesOldValues = append(roleRulesOldValues, rulesMap)
 	}
 
 	return roleRulesOldValues
 }
 
-func saveRoleAccessRuleOldValues(roleRules *[]akeyless_api.PathRule) []interface{} {
+func saveRoleAccessRuleOldValues(roleRules []akeyless_api.PathRule) []interface{} {
 
 	var roleRulesOldValues = generateEmptyAccessRulesSet()
 
 	if roleRules != nil {
-		for _, rule := range *roleRules {
+		for _, rule := range roleRules {
 			rType := *rule.Type
 			if isAccessRule(rType) {
 				for i, val := range roleRulesOldValues {
 					if val.(map[string]interface{})["rule_type"] == rType {
-						roleRulesOldValues[i].(map[string]interface{})["capability"] = *rule.Capabilities
+						roleRulesOldValues[i].(map[string]interface{})["capability"] = rule.Capabilities
 						roleRulesOldValues[i].(map[string]interface{})["path"] = *rule.Path
 					}
 				}

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -195,7 +195,7 @@ func resourceRotatedSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err = d.Set("tags", *itemOut.ItemTags)
+		err = d.Set("tags", itemOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -268,26 +268,29 @@ func resourceRotatedSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	value, ok := rOut["value"]
+	val, ok := rOut["value"]
 	if ok {
-		switch rotatorType {
-		case common.ServiceAccountRotator:
-			if saKey, ok := value["service_account_key_base64"]; ok {
-				err := d.Set("gcp_key", saKey.(string))
-				if err != nil {
-					return err
+		value, ok := val.(map[string]any)
+		if ok {
+			switch rotatorType {
+			case common.ServiceAccountRotator:
+				if saKey, ok := value["service_account_key_base64"]; ok {
+					err := d.Set("gcp_key", saKey.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-			if saEmail, ok := value["service_account_email"]; ok {
-				err := d.Set("gcp_service_account_email", saEmail.(string))
-				if err != nil {
-					return err
+				if saEmail, ok := value["service_account_email"]; ok {
+					err := d.Set("gcp_service_account_email", saEmail.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-			if saKeyId, ok := value["service_account_key_id"]; ok {
-				err := d.Set("gcp_service_account_key_id", saKeyId.(string))
-				if err != nil {
-					return err
+				if saKeyId, ok := value["service_account_key_id"]; ok {
+					err := d.Set("gcp_service_account_key_id", saKeyId.(string))
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
