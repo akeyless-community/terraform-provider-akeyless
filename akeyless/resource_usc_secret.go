@@ -354,14 +354,14 @@ func getItemTargetType(d *schema.ResourceData, m any) (string, error) {
 	return targetType, nil
 }
 
-const uscDelimiter string = "__"
+const uscSecretDelimiter string = "__"
 
 func buildUscSecretId(uscName, secretName string) string {
-	return fmt.Sprintf("%s%s%s", uscName, uscDelimiter, secretName)
+	return strings.Join([]string{uscName, secretName}, uscSecretDelimiter)
 }
 
 func extractUscNameAndSecretNameFromId(id string) (string, string, error) {
-	fields := strings.Split(id, uscDelimiter)
+	fields := strings.Split(id, uscSecretDelimiter)
 	if len(fields) != 2 {
 		return "", "", fmt.Errorf("invalid id format: %s. expected format 'uscName__secretName'", id)
 	}
