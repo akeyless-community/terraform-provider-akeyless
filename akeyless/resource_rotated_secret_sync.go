@@ -105,7 +105,7 @@ func resourceRotatedSecretSyncRead(d *schema.ResourceData, m any) error {
 	if rOut.UscSyncAssociatedItems != nil {
 		namespace, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
 		if !exists {
-			return fmt.Errorf("rotated secret sync not found for rotated secret name: %s, usc name: %s, remote secret name: %s", &rsName, uscName, remoteSecretName)
+			return fmt.Errorf("rotated secret sync not found for rotated secret name: %s, usc name: %s, remote secret name: %s", rsName, uscName, remoteSecretName)
 		}
 		err := d.Set("namespace", namespace)
 		if err != nil {
