@@ -512,7 +512,7 @@ func Base64Encode(input string) string {
 }
 
 func EnsureLeadingSlash(path string) string {
-	if !strings.HasPrefix(path, "/") {
+	if len(path) != 0 && !strings.HasPrefix(path, "/") {
 		return "/" + path
 	}
 	return path
