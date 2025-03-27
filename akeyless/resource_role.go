@@ -100,6 +100,7 @@ func resourceRole() *schema.Resource {
 						},
 					},
 				},
+				Set: rulesHashFunction,
 			},
 			"restricted_rules": {
 				Type:     schema.TypeSet,
@@ -165,6 +166,24 @@ func resourceRole() *schema.Resource {
 			},
 		},
 	}
+}
+
+// rulesHashFunction is used to generate a unique hash for a set of rules where leading slash is ensured for path.
+func rulesHashFunction(v interface{}) int {
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		return 0
+	}
+
+	normalizedPath := common.EnsureLeadingSlash(m["path"].(string))
+
+	hashString := fmt.Sprintf("%s-%s-%s",
+		normalizedPath,
+		m["rule_type"].(string),
+		strings.Join(common.ExpandStringList(m["capability"].(*schema.Set).List()), ","),
+	)
+
+	return schema.HashString(hashString)
 }
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) (ret diag.Diagnostics) {
