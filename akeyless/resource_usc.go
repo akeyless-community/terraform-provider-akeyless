@@ -30,7 +30,7 @@ func resourceUsc() *schema.Resource {
 			},
 			"target_to_associate": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "Target Universal Secrets Connector to connect",
 			},
 			"azure_kv_name": {

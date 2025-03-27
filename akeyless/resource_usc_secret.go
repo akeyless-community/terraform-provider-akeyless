@@ -41,6 +41,7 @@ func resourceUscSecret() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "Value of the universal secrets item, either text or base64 encoded binary",
 			},
 			"binary_value": {
@@ -308,6 +309,31 @@ func resourceUscSecretImport(d *schema.ResourceData, m any) ([]*schema.ResourceD
 	err = d.Set("secret_id", rOut.GetId())
 	if err != nil {
 		return nil, err
+	}
+
+	if rOut.BinaryValue != nil {
+		err := d.Set("binary_value", *rOut.BinaryValue)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if rOut.Value != nil {
+		value := *rOut.Value
+
+		// value should be decoded, unless it provided as binary (encoded).
+		// hashi vault target always expects encoded data.
+		if !rOut.GetBinaryValue() && targetType != common.TargetTypeVault {
+			decoded, err := common.Base64Decode(*rOut.Value)
+			if err != nil {
+				return nil, err
+			}
+			value = decoded
+		}
+
+		err := d.Set("value", value)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return []*schema.ResourceData{d}, nil

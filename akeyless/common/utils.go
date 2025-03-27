@@ -695,6 +695,8 @@ func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, er
 
 	// nothing informative
 	if resp.StatusCode == http.StatusNotFound {
+		// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+		d.SetId("")
 		return fmt.Errorf("%s: not found: %w", msg, err)
 	}
 	return fmt.Errorf("%s: %w", msg, err)

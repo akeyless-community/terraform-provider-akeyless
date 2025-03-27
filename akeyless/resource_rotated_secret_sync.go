@@ -13,7 +13,7 @@ import (
 
 func resourceRotatedSecretSync() *schema.Resource {
 	return &schema.Resource{
-		Description: "Universal Secrets Connector resource",
+		Description: "Sync Rotated Secret with Universal Secrets Connector resource",
 		Create:      resourceRotatedSecretSyncCreate,
 		Read:        resourceRotatedSecretSyncRead,
 		Update:      resourceRotatedSecretSyncUpdate,
@@ -31,7 +31,7 @@ func resourceRotatedSecretSync() *schema.Resource {
 			"usc_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Universal Secret Connector name, If not provided all attached USC's will be synced",
+				Description: "Universal Secret Connector name",
 				ForceNew:    true,
 			},
 			"remote_secret_name": {
