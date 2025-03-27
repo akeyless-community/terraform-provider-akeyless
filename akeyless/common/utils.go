@@ -5,6 +5,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"math/rand"
+	"net/http"
 	"os"
 	"reflect"
 	"strconv"
@@ -15,6 +18,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+var allLetters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+var lowerLetters = []rune("abcdefghijklmnopqrstuvwxyz")
+
+func GenerateRandomAlphaNumericString(length int) string {
+	s := make([]rune, length)
+
+	for i := range s {
+		s[i] = allLetters[rand.Intn(len(allLetters))]
+	}
+
+	return string(s)
+}
+
+func GenerateRandomLowercasedString(length int) string {
+	s := make([]rune, length)
+
+	for i := range s {
+		s[i] = lowerLetters[rand.Intn(len(lowerLetters))]
+	}
+
+	return string(s)
+}
 
 func ExpandStringList(configured []interface{}) []string {
 	vs := make([]string, 0, len(configured))
@@ -179,13 +205,12 @@ func GetAkeylessPtr(ptr interface{}, val interface{}) {
 }
 
 func GetTargetName(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string {
-	if itemTargetsAssoc == nil {
-		return ""
-	}
+
 	if len(itemTargetsAssoc) == 0 {
 		return ""
 	}
 	targets := itemTargetsAssoc
+
 	if len(targets) == 1 {
 		if targets[0].TargetName == nil {
 			return ""
@@ -199,6 +224,34 @@ func GetTargetName(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string
 		}
 	}
 	return strings.Join(names, ",")
+}
+
+func GetTargetType(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string {
+
+	if len(itemTargetsAssoc) == 0 {
+		return ""
+	}
+	return itemTargetsAssoc[0].GetTargetType()
+}
+
+func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, uscName, remoteSecretName string) (namespace string, exists bool) {
+	for _, assoc := range associatedItems {
+		if assoc.ItemName == nil || *assoc.ItemName != uscName {
+			continue
+		}
+
+		if assoc.Attributes == nil {
+			return "", false
+		}
+		attr := *assoc.Attributes
+
+		if attr.SecretName == nil || *attr.SecretName != remoteSecretName {
+			return "", false
+		}
+
+		return attr.GetNamespace(), true
+	}
+	return "", false
 }
 
 func GetTagsForUpdate(d *schema.ResourceData, name, token string, newTags []string,
@@ -511,6 +564,11 @@ func Base64Encode(input string) string {
 	return base64.StdEncoding.EncodeToString([]byte(input))
 }
 
+func Base64Decode(input string) (string, error) {
+	b, err := base64.StdEncoding.DecodeString(input)
+	return string(b), err
+}
+
 func SetDataByPrefixSlash(d *schema.ResourceData, key, returnedValue, existValue string) error {
 	if "/"+returnedValue == existValue {
 		return d.Set(key, existValue)
@@ -586,4 +644,60 @@ func IsLocalEnv() bool {
 		return true
 	}
 	return false
+}
+
+func HandleError(msg string, resp *http.Response, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	// err is informative
+	var apiErr akeyless_api.GenericOpenAPIError
+	if errors.As(err, &apiErr) {
+		return fmt.Errorf("%s: %s", msg, string(apiErr.Body()))
+	}
+
+	// resp is informative
+	if resp.Body != nil {
+		if errorMsg, errRead := io.ReadAll(resp.Body); errRead == nil {
+			return fmt.Errorf("%s: %s", msg, string(errorMsg))
+		}
+	}
+
+	// nothing informative
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("%s: not found: %w", msg, err)
+	}
+	return fmt.Errorf("%s: %w", msg, err)
+}
+
+func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	// err is informative
+	var apiErr akeyless_api.GenericOpenAPIError
+	if errors.As(err, &apiErr) {
+		if resp.StatusCode == http.StatusNotFound {
+			// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+			d.SetId("")
+		}
+		return fmt.Errorf("%s: %s", msg, string(apiErr.Body()))
+	}
+
+	// resp is informative
+	if resp.Body != nil {
+		if errorMsg, errRead := io.ReadAll(resp.Body); errRead == nil {
+			return fmt.Errorf("%s: %s", msg, string(errorMsg))
+		}
+	}
+
+	// nothing informative
+	if resp.StatusCode == http.StatusNotFound {
+		// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+		d.SetId("")
+		return fmt.Errorf("%s: not found: %w", msg, err)
+	}
+	return fmt.Errorf("%s: %w", msg, err)
 }

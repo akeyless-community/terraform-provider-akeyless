@@ -129,6 +129,7 @@ func Provider() *schema.Provider {
 			"akeyless_rotated_secret_snowflake":                resourceRotatedSecretSnowflake(),
 			"akeyless_rotated_secret_ssh":                      resourceRotatedSecretSsh(),
 			"akeyless_rotated_secret_windows":                  resourceRotatedSecretWindows(),
+			"akeyless_rotated_secret_sync":                     resourceRotatedSecretSync(),
 			"akeyless_target_artifactory":                      resourceArtifactoryTarget(),
 			"akeyless_target_aws":                              resourceAwsTarget(),
 			"akeyless_target_azure":                            resourceAzureTarget(),
@@ -149,6 +150,8 @@ func Provider() *schema.Provider {
 			"akeyless_k8s_auth_config":                         resourceK8sAuthConfig(),
 			"akeyless_associate_role_auth_method":              resourceAssocRoleAm(),
 			"akeyless_tokenizer":                               resourceTokenizer(),
+			"akeyless_usc":                                     resourceUsc(),
+			"akeyless_usc_secret":                              resourceUscSecret(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_auth":               dataSourceAuth(),
