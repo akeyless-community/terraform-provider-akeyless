@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DiffSuppressOnLeadingSlash(k, old, new string, d *schema.ResourceData) bool {
+func DiffSuppressOnLeadingSlash(_, old, new string, _ *schema.ResourceData) bool {
 	return EnsureLeadingSlash(old) == EnsureLeadingSlash(new)
 }
 
