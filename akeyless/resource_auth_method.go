@@ -24,10 +24,11 @@ func resourceAuthMethod() *schema.Resource {
 		DeprecationMessage: "Deprecated: Please use new resource: akeyless_auth_method_<TYPE>",
 		Schema: map[string]*schema.Schema{
 			"path": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The path where the Auth Method will be stored",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				Description:      "The path where the Auth Method will be stored",
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"bound_ips": {
 				Type:        schema.TypeString,

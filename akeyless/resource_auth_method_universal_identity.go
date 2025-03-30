@@ -25,10 +25,11 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Auth Method name",
-				ForceNew:    true,
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "Auth Method name",
+				ForceNew:         true,
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
