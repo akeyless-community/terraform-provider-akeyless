@@ -19,6 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func DiffSuppressOnLeadingSlash(_, old, new string, _ *schema.ResourceData) bool {
+	return EnsureLeadingSlash(old) == EnsureLeadingSlash(new)
+}
+
 var allLetters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 var lowerLetters = []rune("abcdefghijklmnopqrstuvwxyz")
 

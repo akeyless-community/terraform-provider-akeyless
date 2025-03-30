@@ -37,7 +37,7 @@ func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "%v" {
-			name 				= "%v"
+			name 				= "/%v"
 			access_expires 		= 10001
 			bound_ips 			= ["1.1.4.0/32"]
             audit_logs_claims 	= ["eee","kk"]
