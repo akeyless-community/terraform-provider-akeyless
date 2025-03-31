@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -752,6 +752,7 @@ var createTargetByTypeMap = map[string]createTargetFunc{
 	"gke_target_details":              createGkeTarget,
 	"globalsign_atlas_target_details": createGlobalSignAtlasTarget,
 	"globalsign_target_details":       createGlobalSignTarget,
+	"hashi_target_details":            createHashiTarget,
 	"ldap_target_details":             createLdapTarget,
 	"linked_target_details":           createLinkedTarget,
 	"mongo_db_target_details":         createMongoDbTarget,
@@ -1010,6 +1011,26 @@ func createGlobalSignTarget(t *testing.T, name string, details map[string]interf
 	require.NoError(t, handleError(resp, err))
 }
 
+func createHashiTarget(t *testing.T, name string, details map[string]interface{}) {
+
+	p, err := getProviderMeta()
+	require.NoError(t, err)
+
+	client := p.client
+	token := *p.token
+
+	body := akeyless_api.CreateHashiVaultTarget{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.HashiUrl, details["vault_url"])
+	common.GetAkeylessPtr(&body.VaultToken, details["vault_token"])
+	common.GetAkeylessPtr(&body.Namespace, details["vault_namespaces"])
+
+	_, resp, err := client.CreateHashiVaultTarget(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(resp, err))
+}
+
 func createLdapTarget(t *testing.T, name string, details map[string]interface{}) {
 
 	p, err := getProviderMeta()
@@ -1061,12 +1082,12 @@ func createK8sTarget(t *testing.T, name string, details map[string]interface{}) 
 	token := *p.token
 
 	body := akeyless_api.CreateNativeK8STarget{
-		Name:               name,
-		Token:              &token,
-		K8sClusterEndpoint: details["cluster_endpoint"].(string),
-		K8sClusterCaCert:   details["cluster_ca_cert"].(string),
-		K8sClusterToken:    details["bearer_token"].(string),
+		Name:  name,
+		Token: &token,
 	}
+	common.GetAkeylessPtr(&body.K8sClusterEndpoint, details["cluster_endpoint"].(string))
+	common.GetAkeylessPtr(&body.K8sClusterCaCert, details["cluster_ca_cert"].(string))
+	common.GetAkeylessPtr(&body.K8sClusterToken, details["bearer_token"].(string))
 
 	_, resp, err := client.CreateNativeK8STarget(context.Background()).Body(body).Execute()
 	require.NoError(t, handleError(resp, err))

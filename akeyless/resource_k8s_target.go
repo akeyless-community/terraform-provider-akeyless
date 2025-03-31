@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -75,14 +75,14 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 
 	body := akeyless_api.TargetCreateK8s{
-		Name:               name,
-		K8sClusterEndpoint: k8sClusterEndpoint,
-		K8sClusterCaCert:   k8sClusterCaCert,
-		K8sClusterToken:    k8sClusterToken,
-		Token:              &token,
+		Name:  name,
+		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.K8sClusterEndpoint, k8sClusterEndpoint)
+	common.GetAkeylessPtr(&body.K8sClusterCaCert, k8sClusterCaCert)
+	common.GetAkeylessPtr(&body.K8sClusterToken, k8sClusterToken)
 
 	_, _, err := client.TargetCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
@@ -176,14 +176,14 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 
 	body := akeyless_api.TargetUpdateK8s{
-		Name:               name,
-		K8sClusterEndpoint: k8sClusterEndpoint,
-		K8sClusterCaCert:   k8sClusterCaCert,
-		K8sClusterToken:    k8sClusterToken,
-		Token:              &token,
+		Name:  name,
+		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.K8sClusterEndpoint, k8sClusterEndpoint)
+	common.GetAkeylessPtr(&body.K8sClusterCaCert, k8sClusterCaCert)
+	common.GetAkeylessPtr(&body.K8sClusterToken, k8sClusterToken)
 
 	_, _, err := client.TargetUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {

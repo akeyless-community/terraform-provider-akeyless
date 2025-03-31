@@ -27,4 +27,10 @@ const (
 	StorageAccountRotator = "azure-storage-account-rotator"
 
 	UseExisting = "use-existing"
+
+	TargetTypeAws   = "aws"
+	TargetTypeAzure = "azure"
+	TargetTypeGcp   = "gcp"
+	TargetTypeK8s   = "k8s"
+	TargetTypeVault = "hashi_vault"
 )

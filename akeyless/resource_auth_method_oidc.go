@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -25,10 +25,11 @@ func resourceAuthMethodOidc() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Auth Method name",
-				ForceNew:    true,
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "Auth Method name",
+				ForceNew:         true,
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
@@ -270,14 +271,14 @@ func resourceAuthMethodOidcRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.AccessInfo.OidcAccessRules.AllowedRedirectURIs != nil {
-		err = d.Set("allowed_redirect_uri", *rOut.AccessInfo.OidcAccessRules.AllowedRedirectURIs)
+		err = d.Set("allowed_redirect_uri", rOut.AccessInfo.OidcAccessRules.AllowedRedirectURIs)
 		if err != nil {
 			return err
 		}
 	}
 
 	if rOut.AccessInfo.OidcAccessRules.RequiredScopes != nil {
-		err = d.Set("required_scopes", *rOut.AccessInfo.OidcAccessRules.RequiredScopes)
+		err = d.Set("required_scopes", rOut.AccessInfo.OidcAccessRules.RequiredScopes)
 		if err != nil {
 			return err
 		}
@@ -291,7 +292,7 @@ func resourceAuthMethodOidcRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}

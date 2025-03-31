@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -189,7 +189,7 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err = d.Set("tags", *itemOut.ItemTags)
+		err = d.Set("tags", itemOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -256,20 +256,23 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 		}
 	}
 
-	value, ok := rOut["value"]
+	val, ok := rOut["value"]
 	if ok {
-		switch rotatorType {
-		case common.UserPassRotator:
-			if username, ok := value["username"]; ok {
-				err := d.Set("rotated_username", username.(string))
-				if err != nil {
-					return err
+		value, ok := val.(map[string]any)
+		if ok {
+			switch rotatorType {
+			case common.UserPassRotator:
+				if username, ok := value["username"]; ok {
+					err := d.Set("rotated_username", username.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-			if password, ok := value["password"]; ok {
-				err := d.Set("rotated_password", password.(string))
-				if err != nil {
-					return err
+				if password, ok := value["password"]; ok {
+					err := d.Set("rotated_password", password.(string))
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}

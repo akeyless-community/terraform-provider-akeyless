@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -196,7 +196,7 @@ func resourceProducerOracleRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Tags != nil {
-		err = d.Set("tags", *rOut.Tags)
+		err = d.Set("tags", rOut.Tags)
 		if err != nil {
 			return err
 		}

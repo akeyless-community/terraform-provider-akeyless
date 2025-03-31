@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -25,10 +25,11 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Auth Method name",
-				ForceNew:    true,
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "Auth Method name",
+				ForceNew:         true,
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
@@ -230,7 +231,7 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 		}
 	}
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}
