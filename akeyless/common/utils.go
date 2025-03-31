@@ -689,7 +689,7 @@ func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, er
 
 	// err is informative
 	var apiErr akeyless_api.GenericOpenAPIError
-	if errors.As(err, &apiErr) {
+	if errors.As(err, &apiErr) && resp != nil {
 		if resp.StatusCode == http.StatusNotFound {
 			// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
 			d.SetId("")
@@ -698,14 +698,14 @@ func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, er
 	}
 
 	// resp is informative
-	if resp.Body != nil {
+	if resp != nil && resp.Body != nil {
 		if errorMsg, errRead := io.ReadAll(resp.Body); errRead == nil {
 			return fmt.Errorf("%s: %s", msg, string(errorMsg))
 		}
 	}
 
 	// nothing informative
-	if resp.StatusCode == http.StatusNotFound {
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
 		d.SetId("")
 		return fmt.Errorf("%s: not found: %w", msg, err)
