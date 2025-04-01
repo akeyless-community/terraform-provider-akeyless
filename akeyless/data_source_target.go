@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -169,7 +169,7 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.ClientPermissions != nil {
-		err := d.Set("client_permissions", *rOut.ClientPermissions)
+		err := d.Set("client_permissions", rOut.ClientPermissions)
 		if err != nil {
 			return err
 		}

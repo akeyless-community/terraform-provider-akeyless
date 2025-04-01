@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -25,6 +25,7 @@ func TestStaticResource(t *testing.T) {
 			tags 				= ["t1", "t2"]
 			description 		= "aaaa"
             keep_prev_version	= "true"
+			delete_protection  	= "true"
 		}
 	`, secretName, secretPath)
 
@@ -40,7 +41,18 @@ func TestStaticResource(t *testing.T) {
 		}
 	`, secretName, secretPath)
 
-	runStaticSecretTest(t, config, secretPath, configUpdate)
+	configUpdate2 := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path 						= "%v"
+			value 						= "value2"
+			delete_protection  			= "false"
+			secure_access_enable 		= "false"
+			secure_access_web_browsing 	= "true"
+			secure_access_url 			= "http://abc.com"
+		}
+	`, secretName, secretPath)
+
+	testStaticSecretResource(t, secretPath, config, configUpdate, configUpdate2)
 }
 
 func TestStaticPasswordResource(t *testing.T) {
@@ -64,6 +76,7 @@ func TestStaticPasswordResource(t *testing.T) {
 			tags 				= ["t1", "t2"]
 			description 		= "my password"
             keep_prev_version	= "true"
+			delete_protection  	= "true"
 		}
 	`, secretName, secretPath)
 
@@ -83,26 +96,34 @@ func TestStaticPasswordResource(t *testing.T) {
 		}
 	`, secretName, secretPath)
 
-	runStaticSecretTest(t, config, secretPath, configUpdate)
+	configUpdate2 := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path 				= "%v"
+			type 				= "password"
+			username 			= "user2"
+			password 			= "def"
+			inject_url 			= ["http://abc.com", "http://def.com"]
+			delete_protection  	= "false"
+		}
+	`, secretName, secretPath)
+
+	testStaticSecretResource(t, secretPath, config, configUpdate, configUpdate2)
 }
 
-func runStaticSecretTest(t *testing.T, config string, secretPath string, configUpdate string) {
+func testStaticSecretResource(t *testing.T, secretPath string, configs ...string) {
+	steps := make([]resource.TestStep, len(configs))
+	for i, config := range configs {
+		steps[i] = resource.TestStep{
+			Config: config,
+			Check: resource.ComposeTestCheckFunc(
+				checkSecretExistsRemotely(secretPath),
+			),
+		}
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					checkSecretExistsRemotely(secretPath),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					checkSecretExistsRemotely(secretPath),
-				),
-			},
-		},
+		Steps:             steps,
 	})
 }
 

@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"net/http"
 	"strings"
 	"testing"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
@@ -182,6 +183,95 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
 					checkRemoveRoleRemotely(t, rolePath, 4),
+				),
+			},
+		},
+	})
+}
+func TestRoleResourceRuleWithNoLeadingSlash(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	authMethodPath := testPath("test_am_resource")
+	deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath)
+
+	rulePath := "terraform-tests/*"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method" "test_auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+
+		resource "akeyless_role" "test_role" {
+			name 	= "%v"
+			assoc_auth_method {
+				am_name 	= "%v"
+				sub_claims 	= {
+					"groups" = "admins,developers"  
+				}
+			}
+			rules {
+				capability 	= ["read"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
+			}
+			audit_access 		= "all"
+			analytics_access 	= "own"
+			
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
+		}
+	`, authMethodPath, rolePath, authMethodPath, rulePath)
+
+	configAddRole := fmt.Sprintf(`
+		resource "akeyless_auth_method" "test_auth_method" {
+			path = "%v"
+			api_key {
+			}
+		}
+
+		resource "akeyless_role" "test_role" {
+			name 	= "%v"
+			assoc_auth_method {
+				am_name 	= "%v"
+				sub_claims 	= {
+					"groups" = "admins,developers"
+				}
+			}
+			rules {
+				capability 	= ["read", "list"]
+				path 		= "%v"
+				rule_type 	= "auth-method-rule"
+			}
+			rules {
+				capability 	= ["read", "list"]
+				path 		= "%v"
+				rule_type 	= "item-rule"
+			}
+			audit_access 		= "all"
+			analytics_access 	= "all"
+			  
+			depends_on = [
+    			akeyless_auth_method.test_auth_method,
+  			]
+		}
+	`, authMethodPath, rolePath, authMethodPath, rulePath, rulePath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
+				),
+			},
+			{
+				Config: configAddRole,
+				Check: resource.ComposeTestCheckFunc(
+					checkAddRoleRemotely(t, rolePath, 5),
 				),
 			},
 		},

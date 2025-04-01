@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -25,10 +25,11 @@ func resourceAuthMethodOauth2() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Auth Method name",
-				ForceNew:    true,
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "Auth Method name",
+				ForceNew:         true,
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
@@ -131,13 +132,13 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 
 	body := akeyless_api.AuthMethodCreateOauth2{
 		Name:             name,
-		JwksUri:          jwksUri,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
 	}
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwksUri, jwksUri)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.BoundClientIds, boundClientIds)
 	common.GetAkeylessPtr(&body.Issuer, issuer)
@@ -270,14 +271,14 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.AccessInfo.Oauth2AccessRules.BoundClientsId != nil {
-		err = d.Set("bound_client_ids", *rOut.AccessInfo.Oauth2AccessRules.BoundClientsId)
+		err = d.Set("bound_client_ids", rOut.AccessInfo.Oauth2AccessRules.BoundClientsId)
 		if err != nil {
 			return err
 		}
 	}
 
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}
@@ -321,13 +322,13 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 
 	body := akeyless_api.AuthMethodUpdateOauth2{
 		Name:             name,
-		JwksUri:          jwksUri,
 		UniqueIdentifier: uniqueIdentifier,
 		Token:            &token,
 	}
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
+	common.GetAkeylessPtr(&body.JwksUri, jwksUri)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.BoundClientIds, boundClientIds)
 	common.GetAkeylessPtr(&body.Issuer, issuer)

@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
@@ -37,7 +37,7 @@ func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "%v" {
-			name 				= "%v"
+			name 				= "/%v"
 			access_expires 		= 10001
 			bound_ips 			= ["1.1.4.0/32"]
             audit_logs_claims 	= ["eee","kk"]

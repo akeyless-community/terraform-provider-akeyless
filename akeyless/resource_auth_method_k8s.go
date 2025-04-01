@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -25,10 +25,11 @@ func resourceAuthMethodK8s() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Auth Method name",
-				ForceNew:    true,
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "Auth Method name",
+				ForceNew:         true,
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
@@ -283,27 +284,27 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.AccessInfo.K8sAccessRules.BoundPodNames != nil {
-		err = d.Set("bound_pod_names", *rOut.AccessInfo.K8sAccessRules.BoundPodNames)
+		err = d.Set("bound_pod_names", rOut.AccessInfo.K8sAccessRules.BoundPodNames)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.AccessInfo.K8sAccessRules.BoundNamespaces != nil {
-		err = d.Set("bound_namespaces", *rOut.AccessInfo.K8sAccessRules.BoundNamespaces)
+		err = d.Set("bound_namespaces", rOut.AccessInfo.K8sAccessRules.BoundNamespaces)
 		if err != nil {
 			return err
 		}
 	}
 
 	if rOut.AccessInfo.K8sAccessRules.BoundServiceAccountNames != nil {
-		err = d.Set("bound_sa_names", *rOut.AccessInfo.K8sAccessRules.BoundServiceAccountNames)
+		err = d.Set("bound_sa_names", rOut.AccessInfo.K8sAccessRules.BoundServiceAccountNames)
 		if err != nil {
 			return err
 		}
 	}
 
 	if rOut.AccessInfo.AuditLogsClaims != nil {
-		err = d.Set("audit_logs_claims", *rOut.AccessInfo.AuditLogsClaims)
+		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
 			return err
 		}

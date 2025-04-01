@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,10 +26,11 @@ func resourceAuthMethodCert() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Auth Method name",
-				ForceNew:    true,
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "Auth Method name",
+				ForceNew:         true,
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"unique_identifier": {
 				Type:        schema.TypeString,
@@ -287,7 +288,7 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if accessInfo.AuditLogsClaims != nil {
-			err = d.Set("audit_logs_claims", *accessInfo.AuditLogsClaims)
+			err = d.Set("audit_logs_claims", accessInfo.AuditLogsClaims)
 			if err != nil {
 				return err
 			}
@@ -307,43 +308,43 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if certAccessRules.BoundCommonNames != nil {
-				err = d.Set("bound_common_names", *certAccessRules.BoundCommonNames)
+				err = d.Set("bound_common_names", certAccessRules.BoundCommonNames)
 				if err != nil {
 					return err
 				}
 			}
 			if certAccessRules.BoundDnsSans != nil {
-				err = d.Set("bound_dns_sans", *certAccessRules.BoundDnsSans)
+				err = d.Set("bound_dns_sans", certAccessRules.BoundDnsSans)
 				if err != nil {
 					return err
 				}
 			}
 			if certAccessRules.BoundEmailSans != nil {
-				err = d.Set("bound_email_sans", *certAccessRules.BoundEmailSans)
+				err = d.Set("bound_email_sans", certAccessRules.BoundEmailSans)
 				if err != nil {
 					return err
 				}
 			}
 			if certAccessRules.BoundUriSans != nil {
-				err = d.Set("bound_uri_sans", *certAccessRules.BoundUriSans)
+				err = d.Set("bound_uri_sans", certAccessRules.BoundUriSans)
 				if err != nil {
 					return err
 				}
 			}
 			if certAccessRules.BoundOrganizationalUnits != nil {
-				err = d.Set("bound_organizational_units", *certAccessRules.BoundOrganizationalUnits)
+				err = d.Set("bound_organizational_units", certAccessRules.BoundOrganizationalUnits)
 				if err != nil {
 					return err
 				}
 			}
 			if certAccessRules.BoundExtensions != nil {
-				err = d.Set("bound_extensions", *certAccessRules.BoundExtensions)
+				err = d.Set("bound_extensions", certAccessRules.BoundExtensions)
 				if err != nil {
 					return err
 				}
 			}
 			if certAccessRules.RevokedCertIds != nil {
-				err = d.Set("revoked_cert_ids", *certAccessRules.RevokedCertIds)
+				err = d.Set("revoked_cert_ids", certAccessRules.RevokedCertIds)
 				if err != nil {
 					return err
 				}

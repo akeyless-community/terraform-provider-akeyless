@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -184,7 +184,7 @@ func resourceGatewayUpdateCacheImport(d *schema.ResourceData, m interface{}) ([]
 	return []*schema.ResourceData{d}, nil
 }
 
-func getGwCacheConfig(m interface{}) (akeyless_api.CacheConfigPart, error) {
+func getGwCacheConfig(m interface{}) (*akeyless_api.CacheConfigPart, error) {
 
 	provider := m.(*providerMeta)
 	client := *provider.client
@@ -200,9 +200,9 @@ func getGwCacheConfig(m interface{}) (akeyless_api.CacheConfigPart, error) {
 	if err != nil {
 		var apiErr akeyless_api.GenericOpenAPIError
 		if errors.As(err, &apiErr) {
-			return akeyless_api.CacheConfigPart{}, fmt.Errorf("can't get cache settings: %v", string(apiErr.Body()))
+			return &akeyless_api.CacheConfigPart{}, fmt.Errorf("can't get cache settings: %v", string(apiErr.Body()))
 		}
-		return akeyless_api.CacheConfigPart{}, fmt.Errorf("can't get cache settings: %w", err)
+		return &akeyless_api.CacheConfigPart{}, fmt.Errorf("can't get cache settings: %w", err)
 	}
 
 	return rOut, nil

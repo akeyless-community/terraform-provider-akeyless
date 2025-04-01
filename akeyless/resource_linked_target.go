@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -125,15 +125,15 @@ func resourceLinkedTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Target.TargetItemsAssoc != nil {
-		if (*rOut.Target.TargetItemsAssoc)[0].ItemName != nil {
-			err = d.Set("parent_target_name", *(*rOut.Target.TargetItemsAssoc)[0].ItemName)
+		if (rOut.Target.TargetItemsAssoc)[0].ItemName != nil {
+			err = d.Set("parent_target_name", *rOut.Target.TargetItemsAssoc[0].ItemName)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	if rOut.Target.Attributes != nil {
-		if hostType, ok := (*rOut.Target.Attributes)["parent_target_type"]; ok {
+		if hostType, ok := (rOut.Target.Attributes)["parent_target_type"]; ok {
 			err = d.Set("type", fmt.Sprintf("%v", hostType))
 			if err != nil {
 				return err

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -151,7 +151,7 @@ func resourceGatewayAllowedAccessRead(d *schema.ResourceData, m interface{}) err
 		}
 	}
 	if rOut.Permissions != nil {
-		err = d.Set("permissions", strings.Join(*rOut.Permissions, ","))
+		err = d.Set("permissions", strings.Join(rOut.Permissions, ","))
 		if err != nil {
 			return err
 		}

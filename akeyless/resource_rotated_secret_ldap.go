@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -205,7 +205,7 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 	if itemOut.ItemTags != nil {
-		err := d.Set("tags", *itemOut.ItemTags)
+		err := d.Set("tags", itemOut.ItemTags)
 		if err != nil {
 			return err
 		}
@@ -278,37 +278,40 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 
-	value, ok := rOut["value"]
+	val, ok := rOut["value"]
 	if ok {
-		switch rotatorType {
-		case common.LdapRotator:
-			if username, ok := value["username"]; ok {
-				err := d.Set("rotated_username", username.(string))
-				if err != nil {
-					return err
+		value, ok := val.(map[string]any)
+		if ok {
+			switch rotatorType {
+			case common.LdapRotator:
+				if username, ok := value["username"]; ok {
+					err := d.Set("rotated_username", username.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
-			if password, ok := value["password"]; ok {
-				err := d.Set("rotated_password", password.(string))
-				if err != nil {
-					return err
+				if password, ok := value["password"]; ok {
+					err := d.Set("rotated_password", password.(string))
+					if err != nil {
+						return err
+					}
 				}
-			}
 
-			// TODO: ldap payload is removed in gateway and we can't get it.
-			//
-			// if userDn, ok := value["ldap_user_dn"]; ok {
-			// 	err := d.Set("user_dn", userDn.(string))
-			// 	if err != nil {
-			// 		return err
-			// 	}
-			// }
-			// if userAttr, ok := value["ldap_user_attr"]; ok {
-			// 	err := d.Set("user_attribute", userAttr.(string))
-			// 	if err != nil {
-			// 		return err
-			// 	}
-			// }
+				// TODO: ldap payload is removed in gateway and we can't get it.
+				//
+				// if userDn, ok := value["ldap_user_dn"]; ok {
+				// 	err := d.Set("user_dn", userDn.(string))
+				// 	if err != nil {
+				// 		return err
+				// 	}
+				// }
+				// if userAttr, ok := value["ldap_user_attr"]; ok {
+				// 	err := d.Set("user_attribute", userAttr.(string))
+				// 	if err != nil {
+				// 		return err
+				// 	}
+				// }
+			}
 		}
 	}
 

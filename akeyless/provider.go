@@ -10,7 +10,7 @@ import (
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/gcp"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go/v4"
+	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -129,6 +129,7 @@ func Provider() *schema.Provider {
 			"akeyless_rotated_secret_snowflake":                resourceRotatedSecretSnowflake(),
 			"akeyless_rotated_secret_ssh":                      resourceRotatedSecretSsh(),
 			"akeyless_rotated_secret_windows":                  resourceRotatedSecretWindows(),
+			"akeyless_rotated_secret_sync":                     resourceRotatedSecretSync(),
 			"akeyless_target_artifactory":                      resourceArtifactoryTarget(),
 			"akeyless_target_aws":                              resourceAwsTarget(),
 			"akeyless_target_azure":                            resourceAzureTarget(),
@@ -149,6 +150,8 @@ func Provider() *schema.Provider {
 			"akeyless_k8s_auth_config":                         resourceK8sAuthConfig(),
 			"akeyless_associate_role_auth_method":              resourceAssocRoleAm(),
 			"akeyless_tokenizer":                               resourceTokenizer(),
+			"akeyless_usc":                                     resourceUsc(),
+			"akeyless_usc_secret":                              resourceUscSecret(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_auth":               dataSourceAuth(),

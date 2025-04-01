@@ -90,6 +90,7 @@ output "demo-role" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `restricted_rules` (Set of Object) (see [below for nested schema](#nestedatt--restricted_rules))
 
 <a id="nestedblock--assoc_auth_method"></a>
 ### Nested Schema for `assoc_auth_method`
@@ -120,6 +121,16 @@ Required:
 Optional:
 
 - `rule_type` (String) item-rule, target-rule, role-rule, auth-method-rule, sra-rule
+
+
+<a id="nestedatt--restricted_rules"></a>
+### Nested Schema for `restricted_rules`
+
+Read-Only:
+
+- `capability` (Set of String)
+- `path` (String)
+- `rule_type` (String)
 
 ## Import
 
