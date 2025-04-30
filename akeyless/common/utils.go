@@ -712,3 +712,122 @@ func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, er
 	}
 	return fmt.Errorf("%s: %w", msg, err)
 }
+
+func SetCommonEventForwarderVars(d *schema.ResourceData, rOut *akeyless_api.NotiForwarder) error {
+	if rOut.Paths != nil {
+		err := setEventSourceLocations(d, rOut.Paths)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.EventTypes != nil {
+		err := d.Set("event_types", rOut.EventTypes)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.ProtectionKey != nil {
+		if !strings.Contains(*rOut.ProtectionKey, "__account-def-secrets-key__") {
+			err := d.Set("key", *rOut.ProtectionKey)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if rOut.RunnerType != nil {
+		err := d.Set("runner_type", *rOut.RunnerType)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.TimespanInSeconds != nil {
+		err := d.Set("every", fmt.Sprintf("%d", *rOut.TimespanInSeconds/3600))
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Comment != nil {
+		err := d.Set("description", *rOut.Comment)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func setEventSourceLocations(d *schema.ResourceData, paths []string) error {
+	if len(paths) == 0 {
+		return nil
+	}
+	items := make([]string, 0)
+	authMethods := make([]string, 0)
+	targets := make([]string, 0)
+	gateways := make([]string, 0)
+
+	for _, path := range paths {
+		if strings.HasPrefix(path, "item:") {
+			items = append(items, path[5:])
+		} else if strings.HasPrefix(path, "auth_method:") {
+			authMethods = append(authMethods, path[12:])
+		} else if strings.HasPrefix(path, "target:") {
+			targets = append(targets, path[7:])
+		} else if strings.HasPrefix(path, "gateway:") {
+			gateways = append(gateways, path[8:])
+		}
+	}
+
+	currentItemsSet := d.Get("items_event_source_locations").(*schema.Set)
+	currentItems := ExpandStringList(currentItemsSet.List())
+	if areListsDifferent(currentItems, items) {
+		err := d.Set("items_event_source_locations", items)
+		if err != nil {
+			return err
+		}
+	}
+
+	currentAMSet := d.Get("auth_methods_event_source_locations").(*schema.Set)
+	currentAM := ExpandStringList(currentAMSet.List())
+	if areListsDifferent(currentAM, authMethods) {
+		err := d.Set("auth_methods_event_source_locations", authMethods)
+		if err != nil {
+			return err
+		}
+	}
+
+	currentTargetsSet := d.Get("targets_event_source_locations").(*schema.Set)
+	currentTargets := ExpandStringList(currentTargetsSet.List())
+	if areListsDifferent(currentTargets, targets) {
+		err := d.Set("targets_event_source_locations", targets)
+		if err != nil {
+			return err
+		}
+	}
+
+	// we can't set gateways_event_source_locations as input is URL list but output is ClusterId list
+	gatewaysLen := d.Get("gateways_event_source_locations").(*schema.Set).Len()
+	if gatewaysLen > 0 && gatewaysLen != len(gateways) {
+		return fmt.Errorf("gateway event source locations should be set. Expected %d, got %d", gatewaysLen, len(gateways))
+	}
+
+	return nil
+}
+
+func areListsDifferent(a, b []string) bool {
+	if len(a) != len(b) {
+		return true
+	}
+	for _, aPath := range a {
+		oldPathEnsured := EnsureLeadingSlash(aPath)
+		found := false
+		for _, bPath := range b {
+			if oldPathEnsured == EnsureLeadingSlash(bPath) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return true
+		}
+	}
+	return false
+}
