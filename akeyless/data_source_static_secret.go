@@ -2,6 +2,7 @@ package akeyless
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -30,6 +31,37 @@ func dataSourceStaticSecret() *schema.Resource {
 				Computed:    true,
 				Sensitive:   true,
 				Description: "The secret contents.",
+			},
+			"inject_url": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "List of URLs associated with the item (relevant only for type 'password')",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"password": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
+				Description: "Password value (relevant only for type 'password')",
+			},
+			"username": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Username value (relevant only for type 'password')",
+			},
+			"custom_field": {
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Sensitive:   true,
+				Description: "Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"key_value_pairs": {
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Sensitive:   true,
+				Description: "The key value pairs for key/value secrets.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -62,16 +94,84 @@ func dataSourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get Secret value: %v", err)
 	}
 
+	item := akeyless_api.DescribeItem{
+		Name:  path,
+		Token: &token,
+	}
+
+	itemOut, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	if err != nil {
+		return err
+	}
+
+	secretType := itemOut.ItemSubType
+	value := gsvOut[path]
+
 	err = d.Set("version", version)
 	if err != nil {
 		return err
 	}
-	err = d.Set("value", gsvOut[path])
+	err = d.Set("value", value)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(path)
+	info := itemOut.ItemGeneralInfo
+	format := ""
+	if info != nil {
+		staticSecretInfo := info.StaticSecretInfo
+		if staticSecretInfo != nil {
+			if staticSecretInfo.Format != nil {
+				format = *staticSecretInfo.Format
+			}
+			if staticSecretInfo.Websites != nil {
+				err := d.Set("inject_url", staticSecretInfo.Websites)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
 
+	stringValue, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("wrong value variable string type")
+	}
+
+	if *secretType == "generic" {
+		if format == "key-value" {
+			var kvValue map[string]any
+			err = json.Unmarshal([]byte(stringValue), &kvValue)
+			if err != nil {
+				return fmt.Errorf("can't convert key value secret value")
+			}
+			err = d.Set("key_value_pairs", kvValue)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		var jsonValue map[string]any
+		err = json.Unmarshal([]byte(stringValue), &jsonValue)
+		if err != nil {
+			return fmt.Errorf("can't convert password secret value")
+		}
+		err = d.Set("password", jsonValue["password"])
+		if err != nil {
+			return err
+		}
+		err = d.Set("username", jsonValue["username"])
+		if err != nil {
+			return err
+		}
+		delete(jsonValue, "username")
+		delete(jsonValue, "password")
+		err = d.Set("custom_field", jsonValue)
+		if err != nil {
+			return err
+		}
+	}
+
+	d.SetId(path)
 	return nil
 }
