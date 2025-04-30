@@ -10,6 +10,9 @@ import (
 )
 
 func TestEventForwarderEmail(t *testing.T) {
+	t.Skip("not supported on public gateway")
+	t.Parallel()
+
 	eventForwarderName := "test-event-forwarder-email"
 
 	config := fmt.Sprintf(`
@@ -49,6 +52,9 @@ func TestEventForwarderEmail(t *testing.T) {
 }
 
 func TestEventForwarderWebhook(t *testing.T) {
+	t.Skip("not supported on public gateway")
+	t.Parallel()
+
 	eventForwarderName := "test-event-forwarder-webhook"
 
 	config := fmt.Sprintf(`
@@ -89,6 +95,9 @@ func TestEventForwarderWebhook(t *testing.T) {
 }
 
 func TestEventForwarderServicenow(t *testing.T) {
+	t.Skip("not supported on public gateway")
+	t.Parallel()
+
 	eventForwarderName := "test-event-forwarder-servicenow"
 
 	config := fmt.Sprintf(`
@@ -127,6 +136,9 @@ func TestEventForwarderServicenow(t *testing.T) {
 }
 
 func TestEventForwarderSlack(t *testing.T) {
+	t.Skip("not supported on public gateway")
+	t.Parallel()
+	
 	eventForwarderName := "test-event-forwarder-slack"
 
 	config := fmt.Sprintf(`
