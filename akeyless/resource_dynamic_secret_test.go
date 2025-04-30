@@ -93,6 +93,7 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 			token_repositories 			= %v
 			github_app_id 				= %v
 			github_app_private_key 		= "%v"
+			token_ttl					= "40m"
 		}
 	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
 

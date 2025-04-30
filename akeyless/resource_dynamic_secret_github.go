@@ -76,6 +76,12 @@ func resourceDynamicSecretGithub() *schema.Resource {
 				Description: "Tokens' allowed repositories. By default use installation allowed repositories. To specify multiple repositories use argument multiple times: -r RepoName1 -r RepoName2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"token_ttl": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Token TTL",
+				Default:     "60m",
+			},
 		},
 	}
 }
@@ -99,6 +105,7 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	tokenPermissions := common.ExpandStringList(tokenPermissionsSet.List())
 	tokenRepositoriesSet := d.Get("token_repositories").(*schema.Set)
 	tokenRepositories := common.ExpandStringList(tokenRepositoriesSet.List())
+	tokenTtl := d.Get("token_ttl").(string)
 
 	body := akeyless_api.DynamicSecretCreateGithub{
 		Name:  name,
@@ -113,6 +120,7 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
+	common.GetAkeylessPtr(&body.TokenTtl, tokenTtl)
 
 	_, _, err := client.DynamicSecretCreateGithub(ctx).Body(body).Execute()
 	if err != nil {
@@ -227,6 +235,13 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
+	if rOut.UserTtl != nil { //is this correct?
+		err = d.Set("token_ttl", *rOut.UserTtl)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -251,6 +266,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	tokenPermissions := common.ExpandStringList(tokenPermissionsSet.List())
 	tokenRepositoriesSet := d.Get("token_repositories").(*schema.Set)
 	tokenRepositories := common.ExpandStringList(tokenRepositoriesSet.List())
+	tokenTtl := d.Get("token_ttl").(string)
 
 	body := akeyless_api.DynamicSecretUpdateGithub{
 		Name:  name,
@@ -265,6 +281,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
+	common.GetAkeylessPtr(&body.TokenTtl, tokenTtl)
 
 	_, _, err := client.DynamicSecretUpdateGithub(ctx).Body(body).Execute()
 	if err != nil {
