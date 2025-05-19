@@ -713,6 +713,11 @@ func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, er
 	return fmt.Errorf("%s: %w", msg, err)
 }
 
+func ValidateEventForwarderUpdateParams(d *schema.ResourceData) error {
+	paramsMustNotUpdate := []string{"runner_type", "every"}
+	return GetErrorOnUpdateParam(d, paramsMustNotUpdate)
+}
+
 func SetCommonEventForwarderVars(d *schema.ResourceData, rOut *akeyless_api.NotiForwarder) error {
 	if rOut.Paths != nil {
 		err := setEventSourceLocations(d, rOut.Paths)
@@ -816,18 +821,19 @@ func areListsDifferent(a, b []string) bool {
 	if len(a) != len(b) {
 		return true
 	}
-	for _, aPath := range a {
-		oldPathEnsured := EnsureLeadingSlash(aPath)
-		found := false
-		for _, bPath := range b {
-			if oldPathEnsured == EnsureLeadingSlash(bPath) {
-				found = true
-				break
-			}
-		}
-		if !found {
+	mapA := make(map[string]struct{}, len(a))
+	for _, item := range a {
+		mapA[EnsureLeadingSlash(item)] = struct{}{}
+	}
+	for _, itemB := range b {
+		item := EnsureLeadingSlash(itemB)
+		if _, exists := mapA[item]; !exists {
 			return true
 		}
+		delete(mapA, item)
+	}
+	if len(mapA) > 0 {
+		return true
 	}
 	return false
 }

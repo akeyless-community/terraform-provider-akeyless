@@ -18,6 +18,7 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 			token_permissions 	   	= %v
 			github_app_id 		  	= %v
 			github_app_private_key	= "%v"
+			token_ttl				= "50m"
 		}
 	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_TOKEN_PERM, GITHUB_APP_ID, GITHUB_APP_KEY)
 
@@ -28,6 +29,7 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 			token_repositories 		= %v
 			github_app_id 			= %v
 			github_app_private_key 	= "%v"
+			token_ttl				= "40m"
 		}
 	`, name, itemPath, GITHUB_INSTALL_REPO, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
 
@@ -38,6 +40,7 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 			token_repositories 			= %v
 			github_app_id 				= %v
 			github_app_private_key 		= "%v"
+			token_ttl					= "40m"
 		}
 	`, name, itemPath, GITHUB_INSTALL_ORGANIZATION, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
 
@@ -49,6 +52,7 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 			token_repositories 			= %v
 			github_app_id 				= %v
 			github_app_private_key 		= "%v"
+			token_ttl					= "40m"
 		}
 	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_INSTALL_ORGANIZATION, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
 
@@ -61,6 +65,7 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 			token_repositories 			= %v
 			github_app_id 				= %v
 			github_app_private_key 		= "%v"
+			token_ttl					= "40m"
 		}
 	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_INSTALL_REPO, GITHUB_INSTALL_ORGANIZATION, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
 
@@ -71,6 +76,7 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 			token_repositories 			= %v
 			github_app_id 				= %v
 			github_app_private_key 		= "%v"
+			token_ttl					= "40m"
 		}
 	`, name, itemPath, GITHUB_INSTALL_REPO, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
 
@@ -83,6 +89,7 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 			token_repositories 			= %v
 			github_app_id 				= %v
 			github_app_private_key 		= "%v"
+			token_ttl					= "40m"
 		}
 	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_INSTALL_REPO, GITHUB_INSTALL_ORGANIZATION, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
 

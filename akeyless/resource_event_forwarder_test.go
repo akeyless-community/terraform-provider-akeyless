@@ -36,7 +36,6 @@ func TestEventForwarderEmail(t *testing.T) {
 			name = "%v"
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
-			auth_methods_event_source_locations = ["/auth/"]
 			gateways_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			email_to = "sendmemail123@akeyless.io"
@@ -101,36 +100,40 @@ func TestEventForwarderServicenow(t *testing.T) {
 	eventForwarderName := "test-event-forwarder-servicenow"
 
 	config := fmt.Sprintf(`
-		resource "akeyless_event_forwarder_servicenow" "%v" {
+		resource "akeyless_event_forwarder_service_now" "%v" {
 			name = "%v"
 			items_event_source_locations = ["/items/*"]
 			targets_event_source_locations = ["/targets/*"]
 			auth_methods_event_source_locations = ["/auth-methods/*"]
 			gateways_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
-			url = "https://example.com"
-			username = "myusername"
-			password = "mypassword"
+			host = "https://example.com"
+			admin_name = "myusername"
+			admin_pwd = "mypassword"
 			runner_type = "immediate"
 			description = "test servicenow event forwarder"
 		}
 	`, eventForwarderName, eventForwarderName)
 
+	base64Key := "XXXXXX"
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_event_forwarder_servicenow" "%v" {
+		resource "akeyless_event_forwarder_service_now" "%v" {
 			name = "%v"
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			auth_methods_event_source_locations = ["/auth/"]
 			gateways_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
-			url = "https://example2.com"
-			username = "myusername2"
-			password = "mypassword2"
+			host = "https://example2.com"
+			auth_type = "jwt"
+			user_email = "myusername2@asa.com"
+			client_id = "myclientid"
+			client_secret = "myclientsecret"
+			app_private_key_base64 = "%v"
 			runner_type = "immediate"
 			description = "test servicenow event forwarder update"
 		}
-	`, eventForwarderName, eventForwarderName)
+	`, eventForwarderName, eventForwarderName, base64Key)
 
 	testEventForwarderResource(t, eventForwarderName, config, configUpdate)
 }
@@ -138,7 +141,7 @@ func TestEventForwarderServicenow(t *testing.T) {
 func TestEventForwarderSlack(t *testing.T) {
 	t.Skip("not supported on public gateway")
 	t.Parallel()
-	
+
 	eventForwarderName := "test-event-forwarder-slack"
 
 	config := fmt.Sprintf(`

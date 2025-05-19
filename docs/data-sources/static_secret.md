@@ -31,7 +31,12 @@ data "akeyless_static_secret" "secret" {
 
 ### Read-Only
 
+- `custom_field` (Map of String, Sensitive) Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')
 - `id` (String) The ID of this resource.
+- `inject_url` (Set of String) List of URLs associated with the item (relevant only for type 'password')
+- `key_value_pairs` (Map of String, Sensitive) The key value pairs for key/value secrets.
+- `password` (String, Sensitive) Password value (relevant only for type 'password')
+- `username` (String) Username value (relevant only for type 'password')
 - `value` (String, Sensitive) The secret contents.
 
 

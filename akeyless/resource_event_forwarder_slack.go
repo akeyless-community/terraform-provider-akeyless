@@ -62,7 +62,7 @@ func resourceEventForwarderSlack() *schema.Resource {
 			"event_types": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "A comma-separated list of types of events to notify about [request-access, certificate-pending-expiration, certificate-expired, certificate-provisioning-success, certificate-provisioning-failure, auth-method-pending-expiration, auth-method-expired, next-automatic-rotation, rotated-secret-success, rotated-secret-failure, dynamic-secret-failure, multi-auth-failure, uid-rotation-failure, apply-justification, email-auth-method-approved, usage, rotation-usage, gateway-inactive, static-secret-updated, rate-limiting, usage-report, secret-sync]",
+				Description: "A comma-separated list of types of events to notify about",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"key": {
@@ -74,7 +74,7 @@ func resourceEventForwarderSlack() *schema.Resource {
 			"runner_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Event Forwarder runner type [immediate, periodic]",
+				Description: "Event Forwarder runner type [immediate/periodic]",
 				Default:     "immediate",
 			},
 			"every": {
@@ -170,7 +170,7 @@ func resourceEventForwarderSlackRead(d *schema.ResourceData, m interface{}) erro
 	rOut := readOut.EventForwarder
 
 	if rOut.NotiForwarderType != nil {
-		if *rOut.NotiForwarderType != "slack" {
+		if *rOut.NotiForwarderType != common.EventForwarderSlack {
 			return fmt.Errorf("resource type is not slack")
 		}
 	}
@@ -186,6 +186,12 @@ func resourceEventForwarderSlackRead(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceEventForwarderSlackUpdate(d *schema.ResourceData, m interface{}) error {
+
+	err := common.ValidateEventForwarderUpdateParams(d)
+	if err != nil {
+		return fmt.Errorf("failed to update: %w", err)
+	}
+
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token

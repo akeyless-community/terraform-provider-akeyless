@@ -235,7 +235,7 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
-	if rOut.UserTtl != nil { //is this correct?
+	if rOut.UserTtl != nil {
 		err = d.Set("token_ttl", *rOut.UserTtl)
 		if err != nil {
 			return err

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -57,7 +58,7 @@ func resourceEventForwarderEmail() *schema.Resource {
 			"event_types": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "A comma-separated list of types of events to notify about [request-access, certificate-pending-expiration, certificate-expired, certificate-provisioning-success, certificate-provisioning-failure, auth-method-pending-expiration, auth-method-expired, next-automatic-rotation, rotated-secret-success, rotated-secret-failure, dynamic-secret-failure, multi-auth-failure, uid-rotation-failure, apply-justification, email-auth-method-approved, usage, rotation-usage, gateway-inactive, static-secret-updated, rate-limiting, usage-report, secret-sync]",
+				Description: "A comma-separated list of types of events to notify about",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"key": {
@@ -84,7 +85,7 @@ func resourceEventForwarderEmail() *schema.Resource {
 			"runner_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Event Forwarder runner type [immediate, periodic]",
+				Description: "Event Forwarder runner type [immediate/periodic]",
 				Default:     "immediate",
 			},
 			"every": {
@@ -184,7 +185,7 @@ func resourceEventForwarderEmailRead(d *schema.ResourceData, m interface{}) erro
 	rOut := readOut.EventForwarder
 
 	if rOut.NotiForwarderType != nil {
-		if *rOut.NotiForwarderType != "email" {
+		if *rOut.NotiForwarderType != common.EventForwarderEmail {
 			return fmt.Errorf("resource type is not email")
 		}
 	}
@@ -195,17 +196,13 @@ func resourceEventForwarderEmailRead(d *schema.ResourceData, m interface{}) erro
 	}
 
 	if rOut.ToEmails != nil {
-		// array to comma separated string
-		emailTo := ""
-		for i, email := range rOut.ToEmails {
+		emails := make([]string, len(rOut.ToEmails))
+		for _, email := range rOut.ToEmails {
 			if email.ToEmail != nil {
-				if i == 0 {
-					emailTo = *email.ToEmail
-				} else {
-					emailTo = fmt.Sprintf("%s,%s", emailTo, *email.ToEmail)
-				}
+				emails = append(emails, *email.ToEmail)
 			}
 		}
+		emailTo := strings.Join(emails, ",")
 		err = d.Set("email_to", emailTo)
 		if err != nil {
 			return err
@@ -230,6 +227,12 @@ func resourceEventForwarderEmailRead(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceEventForwarderEmailUpdate(d *schema.ResourceData, m interface{}) error {
+
+	err := common.ValidateEventForwarderUpdateParams(d)
+	if err != nil {
+		return fmt.Errorf("failed to update: %w", err)
+	}
+
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
