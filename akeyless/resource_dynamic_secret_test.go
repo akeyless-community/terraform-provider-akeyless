@@ -7,7 +7,7 @@ import (
 
 func TestGithubDynamicSecretResource(t *testing.T) {
 
-	//t.Skip("for now the requested values are fictive")
+	t.Skip("for now the requested values are fictive")
 
 	name := "github_test"
 	itemPath := testPath(name)
