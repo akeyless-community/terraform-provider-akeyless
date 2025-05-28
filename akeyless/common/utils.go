@@ -771,13 +771,13 @@ func setEventSourceLocations(d *schema.ResourceData, paths []string) error {
 
 	for _, path := range paths {
 		if strings.HasPrefix(path, "item:") {
-			items = append(items, path[5:])
+			items = append(items, strings.TrimPrefix(path, "item:"))
 		} else if strings.HasPrefix(path, "auth_method:") {
-			authMethods = append(authMethods, path[12:])
+			authMethods = append(authMethods, strings.TrimPrefix(path, "auth_method:"))
 		} else if strings.HasPrefix(path, "target:") {
-			targets = append(targets, path[7:])
+			targets = append(targets, strings.TrimPrefix(path, "target:"))
 		} else if strings.HasPrefix(path, "gateway:") {
-			gateways = append(gateways, path[8:])
+			gateways = append(gateways, strings.TrimPrefix(path, "gateway:"))
 		}
 	}
 

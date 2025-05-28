@@ -164,6 +164,7 @@ func dataSourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return err
 		}
+		// Remove separate fields from the custom_field map
 		delete(jsonValue, "username")
 		delete(jsonValue, "password")
 		err = d.Set("custom_field", jsonValue)

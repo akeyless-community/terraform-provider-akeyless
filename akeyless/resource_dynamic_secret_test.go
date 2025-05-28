@@ -7,7 +7,7 @@ import (
 
 func TestGithubDynamicSecretResource(t *testing.T) {
 
-	t.Skip("for now the requested values are fictive")
+	//t.Skip("for now the requested values are fictive")
 
 	name := "github_test"
 	itemPath := testPath(name)
@@ -100,7 +100,6 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 			token_repositories 			= %v
 			github_app_id 				= %v
 			github_app_private_key 		= "%v"
-			token_ttl					= "40m"
 		}
 	`, name, itemPath, GITHUB_INSTALL_ID, GITHUB_TOKEN_REPO, GITHUB_APP_ID, GITHUB_APP_KEY)
 

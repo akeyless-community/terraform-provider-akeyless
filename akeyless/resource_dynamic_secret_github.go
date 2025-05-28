@@ -91,7 +91,6 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
@@ -122,12 +121,9 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
 	common.GetAkeylessPtr(&body.TokenTtl, tokenTtl)
 
-	_, _, err := client.DynamicSecretCreateGithub(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateGithub(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create github dynamic secret: ", resp, err)
 	}
 
 	d.SetId(name)
@@ -252,7 +248,6 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
@@ -283,12 +278,9 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
 	common.GetAkeylessPtr(&body.TokenTtl, tokenTtl)
 
-	_, _, err := client.DynamicSecretUpdateGithub(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateGithub(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update github dynamic secret: ", resp, err)
 	}
 
 	d.SetId(name)
