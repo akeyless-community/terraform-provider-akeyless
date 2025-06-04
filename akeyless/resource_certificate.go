@@ -142,12 +142,13 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 
 	if rOut.ItemGeneralInfo != nil {
 		if rOut.ItemGeneralInfo.CertificateChainInfo != nil {
-			if rOut.ItemGeneralInfo.CertificateChainInfo.CertificateFormat != nil {
-				err = d.Set("format", *rOut.ItemGeneralInfo.CertificateChainInfo.CertificateFormat)
-				if err != nil {
-					return err
-				}
-			}
+			// We don't read the certificate format as it might change as it is derived from the certificate data.
+			//if rOut.ItemGeneralInfo.CertificateChainInfo.CertificateFormat != nil {
+			//	err = d.Set("format", *rOut.ItemGeneralInfo.CertificateChainInfo.CertificateFormat)
+			//	if err != nil {
+			//		return err
+			//	}
+			//}
 			if rOut.ItemGeneralInfo.CertificateChainInfo.ExpirationEvents != nil {
 				err = d.Set("expiration_event_in", common.ReadExpirationEventInParam(rOut.ItemGeneralInfo.CertificateChainInfo.ExpirationEvents))
 				if err != nil {
@@ -237,36 +238,32 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.KeyData, keyData)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
-
-	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
-	if err == nil {
-		if len(add) > 0 {
-			common.GetAkeylessPtr(&body.AddTag, add)
-		}
-		if len(remove) > 0 {
-			common.GetAkeylessPtr(&body.RmTag, remove)
-		}
-	}
 
 	_, resp, err := client.UpdateCertificateValue(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update Certificate", resp, err)
 	}
 
-	// update item description as it is not updated by UpdateCertificateValue
-	if description != "" {
-		updateBody := akeyless_api.UpdateItem{
-			Name:        name,
-			Token:       &token,
-			Description: &description,
-		}
+	updateBody := akeyless_api.UpdateItem{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&updateBody.Description, description)
+	common.GetAkeylessPtr(&updateBody.DeleteProtection, deleteProtection)
 
-		_, resp, err = client.UpdateItem(ctx).Body(updateBody).Execute()
-		if err != nil {
-			return common.HandleError("can't update Certificate description", resp, err)
+	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
+	if err == nil {
+		if len(add) > 0 {
+			common.GetAkeylessPtr(&updateBody.AddTag, add)
 		}
+		if len(remove) > 0 {
+			common.GetAkeylessPtr(&updateBody.RmTag, remove)
+		}
+	}
+
+	_, resp, err = client.UpdateItem(ctx).Body(updateBody).Execute()
+	if err != nil {
+		return common.HandleError("can't update Certificate details", resp, err)
 	}
 
 	d.SetId(name)

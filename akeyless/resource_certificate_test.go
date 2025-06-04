@@ -14,10 +14,11 @@ func TestCertificateResource(t *testing.T) {
 
 	t.Parallel()
 
-	certificateName := "test_certificate6"
+	certificateName := "test_certificate"
 	certificatePath := testPath(certificateName)
 	keyData, cert := generateCertForTest(t, 1024)
 	keyData2, cert2 := generateCertForTest(t, 1024)
+	crt2 := convertPemCertToCrt(t, cert2)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_certificate" "%v" {
@@ -36,16 +37,17 @@ func TestCertificateResource(t *testing.T) {
 		resource "akeyless_certificate" "%v" {
 			name 				= "%v"
 			certificate_data	= "%v"
+			format 				= "crt"
 			tags 				= ["t1", "t3"]
 			description 		= "updated certificate description"
 		}
-	`, certificateName, certificatePath, cert2)
+	`, certificateName, certificatePath, crt2)
 
 	configUpdate2 := fmt.Sprintf(`
 		resource "akeyless_certificate" "%v" {
 			name 				= "%v"
 			certificate_data 	= "%v"
-			format 				= "pem"
+			format 				= "p12"
 			key_data 			= "%v"
 			expiration_event_in = ["20"]
 			description 		= "updated certificate description again"

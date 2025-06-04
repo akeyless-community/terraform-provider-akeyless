@@ -143,6 +143,17 @@ func createCsrBase64(key *rsa.PrivateKey) string {
 	return base64.StdEncoding.EncodeToString(csr)
 }
 
+func convertPemCertToCrt(t *testing.T, certPem string) string {
+	certBytes, err := base64.StdEncoding.DecodeString(certPem)
+	require.NoError(t, err)
+
+	block, _ := pem.Decode(certBytes)
+	require.NotNil(t, block)
+
+	crtBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: block.Bytes})
+	return base64.StdEncoding.EncodeToString(crtBytes)
+}
+
 func createDfcKey(t *testing.T, name string) {
 
 	client, token := prepareClient(t)
