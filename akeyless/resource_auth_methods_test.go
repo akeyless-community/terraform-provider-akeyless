@@ -273,9 +273,60 @@ func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
 	})
 }
 
+func TestAuthMethodLDAPResourceCreateNew(t *testing.T) {
+	name := "test_auth_method_ldap"
+	path := testPath("auth_method_ldap")
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_ldap" "%v" {
+			name 				= "%v"
+			description 		= "test ldap auth method"
+			access_expires 		= 1638741817
+			jwt_ttl 			= 42
+			product_type 		= ["ca","dp","sm","sra"]
+			audit_logs_claims 	= ["eee","kk"]
+			expiration_event_in = ["2","6"]
+			delete_protection 	= "true"
+			unique_identifier 	= "email"
+			gen_key 			= "true"
+		}
+	`, name, path)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_ldap" "%v" {
+			name 				= "%v"
+			description 		= "test ldap auth method"
+			access_expires 		= 1638741817
+			jwt_ttl 			= 42
+			product_type 		= ["sm","pm","cm"]
+			audit_logs_claims 	= ["eee","kk"]
+			expiration_event_in = ["2","6"]
+			delete_protection 	= "false"
+			unique_identifier 	= "username"
+			gen_key 			= "true"
+		}
+	`, name, path)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkMethodExistsRemotelyNew(path),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkMethodExistsRemotelyNew(path),
+				),
+			},
+		},
+	})
+}
+
 func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
-	name := "tes_akeyless_auth_method_oauth2"
-	path := testPath("auth_method_oauth2")
+	name := "test_akeyless_auth_method_oauth"
+	path := testPath("auth_method_oauth")
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_oauth2" "%v" {
 			name 				= "%v"
@@ -370,7 +421,7 @@ func TestAuthMethodOidcResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
-	name := "test_auth_method_saml2"
+	name := "test_auth_method_saml"
 	path := testPath(name)
 	deleteAuthMethod(path)
 

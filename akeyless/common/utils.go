@@ -648,6 +648,16 @@ func ReadRotationEventInParam(expirationEvents []akeyless_api.NextAutoRotationEv
 	return expirationEventsList
 }
 
+func ReadAuthExpirationEventInParam(expirationEvents []akeyless_api.AuthExpirationEvent) []string {
+	var expirationEventsList []string
+	for _, e := range expirationEvents {
+		seconds := e.GetSecondsBefore()
+		days := seconds / 60 / 60 / 24
+		expirationEventsList = append(expirationEventsList, strconv.FormatInt(days, 10))
+	}
+	return expirationEventsList
+}
+
 var gatewayURL = os.Getenv("AKEYLESS_GATEWAY")
 
 func IsLocalEnv() bool {
@@ -836,4 +846,36 @@ func areListsDifferent(a, b []string) bool {
 		return true
 	}
 	return false
+}
+
+func GetOriginalProductTypeConvention(d *schema.ResourceData, productTypes []string) []string {
+	productTypeSet := d.Get("product_type").(*schema.Set)
+	origProductTypes := ExpandStringList(productTypeSet.List())
+	for _, origProductType := range origProductTypes {
+		if origProductType == "ca" {
+			for j, productType := range productTypes {
+				if productType == "cm" {
+					productTypes[j] = origProductType
+					break
+				}
+			}
+		}
+		if origProductType == "dp" {
+			for j, productType := range productTypes {
+				if productType == "adp" {
+					productTypes[j] = origProductType
+					break
+				}
+			}
+		}
+		if origProductType == "pm" {
+			for j, productType := range productTypes {
+				if productType == "apm" {
+					productTypes[j] = origProductType
+					break
+				}
+			}
+		}
+	}
+	return productTypes
 }
