@@ -282,7 +282,7 @@ func TestAuthMethodLDAPResourceCreateNew(t *testing.T) {
 			description 		= "test ldap auth method"
 			access_expires 		= 1638741817
 			jwt_ttl 			= 42
-			product_type 		= ["ca","dp","sm","sra"]
+			product_type 		= ["sm","sra"]
 			audit_logs_claims 	= ["eee","kk"]
 			expiration_event_in = ["2","6"]
 			delete_protection 	= "true"
@@ -296,7 +296,7 @@ func TestAuthMethodLDAPResourceCreateNew(t *testing.T) {
 			description 		= "test ldap auth method"
 			access_expires 		= 1638741817
 			jwt_ttl 			= 42
-			product_type 		= ["sm","pm","cm"]
+			product_type 		= ["sm"]
 			audit_logs_claims 	= ["eee","kk"]
 			expiration_event_in = ["2","6"]
 			delete_protection 	= "false"
