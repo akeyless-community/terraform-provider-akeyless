@@ -143,6 +143,17 @@ func createCsrBase64(key *rsa.PrivateKey) string {
 	return base64.StdEncoding.EncodeToString(csr)
 }
 
+func convertPemCertToCrt(t *testing.T, certPem string) string {
+	certBytes, err := base64.StdEncoding.DecodeString(certPem)
+	require.NoError(t, err)
+
+	block, _ := pem.Decode(certBytes)
+	require.NotNil(t, block)
+
+	crtBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: block.Bytes})
+	return base64.StdEncoding.EncodeToString(crtBytes)
+}
+
 func createDfcKey(t *testing.T, name string) {
 
 	client, token := prepareClient(t)
@@ -243,6 +254,40 @@ func createCertificate(t *testing.T, certName, certBase64, keyBase64 string) {
 
 	_, res, err := client.CreateCertificate(context.Background()).Body(body).Execute()
 	require.NoError(t, handleError(res, err), "failed to create certificate for test")
+}
+
+func createSecret(t *testing.T, secretName, secretType, format, value, username, password string, customField map[string]string, injectUrl []string) {
+
+	client, token := prepareClient(t)
+
+	body := akeyless_api.CreateSecret{
+		Name:  secretName,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.Type, secretType)
+	common.GetAkeylessPtr(&body.Format, format)
+	common.GetAkeylessPtr(&body.Value, value)
+	common.GetAkeylessPtr(&body.Username, username)
+	common.GetAkeylessPtr(&body.Password, password)
+	body.CustomField = &customField
+	common.GetAkeylessPtr(&body.InjectUrl, injectUrl)
+
+	_, res, err := client.CreateSecret(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(res, err), fmt.Sprintf("failed to create secret for test: %v", handleError(res, err)))
+}
+
+func deleteItemIfExists(t *testing.T, path string) {
+
+	client, token := prepareClient(t)
+
+	gsvBody := akeyless_api.DeleteItem{
+		Name:              path,
+		DeleteImmediately: akeyless_api.PtrBool(true),
+		DeleteInDays:      akeyless_api.PtrInt64(-1),
+		Token:             &token,
+	}
+
+	client.DeleteItem(context.Background()).Body(gsvBody).Execute()
 }
 
 func deleteItem(t *testing.T, path string) {

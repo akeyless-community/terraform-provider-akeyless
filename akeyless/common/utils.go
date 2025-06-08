@@ -648,6 +648,16 @@ func ReadRotationEventInParam(expirationEvents []akeyless_api.NextAutoRotationEv
 	return expirationEventsList
 }
 
+func ReadAuthExpirationEventInParam(expirationEvents []akeyless_api.AuthExpirationEvent) []string {
+	var expirationEventsList []string
+	for _, e := range expirationEvents {
+		seconds := e.GetSecondsBefore()
+		days := seconds / 60 / 60 / 24
+		expirationEventsList = append(expirationEventsList, strconv.FormatInt(days, 10))
+	}
+	return expirationEventsList
+}
+
 var gatewayURL = os.Getenv("AKEYLESS_GATEWAY")
 
 func IsLocalEnv() bool {
@@ -711,4 +721,161 @@ func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, er
 		return fmt.Errorf("%s: not found: %w", msg, err)
 	}
 	return fmt.Errorf("%s: %w", msg, err)
+}
+
+func ValidateEventForwarderUpdateParams(d *schema.ResourceData) error {
+	paramsMustNotUpdate := []string{"runner_type", "every"}
+	return GetErrorOnUpdateParam(d, paramsMustNotUpdate)
+}
+
+func SetCommonEventForwarderVars(d *schema.ResourceData, rOut *akeyless_api.NotiForwarder) error {
+	if rOut.Paths != nil {
+		err := setEventSourceLocations(d, rOut.Paths)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.EventTypes != nil {
+		err := d.Set("event_types", rOut.EventTypes)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.ProtectionKey != nil {
+		if !strings.Contains(*rOut.ProtectionKey, "__account-def-secrets-key__") {
+			err := d.Set("key", *rOut.ProtectionKey)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if rOut.RunnerType != nil {
+		err := d.Set("runner_type", *rOut.RunnerType)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.TimespanInSeconds != nil {
+		err := d.Set("every", fmt.Sprintf("%d", *rOut.TimespanInSeconds/3600))
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Comment != nil {
+		err := d.Set("description", *rOut.Comment)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func setEventSourceLocations(d *schema.ResourceData, paths []string) error {
+	if len(paths) == 0 {
+		return nil
+	}
+	items := make([]string, 0)
+	authMethods := make([]string, 0)
+	targets := make([]string, 0)
+	gateways := make([]string, 0)
+
+	for _, path := range paths {
+		if strings.HasPrefix(path, "item:") {
+			items = append(items, strings.TrimPrefix(path, "item:"))
+		} else if strings.HasPrefix(path, "auth_method:") {
+			authMethods = append(authMethods, strings.TrimPrefix(path, "auth_method:"))
+		} else if strings.HasPrefix(path, "target:") {
+			targets = append(targets, strings.TrimPrefix(path, "target:"))
+		} else if strings.HasPrefix(path, "gateway:") {
+			gateways = append(gateways, strings.TrimPrefix(path, "gateway:"))
+		}
+	}
+
+	currentItemsSet := d.Get("items_event_source_locations").(*schema.Set)
+	currentItems := ExpandStringList(currentItemsSet.List())
+	if areListsDifferent(currentItems, items) {
+		err := d.Set("items_event_source_locations", items)
+		if err != nil {
+			return err
+		}
+	}
+
+	currentAMSet := d.Get("auth_methods_event_source_locations").(*schema.Set)
+	currentAM := ExpandStringList(currentAMSet.List())
+	if areListsDifferent(currentAM, authMethods) {
+		err := d.Set("auth_methods_event_source_locations", authMethods)
+		if err != nil {
+			return err
+		}
+	}
+
+	currentTargetsSet := d.Get("targets_event_source_locations").(*schema.Set)
+	currentTargets := ExpandStringList(currentTargetsSet.List())
+	if areListsDifferent(currentTargets, targets) {
+		err := d.Set("targets_event_source_locations", targets)
+		if err != nil {
+			return err
+		}
+	}
+
+	// we can't set gateways_event_source_locations as input is URL list but output is ClusterId list
+	gatewaysLen := d.Get("gateways_event_source_locations").(*schema.Set).Len()
+	if gatewaysLen > 0 && gatewaysLen != len(gateways) {
+		return fmt.Errorf("gateway event source locations should be set. Expected %d, got %d", gatewaysLen, len(gateways))
+	}
+
+	return nil
+}
+
+func areListsDifferent(a, b []string) bool {
+	if len(a) != len(b) {
+		return true
+	}
+	mapA := make(map[string]struct{}, len(a))
+	for _, item := range a {
+		mapA[EnsureLeadingSlash(item)] = struct{}{}
+	}
+	for _, itemB := range b {
+		item := EnsureLeadingSlash(itemB)
+		if _, exists := mapA[item]; !exists {
+			return true
+		}
+		delete(mapA, item)
+	}
+	if len(mapA) > 0 {
+		return true
+	}
+	return false
+}
+
+func GetOriginalProductTypeConvention(d *schema.ResourceData, productTypes []string) []string {
+	productTypeSet := d.Get("product_type").(*schema.Set)
+	origProductTypes := ExpandStringList(productTypeSet.List())
+	for _, origProductType := range origProductTypes {
+		if origProductType == "ca" {
+			for j, productType := range productTypes {
+				if productType == "cm" {
+					productTypes[j] = origProductType
+					break
+				}
+			}
+		}
+		if origProductType == "dp" {
+			for j, productType := range productTypes {
+				if productType == "adp" {
+					productTypes[j] = origProductType
+					break
+				}
+			}
+		}
+		if origProductType == "pm" {
+			for j, productType := range productTypes {
+				if productType == "apm" {
+					productTypes[j] = origProductType
+					break
+				}
+			}
+		}
+	}
+	return productTypes
 }

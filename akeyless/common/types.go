@@ -33,4 +33,9 @@ const (
 	TargetTypeGcp   = "gcp"
 	TargetTypeK8s   = "k8s"
 	TargetTypeVault = "hashi_vault"
+
+	EventForwarderEmail      = "email"
+	EventForwarderWebhook    = "webhook"
+	EventForwarderServiceNow = "servicenow"
+	EventForwarderSlack      = "slack"
 )

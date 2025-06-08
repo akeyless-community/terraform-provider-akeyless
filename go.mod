@@ -105,4 +105,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/akeylesslabs/akeyless-go => github.com/akeylesslabs/akeyless-go/v5 v5.0.1
+replace github.com/akeylesslabs/akeyless-go => github.com/akeylesslabs/akeyless-go/v5 v5.0.3

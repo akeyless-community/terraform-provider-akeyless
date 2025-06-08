@@ -65,6 +65,12 @@ func resourceUscSecret() *schema.Resource {
 				Description: "Tags for the universal secrets",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"object_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Either secret or certificate (Relevant only for Azure KV targets)",
+				Default:     "secret",
+			},
 			"secret_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -89,6 +95,7 @@ func resourceUscSecretCreate(d *schema.ResourceData, m any) error {
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	objectType := d.Get("object_type").(string)
 
 	body := akeyless_api.UscCreate{
 		UscName:    uscName,
@@ -100,6 +107,7 @@ func resourceUscSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tags, tags)
+	common.GetAkeylessPtr(&body.ObjectType, objectType)
 
 	out, resp, err := client.UscCreate(ctx).Body(body).Execute()
 	if err != nil {

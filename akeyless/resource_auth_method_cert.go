@@ -203,6 +203,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 			}
 			return fmt.Errorf("failed to create auth method cert: %v", string(apiErr.Body()))
 		}
+		return fmt.Errorf("can't create Auth Method cert: %v", err)
 	}
 
 	if rOut.AccessId != nil {
@@ -419,7 +420,6 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
-	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.CertificateData, certificateData)
 	common.GetAkeylessPtr(&body.BoundCommonNames, boundCommonNames)

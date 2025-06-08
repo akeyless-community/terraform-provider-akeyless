@@ -25,6 +25,7 @@ Universal Secrets Connector secret resource
 - `binary_value` (Boolean) Use this option if the universal secrets value is a base64 encoded binary. (relevant for aws/azure/gcp/k8s targets)
 - `description` (String) Description of the universal secret (relevant for aws/hashi target)
 - `namespace` (String) The namespace (relevant for Hashi vault target)
+- `object_type` (String) Either secret or certificate (Relevant only for Azure KV targets)
 - `tags` (Set of String) Tags for the universal secrets
 - `value` (String, Sensitive) Value of the universal secrets item, either text or base64 encoded binary
 - `version_id` (String) Version ID of the secret (if not specified, will retrieve the last version)
