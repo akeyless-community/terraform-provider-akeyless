@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -397,6 +398,12 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 
 	rulesToAdd := extractRulesToSet(d, roleRulesNewValues, roleRulesOldValues)
 	rulesToDelete := extractRulesToSet(d, roleRulesOldValues, roleRulesNewValues)
+
+	// TODO remove after debugging- ASM-13468
+	if v, _ := strconv.ParseBool(os.Getenv("DEBUG_ROLE_RULES")); v {
+		log.Printf("existing_role_rules: %v\n", roleRulesOldValues)
+		log.Printf("requested_role_rules: %v\n", roleRulesNewValues)
+	}
 
 	err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, m)
 	defer func() {
