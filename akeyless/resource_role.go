@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +13,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -22,9 +22,9 @@ func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Role Resource",
 		CreateContext: resourceRoleCreate,
-		Read:          resourceRoleRead,
+		ReadContext:   resourceRoleRead,
 		UpdateContext: resourceRoleUpdate,
-		Delete:        resourceRoleDelete,
+		DeleteContext: resourceRoleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRoleImport,
 		},
@@ -230,7 +230,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	defer func() {
 		if !ok {
-			errInner := resourceRoleDelete(d, m)
+			errInner := resourceRoleDelete(ctx, d, m)
 			if err != nil {
 				ret = diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("fatal error: role created with errors and failed to be deleted: %v. delete error: %v", err, errInner))}
 			}
@@ -311,12 +311,12 @@ func initRestrictedRules(d *schema.ResourceData, name string, m any) error {
 	return setRestrictedRules(d, restrictedRules)
 }
 
-func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
+func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	name := d.Id()
 
 	role, err := getRole(d, name, m)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if role.RoleAuthMethodsAssoc != nil {
@@ -324,7 +324,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 		if len(assocsSet.List()) != 0 {
 			err := readAuthMethodsAssoc(d, role.RoleAuthMethodsAssoc)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -335,7 +335,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 			if len(rulesSet.List()) != 0 {
 				err := readRules(d, role.Rules.PathRules)
 				if err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 		}
@@ -344,7 +344,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	if role.DeleteProtection != nil {
 		err = d.Set("delete_protection", strconv.FormatBool(*role.DeleteProtection))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -358,7 +358,6 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	ok := true
 
 	name := d.Get("name").(string)
-	//ctx := context.Background()
 
 	role, err := getRole(d, name, m)
 	if err != nil {
@@ -439,11 +438,11 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	return nil
 }
 
-func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
+func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
-	ctx := context.Background()
+
 	name := d.Id()
 
 	deleteRole := akeyless_api.DeleteRole{
@@ -456,10 +455,10 @@ func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode != http.StatusNotFound {
-				return fmt.Errorf("can't delete role: %v", string(apiErr.Body()))
+				return diag.FromErr(fmt.Errorf("can't delete role: %v", string(apiErr.Body())))
 			}
 		} else {
-			return fmt.Errorf("can't delete role: %v", err)
+			return diag.FromErr(fmt.Errorf("can't delete role: %v", err))
 		}
 	}
 
