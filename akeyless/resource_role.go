@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"log"
 	"net/http"
 	"os"
@@ -22,7 +23,7 @@ func resourceRole() *schema.Resource {
 		Description:   "Role Resource",
 		CreateContext: resourceRoleCreate,
 		Read:          resourceRoleRead,
-		Update:        resourceRoleUpdate,
+		UpdateContext: resourceRoleUpdate,
 		Delete:        resourceRoleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRoleImport,
@@ -350,18 +351,18 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
+func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	cleanEmptyAssocs(d)
 
 	ok := true
 
 	name := d.Get("name").(string)
-	ctx := context.Background()
+	//ctx := context.Background()
 
 	role, err := getRole(d, name, m)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	assocsSet := d.Get("assoc_auth_method").(*schema.Set)
@@ -374,7 +375,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 
 		err, ok = assocRoleAuthMethod(ctx, name, assocsToDelete, assocsToAdd, assosToUpdateNew, m)
 		if !ok {
-			return err
+			return diag.FromErr(err)
 		}
 		defer func() {
 			if !ok {
@@ -401,8 +402,8 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 
 	// TODO remove after debugging- ASM-13468
 	if v, _ := strconv.ParseBool(os.Getenv("DEBUG_ROLE_RULES")); v {
-		log.Printf("existing_role_rules: %v\n", roleRulesOldValues)
-		log.Printf("requested_role_rules: %v\n", roleRulesNewValues)
+		tflog.Debug(ctx, fmt.Sprintf("existing_role_rules: %v", roleRulesOldValues))
+		tflog.Debug(ctx, fmt.Sprintf("requested_role_rules: %v", roleRulesNewValues))
 	}
 
 	err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, m)
@@ -415,7 +416,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 		}
 	}()
 	if !ok {
-		return err
+		return diag.FromErr(err)
 	}
 
 	accessRulesNewValues := getNewAccessRules(d)
@@ -430,7 +431,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
 		}
 
-		return fmt.Errorf("can't update role access rule: %v", err)
+		return diag.FromErr(fmt.Errorf("can't update role access rule: %v", err))
 	}
 
 	d.SetId(name)
