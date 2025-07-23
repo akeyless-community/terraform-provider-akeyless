@@ -402,7 +402,8 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	// TODO remove after debugging- ASM-13468
 	if v, _ := strconv.ParseBool(os.Getenv("DEBUG_ROLE_RULES")); v {
 		tflog.Debug(ctx, fmt.Sprintf("existing_role_rules: %v", roleRulesOldValues))
-		tflog.Debug(ctx, fmt.Sprintf("requested_role_rules: %v", roleRulesNewValues))
+		newRulesFormatted := derefRulesMap(roleRulesNewValues)
+		tflog.Debug(ctx, fmt.Sprintf("requested_role_rules: %v", newRulesFormatted))
 	}
 
 	err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, m)
@@ -436,6 +437,17 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	d.SetId(name)
 
 	return nil
+}
+
+func derefRulesMap(m []any) []map[string]any {
+	rules := make([]map[string]any, 0, len(m))
+	for _, v := range m {
+		rule := v.(map[string]any)
+		rule["capability"] = getCapability(rule["capability"])
+		rules = append(rules, rule)
+	}
+	return rules
+
 }
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
