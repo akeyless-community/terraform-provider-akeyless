@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -401,9 +402,12 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 	// TODO remove after debugging- ASM-13468
 	if v, _ := strconv.ParseBool(os.Getenv("DEBUG_ROLE_RULES")); v {
-		tflog.Debug(ctx, fmt.Sprintf("existing_role_rules: %v", roleRulesOldValues))
 		newRulesFormatted := derefRulesMap(roleRulesNewValues)
+
+		tflog.Debug(ctx, fmt.Sprintf("existing_role_rules: %v", roleRulesOldValues))
 		tflog.Debug(ctx, fmt.Sprintf("requested_role_rules: %v", newRulesFormatted))
+		tflog.Debug(ctx, fmt.Sprintf("rules_to_delete: %v", rulesToDelete))
+		tflog.Debug(ctx, fmt.Sprintf("rules_to_add: %v", rulesToAdd))
 	}
 
 	err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, m)
@@ -691,7 +695,7 @@ func isRestrictedRule(d *schema.ResourceData, rule map[string]any) bool {
 func isRuleExistsInOldRules(newRule map[string]any, oldRules []interface{}) bool {
 	for _, oldRuleI := range oldRules {
 		oldRule := oldRuleI.(map[string]any)
-		if isRulesEqual(newRule, oldRule) {
+		if areRulesEqual(newRule, oldRule) {
 			return true
 		}
 	}
@@ -1190,16 +1194,22 @@ func getCapability(capability interface{}) []string {
 	return nil
 }
 
-func isRulesEqual(rule1, rule2 map[string]interface{}) bool {
-	rule1Cap := strings.Join(getCapability(rule1["capability"]), ",")
+func areRulesEqual(rule1, rule2 map[string]any) bool {
+	rule1Cap := getCapability(rule1["capability"])
 	rule1Path := rule1["path"].(string)
 	rule1Type := rule1["rule_type"].(string)
 
-	rule2Cap := strings.Join(getCapability(rule2["capability"]), ",")
+	rule2Cap := getCapability(rule2["capability"])
 	rule2Path := rule2["path"].(string)
 	rule2Type := rule2["rule_type"].(string)
 
-	return rule1Cap == rule2Cap && rule1Path == rule2Path && rule1Type == rule2Type
+	return areCapabilitiesEqual(rule1Cap, rule2Cap) && rule1Path == rule2Path && rule1Type == rule2Type
+}
+
+func areCapabilitiesEqual(c1, c2 []string) bool {
+	sort.Strings(c1)
+	sort.Strings(c2)
+	return reflect.DeepEqual(c1, c2)
 }
 
 func isValidRuleType(ruleType string) bool {
