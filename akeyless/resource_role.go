@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -20,9 +23,9 @@ func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Role Resource",
 		CreateContext: resourceRoleCreate,
-		Read:          resourceRoleRead,
-		Update:        resourceRoleUpdate,
-		Delete:        resourceRoleDelete,
+		ReadContext:   resourceRoleRead,
+		UpdateContext: resourceRoleUpdate,
+		DeleteContext: resourceRoleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRoleImport,
 		},
@@ -228,7 +231,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	defer func() {
 		if !ok {
-			errInner := resourceRoleDelete(d, m)
+			errInner := resourceRoleDelete(ctx, d, m)
 			if err != nil {
 				ret = diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("fatal error: role created with errors and failed to be deleted: %v. delete error: %v", err, errInner))}
 			}
@@ -309,12 +312,12 @@ func initRestrictedRules(d *schema.ResourceData, name string, m any) error {
 	return setRestrictedRules(d, restrictedRules)
 }
 
-func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
+func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	name := d.Id()
 
 	role, err := getRole(d, name, m)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if role.RoleAuthMethodsAssoc != nil {
@@ -322,7 +325,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 		if len(assocsSet.List()) != 0 {
 			err := readAuthMethodsAssoc(d, role.RoleAuthMethodsAssoc)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -333,7 +336,7 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 			if len(rulesSet.List()) != 0 {
 				err := readRules(d, role.Rules.PathRules)
 				if err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 		}
@@ -342,25 +345,24 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	if role.DeleteProtection != nil {
 		err = d.Set("delete_protection", strconv.FormatBool(*role.DeleteProtection))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	return nil
 }
 
-func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
+func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	cleanEmptyAssocs(d)
 
 	ok := true
 
 	name := d.Get("name").(string)
-	ctx := context.Background()
 
 	role, err := getRole(d, name, m)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	assocsSet := d.Get("assoc_auth_method").(*schema.Set)
@@ -373,7 +375,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 
 		err, ok = assocRoleAuthMethod(ctx, name, assocsToDelete, assocsToAdd, assosToUpdateNew, m)
 		if !ok {
-			return err
+			return diag.FromErr(err)
 		}
 		defer func() {
 			if !ok {
@@ -398,6 +400,16 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	rulesToAdd := extractRulesToSet(d, roleRulesNewValues, roleRulesOldValues)
 	rulesToDelete := extractRulesToSet(d, roleRulesOldValues, roleRulesNewValues)
 
+	// TODO remove after debugging- ASM-13468
+	if v, _ := strconv.ParseBool(os.Getenv("DEBUG_ROLE_RULES")); v {
+		newRulesFormatted := derefRulesMap(roleRulesNewValues)
+
+		tflog.Debug(ctx, fmt.Sprintf("existing_role_rules: %v", roleRulesOldValues))
+		tflog.Debug(ctx, fmt.Sprintf("requested_role_rules: %v", newRulesFormatted))
+		tflog.Debug(ctx, fmt.Sprintf("rules_to_delete: %v", rulesToDelete))
+		tflog.Debug(ctx, fmt.Sprintf("rules_to_add: %v", rulesToAdd))
+	}
+
 	err, ok = setRoleRules(ctx, name, rulesToDelete, rulesToAdd, m)
 	defer func() {
 		if !ok {
@@ -408,7 +420,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 		}
 	}()
 	if !ok {
-		return err
+		return diag.FromErr(err)
 	}
 
 	accessRulesNewValues := getNewAccessRules(d)
@@ -423,7 +435,7 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
 		}
 
-		return fmt.Errorf("can't update role access rule: %v", err)
+		return diag.FromErr(fmt.Errorf("can't update role access rule: %v", err))
 	}
 
 	d.SetId(name)
@@ -431,11 +443,22 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) (err error) {
 	return nil
 }
 
-func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
+func derefRulesMap(m []any) []map[string]any {
+	rules := make([]map[string]any, 0, len(m))
+	for _, v := range m {
+		rule := v.(map[string]any)
+		rule["capability"] = getCapability(rule["capability"])
+		rules = append(rules, rule)
+	}
+	return rules
+
+}
+
+func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
-	ctx := context.Background()
+
 	name := d.Id()
 
 	deleteRole := akeyless_api.DeleteRole{
@@ -448,10 +471,10 @@ func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode != http.StatusNotFound {
-				return fmt.Errorf("can't delete role: %v", string(apiErr.Body()))
+				return diag.FromErr(fmt.Errorf("can't delete role: %v", string(apiErr.Body())))
 			}
 		} else {
-			return fmt.Errorf("can't delete role: %v", err)
+			return diag.FromErr(fmt.Errorf("can't delete role: %v", err))
 		}
 	}
 
@@ -672,7 +695,7 @@ func isRestrictedRule(d *schema.ResourceData, rule map[string]any) bool {
 func isRuleExistsInOldRules(newRule map[string]any, oldRules []interface{}) bool {
 	for _, oldRuleI := range oldRules {
 		oldRule := oldRuleI.(map[string]any)
-		if isRulesEqual(newRule, oldRule) {
+		if areRulesEqual(newRule, oldRule) {
 			return true
 		}
 	}
@@ -1171,16 +1194,22 @@ func getCapability(capability interface{}) []string {
 	return nil
 }
 
-func isRulesEqual(rule1, rule2 map[string]interface{}) bool {
-	rule1Cap := strings.Join(getCapability(rule1["capability"]), ",")
+func areRulesEqual(rule1, rule2 map[string]any) bool {
+	rule1Cap := getCapability(rule1["capability"])
 	rule1Path := rule1["path"].(string)
 	rule1Type := rule1["rule_type"].(string)
 
-	rule2Cap := strings.Join(getCapability(rule2["capability"]), ",")
+	rule2Cap := getCapability(rule2["capability"])
 	rule2Path := rule2["path"].(string)
 	rule2Type := rule2["rule_type"].(string)
 
-	return rule1Cap == rule2Cap && rule1Path == rule2Path && rule1Type == rule2Type
+	return areCapabilitiesEqual(rule1Cap, rule2Cap) && rule1Path == rule2Path && rule1Type == rule2Type
+}
+
+func areCapabilitiesEqual(c1, c2 []string) bool {
+	sort.Strings(c1)
+	sort.Strings(c2)
+	return reflect.DeepEqual(c1, c2)
 }
 
 func isValidRuleType(ruleType string) bool {
