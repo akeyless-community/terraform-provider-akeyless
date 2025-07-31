@@ -280,13 +280,7 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.K8sAuthType != nil {
-		if *rOut.K8sAuthType == "bearer_token" {
-			err = d.Set("k8s_auth_type", "token")
-		} else if *rOut.K8sAuthType == "client_cert" {
-			err = d.Set("k8s_auth_type", "certificate")
-		} else {
-			err = d.Set("k8s_auth_type", *rOut.K8sAuthType)
-		}
+		err = d.Set("k8s_auth_type", getK8sAuthType(*rOut.K8sAuthType))
 		if err != nil {
 			return err
 		}
@@ -307,6 +301,17 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 	d.SetId(path)
 
 	return nil
+}
+
+func getK8sAuthType(k8sAuthType string) string {
+	switch k8sAuthType {
+	case "bearer_token":
+		return "token"
+	case "client_cert":
+		return "certificate"
+	default:
+		return k8sAuthType
+	}
 }
 
 func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {

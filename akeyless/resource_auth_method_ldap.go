@@ -127,7 +127,6 @@ func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	//var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -169,7 +168,7 @@ func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
 
 	rOut, resp, err := client.AuthMethodCreateLdap(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't create auth ldap", resp, err)
+		return common.HandleError("can't create auth method ldap", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -366,7 +365,7 @@ func resourceAuthMethodLdapUpdate(d *schema.ResourceData, m interface{}) error {
 
 	rOut, resp, err := client.AuthMethodUpdateLdap(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't update auth ldap", resp, err)
+		return common.HandleError("can't update auth method ldap", resp, err)
 	}
 
 	if rOut.PrvKey != nil {
