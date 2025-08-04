@@ -97,6 +97,11 @@ func resourceAuthMethodOauth2() *schema.Resource {
 				Description: "Protection from accidental deletion of this auth method, [true/false]",
 				Default:     "false",
 			},
+			"gateway_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Gateway URL for the OAuth2 auth method",
+			},
 			"access_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -129,6 +134,7 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
+	gatewayUrl := d.Get("gateway_url").(string)
 
 	body := akeyless_api.AuthMethodCreateOauth2{
 		Name:             name,
@@ -146,6 +152,7 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.JwksJsonData, jwksJsonData)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.GatewayUrl, gatewayUrl)
 
 	rOut, _, err := client.AuthMethodCreateOauth2(ctx).Body(body).Execute()
 	if err != nil {
@@ -291,6 +298,9 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	// Note: GatewayUrl field is not available in the read response
+	// This is a limitation of the current Akeyless API response structure
+
 	d.SetId(path)
 
 	return nil
@@ -319,6 +329,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
+	gatewayUrl := d.Get("gateway_url").(string)
 
 	body := akeyless_api.AuthMethodUpdateOauth2{
 		Name:             name,
@@ -337,6 +348,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.JwksJsonData, jwksJsonData)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.GatewayUrl, gatewayUrl)
 
 	_, _, err := client.AuthMethodUpdateOauth2(ctx).Body(body).Execute()
 	if err != nil {
