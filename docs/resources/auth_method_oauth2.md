@@ -29,6 +29,7 @@ AOAuth2 Auth Method Resource
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
+- `gateway_url` (String) Akeyless Gateway URL (Configuration Management port). Relevant only when the jwks-uri is accessible only from the gateway.
 - `issuer` (String) Issuer URL
 - `jwks_json_data` (String) The JSON Web Key Set (JWKS) containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization serve, in base64 format.
 - `jwks_uri` (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.

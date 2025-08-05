@@ -122,7 +122,6 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessId := d.Get("access_id").(string)
@@ -163,12 +162,9 @@ func resourceK8sAuthConfigCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.K8sClientCertificate, k8sClientCertificate)
 	common.GetAkeylessPtr(&body.K8sClientKey, k8sClientKey)
 
-	_, _, err := client.GatewayCreateK8SAuthConfig(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayCreateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create K8S Auth Config: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create K8S Auth Config: %v", err)
+		return common.HandleError("can't create k8s auth conf", resp, err)
 	}
 
 	d.SetId(name)
@@ -284,7 +280,7 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.K8sAuthType != nil {
-		err = d.Set("k8s_auth_type", *rOut.K8sAuthType)
+		err = d.Set("k8s_auth_type", getK8sAuthType(*rOut.K8sAuthType))
 		if err != nil {
 			return err
 		}
@@ -307,12 +303,22 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
+func getK8sAuthType(k8sAuthType string) string {
+	switch k8sAuthType {
+	case "bearer_token":
+		return "token"
+	case "client_cert":
+		return "certificate"
+	default:
+		return k8sAuthType
+	}
+}
+
 func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessId := d.Get("access_id").(string)
@@ -353,12 +359,9 @@ func resourceK8sAuthConfigUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.K8sClientCertificate, k8sClientCertificate)
 	common.GetAkeylessPtr(&body.K8sClientKey, k8sClientKey)
 
-	_, _, err := client.GatewayUpdateK8SAuthConfig(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update k8s auth conf", resp, err)
 	}
 
 	d.SetId(name)

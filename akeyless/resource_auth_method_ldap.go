@@ -127,7 +127,6 @@ func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -167,12 +166,9 @@ func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UniqueIdentifier, uniqueIdentifier)
 	common.GetAkeylessPtr(&body.GenKey, genKey)
 
-	rOut, _, err := client.AuthMethodCreateLdap(ctx).Body(body).Execute()
+	rOut, resp, err := client.AuthMethodCreateLdap(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Auth Method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Auth Method: %v", err)
+		return common.HandleError("can't create auth method ldap", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -328,7 +324,6 @@ func resourceAuthMethodLdapUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -368,12 +363,9 @@ func resourceAuthMethodLdapUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PublicKeyData, publicKeyData)
 	common.GetAkeylessPtr(&body.GenKey, genKey)
 
-	rOut, _, err := client.AuthMethodUpdateLdap(ctx).Body(body).Execute()
+	rOut, resp, err := client.AuthMethodUpdateLdap(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update : %v", err)
+		return common.HandleError("can't update auth method ldap", resp, err)
 	}
 
 	if rOut.PrvKey != nil {

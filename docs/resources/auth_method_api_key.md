@@ -3,12 +3,12 @@
 page_title: "akeyless_auth_method_api_key Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  AWS API Key Auth Method Resource
+  API Key Auth Method Resource
 ---
 
 # akeyless_auth_method_api_key (Resource)
 
-AWS API Key Auth Method Resource
+API Key Auth Method Resource
 
 
 
