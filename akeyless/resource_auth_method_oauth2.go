@@ -97,6 +97,11 @@ func resourceAuthMethodOauth2() *schema.Resource {
 				Description: "Protection from accidental deletion of this auth method, [true/false]",
 				Default:     "false",
 			},
+			"gateway_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Akeyless Gateway URL (Configuration Management port). Relevant only when the jwks-uri is accessible only from the gateway.",
+			},
 			"access_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -111,7 +116,6 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -129,6 +133,7 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
+	gatewayUrl := d.Get("gateway_url").(string)
 
 	body := akeyless_api.AuthMethodCreateOauth2{
 		Name:             name,
@@ -146,13 +151,11 @@ func resourceAuthMethodOauth2Create(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.JwksJsonData, jwksJsonData)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.GatewayUrl, gatewayUrl)
 
-	rOut, _, err := client.AuthMethodCreateOauth2(ctx).Body(body).Execute()
+	rOut, resp, err := client.AuthMethodCreateOauth2(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Auth Method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Auth Method: %v", err)
+		return common.HandleError("can't create Auth Method", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -291,6 +294,12 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if d.Get("gateway_url").(string) != "" {
+		if rOut.AccessInfo.Oauth2AccessRules.AuthorizedGwClusterName == nil {
+			return fmt.Errorf("gateway_url is set, but the auth method does not have an authorized gateway cluster name")
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -319,6 +328,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
+	gatewayUrl := d.Get("gateway_url").(string)
 
 	body := akeyless_api.AuthMethodUpdateOauth2{
 		Name:             name,
@@ -337,6 +347,7 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.JwksJsonData, jwksJsonData)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.GatewayUrl, gatewayUrl)
 
 	_, _, err := client.AuthMethodUpdateOauth2(ctx).Body(body).Execute()
 	if err != nil {
