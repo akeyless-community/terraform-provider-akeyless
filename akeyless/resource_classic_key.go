@@ -372,9 +372,14 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	exportBody := akeyless_api.ExportClassicKey{
-		Name:            path,
-		Token:           &token,
-		ExportPublicKey: akeyless_api.PtrBool(true),
+		Name:  path,
+		Token: &token,
+	}
+
+	if strings.HasPrefix(d.Get("alg").(string), "AES") {
+		exportBody.ExportPublicKey = akeyless_api.PtrBool(false)
+	} else {
+		exportBody.ExportPublicKey = akeyless_api.PtrBool(true)
 	}
 
 	item, res, err := client.ExportClassicKey(ctx).Body(exportBody).Execute()
@@ -434,7 +439,7 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	rotationEventInSet := d.Get("rotation_event_in").(*schema.Set)
 	rotationEventInList := common.ExpandStringList(rotationEventInSet.List())
 
-	if d.HasChange("expiration_event_in") {
+	if d.HasChange("expiration_event_in") || d.HasChange("description") {
 		expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 		expirationEventInList := common.ExpandStringList(expirationEventInSet.List())
 
@@ -442,7 +447,7 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 			Name:  name,
 			Token: &token,
 		}
-		//common.GetAkeylessPtr(&body.Description, description)
+		common.GetAkeylessPtr(&body.Description, description)
 		common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventInList)
 
 		_, _, err = client.UpdateItem(ctx).Body(body).Execute()
