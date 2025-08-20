@@ -26,6 +26,7 @@ Artifactory dynamic secret resource
 - `artifactory_admin_name` (String) Admin name
 - `artifactory_admin_pwd` (String) Admin API Key/Password
 - `base_url` (String) Artifactory REST URL, must end with artifactory postfix
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation

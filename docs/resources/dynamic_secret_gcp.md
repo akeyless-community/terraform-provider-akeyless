@@ -21,6 +21,7 @@ Google Cloud Provider (GCP) dynamic secret resource
 
 ### Optional
 
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this item, [true/false]
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `gcp_cred_type` (String) Credentials type, options are [token, key]

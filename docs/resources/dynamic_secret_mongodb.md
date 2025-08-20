@@ -21,6 +21,7 @@ Mongo DB dynamic secret resource
 
 ### Optional
 
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `mongodb_atlas_api_private_key` (String) MongoDB Atlas private key
 - `mongodb_atlas_api_public_key` (String) MongoDB Atlas public key

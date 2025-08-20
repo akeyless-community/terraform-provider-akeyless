@@ -25,6 +25,7 @@ Azure AD dynamic secret resource
 - `azure_client_id` (String) Azure Client ID (Application ID)
 - `azure_client_secret` (String, Sensitive) Azure AD Client Secret
 - `azure_tenant_id` (String) Azure Tenant ID
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `password_length` (String) The length of the password to be generated
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]

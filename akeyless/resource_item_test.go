@@ -258,6 +258,32 @@ func TestClassicGpgKey(t *testing.T) {
 	testItemResource(t, itemPath, config, configUpdate)
 }
 
+func TestClassicAESKey(t *testing.T) {
+
+	t.Skip("not authorized to create classic key on public gateway")
+	t.Parallel()
+
+	name := "test_classic_aes_key"
+	itemPath := testPath(name)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"
+			alg			= "AES256GCM"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_classic_key" "%v" {
+			name 		= "%v"	
+			alg			= "AES256GCM"
+			description = "AES"
+		}
+	`, name, itemPath)
+
+	testItemResource(t, itemPath, config, configUpdate)
+}
+
 func TestPkiResource(t *testing.T) {
 	t.Parallel()
 

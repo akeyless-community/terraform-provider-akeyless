@@ -21,6 +21,7 @@ Native Kubernetes Service dynamic secret resource
 
 ### Optional
 
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this item [true/false]
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `k8s_allowed_namespaces` (String) Comma-separated list of allowed K8S namespaces for the generated ServiceAccount (relevant only for k8s-service-account-type=dynamic).

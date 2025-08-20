@@ -21,6 +21,7 @@ Microsoft SQL Server dynamic secret resource
 
 ### Optional
 
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `mssql_create_statements` (String) MSSQL Server Creation Statements
 - `mssql_dbname` (String) MSSQL Server DB Name
