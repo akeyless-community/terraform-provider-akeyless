@@ -5,9 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/pem"
-	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -158,7 +156,6 @@ func resourceClassicKeyCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
@@ -212,12 +209,9 @@ func resourceClassicKeyCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.CreateClassicKey(ctx).Body(body).Execute()
+	_, resp, err := client.CreateClassicKey(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create classic-key: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create classic-key: %v", err)
+		return common.HandleError("failed to create classic-key", resp, err)
 	}
 
 	d.SetId(name)
@@ -230,7 +224,6 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -242,15 +235,7 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.DescribeItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get classic-key: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get classic-key: %w", err)
+		return common.HandleReadError(d, "failed to get classic-key", res, err)
 	}
 
 	if rOut.ItemTags != nil {
@@ -384,15 +369,7 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 
 	item, res, err := client.ExportClassicKey(ctx).Body(exportBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get the classic-key: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get the classic-key: %w", err)
+		return common.HandleReadError(d, "failed to get the classic-key", res, err)
 	}
 
 	if item.CertificatePem != nil && *item.CertificatePem != "" {
@@ -427,7 +404,6 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -450,12 +426,9 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		common.GetAkeylessPtr(&body.Description, description)
 		common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventInList)
 
-		_, _, err = client.UpdateItem(ctx).Body(body).Execute()
+		_, resp, err := client.UpdateItem(ctx).Body(body).Execute()
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				return fmt.Errorf("failed to update classic-key: %v", string(apiErr.Body()))
-			}
-			return fmt.Errorf("failed to update classic-key: %w", err)
+			return common.HandleError("failed to update classic-key:", resp, err)
 		}
 	}
 
@@ -470,12 +443,9 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		common.GetAkeylessPtr(&body.CertFileData, certFileData)
 		common.GetAkeylessPtr(&body.CertificateFormat, certificateFormat)
 
-		_, _, err = client.UpdateClassicKeyCertificate(ctx).Body(body).Execute()
+		_, resp, err := client.UpdateClassicKeyCertificate(ctx).Body(body).Execute()
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				return fmt.Errorf("failed to update classic-key certificate: %v", string(apiErr.Body()))
-			}
-			return fmt.Errorf("failed to update classic-key certificate: %w", err)
+			return common.HandleError("failed to update classic-key certificate:", resp, err)
 		}
 
 	}
@@ -501,12 +471,9 @@ func resourceClassicKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, _, err = client.GatewayUpdateItem(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update the classic-key: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update the classic-key: %w", err)
+		return common.HandleError("failed to update the classic-key:", resp, err)
 	}
 
 	d.SetId(name)
