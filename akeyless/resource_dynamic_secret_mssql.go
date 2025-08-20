@@ -89,6 +89,11 @@ func resourceDynamicSecretMssql() *schema.Resource {
 				Optional:    true,
 				Description: "Encrypt dynamic secret details with following key",
 			},
+			"custom_username_template": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Customize how temporary usernames are generated using go template",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -151,6 +156,7 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
+	customUsernameTemplate := d.Get("custom_username_template").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -175,6 +181,7 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
@@ -291,6 +298,13 @@ func resourceDynamicSecretMssqlRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 
+	if rOut.UsernameTemplate != nil {
+		err = d.Set("custom_username_template", *rOut.UsernameTemplate)
+		if err != nil {
+			return err
+		}
+	}
+
 	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
 	d.SetId(path)
@@ -317,6 +331,7 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
+	customUsernameTemplate := d.Get("custom_username_template").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -341,6 +356,7 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)

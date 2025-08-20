@@ -21,6 +21,7 @@ RDP dynamic secret resource
 
 ### Optional
 
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `fixed_user_only` (String) Enable fixed user only
 - `password_length` (String) The length of the password to be generated

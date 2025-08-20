@@ -85,6 +85,11 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Optional:    true,
 				Description: "Encrypt dynamic secret details with following key",
 			},
+			"custom_username_template": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Customize how temporary usernames are generated using go template",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -121,6 +126,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	serviceAccountType := d.Get("service_account_type").(string)
 	roleBinding := d.Get("role_binding").(string)
 	deleteProtection := d.Get("delete_protection").(string)
+	customUsernameTemplate := d.Get("custom_username_template").(string)
 
 	body := akeyless_api.DynamicSecretCreateGcp{
 		Name:  name,
@@ -138,6 +144,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ServiceAccountType, serviceAccountType)
 	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 
 	_, _, err := client.DynamicSecretCreateGcp(ctx).Body(body).Execute()
 	if err != nil {
@@ -236,6 +243,12 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.UsernameTemplate != nil {
+		err = d.Set("custom_username_template", *rOut.UsernameTemplate)
+		if err != nil {
+			return err
+		}
+	}
 	if rOut.GcpServiceAccountType != nil {
 		err = d.Set("service_account_type", *rOut.GcpServiceAccountType)
 		if err != nil {
@@ -286,6 +299,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	serviceAccountType := d.Get("service_account_type").(string)
 	roleBinding := d.Get("role_binding").(string)
 	deleteProtection := d.Get("delete_protection").(string)
+	customUsernameTemplate := d.Get("custom_username_template").(string)
 
 	body := akeyless_api.DynamicSecretUpdateGcp{
 		Name:  name,
@@ -303,6 +317,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ServiceAccountType, serviceAccountType)
 	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 
 	_, _, err := client.DynamicSecretUpdateGcp(ctx).Body(body).Execute()
 	if err != nil {

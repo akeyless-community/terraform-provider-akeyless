@@ -21,6 +21,7 @@ MySQL dynamic secret resource
 
 ### Optional
 
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `db_server_certificates` (String) the set of root certificate authorities in base64 encoding that clients use when verifying server certificates
 - `db_server_name` (String) Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is given. It is also included in the client's handshake to support virtual hosting unless it is an IP address
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key

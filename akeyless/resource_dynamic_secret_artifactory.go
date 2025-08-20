@@ -70,6 +70,11 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 				Optional:    true,
 				Description: "Encrypt dynamic secret details with following key",
 			},
+			"custom_username_template": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Customize how temporary usernames are generated using go template",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -96,6 +101,7 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
+	customUsernameTemplate := d.Get("custom_username_template").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
@@ -111,6 +117,7 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	common.GetAkeylessPtr(&body.ArtifactoryAdminPwd, artifactoryAdminPwd)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
 	_, _, err := client.DynamicSecretCreateArtifactory(ctx).Body(body).Execute()
@@ -211,6 +218,13 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 		}
 	}
 
+	if rOut.UsernameTemplate != nil {
+		err = d.Set("custom_username_template", *rOut.UsernameTemplate)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -232,6 +246,7 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
+	customUsernameTemplate := d.Get("custom_username_template").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 
@@ -247,6 +262,7 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	common.GetAkeylessPtr(&body.ArtifactoryAdminPwd, artifactoryAdminPwd)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)
 
 	_, _, err := client.DynamicSecretUpdateArtifactory(ctx).Body(body).Execute()

@@ -22,6 +22,7 @@ Redshift dynamic secret resource
 ### Optional
 
 - `creation_statements` (String) Redshift Creation Statements
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `password_length` (String) The length of the password to be generated
 - `redshift_db_name` (String) Redshift DB name

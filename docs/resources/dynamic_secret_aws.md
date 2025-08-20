@@ -29,6 +29,7 @@ AWS dynamic secret resource
 - `aws_user_groups` (String) UserGroup name(s). Multiple values should be separated by comma
 - `aws_user_policies` (String) Policy ARN(s). Multiple values should be separated by comma
 - `aws_user_programmatic_access` (Boolean) Enable AWS User programmatic access
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `password_length` (String) The length of the password to be generated
 - `region` (String) Region

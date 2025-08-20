@@ -26,6 +26,7 @@ Cassandra dynamic secret resource
 - `cassandra_password` (String) Cassandra superuser password
 - `cassandra_port` (String) Cassandra port
 - `cassandra_username` (String) Cassandra superuser user name
+- `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `password_length` (String) The length of the password to be generated
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
