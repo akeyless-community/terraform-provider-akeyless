@@ -22,7 +22,6 @@ resource "akeyless_auth_method" "api_key" {
   api_key {
   }
 
-// example:
 //  saml {
 //    idp_metadata_url = ""
 //    unique_identifier = ""
