@@ -45,6 +45,11 @@ func resourceRotatedSecretSync() *schema.Resource {
 				Optional:    true,
 				Description: "Vault namespace, releavnt only for Hashicorp Vault Target",
 			},
+			"filter_secret_value": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "JQ expression to filter or transform the secret value",
+			},
 		},
 	}
 }
@@ -60,14 +65,17 @@ func resourceRotatedSecretSyncCreate(d *schema.ResourceData, m any) error {
 	uscName := d.Get("usc_name").(string)
 	remoteSecretName := d.Get("remote_secret_name").(string)
 	namespace := d.Get("namespace").(string)
+	filterSecretValue := d.Get("filter_secret_value").(string)
 
 	body := akeyless_api.RotatedSecretSync{
-		Name:  rsName,
-		Token: &token,
+		Name:              rsName,
+		Token:             &token,
+		FilterSecretValue: &filterSecretValue,
 	}
 	common.GetAkeylessPtr(&body.UscName, uscName)
 	common.GetAkeylessPtr(&body.RemoteSecretName, remoteSecretName)
 	common.GetAkeylessPtr(&body.Namespace, namespace)
+	common.GetAkeylessPtr(&body.FilterSecretValue, filterSecretValue)
 
 	_, resp, err := client.RotatedSecretSync(ctx).Body(body).Execute()
 	if err != nil {
