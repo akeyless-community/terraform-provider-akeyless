@@ -68,9 +68,8 @@ func resourceRotatedSecretSyncCreate(d *schema.ResourceData, m any) error {
 	filterSecretValue := d.Get("filter_secret_value").(string)
 
 	body := akeyless_api.RotatedSecretSync{
-		Name:              rsName,
-		Token:             &token,
-		FilterSecretValue: &filterSecretValue,
+		Name:  rsName,
+		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.UscName, uscName)
 	common.GetAkeylessPtr(&body.RemoteSecretName, remoteSecretName)

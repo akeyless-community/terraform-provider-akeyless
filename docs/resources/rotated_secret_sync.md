@@ -20,6 +20,7 @@ Sync Rotated Secret with Universal Secrets Connector resource
 - `name` (String) Rotated Secret name
 - `remote_secret_name` (String) Remote Secret Name that will be synced on the remote endpoint
 - `usc_name` (String) Universal Secret Connector name
+- `filter_secret_value` (String) JQ expression to filter or transform the secret value
 
 ### Optional
 
