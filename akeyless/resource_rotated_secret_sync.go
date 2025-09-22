@@ -45,6 +45,11 @@ func resourceRotatedSecretSync() *schema.Resource {
 				Optional:    true,
 				Description: "Vault namespace, releavnt only for Hashicorp Vault Target",
 			},
+			"filter_secret_value": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "JQ expression to filter or transform the secret value",
+			},
 		},
 	}
 }
@@ -60,6 +65,7 @@ func resourceRotatedSecretSyncCreate(d *schema.ResourceData, m any) error {
 	uscName := d.Get("usc_name").(string)
 	remoteSecretName := d.Get("remote_secret_name").(string)
 	namespace := d.Get("namespace").(string)
+	filterSecretValue := d.Get("filter_secret_value").(string)
 
 	body := akeyless_api.RotatedSecretSync{
 		Name:  rsName,
@@ -68,6 +74,7 @@ func resourceRotatedSecretSyncCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.UscName, uscName)
 	common.GetAkeylessPtr(&body.RemoteSecretName, remoteSecretName)
 	common.GetAkeylessPtr(&body.Namespace, namespace)
+	common.GetAkeylessPtr(&body.FilterSecretValue, filterSecretValue)
 
 	_, resp, err := client.RotatedSecretSync(ctx).Body(body).Execute()
 	if err != nil {
@@ -103,11 +110,15 @@ func resourceRotatedSecretSyncRead(d *schema.ResourceData, m any) error {
 	}
 
 	if rOut.UscSyncAssociatedItems != nil {
-		namespace, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
+		namespace, filterSecretValue, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
 		if !exists {
 			return fmt.Errorf("rotated secret sync not found for rotated secret name: %s, usc name: %s, remote secret name: %s", rsName, uscName, remoteSecretName)
 		}
-		err := d.Set("namespace", namespace)
+		err = d.Set("namespace", namespace)
+		if err != nil {
+			return err
+		}
+		err = d.Set("filter_secret_value", filterSecretValue)
 		if err != nil {
 			return err
 		}
@@ -173,11 +184,15 @@ func resourceRotatedSecretSyncImport(d *schema.ResourceData, m any) ([]*schema.R
 	}
 
 	if rOut.UscSyncAssociatedItems != nil {
-		namespace, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
+		namespace, filterSecretValue, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
 		if !exists {
 			return nil, fmt.Errorf("rotated secret sync not found for rotated secret name: %s, usc name: %s, remote secret name: %s", rsName, uscName, remoteSecretName)
 		}
 		err := d.Set("namespace", namespace)
+		if err != nil {
+			return nil, err
+		}
+		err = d.Set("filter_secret_value", filterSecretValue)
 		if err != nil {
 			return nil, err
 		}

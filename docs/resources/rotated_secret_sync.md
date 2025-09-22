@@ -23,6 +23,7 @@ Sync Rotated Secret with Universal Secrets Connector resource
 
 ### Optional
 
+- `filter_secret_value` (String) JQ expression to filter or transform the secret value
 - `namespace` (String) Vault namespace, releavnt only for Hashicorp Vault Target
 
 ### Read-Only

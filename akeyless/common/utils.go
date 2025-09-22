@@ -238,24 +238,24 @@ func GetTargetType(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string
 	return itemTargetsAssoc[0].GetTargetType()
 }
 
-func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, uscName, remoteSecretName string) (namespace string, exists bool) {
+func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, uscName, remoteSecretName string) (namespace, filterSecretValue string, exists bool) {
 	for _, assoc := range associatedItems {
 		if assoc.ItemName == nil || *assoc.ItemName != uscName {
 			continue
 		}
 
 		if assoc.Attributes == nil {
-			return "", false
+			return "", "", false
 		}
 		attr := *assoc.Attributes
 
 		if attr.SecretName == nil || *attr.SecretName != remoteSecretName {
-			return "", false
+			return "", "", false
 		}
 
-		return attr.GetNamespace(), true
+		return attr.GetNamespace(), attr.GetJqSecretFilter(), true
 	}
-	return "", false
+	return "", "", false
 }
 
 func GetTagsForUpdate(d *schema.ResourceData, name, token string, newTags []string,
