@@ -29,6 +29,12 @@ func dataSourceGetRotatedSecretValue() *schema.Resource {
 				Optional:    true,
 				Description: "Secret version",
 			},
+            "ignore_cache": {
+                Type:        schema.TypeString,
+                Optional:    true,
+                Description: "Retrieve the Secret value without checking the Gateway's cache [true/false]",
+                Default:     "false",
+            },
 			"value": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -49,12 +55,14 @@ func dataSourceGetRotatedSecretValueRead(d *schema.ResourceData, m interface{}) 
 	ctx := context.Background()
 	names := d.Get("name").(string)
 	version := d.Get("version").(int)
+    ignoreCache := d.Get("ignore_cache").(string)
 
 	body := akeyless_api.GetRotatedSecretValue{
 		Names: names,
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Version, version)
+    common.GetAkeylessPtr(&body.IgnoreCache, ignoreCache)
 
 	rOut, res, err := client.GetRotatedSecretValue(ctx).Body(body).Execute()
 	if err != nil {
