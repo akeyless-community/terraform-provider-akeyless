@@ -59,7 +59,6 @@ func resourceProducerMssql() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "MS SQL Server host name",
-				Default:     "127.0.0.1",
 			},
 			"mssql_port": {
 				Type:        schema.TypeString,

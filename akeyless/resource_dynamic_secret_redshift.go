@@ -53,7 +53,6 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Redshift host name",
-				Default:     "127.0.0.1",
 			},
 			"redshift_port": {
 				Type:        schema.TypeString,
