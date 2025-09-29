@@ -53,7 +53,6 @@ func resourceDynamicSecretOracle() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Oracle host name",
-				Default:     "127.0.0.1",
 			},
 			"oracle_port": {
 				Type:        schema.TypeString,
