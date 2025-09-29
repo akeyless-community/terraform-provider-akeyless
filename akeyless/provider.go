@@ -164,6 +164,7 @@ func Provider() *schema.Provider {
 			"akeyless_static_secret":      dataSourceStaticSecret(),
 			"akeyless_secret":             dataSourceSecret(),
 			"akeyless_auth_method":        dataSourceAuthMethod(),
+			"akeyless_reset_access_key":   dataSourceResetAccessKey(),
 			"akeyless_certificate":        dataSourceCertificate(),
 			"akeyless_dynamic_secret":     dataSourceDynamicSecret(),
 			"akeyless_role":               dataSourceRole(),
