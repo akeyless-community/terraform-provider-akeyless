@@ -30,7 +30,7 @@ func TestAccDataSourceResetAccessKey_createAndReset(t *testing.T) {
 				Config: cfg,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("akeyless_auth_method_api_key.am", "access_key"),
-					resource.TestCheckResourceAttrSet("data.akeyless_reset_access_key.test", "new_access_key"),
+					resource.TestCheckResourceAttrSet("data.akeyless_reset_access_key.test", "access_key"),
 					testCheckNewKeyDifferentFromOld(),
 				),
 			},
@@ -49,7 +49,7 @@ func testCheckNewKeyDifferentFromOld() resource.TestCheckFunc {
 			return fmt.Errorf("resource not found in state")
 		}
 
-		newKey := ds.Primary.Attributes["new_access_key"]
+		newKey := ds.Primary.Attributes["access_key"]
 		oldKey := rs.Primary.Attributes["access_key"]
 		if newKey == "" || oldKey == "" {
 			return fmt.Errorf("expected both keys to be set")

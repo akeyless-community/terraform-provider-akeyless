@@ -21,7 +21,7 @@ Reset an Auth Method access key and return the new key
 
 ### Read-Only
 
+- `access_key` (String, Sensitive) The newly generated access key
 - `id` (String) The ID of this resource.
-- `new_access_key` (String, Sensitive) The newly generated access key
 
 

@@ -20,7 +20,7 @@ func dataSourceResetAccessKey() *schema.Resource {
 				Required:    true,
 				Description: "Auth Method name",
 			},
-			"new_access_key": {
+			"access_key": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   true,
@@ -54,7 +54,7 @@ func dataSourceResetAccessKeyRead(d *schema.ResourceData, m interface{}) error {
 	if rOut.AccessKey == nil {
 		return fmt.Errorf("reset access key succeeded but response did not include a new key")
 	}
-	if err := d.Set("new_access_key", rOut.AccessKey); err != nil {
+	if err := d.Set("access_key", rOut.AccessKey); err != nil {
 		return err
 	}
 
