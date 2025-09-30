@@ -136,6 +136,7 @@ func Provider() *schema.Provider {
 			"akeyless_rotated_secret_ssh":                      resourceRotatedSecretSsh(),
 			"akeyless_rotated_secret_windows":                  resourceRotatedSecretWindows(),
 			"akeyless_rotated_secret_sync":                     resourceRotatedSecretSync(),
+			"akeyless_static_secret_sync":                      resourceStaticSecretSync(),
 			"akeyless_target_artifactory":                      resourceArtifactoryTarget(),
 			"akeyless_target_aws":                              resourceAwsTarget(),
 			"akeyless_target_azure":                            resourceAzureTarget(),
