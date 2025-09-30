@@ -53,6 +53,11 @@ func resourcePKICertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "A list of the allowed URIs that clients can request to be included in the certificate as part of the URI Subject Alternative Names (in a comma-delimited list)",
 			},
+			"allowed_ip_sans": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A list of the allowed CIDRs for IPs that clients can request to be included in the certificate as part of the IP Subject Alternative Names (in a comma-delimited list)",
+			},
 			"allow_subdomains": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -226,13 +231,13 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
 	ttl := d.Get("ttl").(string)
 	allowedDomains := d.Get("allowed_domains").(string)
 	allowedUriSans := d.Get("allowed_uri_sans").(string)
+	allowedIpSans := d.Get("allowed_ip_sans").(string)
 	allowSubdomains := d.Get("allow_subdomains").(bool)
 	notEnforceHostnames := d.Get("not_enforce_hostnames").(bool)
 	allowAnyName := d.Get("allow_any_name").(bool)
@@ -276,6 +281,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SignerKeyName, signerKeyName)
 	common.GetAkeylessPtr(&body.AllowedDomains, allowedDomains)
 	common.GetAkeylessPtr(&body.AllowedUriSans, allowedUriSans)
+	common.GetAkeylessPtr(&body.AllowedIpSans, allowedIpSans)
 	common.GetAkeylessPtr(&body.AllowSubdomains, allowSubdomains)
 	common.GetAkeylessPtr(&body.NotEnforceHostnames, notEnforceHostnames)
 	common.GetAkeylessPtr(&body.AllowAnyName, allowAnyName)
@@ -309,12 +315,9 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
-	_, _, err := client.CreatePKICertIssuer(ctx).Body(body).Execute()
+	_, resp, err := client.CreatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to create pki cert issuer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to create pki cert issuer: %w", err)
+		return common.HandleError("failed to create pki cert issuer", resp, err)
 	}
 
 	d.SetId(name)
@@ -415,6 +418,12 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 			}
 			if pki.AllowedUriSans != nil {
 				err := d.Set("allowed_uri_sans", strings.Join(pki.AllowedUriSans, ","))
+				if err != nil {
+					return err
+				}
+			}
+			if pki.AllowedIpSans != nil {
+				err := d.Set("allowed_ip_sans", strings.Join(pki.AllowedIpSans, ","))
 				if err != nil {
 					return err
 				}
@@ -657,13 +666,13 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
 	ttl := d.Get("ttl").(string)
 	allowedDomains := d.Get("allowed_domains").(string)
 	allowedUriSans := d.Get("allowed_uri_sans").(string)
+	allowedIpSans := d.Get("allowed_ip_sans").(string)
 	allowSubdomains := d.Get("allow_subdomains").(bool)
 	notEnforceHostnames := d.Get("not_enforce_hostnames").(bool)
 	allowAnyName := d.Get("allow_any_name").(bool)
@@ -718,6 +727,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SignerKeyName, signerKeyName)
 	common.GetAkeylessPtr(&body.AllowedDomains, allowedDomains)
 	common.GetAkeylessPtr(&body.AllowedUriSans, allowedUriSans)
+	common.GetAkeylessPtr(&body.AllowedIpSans, allowedIpSans)
 	common.GetAkeylessPtr(&body.AllowSubdomains, allowSubdomains)
 	common.GetAkeylessPtr(&body.NotEnforceHostnames, notEnforceHostnames)
 	common.GetAkeylessPtr(&body.AllowAnyName, allowAnyName)
@@ -749,12 +759,9 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
-	_, _, err = client.UpdatePKICertIssuer(ctx).Body(body).Execute()
+	_, resp, err := client.UpdatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update : %w", err)
+		return common.HandleError("failed to update pki cert issuer", resp, err)
 	}
 
 	d.SetId(name)

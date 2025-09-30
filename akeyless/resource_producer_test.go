@@ -280,8 +280,10 @@ func TestRotatedSecretResource(t *testing.T) {
 			authentication_credentials = "use-target-creds"
 			key 			= "%v"
 			depends_on = [
-    			akeyless_target_db.%v,
+				akeyless_target_db.%v,
   			]
+			# exercise ignore_cache in Read
+			ignore_cache = "true"
 		}
 	`, targetName, targetPath, db_attr, user, password, rsName, rsPath, targetPath, targetName, targetName, KEY, targetName)
 
@@ -307,6 +309,8 @@ func TestRotatedSecretResource(t *testing.T) {
 			depends_on = [
 				akeyless_target_db.%v,
 			]
+			# exercise ignore_cache in Read
+			ignore_cache = "true"
 		}
 	`, targetName, targetPath, db_attr, user, password, rsName, rsPath, targetPath, targetName, targetName, KEY, targetName)
 

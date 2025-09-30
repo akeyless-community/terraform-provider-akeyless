@@ -27,6 +27,7 @@ PKI Cert Issuer  resource
 - `allow_subdomains` (Boolean) If set, clients can request certificates for subdomains and wildcard subdomains of the allowed domains
 - `allowed_domains` (String) A list of the allowed domains that clients can request to be included in the certificate (in a comma-delimited list)
 - `allowed_extra_extensions` (String) A json string that defines the allowed extra extensions for the pki cert issuer
+- `allowed_ip_sans` (String) A list of the allowed CIDRs for IPs that clients can request to be included in the certificate as part of the IP Subject Alternative Names (in a comma-delimited list)
 - `allowed_uri_sans` (String) A list of the allowed URIs that clients can request to be included in the certificate as part of the URI Subject Alternative Names (in a comma-delimited list)
 - `auto_renew` (Boolean) Automatically renew certificates before expiration
 - `ca_target` (String) The name of an existing CA target to attach this PKI Certificate Issuer to, required in Public CA mode

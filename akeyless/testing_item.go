@@ -391,5 +391,5 @@ func isAlreadyExistError(err error) bool {
 }
 
 func containsAlreadyExist(msg string) bool {
-	return strings.Contains(msg, "AlreadyExists")
+	return strings.Contains(msg, "AlreadyExists") || strings.Contains(msg, "Conflict")
 }

@@ -29,6 +29,7 @@ Rotated secret resource
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation
 - `custom_payload` (String) Secret payload to be sent with rotation request (relevant only for rotator-type=custom)
 - `description` (String) Description of the object
+- `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `rotated_password` (String) rotated-username password (relevant only for rotator-type=password)
 - `rotated_username` (String) username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password)
