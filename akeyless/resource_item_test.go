@@ -337,7 +337,7 @@ func TestPkiResource(t *testing.T) {
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domain1,domain2"
 			allowed_uri_sans      	= "uri_san1,uri_san2"
-			allowed_ip_sans       	= "1.1.1.1,2.2.2.2"
+			allowed_ip_sans       	= "1.1.1.1/32,2.2.2.2/32"
 			allow_subdomains      	= false
 			not_enforce_hostnames 	= true
 			allow_any_name        	= false
