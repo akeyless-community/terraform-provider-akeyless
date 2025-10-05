@@ -226,9 +226,7 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	ignoreCache := d.Get("ignore_cache").(string)
-	if ignoreCache != "" {
-		body.IgnoreCache = &ignoreCache
-	}
+	common.GetAkeylessPtr(&body.IgnoreCache, ignoreCache)
 
 	item := akeyless_api.DescribeItem{
 		Name:         path,

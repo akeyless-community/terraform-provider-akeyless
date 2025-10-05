@@ -14,14 +14,15 @@ func TestAccDataSourceResetAccessKey_createAndReset(t *testing.T) {
 	name := testPath(fmt.Sprintf("reset-ak/%s", rand))
 
 	cfg := fmt.Sprintf(`
-	resource "akeyless_auth_method_api_key" "am" {
+    resource "akeyless_auth_method_api_key" "am" {
   		name = "%s"
-	}
+    }
 
-	data "akeyless_reset_access_key" "test" {
-		name = akeyless_auth_method_api_key.am.name
-	}
-	`, name)
+    data "akeyless_reset_access_key" "test" {
+    	name       = akeyless_auth_method_api_key.am.name
+    	depends_on = [akeyless_auth_method_api_key.am]
+    }
+    `, name)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,

@@ -27,8 +27,9 @@ func TestStaticSecretSyncResource(t *testing.T) {
             name               = akeyless_static_secret.%v.path
             usc_name           = "%v"
             remote_secret_name = "%v"
+            depends_on         = [akeyless_static_secret.%v]
         }
-    `, secretName, secretPath, secretName, uscName, remoteSecretName)
+    `, secretName, secretPath, secretName, uscName, remoteSecretName, secretName)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,

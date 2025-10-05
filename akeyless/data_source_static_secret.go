@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -26,12 +27,12 @@ func dataSourceStaticSecret() *schema.Resource {
 				Computed:    true,
 				Description: "The version of the secret.",
 			},
-            "ignore_cache": {
-                Type:        schema.TypeString,
-                Optional:    true,
-                Description: "Retrieve the Secret value without checking the Gateway's cache [true/false]",
-                Default:     "false",
-            },
+			"ignore_cache": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Retrieve the Secret value without checking the Gateway's cache [true/false]",
+				Default:     "false",
+			},
 			"value": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -87,14 +88,12 @@ func dataSourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	version := int32(d.Get("version").(int))
-    ignoreCache := d.Get("ignore_cache").(string)
+	ignoreCache := d.Get("ignore_cache").(string)
 
 	if version != 0 {
 		gsvBody.Version = &version
 	}
-    if ignoreCache != "" {
-        gsvBody.IgnoreCache = &ignoreCache
-    }
+	common.GetAkeylessPtr(&gsvBody.IgnoreCache, ignoreCache)
 
 	gsvOut, _, err := client.GetSecretValue(ctx).Body(gsvBody).Execute()
 	if err != nil {

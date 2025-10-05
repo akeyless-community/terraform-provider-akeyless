@@ -281,9 +281,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 		Token: &token,
 	}
 	ignoreCache := d.Get("ignore_cache").(string)
-	if ignoreCache != "" {
-		gsvBody.IgnoreCache = &ignoreCache
-	}
+	common.GetAkeylessPtr(&gsvBody.IgnoreCache, ignoreCache)
 
 	gsvOut, res, err := client.GetSecretValue(ctx).Body(gsvBody).Execute()
 
