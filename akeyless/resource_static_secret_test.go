@@ -26,6 +26,8 @@ func TestStaticResource(t *testing.T) {
 			description 		= "aaaa"
             keep_prev_version	= "true"
 			delete_protection  	= "true"
+			# exercise ignore_cache in Read
+			ignore_cache       = "true"
 		}
 	`, secretName, secretPath)
 
@@ -77,6 +79,8 @@ func TestStaticPasswordResource(t *testing.T) {
 			description 		= "my password"
             keep_prev_version	= "true"
 			delete_protection  	= "true"
+			# exercise ignore_cache in Read
+			ignore_cache       = "true"
 		}
 	`, secretName, secretPath)
 

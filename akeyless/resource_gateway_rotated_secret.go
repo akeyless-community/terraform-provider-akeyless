@@ -139,6 +139,12 @@ func resourceRotatedSecret() *schema.Resource {
 				Computed:    true,
 				Description: "Secret payload to be sent with rotation request (relevant only for rotator-type=custom)",
 			},
+			"ignore_cache": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Retrieve the Secret value without checking the Gateway's cache [true/false]",
+				Default:     "false",
+			},
 		},
 	}
 }
@@ -219,6 +225,8 @@ func resourceRotatedSecretRead(d *schema.ResourceData, m interface{}) error {
 		Names: path,
 		Token: &token,
 	}
+	ignoreCache := d.Get("ignore_cache").(string)
+	common.GetAkeylessPtr(&body.IgnoreCache, ignoreCache)
 
 	item := akeyless_api.DescribeItem{
 		Name:         path,

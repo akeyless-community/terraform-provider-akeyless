@@ -83,6 +83,12 @@ func resourceStaticSecret() *schema.Resource {
 				Computed:    true,
 				Description: "The version of the secret.",
 			},
+			"ignore_cache": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Retrieve the Secret value without checking the Gateway's cache [true/false]",
+				Default:     "false",
+			},
 			"keep_prev_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -274,6 +280,8 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 		Names: []string{path},
 		Token: &token,
 	}
+	ignoreCache := d.Get("ignore_cache").(string)
+	common.GetAkeylessPtr(&gsvBody.IgnoreCache, ignoreCache)
 
 	gsvOut, res, err := client.GetSecretValue(ctx).Body(gsvBody).Execute()
 

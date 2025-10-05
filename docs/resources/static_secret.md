@@ -49,6 +49,7 @@ resource "akeyless_static_secret" "secret" {
 - `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `description` (String) Description of the object
 - `format` (String) Secret format [text/json/key-value] (relevant only for type 'generic')
+- `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `inject_url` (Set of String) List of URLs associated with the item (relevant only for type 'password')
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `multiline_value` (Boolean) The provided value is a multiline value (separated by '

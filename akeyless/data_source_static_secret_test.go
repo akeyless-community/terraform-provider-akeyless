@@ -83,6 +83,7 @@ func TestStaticSecretDataSource(t *testing.T) {
 			config := fmt.Sprintf(`
 				data "akeyless_static_secret" "%v" {
 					path = "%v"
+					ignore_cache = "true"
 				}
 				output "static_secret" {
 					value      = nonsensitive(data.akeyless_static_secret.%v.value)

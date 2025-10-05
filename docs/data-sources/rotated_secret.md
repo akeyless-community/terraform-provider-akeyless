@@ -21,6 +21,7 @@ Get rotated secret value data source
 
 ### Optional
 
+- `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `version` (Number) Secret version
 
 ### Read-Only

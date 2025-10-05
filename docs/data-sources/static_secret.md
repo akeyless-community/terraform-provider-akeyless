@@ -27,6 +27,7 @@ data "akeyless_static_secret" "secret" {
 
 ### Optional
 
+- `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `version` (Number) The version of the secret.
 
 ### Read-Only
