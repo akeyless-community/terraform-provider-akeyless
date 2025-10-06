@@ -52,7 +52,6 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "PostgreSQL host name",
-				Default:     "127.0.0.1",
 			},
 			"postgresql_port": {
 				Type:        schema.TypeString,

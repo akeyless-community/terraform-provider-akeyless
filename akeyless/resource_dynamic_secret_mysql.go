@@ -54,7 +54,6 @@ func resourceDynamicSecretMysql() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "MySQL host name",
-				Default:     "127.0.0.1",
 			},
 			"mysql_port": {
 				Type:        schema.TypeString,

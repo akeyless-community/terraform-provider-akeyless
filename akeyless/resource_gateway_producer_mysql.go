@@ -60,7 +60,6 @@ func resourceProducerMysql() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "MySQL host name",
-				Default:     "127.0.0.1",
 			},
 			"mysql_port": {
 				Type:        schema.TypeString,
