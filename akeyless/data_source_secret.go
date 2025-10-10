@@ -32,6 +32,12 @@ func dataSourceSecret() *schema.Resource {
 				Computed:    true,
 				Description: "The version of the secret.",
 			},
+			"ignore_cache": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Retrieve the Secret value without checking the Gateway's cache [true/false]",
+				Default:     "false",
+			},
 		},
 	}
 }
