@@ -10,9 +10,9 @@ const (
 	Uid      = "universal_identity"
 	Cert     = "cert"
 
-	StaticSecretType        = "STATIC_SECRET"
-	DynamicStaticSecretType = "DYNAMIC_SECRET"
-	RotatedSecretType       = "ROTATED_SECRET"
+	StaticSecretType  = "STATIC_SECRET"
+	DynamicSecretType = "DYNAMIC_SECRET"
+	RotatedSecretType = "ROTATED_SECRET"
 
 	AlgRsa1024   = "RSA1024"
 	AlgAes128GCM = "AES128GCM"
