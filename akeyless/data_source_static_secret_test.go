@@ -3,11 +3,12 @@ package akeyless
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestStaticSecretDataSource(t *testing.T) {
@@ -78,7 +79,17 @@ func TestStaticSecretDataSource(t *testing.T) {
 			staticPath := testPath(tt.name)
 			deleteItemIfExists(t, staticPath)
 
-			createSecret(t, staticPath, tt.secretType, tt.secretFormat, tt.secretValue, tt.username, tt.password, tt.customField, tt.injectURL)
+			secret := &testSecret{
+				secretName:  staticPath,
+				secretType:  tt.secretType,
+				format:      tt.secretFormat,
+				value:       tt.secretValue,
+				username:    tt.username,
+				password:    tt.password,
+				customField: tt.customField,
+				injectUrl:   tt.injectURL,
+			}
+			createSecret(t, secret)
 
 			config := fmt.Sprintf(`
 				data "akeyless_static_secret" "%v" {
