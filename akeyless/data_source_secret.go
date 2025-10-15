@@ -61,20 +61,20 @@ func dataSourceSecretRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get Secret item: %v", err)
 	}
 
-	switch {
-	case *itemOut.ItemType == common.StaticSecretType:
+	switch *itemOut.ItemType {
+	case common.StaticSecretType:
 		err := getStaticSecretValue(ctx, d, m)
 		if err != nil {
 			return err
 		}
 		return nil
-	case *itemOut.ItemType == common.DynamicSecretType:
+	case common.DynamicSecretType:
 		err := getDynamicSecretValue(ctx, d, m)
 		if err != nil {
 			return err
 		}
 		return nil
-	case *itemOut.ItemType == common.RotatedSecretType:
+	case common.RotatedSecretType:
 		err := getRotatedSecretValue(ctx, d, m)
 		if err != nil {
 			return err
