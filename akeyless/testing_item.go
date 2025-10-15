@@ -256,21 +256,32 @@ func createCertificate(t *testing.T, certName, certBase64, keyBase64 string) {
 	require.NoError(t, handleError(res, err), "failed to create certificate for test")
 }
 
-func createSecret(t *testing.T, secretName, secretType, format, value, username, password string, customField map[string]string, injectUrl []string) {
+type testSecret struct {
+	secretName  string
+	secretType  string
+	format      string
+	value       string
+	username    string
+	password    string
+	customField map[string]string
+	injectUrl   []string
+}
+
+func createSecret(t *testing.T, secret *testSecret) {
 
 	client, token := prepareClient(t)
 
 	body := akeyless_api.CreateSecret{
-		Name:  secretName,
+		Name:  secret.secretName,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.Type, secretType)
-	common.GetAkeylessPtr(&body.Format, format)
-	common.GetAkeylessPtr(&body.Value, value)
-	common.GetAkeylessPtr(&body.Username, username)
-	common.GetAkeylessPtr(&body.Password, password)
-	body.CustomField = &customField
-	common.GetAkeylessPtr(&body.InjectUrl, injectUrl)
+	common.GetAkeylessPtr(&body.Type, secret.secretType)
+	common.GetAkeylessPtr(&body.Format, secret.format)
+	common.GetAkeylessPtr(&body.Value, secret.value)
+	common.GetAkeylessPtr(&body.Username, secret.username)
+	common.GetAkeylessPtr(&body.Password, secret.password)
+	body.CustomField = &secret.customField
+	common.GetAkeylessPtr(&body.InjectUrl, secret.injectUrl)
 
 	_, res, err := client.CreateSecret(context.Background()).Body(body).Execute()
 	require.NoError(t, handleError(res, err), fmt.Sprintf("failed to create secret for test: %v", handleError(res, err)))
@@ -316,6 +327,56 @@ func deleteItems(t *testing.T, path string) {
 
 	_, _, err := client.DeleteItems(context.Background()).Body(gsvBody).Execute()
 	require.NoError(t, err)
+}
+
+type testMysqlDynamicSecret struct {
+	secretName string
+	username   string
+	password   string
+	host       string
+	port       string
+	dbName     string
+}
+
+// use only locally - not on pipeline tests
+func createMysqlDynamicSecret(t *testing.T, secret *testMysqlDynamicSecret) {
+
+	client, token := prepareClient(t)
+
+	body := akeyless_api.DynamicSecretCreateMySql{
+		Name:  secret.secretName,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.MysqlUsername, secret.username)
+	common.GetAkeylessPtr(&body.MysqlPassword, secret.password)
+	common.GetAkeylessPtr(&body.MysqlHost, secret.host)
+	common.GetAkeylessPtr(&body.MysqlPort, secret.port)
+	common.GetAkeylessPtr(&body.MysqlDbname, secret.dbName)
+
+	_, res, err := client.DynamicSecretCreateMySql(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(res, err), fmt.Sprintf("failed to create mysql dynamic secret for test: %v", handleError(res, err)))
+}
+
+type testMysqlRotatedSecret struct {
+	secretName string
+	targetName string
+}
+
+// use only locally - not on pipeline tests
+func createMysqlRotatedSecret(t *testing.T, secret *testMysqlRotatedSecret) {
+
+	client, token := prepareClient(t)
+
+	body := akeyless_api.RotatedSecretCreateMysql{
+		Name:        secret.secretName,
+		TargetName:  secret.targetName,
+		RotatorType: "target",
+		Token:       &token,
+	}
+	common.GetAkeylessPtr(&body.AuthenticationCredentials, "use-target-creds")
+
+	_, res, err := client.RotatedSecretCreateMysql(context.Background()).Body(body).Execute()
+	require.NoError(t, handleError(res, err), fmt.Sprintf("failed to create mysql rotated secret for test: %v", handleError(res, err)))
 }
 
 func getProviderMeta() (*providerMeta, error) {
