@@ -17,6 +17,11 @@ const (
 	rotatedSecretType testSecretType = "ROTATED_SECRET"
 
 	staticSecretValueForTest string = "1234"
+	mysqlTestUsername        string = "root"
+	mysqlTestPassword        string = "password"
+	mysqlTestHost            string = "127.0.0.1"
+	mysqlTestPort            string = "3306"
+	mysqlTestDBName          string = "mysql"
 )
 
 func TestSecretDataSource(t *testing.T) {
@@ -60,11 +65,11 @@ func testSecretDataSourceDynamic(t *testing.T) {
 
 	secret := &testMysqlDynamicSecret{
 		secretName: secretPath,
-		username:   "root",
-		password:   "password",
-		host:       "127.0.0.1",
-		port:       "3306",
-		dbName:     "mysql",
+		username:   mysqlTestUsername,
+		password:   mysqlTestPassword,
+		host:       mysqlTestHost,
+		port:       mysqlTestPort,
+		dbName:     mysqlTestDBName,
 	}
 	createMysqlDynamicSecret(t, secret)
 	defer deleteItemIfExists(t, secretPath)
@@ -91,11 +96,11 @@ func testSecretDataSourceRotated(t *testing.T) {
 	targetDetailsType := "db_target_details"
 
 	targetDetails := map[string]any{
-		"user_name": "root",
-		"pwd":       "password",
-		"host":      "127.0.0.1",
-		"port":      "3306",
-		"db_name":   "mysql",
+		"user_name": mysqlTestUsername,
+		"pwd":       mysqlTestPassword,
+		"host":      mysqlTestHost,
+		"port":      mysqlTestPort,
+		"db_name":   mysqlTestDBName,
 	}
 
 	createTargetByType(t, targetPath, targetDetailsType, targetDetails)
