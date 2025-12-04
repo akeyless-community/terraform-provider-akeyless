@@ -63,6 +63,11 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Optional:    true,
 				Description: "Service account key algorithm, e.g. KEY_ALG_RSA_1024",
 			},
+			"project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCP Project ID override for dynamic secret operations",
+			},
 			"service_account_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -119,6 +124,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	gcpKey := d.Get("gcp_key").(string)
 	gcpTokenScopes := d.Get("gcp_token_scopes").(string)
 	gcpKeyAlgo := d.Get("gcp_key_algo").(string)
+	projectId := d.Get("project_id").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -138,6 +144,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.GcpTokenScopes, gcpTokenScopes)
 	common.GetAkeylessPtr(&body.GcpKeyAlgo, gcpKeyAlgo)
+	common.GetAkeylessPtr(&body.GcpProjectId, projectId)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
@@ -188,6 +195,12 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 	}
 	if rOut.GcpKeyAlgo != nil {
 		err = d.Set("gcp_key_algo", *rOut.GcpKeyAlgo)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GcpProjectId != nil {
+		err = d.Set("project_id", *rOut.GcpProjectId)
 		if err != nil {
 			return err
 		}
@@ -292,6 +305,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	gcpKey := d.Get("gcp_key").(string)
 	gcpTokenScopes := d.Get("gcp_token_scopes").(string)
 	gcpKeyAlgo := d.Get("gcp_key_algo").(string)
+	projectId := d.Get("project_id").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -311,6 +325,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.GcpTokenScopes, gcpTokenScopes)
 	common.GetAkeylessPtr(&body.GcpKeyAlgo, gcpKeyAlgo)
+	common.GetAkeylessPtr(&body.GcpProjectId, projectId)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)

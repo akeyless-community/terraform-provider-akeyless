@@ -80,8 +80,8 @@ github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7l
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/akeylesslabs/akeyless-go-cloud-id v0.3.5 h1:ly0WKARATneFzwBlTZ2lUyjtLqoOEYqt1vOlf89za/4=
 github.com/akeylesslabs/akeyless-go-cloud-id v0.3.5/go.mod h1:W6DMNwPyIE3jpXDaJOvCKUT/kHPZrpl/BGiIVUILbMk=
-github.com/akeylesslabs/akeyless-go/v5 v5.0.8 h1:rOYxuhCHEZDt7e5J1agI2I4qNPueX28dL4PdTv1rhu0=
-github.com/akeylesslabs/akeyless-go/v5 v5.0.8/go.mod h1:4oo5+/uOcshVr/+hLxxL4UQIALyQNWwOCskLGgTL6nk=
+github.com/akeylesslabs/akeyless-go/v5 v5.0.16 h1:nH0ExvPnfWMhHL3DovUQBXST/2Dj02KJxIHFYMqRauo=
+github.com/akeylesslabs/akeyless-go/v5 v5.0.16/go.mod h1:4oo5+/uOcshVr/+hLxxL4UQIALyQNWwOCskLGgTL6nk=
 github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJEynmyUenKwP++x/+DdGV/Ec=
 github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew1u1fNQOlOtuGxQY=
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
