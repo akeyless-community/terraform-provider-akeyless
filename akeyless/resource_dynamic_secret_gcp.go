@@ -42,6 +42,12 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Optional:    true,
 				Description: "GCP service account email",
 			},
+			"access_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "sa",
+				Description: "The type of the GCP dynamic secret, options are [sa, external]",
+			},
 			"gcp_cred_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -73,6 +79,17 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Optional:    true,
 				Default:     "fixed",
 				Description: "The type of the gcp dynamic secret. Options[fixed, dynamic]",
+			},
+			"role_names": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Comma-separated list of GCP roles to assign to the user",
+			},
+			"fixed_user_claim_keyname": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "ext_email",
+				Description: "For externally provided users, denotes the key-name of IdP claim to extract the username from",
 			},
 			"role_binding": {
 				Type:        schema.TypeString,
@@ -115,10 +132,10 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
+	accessType := d.Get("access_type").(string)
 	gcpSaEmail := d.Get("gcp_sa_email").(string)
 	gcpCredType := d.Get("gcp_cred_type").(string)
 	gcpKey := d.Get("gcp_key").(string)
@@ -131,6 +148,8 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	serviceAccountType := d.Get("service_account_type").(string)
 	roleBinding := d.Get("role_binding").(string)
+	roleNames := d.Get("role_names").(string)
+	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 
@@ -139,6 +158,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
+	common.GetAkeylessPtr(&body.AccessType, accessType)
 	common.GetAkeylessPtr(&body.GcpSaEmail, gcpSaEmail)
 	common.GetAkeylessPtr(&body.GcpCredType, gcpCredType)
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
@@ -150,15 +170,14 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.ServiceAccountType, serviceAccountType)
 	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
+	common.GetAkeylessPtr(&body.RoleNames, roleNames)
+	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 
-	_, _, err := client.DynamicSecretCreateGcp(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateGcp(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("DynamicSecretCreateGcp", resp, err)
 	}
 
 	d.SetId(name)
@@ -279,6 +298,24 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.GcpAccessType != nil {
+		err = d.Set("access_type", *rOut.GcpAccessType)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GcpRoleNames != nil {
+		err = d.Set("role_names", *rOut.GcpRoleNames)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GcpFixedUserClaimKeyname != nil {
+		err = d.Set("fixed_user_claim_keyname", *rOut.GcpFixedUserClaimKeyname)
+		if err != nil {
+			return err
+		}
+	}
 	if rOut.DeleteProtection != nil {
 		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
 		if err != nil {
@@ -300,6 +337,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
+	accessType := d.Get("access_type").(string)
 	gcpSaEmail := d.Get("gcp_sa_email").(string)
 	gcpCredType := d.Get("gcp_cred_type").(string)
 	gcpKey := d.Get("gcp_key").(string)
@@ -312,6 +350,8 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	serviceAccountType := d.Get("service_account_type").(string)
 	roleBinding := d.Get("role_binding").(string)
+	roleNames := d.Get("role_names").(string)
+	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 
@@ -320,6 +360,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
+	common.GetAkeylessPtr(&body.AccessType, accessType)
 	common.GetAkeylessPtr(&body.GcpSaEmail, gcpSaEmail)
 	common.GetAkeylessPtr(&body.GcpCredType, gcpCredType)
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
@@ -331,6 +372,8 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.ServiceAccountType, serviceAccountType)
 	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
+	common.GetAkeylessPtr(&body.RoleNames, roleNames)
+	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 
