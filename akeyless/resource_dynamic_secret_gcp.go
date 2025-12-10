@@ -176,7 +176,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 
-	_, , err := client.DynamicSecretCreateGcp(ctx).Body(body).Execute()
+	_, _, err := client.DynamicSecretCreateGcp(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
