@@ -448,7 +448,7 @@ func TestTargetDataSourcePing(t *testing.T) {
 	targetDetailsType := "ping_target_details"
 
 	expect := map[string]interface{}{
-		"url":                 "https://www.test.com",
+		"url":                 "https://console.akeyless.io",
 		"privileged_user":     "Administrator",
 		"user_password":       "1234",
 		"administrative_port": "9999",
