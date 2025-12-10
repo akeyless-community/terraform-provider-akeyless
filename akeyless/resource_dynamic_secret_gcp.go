@@ -334,14 +334,15 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func normalizeGcpServiceAccountType(apiValue string) string {
-	if apiValue == "gcp_fixed_service_account" {
+	switch apiValue {
+	case "gcp_fixed_service_account":
 		return "fixed"
-	}
-	if apiValue == "gcp_dynamic_service_account" {
+	case "gcp_dynamic_service_account":
 		return "dynamic"
+	default:
+		// Return as-is if it's already in Terraform format or unknown value
+		return apiValue
 	}
-	// Return as-is if it's already in Terraform format or unknown value
-	return apiValue
 }
 
 func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error {
