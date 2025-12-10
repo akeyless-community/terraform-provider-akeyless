@@ -210,7 +210,7 @@ func resourceDynamicSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
+		err = common.SetDataByPrefixSlash(d, "encryption_key_name", *rOut.DynamicSecretKey, d.Get("encryption_key_name").(string))
 		if err != nil {
 			return err
 		}

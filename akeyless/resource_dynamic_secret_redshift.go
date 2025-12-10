@@ -228,7 +228,7 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 
 	if rOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
-		err = d.Set("target_name", targetName)
+		err = common.SetDataByPrefixSlash(d, "target_name", targetName, d.Get("target_name").(string))
 		if err != nil {
 			return err
 		}
@@ -276,7 +276,7 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
+		err = common.SetDataByPrefixSlash(d, "encryption_key_name", *rOut.DynamicSecretKey, d.Get("encryption_key_name").(string))
 		if err != nil {
 			return err
 		}
