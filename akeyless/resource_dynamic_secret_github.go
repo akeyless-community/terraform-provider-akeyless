@@ -212,7 +212,7 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 
 	if rOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
-		err = d.Set("target_name", targetName)
+		err = common.SetDataByPrefixSlash(d, "target_name", targetName, d.Get("target_name").(string))
 		if err != nil {
 			return err
 		}

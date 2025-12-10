@@ -42,6 +42,12 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Optional:    true,
 				Description: "GCP service account email",
 			},
+			"access_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "sa",
+				Description: "The type of the GCP dynamic secret, options are [sa, external]",
+			},
 			"gcp_cred_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -63,11 +69,27 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Optional:    true,
 				Description: "Service account key algorithm, e.g. KEY_ALG_RSA_1024",
 			},
+			"project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCP Project ID override for dynamic secret operations",
+			},
 			"service_account_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "fixed",
 				Description: "The type of the gcp dynamic secret. Options[fixed, dynamic]",
+			},
+			"role_names": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Comma-separated list of GCP roles to assign to the user",
+			},
+			"fixed_user_claim_keyname": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "ext_email",
+				Description: "For externally provided users, denotes the key-name of IdP claim to extract the username from",
 			},
 			"role_binding": {
 				Type:        schema.TypeString,
@@ -114,17 +136,21 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
+	accessType := d.Get("access_type").(string)
 	gcpSaEmail := d.Get("gcp_sa_email").(string)
 	gcpCredType := d.Get("gcp_cred_type").(string)
 	gcpKey := d.Get("gcp_key").(string)
 	gcpTokenScopes := d.Get("gcp_token_scopes").(string)
 	gcpKeyAlgo := d.Get("gcp_key_algo").(string)
+	projectId := d.Get("project_id").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	serviceAccountType := d.Get("service_account_type").(string)
 	roleBinding := d.Get("role_binding").(string)
+	roleNames := d.Get("role_names").(string)
+	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 
@@ -133,16 +159,20 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
+	common.GetAkeylessPtr(&body.AccessType, accessType)
 	common.GetAkeylessPtr(&body.GcpSaEmail, gcpSaEmail)
 	common.GetAkeylessPtr(&body.GcpCredType, gcpCredType)
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.GcpTokenScopes, gcpTokenScopes)
 	common.GetAkeylessPtr(&body.GcpKeyAlgo, gcpKeyAlgo)
+	common.GetAkeylessPtr(&body.GcpProjectId, projectId)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.ServiceAccountType, serviceAccountType)
 	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
+	common.GetAkeylessPtr(&body.RoleNames, roleNames)
+	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 
@@ -192,6 +222,12 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.GcpProjectId != nil {
+		err = d.Set("project_id", *rOut.GcpProjectId)
+		if err != nil {
+			return err
+		}
+	}
 	if rOut.UserTtl != nil {
 		err = d.Set("user_ttl", *rOut.UserTtl)
 		if err != nil {
@@ -207,7 +243,7 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 
 	if rOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
-		err = d.Set("target_name", targetName)
+		err = common.SetDataByPrefixSlash(d, "target_name", targetName, d.Get("target_name").(string))
 		if err != nil {
 			return err
 		}
@@ -238,7 +274,7 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.DynamicSecretKey != nil {
-		err = d.Set("encryption_key_name", *rOut.DynamicSecretKey)
+		err = common.SetDataByPrefixSlash(d, "encryption_key_name", *rOut.DynamicSecretKey, d.Get("encryption_key_name").(string))
 		if err != nil {
 			return err
 		}
@@ -250,7 +286,8 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.GcpServiceAccountType != nil {
-		err = d.Set("service_account_type", *rOut.GcpServiceAccountType)
+		serviceAccountType := normalizeGcpServiceAccountType(*rOut.GcpServiceAccountType)
+		err = d.Set("service_account_type", serviceAccountType)
 		if err != nil {
 			return err
 		}
@@ -262,6 +299,24 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 
 		err = d.Set("role_binding", string(bytes))
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GcpAccessType != nil {
+		err = d.Set("access_type", *rOut.GcpAccessType)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GcpRoleNames != nil {
+		err = d.Set("role_names", *rOut.GcpRoleNames)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GcpFixedUserClaimKeyname != nil {
+		err = d.Set("fixed_user_claim_keyname", *rOut.GcpFixedUserClaimKeyname)
 		if err != nil {
 			return err
 		}
@@ -278,6 +333,18 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
+func normalizeGcpServiceAccountType(apiValue string) string {
+	switch apiValue {
+	case "gcp_fixed_service_account":
+		return "fixed"
+	case "gcp_dynamic_service_account":
+		return "dynamic"
+	default:
+		// Return as-is if it's already in Terraform format or unknown value
+		return apiValue
+	}
+}
+
 func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
@@ -287,17 +354,21 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
+	accessType := d.Get("access_type").(string)
 	gcpSaEmail := d.Get("gcp_sa_email").(string)
 	gcpCredType := d.Get("gcp_cred_type").(string)
 	gcpKey := d.Get("gcp_key").(string)
 	gcpTokenScopes := d.Get("gcp_token_scopes").(string)
 	gcpKeyAlgo := d.Get("gcp_key_algo").(string)
+	projectId := d.Get("project_id").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	serviceAccountType := d.Get("service_account_type").(string)
 	roleBinding := d.Get("role_binding").(string)
+	roleNames := d.Get("role_names").(string)
+	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 
@@ -306,16 +377,20 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
+	common.GetAkeylessPtr(&body.AccessType, accessType)
 	common.GetAkeylessPtr(&body.GcpSaEmail, gcpSaEmail)
 	common.GetAkeylessPtr(&body.GcpCredType, gcpCredType)
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.GcpTokenScopes, gcpTokenScopes)
 	common.GetAkeylessPtr(&body.GcpKeyAlgo, gcpKeyAlgo)
+	common.GetAkeylessPtr(&body.GcpProjectId, projectId)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.ServiceAccountType, serviceAccountType)
 	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
+	common.GetAkeylessPtr(&body.RoleNames, roleNames)
+	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 

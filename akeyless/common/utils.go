@@ -581,7 +581,7 @@ func EnsureLeadingSlash(path string) string {
 }
 
 func SetDataByPrefixSlash(d *schema.ResourceData, key, returnedValue, existValue string) error {
-	if "/"+returnedValue == existValue {
+	if "/"+returnedValue == existValue || returnedValue == "/"+existValue {
 		return d.Set(key, existValue)
 	}
 	return d.Set(key, returnedValue)

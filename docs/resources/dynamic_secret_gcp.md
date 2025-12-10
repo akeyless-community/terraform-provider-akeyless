@@ -21,15 +21,19 @@ Google Cloud Provider (GCP) dynamic secret resource
 
 ### Optional
 
+- `access_type` (String) The type of the GCP dynamic secret, options are [sa, external]
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this item, [true/false]
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from
 - `gcp_cred_type` (String) Credentials type, options are [token, key]
 - `gcp_key` (String) Base64-encoded service account private key text
 - `gcp_key_algo` (String) Service account key algorithm, e.g. KEY_ALG_RSA_1024
 - `gcp_sa_email` (String) GCP service account email
 - `gcp_token_scopes` (String) Access token scopes list, e.g. scope1,scope2
+- `project_id` (String) GCP Project ID override for dynamic secret operations
 - `role_binding` (String) Role binding definitions in json format
+- `role_names` (String) Comma-separated list of GCP roles to assign to the user
 - `service_account_type` (String) The type of the gcp dynamic secret. Options[fixed, dynamic]
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
