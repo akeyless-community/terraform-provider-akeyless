@@ -132,6 +132,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
+	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -175,9 +176,12 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 
-	_, resp, err := client.DynamicSecretCreateGcp(ctx).Body(body).Execute()
+	_, , err := client.DynamicSecretCreateGcp(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("DynamicSecretCreateGcp", resp, err)
+		if errors.As(err, &apiErr) {
+			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+		}
+		return fmt.Errorf("can't create Secret: %v", err)
 	}
 
 	d.SetId(name)
@@ -282,7 +286,8 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.GcpServiceAccountType != nil {
-		err = d.Set("service_account_type", *rOut.GcpServiceAccountType)
+		serviceAccountType := normalizeGcpServiceAccountType(*rOut.GcpServiceAccountType)
+		err = d.Set("service_account_type", serviceAccountType)
 		if err != nil {
 			return err
 		}
@@ -326,6 +331,17 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 	d.SetId(path)
 
 	return nil
+}
+
+func normalizeGcpServiceAccountType(apiValue string) string {
+	if apiValue == "gcp_fixed_service_account" {
+		return "fixed"
+	}
+	if apiValue == "gcp_dynamic_service_account" {
+		return "dynamic"
+	}
+	// Return as-is if it's already in Terraform format or unknown value
+	return apiValue
 }
 
 func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error {
