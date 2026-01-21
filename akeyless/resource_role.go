@@ -418,7 +418,6 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		if !ok {
 			err, _ := setRoleRules(ctx, name, rulesToAdd, rulesToDelete, m)
 			if err != nil {
-				// never crash the provider process; log and keep the original error
 				tflog.Error(ctx, fmt.Sprintf("failed to rollback role rules after error: %v", err))
 			}
 		}
