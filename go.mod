@@ -2,7 +2,7 @@ module github.com/akeylesslabs/terraform-provider-akeyless
 
 godebug x509negativeserial=1
 
-go 1.24.4
+go 1.25
 
 require (
 	github.com/akeylesslabs/akeyless-go v1.0.0
@@ -106,4 +106,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/akeylesslabs/akeyless-go => github.com/akeylesslabs/akeyless-go/v5 v5.0.16
+replace github.com/akeylesslabs/akeyless-go => github.com/akeylesslabs/akeyless-go/v5 v5.0.18
