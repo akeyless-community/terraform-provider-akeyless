@@ -691,6 +691,40 @@ func TestCertificateDataSource(t *testing.T) {
 	tesItemDataSource(t, config, "certificate", []string{"certificate_pem", "private_key_pem"})
 }
 
+func TestFolderResource(t *testing.T) {
+
+	t.Parallel()
+
+	folderEndName := "test_folder"
+	folderName := testPath(folderEndName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_folder" "%v" {
+			name 				= "%v"
+			description 		= "aaaa"
+			tags 				= ["t1", "t2"]
+			delete_protection  	= "true"
+		}
+	`, folderEndName, folderName)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_folder" "%v" {
+			name 				= "%v"
+			description 		= "bbbb"
+			tags 				= ["t1", "t3"]
+		}
+	`, folderEndName, folderName)
+
+	configUpdate2 := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			name 						= "%v"
+			delete_protection  			= "false"
+		}
+	`, folderEndName, folderName)
+
+	testFolderResource(t, folderName, config, configUpdate, configUpdate2)
+}
+
 func testItemResource(t *testing.T, itemPath string, configs ...string) {
 	steps := make([]resource.TestStep, len(configs))
 	for i, config := range configs {
@@ -698,6 +732,23 @@ func testItemResource(t *testing.T, itemPath string, configs ...string) {
 			Config: config,
 			Check: resource.ComposeTestCheckFunc(
 				checkItemExistsRemotely(itemPath),
+			),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps:             steps,
+	})
+}
+
+func testFolderResource(t *testing.T, folderName string, configs ...string) {
+	steps := make([]resource.TestStep, len(configs))
+	for i, config := range configs {
+		steps[i] = resource.TestStep{
+			Config: config,
+			Check: resource.ComposeTestCheckFunc(
+				checkFolderExistsRemotely(folderName),
 			),
 		}
 	}
@@ -747,6 +798,25 @@ func checkItemExistsRemotely(path string) resource.TestCheckFunc {
 		if err != nil {
 			return err
 		}
+		return nil
+	}
+}
+
+func checkFolderExistsRemotely(folder string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
+
+		gsvBody := akeyless_api.FolderGet{
+			Name:  folder,
+			Token: &token,
+		}
+
+		_, _, err := client.FolderGet(context.Background()).Body(gsvBody).Execute()
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 }
