@@ -44,6 +44,7 @@ func resourceFolder() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true, // if not provided on update - keep the existing value
 				Description: "Protection from accidental deletion of this folder [true/false]",
 			},
 			"folder_id": {
@@ -150,7 +151,7 @@ func resourceFolderRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if folder.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*folder.DeleteProtection))
+		err := d.Set("delete_protection", strconv.FormatBool(*folder.DeleteProtection))
 		if err != nil {
 			return err
 		}
@@ -177,7 +178,6 @@ func resourceFolderUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
@@ -224,9 +224,12 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 
-	_, _, err := client.FolderDelete(ctx).Body(body).Execute()
+	_, res, err := client.FolderDelete(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
+			if res != nil && res.StatusCode == http.StatusNotFound {
+				return nil
+			}
 			return fmt.Errorf("can't delete Folder: %v", string(apiErr.Body()))
 		}
 		return fmt.Errorf("can't delete Folder: %v", err)

@@ -114,7 +114,7 @@ func resourceStaticSecret() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
+				Computed:    true, // if not provided on update - keep the existing value
 				Description: "Protection from accidental deletion of this auth method, [true/false]",
 			},
 			"secure_access_enable": {
