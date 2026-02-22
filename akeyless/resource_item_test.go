@@ -716,9 +716,9 @@ func TestFolderResource(t *testing.T) {
 	`, folderEndName, folderName)
 
 	configUpdate2 := fmt.Sprintf(`
-		resource "akeyless_static_secret" "%v" {
-			name 						= "%v"
-			delete_protection  			= "false"
+		resource "akeyless_folder" "%v" {
+			name 				= "%v"
+			delete_protection  	= "false"
 		}
 	`, folderEndName, folderName)
 
