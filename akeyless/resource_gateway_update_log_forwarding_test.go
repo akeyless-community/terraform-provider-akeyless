@@ -184,7 +184,7 @@ func TestGatewayUpdateLogForwardingGoogleChronicle(t *testing.T) {
 			pull_interval   = "10"
 			gcp_key 		= "%s"
 			customer_id 	= "%s"
-			region 			= "us"
+			region 			= "us_multi_region"
 			log_type 		= "prod"
 		}
 	`, name, saKey, customerID)
@@ -375,6 +375,8 @@ func TestGatewayUpdateLogForwardingSyslog(t *testing.T) {
 			host 			= "127.0.0.1:514"
 			target_tag 		= "tag2"
 			formatter 		= "text"
+			enable_tls 		= false
+			tls_certificate	= "use-existing"
 		}
 	`, name)
 

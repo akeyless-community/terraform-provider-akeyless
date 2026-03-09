@@ -381,7 +381,7 @@ func TestPkiResourceWithLocalGw(t *testing.T) {
 		resource "akeyless_pki_cert_issuer" "%v" {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
-			ttl                   	= "50"
+			ttl                   	= "8760h"
 			gw_cluster_url 			= "http://localhost:8000"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domains"

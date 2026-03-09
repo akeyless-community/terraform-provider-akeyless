@@ -11,7 +11,8 @@ func TestGatewayMigrationAws(t *testing.T) {
 	skipIfNoGateway(t)
 	t.Parallel()
 
-	name := "test-migration-aws"
+	name := "migration_aws"
+	migrationName := testPath(name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_aws" "%v" {
@@ -21,7 +22,7 @@ func TestGatewayMigrationAws(t *testing.T) {
 			aws_key         = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 			aws_region      = "us-east-1"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_aws" "%v" {
@@ -31,7 +32,7 @@ func TestGatewayMigrationAws(t *testing.T) {
 			aws_key         = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 			aws_region      = "eu-west-1"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	testMigrationResource(t, config, configUpdate)
 }
@@ -156,7 +157,8 @@ func TestGatewayMigrationCertificate(t *testing.T) {
 	skipIfNoGateway(t)
 	t.Parallel()
 
-	name := "test-migration-cert"
+	name := "migration_cert"
+	migrationName := testPath(name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_certificate" "%v" {
@@ -165,7 +167,7 @@ func TestGatewayMigrationCertificate(t *testing.T) {
 			hosts           = "192.168.1.0/24,10.0.0.1"
 			port_ranges     = "443,8443"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_certificate" "%v" {
@@ -174,7 +176,7 @@ func TestGatewayMigrationCertificate(t *testing.T) {
 			hosts           = "192.168.1.0/24,10.0.0.1,10.0.0.2"
 			port_ranges     = "443,8443,8080-8090"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	testMigrationResource(t, config, configUpdate)
 }

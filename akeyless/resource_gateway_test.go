@@ -83,11 +83,11 @@ func TestGatewayUpdateCache(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_cache" "%v" {
-			enable_cache        	= "true"
+			enable_cache        	= "false"
 			stale_timeout 			= "60"
 			enable_proactive   		= "false"
-			minimum_fetch_interval 	= "10"
-			backup_interval 		= "3"
+			minimum_fetch_interval 	= "5"
+			backup_interval 		= "1"
 		}
 	`, name)
 
