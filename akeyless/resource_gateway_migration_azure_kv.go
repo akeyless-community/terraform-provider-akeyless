@@ -113,7 +113,7 @@ func resourceGatewayMigrationAzureKvCreate(d *schema.ResourceData, m interface{}
 
 	d.SetId(name)
 
-	return nil
+	return resourceGatewayMigrationAzureKvRead(d, m)
 }
 
 func resourceGatewayMigrationAzureKvRead(d *schema.ResourceData, m interface{}) error {
@@ -134,14 +134,17 @@ func resourceGatewayMigrationAzureKvRead(d *schema.ResourceData, m interface{}) 
 	rOut, res, err := client.GatewayGetMigration(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+			if res != nil && res.StatusCode == http.StatusNotFound {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't get Gateway Migration Azure KV: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		if res != nil && res.StatusCode == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("can't get Gateway Migration Azure KV: %v", err)
 	}
 
 	if rOut.Body != nil {

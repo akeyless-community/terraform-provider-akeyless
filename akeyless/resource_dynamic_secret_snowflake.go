@@ -33,6 +33,7 @@ func resourceDynamicSecretSnowflake() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -220,11 +221,13 @@ func resourceDynamicSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 	if rOut.Tags != nil {
 		err = d.Set("tags", rOut.Tags)

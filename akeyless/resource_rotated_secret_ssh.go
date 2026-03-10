@@ -103,6 +103,7 @@ func resourceRotatedSecretSsh() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 			"item_custom_fields": {
 				Type:        schema.TypeMap,
@@ -430,11 +431,13 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	deleteProtectionVal := "false"
 	if itemOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*itemOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 
 	d.SetId(path)

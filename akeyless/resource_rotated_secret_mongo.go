@@ -98,6 +98,7 @@ func resourceRotatedSecretMongo() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 			"item_custom_fields": {
 				Type:        schema.TypeMap,
@@ -163,7 +164,6 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -232,12 +232,9 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 		body.SecureAccessHost = secureAccessHost
 	}
 
-	_, _, err := client.RotatedSecretCreateMongodb(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretCreateMongodb(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -312,11 +309,13 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 			}
 		}
 	}
+	deleteProtectionVal := "false"
 	if itemOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*itemOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 	if itemOut.ItemCustomFieldsDetails != nil && len(itemOut.ItemCustomFieldsDetails) > 0 {
 		customFields := make(map[string]string)

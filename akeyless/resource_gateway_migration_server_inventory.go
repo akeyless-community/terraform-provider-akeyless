@@ -137,7 +137,7 @@ func resourceGatewayMigrationServerInventoryCreate(d *schema.ResourceData, m int
 
 	d.SetId(name)
 
-	return nil
+	return resourceGatewayMigrationServerInventoryRead(d, m)
 }
 
 func resourceGatewayMigrationServerInventoryRead(d *schema.ResourceData, m interface{}) error {
@@ -158,14 +158,17 @@ func resourceGatewayMigrationServerInventoryRead(d *schema.ResourceData, m inter
 	rOut, res, err := client.GatewayGetMigration(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+			if res != nil && res.StatusCode == http.StatusNotFound {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't get Gateway Migration Server Inventory: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		if res != nil && res.StatusCode == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("can't get Gateway Migration Server Inventory: %v", err)
 	}
 
 	if rOut.Body != nil {

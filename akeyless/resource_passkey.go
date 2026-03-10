@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -42,8 +43,8 @@ func resourcePasskey() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -190,15 +191,13 @@ func resourcePasskeyRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		deleteProtection := "false"
-		if *rOut.DeleteProtection {
-			deleteProtection = "true"
-		}
-		err = d.Set("delete_protection", deleteProtection)
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 	if rOut.ItemTags != nil {
 		err = d.Set("tags", rOut.ItemTags)

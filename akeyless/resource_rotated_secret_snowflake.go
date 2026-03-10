@@ -98,6 +98,7 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 			"item_custom_fields": {
 				Type:        schema.TypeMap,
@@ -256,11 +257,13 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if itemOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*itemOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 	if itemOut.ItemCustomFieldsDetails != nil && len(itemOut.ItemCustomFieldsDetails) > 0 {
 		customFields := make(map[string]string)

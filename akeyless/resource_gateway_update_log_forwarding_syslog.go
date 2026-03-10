@@ -141,9 +141,12 @@ func resourceGatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m inte
 			}
 		}
 		if config.SyslogTlsCertificate != nil {
-			err := d.Set("tls_certificate", common.Base64Encode(*config.SyslogTlsCertificate))
-			if err != nil {
-				return err
+			currentVal := d.Get("tls_certificate").(string)
+			if currentVal != "use-existing" {
+				err := d.Set("tls_certificate", common.Base64Encode(*config.SyslogTlsCertificate))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

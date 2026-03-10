@@ -80,7 +80,7 @@ func resourceGatewayMigrationGcpCreate(d *schema.ResourceData, m interface{}) er
 
 	d.SetId(name)
 
-	return nil
+	return resourceGatewayMigrationGcpRead(d, m)
 }
 
 func resourceGatewayMigrationGcpRead(d *schema.ResourceData, m interface{}) error {
@@ -101,14 +101,17 @@ func resourceGatewayMigrationGcpRead(d *schema.ResourceData, m interface{}) erro
 	rOut, res, err := client.GatewayGetMigration(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+			if res != nil && res.StatusCode == http.StatusNotFound {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
+			return fmt.Errorf("can't get Gateway Migration GCP: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't get value: %v", err)
+		if res != nil && res.StatusCode == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("can't get Gateway Migration GCP: %v", err)
 	}
 
 	if rOut.Body != nil {

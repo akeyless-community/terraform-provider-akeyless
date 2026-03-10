@@ -104,6 +104,7 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -125,7 +126,6 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -173,12 +173,9 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 		body.ItemCustomFields = &customFieldsMap
 	}
 
-	_, _, err := client.DynamicSecretCreateCassandra(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateCassandra(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -288,11 +285,13 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 
 	d.SetId(path)
@@ -305,7 +304,6 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -353,12 +351,9 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 		body.ItemCustomFields = &customFieldsMap
 	}
 
-	_, _, err := client.DynamicSecretUpdateCassandra(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateCassandra(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update Secret", resp, err)
 	}
 
 	d.SetId(name)

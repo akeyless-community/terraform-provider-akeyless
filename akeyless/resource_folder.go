@@ -44,8 +44,8 @@ func resourceFolder() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true, // if not provided on update - keep the existing value
 				Description: "Protection from accidental deletion of this folder [true/false]",
+				Default:     "false",
 			},
 			"folder_id": {
 				Type:        schema.TypeInt,
@@ -150,11 +150,13 @@ func resourceFolderRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if folder.DeleteProtection != nil {
-		err := d.Set("delete_protection", strconv.FormatBool(*folder.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*folder.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 
 	d.SetId(name)

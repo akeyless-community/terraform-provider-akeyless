@@ -33,6 +33,7 @@ func resourceDynamicSecretRabbitmq() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -145,7 +146,6 @@ func resourceDynamicSecretRabbitmqCreate(d *schema.ResourceData, m interface{}) 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	deleteProtection := d.Get("delete_protection").(string)
@@ -170,7 +170,7 @@ func resourceDynamicSecretRabbitmqCreate(d *schema.ResourceData, m interface{}) 
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
-	body := akeyless_api.GatewayCreateProducerRabbitMQ{
+	body := akeyless_api.DynamicSecretCreateRabbitMq{
 		Name:  name,
 		Token: &token,
 	}
@@ -201,12 +201,9 @@ func resourceDynamicSecretRabbitmqCreate(d *schema.ResourceData, m interface{}) 
 		body.ItemCustomFields = &fields
 	}
 
-	_, _, err := client.GatewayCreateProducerRabbitMQ(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateRabbitMq(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -241,11 +238,13 @@ func resourceDynamicSecretRabbitmqRead(d *schema.ResourceData, m interface{}) er
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 	if rOut.Tags != nil {
 		err = d.Set("tags", rOut.Tags)
@@ -301,7 +300,6 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	deleteProtection := d.Get("delete_protection").(string)
@@ -326,7 +324,7 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
-	body := akeyless_api.GatewayUpdateProducerRabbitMQ{
+	body := akeyless_api.DynamicSecretUpdateRabbitMq{
 		Name:  name,
 		Token: &token,
 	}
@@ -357,12 +355,9 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 		body.ItemCustomFields = &fields
 	}
 
-	_, _, err := client.GatewayUpdateProducerRabbitMQ(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateRabbitMq(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update Secret", resp, err)
 	}
 
 	d.SetId(name)

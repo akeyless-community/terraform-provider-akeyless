@@ -147,6 +147,7 @@ func resourceProducerK8s() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this item [true/false]",
+				Default:     "false",
 			},
 		},
 	}

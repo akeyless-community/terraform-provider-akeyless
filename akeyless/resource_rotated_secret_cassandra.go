@@ -98,6 +98,7 @@ func resourceRotatedSecretCassandra() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 			"item_custom_fields": {
 				Type:        schema.TypeMap,
@@ -130,7 +131,6 @@ func resourceRotatedSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -177,12 +177,9 @@ func resourceRotatedSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 
-	_, _, err := client.RotatedSecretCreateCassandra(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretCreateCassandra(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)

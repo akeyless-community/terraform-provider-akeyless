@@ -113,6 +113,7 @@ func resourceRotatedSecretAzure() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 			"explicitly_set_sa": {
 				Type:        schema.TypeString,

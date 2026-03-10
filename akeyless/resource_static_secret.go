@@ -125,8 +125,8 @@ func resourceStaticSecret() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true, // if not provided on update - keep the existing value
 				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
@@ -388,11 +388,13 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if itemOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*itemOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 
 	info := itemOut.ItemGeneralInfo
