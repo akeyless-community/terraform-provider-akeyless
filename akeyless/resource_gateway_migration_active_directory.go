@@ -165,7 +165,6 @@ func resourceGatewayMigrationActiveDirectoryCreate(d *schema.ResourceData, m int
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -225,12 +224,9 @@ func resourceGatewayMigrationActiveDirectoryCreate(d *schema.ResourceData, m int
 	common.GetAkeylessPtr(&body.AdDiscoverServices, adDiscoverServices)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
-	_, _, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Gateway Migration Active Directory: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Gateway Migration Active Directory: %v", err)
+		return common.HandleError("can't create Gateway Migration Active Directory", resp, err)
 	}
 
 	d.SetId(name)
@@ -249,7 +245,6 @@ func resourceGatewayMigrationActiveDirectoryRead(d *schema.ResourceData, m inter
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
-		Name:  &path,
 		Token: &token,
 	}
 
@@ -407,7 +402,6 @@ func resourceGatewayMigrationActiveDirectoryUpdate(d *schema.ResourceData, m int
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -478,12 +472,9 @@ func resourceGatewayMigrationActiveDirectoryUpdate(d *schema.ResourceData, m int
 	id = d.Get("migration_id").(string)
 	body.Id = &id
 
-	_, _, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Gateway Migration Active Directory: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update Gateway Migration Active Directory: %v", err)
+		return common.HandleError("can't update Gateway Migration Active Directory", resp, err)
 	}
 
 	return nil

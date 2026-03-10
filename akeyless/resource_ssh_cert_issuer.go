@@ -164,7 +164,6 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
@@ -225,12 +224,9 @@ func resourceSSHCertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessUseInternalSshAccess, secureAccessUseInternalSshAccess)
 	common.GetAkeylessPtr(&body.Target, target)
 
-	_, _, err := client.CreateSSHCertIssuer(ctx).Body(body).Execute()
+	_, resp, err := client.CreateSSHCertIssuer(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to create ssh cert issuer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to create ssh cert issuer: %w", err)
+		return common.HandleError("failed to create ssh cert issuer", resp, err)
 	}
 
 	d.SetId(name)
@@ -333,7 +329,6 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	signerKeyName := d.Get("signer_key_name").(string)
@@ -400,12 +395,9 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessSsh, secureAccessSsh)
 	common.GetAkeylessPtr(&body.SecureAccessUseInternalSshAccess, secureAccessUseInternalSshAccess)
 
-	_, _, err = client.UpdateSSHCertIssuer(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateSSHCertIssuer(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update : %w", err)
+		return common.HandleError("failed to update ", resp, err)
 	}
 
 	d.SetId(name)

@@ -3,8 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -108,7 +106,6 @@ func resourceGatewayUpdateLogForwardingLogzIoUpdate(d *schema.ResourceData, m in
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
@@ -125,12 +122,9 @@ func resourceGatewayUpdateLogForwardingLogzIoUpdate(d *schema.ResourceData, m in
 	common.GetAkeylessPtr(&body.LogzIoToken, logzIoToken)
 	common.GetAkeylessPtr(&body.Protocol, protocol)
 
-	_, _, err := client.GatewayUpdateLogForwardingLogzIo(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingLogzIo(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {

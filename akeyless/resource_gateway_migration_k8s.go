@@ -102,7 +102,6 @@ func resourceGatewayMigrationK8sCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -148,12 +147,9 @@ func resourceGatewayMigrationK8sCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.K8sSkipSystem, k8sSkipSystem)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
-	_, _, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Gateway Migration K8s: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Gateway Migration K8s: %v", err)
+		return common.HandleError("can't create Gateway Migration K8s", resp, err)
 	}
 
 	d.SetId(name)
@@ -172,7 +168,6 @@ func resourceGatewayMigrationK8sRead(d *schema.ResourceData, m interface{}) erro
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
-		Name:  &path,
 		Token: &token,
 	}
 
@@ -249,7 +244,6 @@ func resourceGatewayMigrationK8sUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -306,12 +300,9 @@ func resourceGatewayMigrationK8sUpdate(d *schema.ResourceData, m interface{}) er
 	id = d.Get("migration_id").(string)
 	body.Id = &id
 
-	_, _, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Gateway Migration K8s: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update Gateway Migration K8s: %v", err)
+		return common.HandleError("can't update Gateway Migration K8s", resp, err)
 	}
 
 	return nil

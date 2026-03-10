@@ -157,7 +157,6 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -215,12 +214,9 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
 
-	rOut, _, err := client.AuthMethodCreateOIDC(ctx).Body(body).Execute()
+	rOut, resp, err := client.AuthMethodCreateOIDC(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Auth Method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Auth Method: %v", err)
+		return common.HandleError("can't create Auth Method", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -421,7 +417,6 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -480,12 +475,9 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
 
-	_, _, err := client.AuthMethodUpdateOIDC(ctx).Body(body).Execute()
+	_, resp, err := client.AuthMethodUpdateOIDC(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

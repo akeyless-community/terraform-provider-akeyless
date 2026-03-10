@@ -6,8 +6,8 @@ import (
 )
 
 func TestGithubDynamicSecretResource(t *testing.T) {
-
-	t.Skip("requires real GitHub App credentials")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	name := "github_test"
 	itemPath := testPath(name)

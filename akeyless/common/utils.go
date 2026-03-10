@@ -629,6 +629,36 @@ func SecondsToTimeString(totalSeconds int) string {
 	return result.String()
 }
 
+// TimeStringToSeconds converts a formatted time string like "365d", "8760h", "1d2h3m4s"
+// back to total seconds. Returns -1 if the string cannot be parsed.
+func TimeStringToSeconds(s string) int {
+	total := 0
+	current := 0
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			current = current*10 + int(c-'0')
+		} else {
+			switch c {
+			case 'd':
+				total += current * 86400
+			case 'h':
+				total += current * 3600
+			case 'm':
+				total += current * 60
+			case 's':
+				total += current
+			default:
+				return -1
+			}
+			current = 0
+		}
+	}
+	if current > 0 {
+		total += current
+	}
+	return total
+}
+
 func ExtractLogForwardingFormat(isJson bool) string {
 	if isJson {
 		return "json"

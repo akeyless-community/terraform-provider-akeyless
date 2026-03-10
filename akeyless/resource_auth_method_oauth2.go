@@ -432,7 +432,6 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -492,12 +491,9 @@ func resourceAuthMethodOauth2Update(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
 
-	_, _, err := client.AuthMethodUpdateOauth2(ctx).Body(body).Execute()
+	_, resp, err := client.AuthMethodUpdateOauth2(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

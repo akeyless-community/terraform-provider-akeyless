@@ -681,7 +681,8 @@ func TestDockerhubTargetResource(t *testing.T) {
 }
 
 func TestHashivaultTargetResource(t *testing.T) {
-	t.Skip("Skipping Hashivault target resource test")
+	skipIfNoGateway(t)
+	t.Parallel()
 	targetName := "hashivault_target"
 	targetPath := testPath(targetName)
 
@@ -734,7 +735,8 @@ func TestLdapTargetResource(t *testing.T) {
 }
 
 func TestOpenAITargetResource(t *testing.T) {
-	t.Skip()
+	skipIfNoGateway(t)
+	t.Parallel()
 	targetName := "openai_target"
 	targetPath := testPath(targetName)
 

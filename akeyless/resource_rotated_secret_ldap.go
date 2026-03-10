@@ -120,6 +120,7 @@ func resourceRotatedSecretLdap() *schema.Resource {
 			"max_versions": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Set the maximum number of versions, limited by the account settings defaults.",
 			},
 			"keep_prev_version": {
@@ -204,7 +205,6 @@ func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -280,12 +280,9 @@ func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	}
 	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(target))
 
-	_, _, err := client.RotatedSecretCreateLdap(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretCreateLdap(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -463,7 +460,6 @@ func resourceRotatedSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -545,12 +541,9 @@ func resourceRotatedSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	}
 	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(target))
 
-	_, _, err = client.RotatedSecretUpdateLdap(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretUpdateLdap(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

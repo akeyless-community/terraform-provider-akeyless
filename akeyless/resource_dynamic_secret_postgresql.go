@@ -177,7 +177,6 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -246,12 +245,9 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 		common.GetAkeylessPtr(&body.SecureAccessDelay, delay)
 	}
 
-	_, _, err := client.DynamicSecretCreatePostgreSql(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreatePostgreSql(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -423,7 +419,6 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -492,12 +487,9 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 		common.GetAkeylessPtr(&body.SecureAccessDelay, delay)
 	}
 
-	_, _, err := client.DynamicSecretUpdatePostgreSql(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdatePostgreSql(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

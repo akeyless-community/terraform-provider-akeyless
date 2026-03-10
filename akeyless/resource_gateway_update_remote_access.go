@@ -168,7 +168,6 @@ func resourceGatewayUpdateRemoteAccessUpdate(d *schema.ResourceData, m interface
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	allowedSshUrl := d.Get("allowed_ssh_url").(string)
 	allowedUrls := d.Get("allowed_urls").(string)
@@ -193,12 +192,9 @@ func resourceGatewayUpdateRemoteAccessUpdate(d *schema.ResourceData, m interface
 	common.GetAkeylessPtr(&body.HideSessionRecording, hideSessionRecording)
 	common.GetAkeylessPtr(&body.KeyboardLayout, keyboardLayout)
 
-	_, _, err := client.GatewayUpdateRemoteAccess(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateRemoteAccess(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update remote access config: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update remote access config: %v", err)
+		return common.HandleError("can't update remote access config", resp, err)
 	}
 
 	if d.Id() == "" {

@@ -3,8 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -120,7 +118,6 @@ func resourceGatewayUpdateLogForwardingAzureAnalyticsUpdate(d *schema.ResourceDa
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	enableBatch := d.Get("enable_batch").(string)
@@ -139,12 +136,9 @@ func resourceGatewayUpdateLogForwardingAzureAnalyticsUpdate(d *schema.ResourceDa
 	common.GetAkeylessPtr(&body.WorkspaceId, workspaceId)
 	common.GetAkeylessPtr(&body.WorkspaceKey, workspaceKey)
 
-	_, _, err := client.GatewayUpdateLogForwardingAzureAnalytics(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingAzureAnalytics(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {

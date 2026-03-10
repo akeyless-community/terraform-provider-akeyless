@@ -118,7 +118,6 @@ func resourceGatewayAllowedAccessCreate(d *schema.ResourceData, m interface{}) e
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -146,12 +145,9 @@ func resourceGatewayAllowedAccessCreate(d *schema.ResourceData, m interface{}) e
 		body.SubClaimsCaseInsensitive = &subClaimsCaseInsensitive
 	}
 
-	_, _, err := client.GatewayCreateAllowedAccess(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayCreateAllowedAccess(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create gateway allowed access, error: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create gateway allowed access, error: %v", err)
+		return common.HandleError("can't create gateway allowed access, error", resp, err)
 	}
 
 	d.SetId(name)
@@ -285,7 +281,6 @@ func resourceGatewayAllowedAccessUpdate(d *schema.ResourceData, m interface{}) e
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -313,12 +308,9 @@ func resourceGatewayAllowedAccessUpdate(d *schema.ResourceData, m interface{}) e
 		body.SubClaimsCaseInsensitive = &subClaimsCaseInsensitive
 	}
 
-	_, _, err := client.GatewayUpdateAllowedAccess(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateAllowedAccess(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update gateway allowed access, error: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update gateway allowed access, error: %v", err)
+		return common.HandleError("can't update gateway allowed access, error", resp, err)
 	}
 
 	d.SetId(name)

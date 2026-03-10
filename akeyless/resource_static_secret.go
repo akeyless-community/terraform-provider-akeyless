@@ -244,7 +244,6 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	body := akeyless_api.CreateSecret{
 		Name:           path,
@@ -280,12 +279,9 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 
-	_, _, err := client.CreateSecret(ctx).Body(body).Execute()
+	_, resp, err := client.CreateSecret(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	item := akeyless_api.DescribeItem{
@@ -460,7 +456,6 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Get("path").(string)
@@ -498,12 +493,9 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 			common.GetAkeylessPtr(&body.CustomField, customField)
 		}
 
-		_, _, err := client.UpdateSecretVal(ctx).Body(body).Execute()
+		_, resp, err := client.UpdateSecretVal(ctx).Body(body).Execute()
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				return fmt.Errorf("can't update Secret: %v", string(apiErr.Body()))
-			}
-			return fmt.Errorf("can't update Secret: %v", err)
+			return common.HandleError("can't update Secret", resp, err)
 		}
 	}
 
@@ -560,12 +552,9 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&bodyItem.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessWebProxy, secureAccessWebProxy)
 
-	_, _, err = client.UpdateItem(ctx).Body(bodyItem).Execute()
+	_, resp, err := client.UpdateItem(ctx).Body(bodyItem).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update item: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update item: %v", err)
+		return common.HandleError("can't update item", resp, err)
 	}
 
 	item := akeyless_api.DescribeItem{

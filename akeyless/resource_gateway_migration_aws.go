@@ -68,7 +68,6 @@ func resourceGatewayMigrationAwsCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -85,12 +84,9 @@ func resourceGatewayMigrationAwsCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.AwsRegion, awsRegion)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
-	_, _, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Gateway Migration AWS: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Gateway Migration AWS: %v", err)
+		return common.HandleError("can't create Gateway Migration AWS", resp, err)
 	}
 
 	d.SetId(name)
@@ -109,7 +105,6 @@ func resourceGatewayMigrationAwsRead(d *schema.ResourceData, m interface{}) erro
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
-		Name:  &path,
 		Token: &token,
 	}
 
@@ -176,7 +171,6 @@ func resourceGatewayMigrationAwsUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -203,12 +197,9 @@ func resourceGatewayMigrationAwsUpdate(d *schema.ResourceData, m interface{}) er
 	id = d.Get("migration_id").(string)
 	body.Id = &id
 
-	_, _, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Gateway Migration AWS: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update Gateway Migration AWS: %v", err)
+		return common.HandleError("can't update Gateway Migration AWS", resp, err)
 	}
 
 	return nil

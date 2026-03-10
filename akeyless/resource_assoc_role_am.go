@@ -60,7 +60,6 @@ func resourceAssocRoleAmCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	roleName := d.Get("role_name").(string)
 	amName := d.Get("am_name").(string)
@@ -80,12 +79,9 @@ func resourceAssocRoleAmCreate(d *schema.ResourceData, m interface{}) error {
 	body.SubClaims = &sc
 	common.GetAkeylessPtr(&body.CaseSensitive, caseSensitive)
 
-	r, _, err := client.AssocRoleAuthMethod(ctx).Body(body).Execute()
+	r, resp, err := client.AssocRoleAuthMethod(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create association: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create association: %v", err)
+		return common.HandleError("can't create association", resp, err)
 	}
 	if r.AssocId == nil {
 		return fmt.Errorf("can't create association")
@@ -163,7 +159,6 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	subClaims := d.Get("sub_claims").(map[string]interface{})
 	sc := make(map[string]string, len(subClaims))
@@ -181,12 +176,9 @@ func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 	body.SubClaims = &sc
 	common.GetAkeylessPtr(&body.CaseSensitive, caseSensitive)
 
-	_, _, err = client.UpdateAssoc(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateAssoc(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update association: %s", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update association: %w", err)
+		return common.HandleError("can't update association", resp, err)
 	}
 
 	d.SetId(id)

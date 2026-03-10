@@ -129,6 +129,7 @@ func resourceRotatedSecretAws() *schema.Resource {
 			"max_versions": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Set the maximum number of versions, limited by the account settings defaults.",
 			},
 			"rotate_after_disconnect": {
@@ -176,7 +177,6 @@ func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -243,12 +243,9 @@ func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 		body.ItemCustomFields = &fields
 	}
 
-	_, _, err := client.RotatedSecretCreateAws(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretCreateAws(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -465,7 +462,6 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -540,12 +536,9 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 		body.ItemCustomFields = &fields
 	}
 
-	_, _, err = client.RotatedSecretUpdateAws(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretUpdateAws(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

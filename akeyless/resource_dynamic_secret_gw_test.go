@@ -116,7 +116,7 @@ func TestDynamicSecretPostgresql(t *testing.T) {
 }
 
 func TestDynamicSecretMongo(t *testing.T) {
-	t.Skip("SDK bug: update path is /dynamic-secret-update-mongo instead of /dynamic-secret-update-mongodb (404)")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "ds_mongo_test"
@@ -251,6 +251,109 @@ func TestDynamicSecretCassandra(t *testing.T) {
 	testItemResource(t, itemPath, config, configUpdate)
 }
 
+func TestDynamicSecretOracle(t *testing.T) {
+	skipIfNoGateway(t)
+	t.Parallel()
+
+	name := "ds_oracle_test"
+	itemPath := testPath(name)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_oracle" "%v" {
+			name            = "%v"
+			oracle_username = "admin"
+			oracle_password = "DummyPass123"
+			oracle_host     = "oracle-db.example.com"
+			oracle_port     = "1521"
+			oracle_service_name = "ORCL"
+			user_ttl        = "30m"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_oracle" "%v" {
+			name            = "%v"
+			oracle_username = "admin"
+			oracle_password = "DummyPass123"
+			oracle_host     = "oracle-db.example.com"
+			oracle_port     = "1521"
+			oracle_service_name = "ORCL"
+			user_ttl        = "60m"
+			tags            = ["test1", "test2"]
+		}
+	`, name, itemPath)
+
+	testItemResource(t, itemPath, config, configUpdate)
+}
+
+func TestDynamicSecretHanaDb(t *testing.T) {
+	skipIfNoGateway(t)
+	t.Parallel()
+
+	name := "ds_hana_test"
+	itemPath := testPath(name)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_hana_db" "%v" {
+			name             = "%v"
+			hanadb_username  = "SYSTEM"
+			hanadb_password  = "DummyPass123"
+			hanadb_host      = "hana-db.example.com"
+			hanadb_port      = "30015"
+			user_ttl         = "30m"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_hana_db" "%v" {
+			name             = "%v"
+			hanadb_username  = "SYSTEM"
+			hanadb_password  = "DummyPass123"
+			hanadb_host      = "hana-db.example.com"
+			hanadb_port      = "30015"
+			user_ttl         = "60m"
+			tags             = ["test1", "test2"]
+		}
+	`, name, itemPath)
+
+	testItemResource(t, itemPath, config, configUpdate)
+}
+
+func TestDynamicSecretRedshift(t *testing.T) {
+	skipIfNoGateway(t)
+	t.Parallel()
+
+	name := "ds_redshift_test"
+	itemPath := testPath(name)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_redshift" "%v" {
+			name              = "%v"
+			redshift_username = "admin"
+			redshift_password = "DummyPass123"
+			redshift_host     = "redshift-cluster.example.com"
+			redshift_port     = "5439"
+			redshift_db_name  = "testdb"
+			user_ttl          = "30m"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_redshift" "%v" {
+			name              = "%v"
+			redshift_username = "admin"
+			redshift_password = "DummyPass123"
+			redshift_host     = "redshift-cluster.example.com"
+			redshift_port     = "5439"
+			redshift_db_name  = "testdb"
+			user_ttl          = "60m"
+			tags              = ["test1", "test2"]
+		}
+	`, name, itemPath)
+
+	testItemResource(t, itemPath, config, configUpdate)
+}
+
 func TestDynamicSecretRabbitmq(t *testing.T) {
 	skipIfNoGateway(t)
 	t.Parallel()
@@ -260,24 +363,30 @@ func TestDynamicSecretRabbitmq(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_rabbitmq" "%v" {
-			name                = "%v"
-			rabbitmq_admin_user = "%v"
-			rabbitmq_admin_pwd  = "%v"
-			rabbitmq_server_uri = "%v"
-			rabbitmq_user_tags  = "management"
-			user_ttl            = "30m"
+			name                           = "%v"
+			rabbitmq_admin_user            = "%v"
+			rabbitmq_admin_pwd             = "%v"
+			rabbitmq_server_uri            = "%v"
+			rabbitmq_user_tags             = "management"
+			rabbitmq_user_conf_permission  = ".*"
+			rabbitmq_user_read_permission  = ".*"
+			rabbitmq_user_write_permission = ".*"
+			user_ttl                       = "30m"
 		}
 	`, name, itemPath, dockerRabbitmqUser, dockerRabbitmqPassword, dockerRabbitmqURI)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_rabbitmq" "%v" {
-			name                = "%v"
-			rabbitmq_admin_user = "%v"
-			rabbitmq_admin_pwd  = "%v"
-			rabbitmq_server_uri = "%v"
-			rabbitmq_user_tags  = "administrator"
-			user_ttl            = "60m"
-			tags                = ["test1", "test2"]
+			name                           = "%v"
+			rabbitmq_admin_user            = "%v"
+			rabbitmq_admin_pwd             = "%v"
+			rabbitmq_server_uri            = "%v"
+			rabbitmq_user_tags             = "administrator"
+			rabbitmq_user_conf_permission  = ".*"
+			rabbitmq_user_read_permission  = ".*"
+			rabbitmq_user_write_permission = ".*"
+			user_ttl                       = "60m"
+			tags                           = ["test1", "test2"]
 		}
 	`, name, itemPath, dockerRabbitmqUser, dockerRabbitmqPassword, dockerRabbitmqURI)
 

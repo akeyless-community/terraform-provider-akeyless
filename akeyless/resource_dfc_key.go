@@ -171,7 +171,6 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
@@ -231,12 +230,9 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
-	_, _, err = client.CreateDFCKey(ctx).Body(body).Execute()
+	_, resp, err := client.CreateDFCKey(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to create key: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to create key: %w", err)
+		return common.HandleError("failed to create key", resp, err)
 	}
 
 	d.SetId(name)
@@ -407,7 +403,6 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -445,12 +440,9 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update key: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update key: %w", err)
+		return common.HandleError("failed to update key", resp, err)
 	}
 
 	if d.HasChanges("auto_rotate", "rotation_interval", "rotation_event_in") {
@@ -577,7 +569,6 @@ func validateDfcKeyUpdateParams(d *schema.ResourceData) error {
 }
 
 func updateRotationSettings(d *schema.ResourceData, name string, token string, client akeyless_api.V2ApiService) error {
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	autoRotate := d.Get("auto_rotate").(string)
@@ -601,12 +592,9 @@ func updateRotationSettings(d *schema.ResourceData, name string, token string, c
 	common.GetAkeylessPtr(&rotationSettingsBody.RotationInterval, rotationIntervalInt)
 	common.GetAkeylessPtr(&rotationSettingsBody.RotationEventIn, rotationEventInList)
 
-	_, _, err = client.UpdateRotationSettings(ctx).Body(rotationSettingsBody).Execute()
+	_, resp, err := client.UpdateRotationSettings(ctx).Body(rotationSettingsBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update rotation settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update rotation settings: %w", err)
+		return common.HandleError("failed to update rotation settings", resp, err)
 	}
 	return nil
 }

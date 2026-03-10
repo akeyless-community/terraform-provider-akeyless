@@ -3,8 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -238,7 +236,6 @@ func resourceGatewayUpdateRemoteAccessRdpRecordingUpdate(d *schema.ResourceData,
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	rdpSessionRecording := d.Get("rdp_session_recording").(string)
 	rdpSessionStorage := d.Get("rdp_session_storage").(string)
@@ -275,12 +272,9 @@ func resourceGatewayUpdateRemoteAccessRdpRecordingUpdate(d *schema.ResourceData,
 	common.GetAkeylessPtr(&body.RdpSessionRecordingEncryptionKey, rdpSessionRecordingEncryptionKey)
 	common.GetAkeylessPtr(&body.RdpSessionRecordingQuality, rdpSessionRecordingQuality)
 
-	_, _, err := client.GatewayUpdateRemoteAccessRdpRecordings(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateRemoteAccessRdpRecordings(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update remote access rdp recording config: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update remote access rdp recording config: %v", err)
+		return common.HandleError("can't update remote access rdp recording config", resp, err)
 	}
 
 	if d.Id() == "" {

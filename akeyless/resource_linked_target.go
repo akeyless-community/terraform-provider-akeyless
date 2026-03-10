@@ -76,7 +76,6 @@ func resourceLinkedTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	hosts := d.Get("hosts").(string)
@@ -93,12 +92,9 @@ func resourceLinkedTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Type, hostType)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.TargetCreateLinked(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateLinked(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -206,7 +202,6 @@ func resourceLinkedTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	hosts := d.Get("hosts").(string)
@@ -229,12 +224,9 @@ func resourceLinkedTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 	common.GetAkeylessPtr(&body.RmHosts, rmHosts)
 
-	_, _, err := client.TargetUpdateLinked(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateLinked(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

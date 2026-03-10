@@ -2,8 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -97,6 +95,7 @@ func resourceRotatedSecretDockerHub() *schema.Resource {
 			"max_versions": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Set the maximum number of versions, limited by the account settings defaults.",
 			},
 			"rotation_event_in": {
@@ -119,7 +118,6 @@ func resourceRotatedSecretDockerHubCreate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -162,12 +160,9 @@ func resourceRotatedSecretDockerHubCreate(d *schema.ResourceData, m interface{})
 		body.ItemCustomFields = &fields
 	}
 
-	_, _, err := client.RotatedSecretCreateDockerhub(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretCreateDockerhub(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -297,7 +292,6 @@ func resourceRotatedSecretDockerHubUpdate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -350,12 +344,9 @@ func resourceRotatedSecretDockerHubUpdate(d *schema.ResourceData, m interface{})
 		body.ItemCustomFields = &fields
 	}
 
-	_, _, err = client.RotatedSecretUpdateDockerhub(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretUpdateDockerhub(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

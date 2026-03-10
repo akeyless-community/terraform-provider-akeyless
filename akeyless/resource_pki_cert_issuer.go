@@ -246,8 +246,8 @@ func resourcePKICertIssuer() *schema.Resource {
 			"max_path_len": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: "The maximum path length for the generated certificate. -1, means unlimited",
-				Default:     -1,
+				Description: "The maximum path length for the generated certificate. -1 means unlimited",
+				Default:     0,
 			},
 			"ocsp_ttl": {
 				Type:        schema.TypeString,
@@ -446,16 +446,21 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		certDetails := rOut.CertificateIssueDetails
 
 		if certDetails.MaxTtl != nil {
-			// if ttl represents seconds, it can contain or not contain - "s" at the end.
-			outTtl := common.SecondsToTimeString(int(*certDetails.MaxTtl))
+			apiSeconds := int(*certDetails.MaxTtl)
 			ttlInState := d.Get("ttl").(string)
-			if ttlInState != "" && !strings.HasSuffix(ttlInState, "s") {
-				outTtl = strings.TrimSuffix(outTtl, "s")
-			}
 
-			err := d.Set("ttl", outTtl)
-			if err != nil {
-				return err
+			// Preserve the user's original format when it represents the same duration.
+			if ttlInState != "" && common.TimeStringToSeconds(ttlInState) == apiSeconds {
+				// no change needed
+			} else {
+				outTtl := common.SecondsToTimeString(apiSeconds)
+				if ttlInState != "" && !strings.HasSuffix(ttlInState, "s") {
+					outTtl = strings.TrimSuffix(outTtl, "s")
+				}
+				err := d.Set("ttl", outTtl)
+				if err != nil {
+					return err
+				}
 			}
 		}
 

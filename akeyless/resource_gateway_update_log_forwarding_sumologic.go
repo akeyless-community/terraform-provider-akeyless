@@ -3,8 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -121,7 +119,6 @@ func resourceGatewayUpdateLogForwardingSumologicUpdate(d *schema.ResourceData, m
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
@@ -140,12 +137,9 @@ func resourceGatewayUpdateLogForwardingSumologicUpdate(d *schema.ResourceData, m
 	common.GetAkeylessPtr(&body.SumologicTags, sumologicTags)
 	common.GetAkeylessPtr(&body.Host, host)
 
-	_, _, err := client.GatewayUpdateLogForwardingSumologic(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingSumologic(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {

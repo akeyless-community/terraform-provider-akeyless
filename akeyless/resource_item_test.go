@@ -367,7 +367,6 @@ func TestPkiResource(t *testing.T) {
 }
 
 func TestPkiResourceWithLocalGw(t *testing.T) {
-	t.Skip("gateway does not recognize its own URL in Docker — gw_cluster_url mismatch")
 	skipIfNoGateway(t)
 	t.Parallel()
 

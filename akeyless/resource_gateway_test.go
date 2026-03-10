@@ -95,7 +95,7 @@ func TestGatewayUpdateCache(t *testing.T) {
 }
 
 func TestGatewayUpdateDefaults(t *testing.T) {
-	t.Skip("requires Zero-Knowledge Encryption permission on the gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	keyName := "/protection-key-for-gw-defaults"
@@ -124,7 +124,7 @@ func TestGatewayUpdateDefaults(t *testing.T) {
 }
 
 func TestGatewayUpdateRemoteAccess(t *testing.T) {
-	t.Skip("requires Remote Access Configuration permission on the gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-gw-remote-access"
@@ -180,7 +180,7 @@ func TestGatewayUpdateRemoteAccess(t *testing.T) {
 }
 
 func TestGatewayUpdateRemoteAccessRdpRecording(t *testing.T) {
-	t.Skip("requires Remote Access Configuration permission on the gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-gw-remote-access-rdp-recording"
@@ -347,4 +347,46 @@ func TestGatewayUpdateRemoteAccessRdpRecording(t *testing.T) {
 
 		testGatewayConfigResource(t, config, configUpdate)
 	})
+}
+
+func TestK8sAuthConfig(t *testing.T) {
+	skipIfNoGateway(t)
+	t.Parallel()
+
+	name := "test_k8s_auth"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_api_key" "k8s_auth_am" {
+			name = "%v"
+		}
+		resource "akeyless_k8s_auth_config" "%v" {
+			name                      = "%v"
+			access_id                 = akeyless_auth_method_api_key.k8s_auth_am.access_id
+			signing_key               = "LS0tLS1CRUdJTi..."
+			k8s_host                  = "https://k8s-api.example.com:6443"
+			k8s_ca_cert               = "LS0tLS1CRUdJTi..."
+			token_reviewer_jwt        = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
+			disable_issuer_validation = "true"
+			depends_on = [akeyless_auth_method_api_key.k8s_auth_am]
+		}
+	`, testPath("k8s_auth_am"), name, testPath(name))
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_api_key" "k8s_auth_am" {
+			name = "%v"
+		}
+		resource "akeyless_k8s_auth_config" "%v" {
+			name                      = "%v"
+			access_id                 = akeyless_auth_method_api_key.k8s_auth_am.access_id
+			signing_key               = "LS0tLS1CRUdJTi..."
+			k8s_host                  = "https://k8s-api.example.com:6443"
+			k8s_ca_cert               = "LS0tLS1CRUdJTi..."
+			token_reviewer_jwt        = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
+			token_exp                 = 600
+			disable_issuer_validation = "true"
+			depends_on = [akeyless_auth_method_api_key.k8s_auth_am]
+		}
+	`, testPath("k8s_auth_am"), name, testPath(name))
+
+	testGatewayConfigResource(t, config, configUpdate)
 }

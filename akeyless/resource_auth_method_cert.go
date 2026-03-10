@@ -238,13 +238,12 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
 				d.SetId("")
 				return nil
 			}
 			return fmt.Errorf("failed to create auth method cert: %v", string(apiErr.Body()))
 		}
-		return fmt.Errorf("can't create Auth Method cert: %v", err)
+		return common.HandleError("can't create Auth Method cert", res, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -460,7 +459,6 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -524,12 +522,9 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 
-	_, _, err := client.AuthMethodUpdateCert(ctx).Body(body).Execute()
+	_, resp, err := client.AuthMethodUpdateCert(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update : %w", err)
+		return common.HandleError("failed to update ", resp, err)
 	}
 
 	d.SetId(name)

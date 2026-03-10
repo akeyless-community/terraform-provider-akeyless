@@ -103,7 +103,6 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
@@ -136,12 +135,9 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 		body.UseGwServiceAccount = &useGwServiceAccount
 	}
 
-	_, _, err := client.TargetCreateK8s(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -251,7 +247,6 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
@@ -286,12 +281,9 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		body.UseGwServiceAccount = &useGwServiceAccount
 	}
 
-	_, _, err := client.TargetUpdateK8s(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

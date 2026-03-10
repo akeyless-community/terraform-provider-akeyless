@@ -9,6 +9,9 @@ services:
     environment:
       ADMIN_ACCESS_ID: ${AKEYLESS_ACCESS_ID}
       ADMIN_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY}
+      CLUSTER_URL: http://localhost:8081
+      VALIDATION_TEST: "true"
+      VERSION: 4.47.0-test
     healthcheck:
       test: ["CMD", "curl", "-sf", "-X", "POST", "http://localhost:8081/health"]
       interval: 10s
@@ -30,85 +33,85 @@ services:
       timeout: 3s
       retries: 20
 
-  postgres:
-    image: postgres:16
-    ports:
-      - "15432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres_password
-      POSTGRES_DB: testdb
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+#  postgres:
+#    image: postgres:16
+#    ports:
+#      - "15432:5432"
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: postgres_password
+#      POSTGRES_DB: testdb
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready -U postgres"]
+#      interval: 5s
+#      timeout: 3s
+#      retries: 20
 
-  mongo:
-    image: mongo:7
-    ports:
-      - "37017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: mongo_password
-      MONGO_INITDB_DATABASE: testdb
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+#  mongo:
+#    image: mongo:7
+#    ports:
+#      - "37017:27017"
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: admin
+#      MONGO_INITDB_ROOT_PASSWORD: mongo_password
+#      MONGO_INITDB_DATABASE: testdb
+#    healthcheck:
+#      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+#      interval: 5s
+#      timeout: 3s
+#      retries: 20
 
-  mssql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    platform: linux/amd64
-    ports:
-      - "11433:1433"
-    environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "MssqlPass123!"
-    healthcheck:
-      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "MssqlPass123!", "-C", "-Q", "SELECT 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
+#  mssql:
+#    image: mcr.microsoft.com/mssql/server:2022-latest
+#    platform: linux/amd64
+#    ports:
+#      - "11433:1433"
+#    environment:
+#      ACCEPT_EULA: "Y"
+#      MSSQL_SA_PASSWORD: "MssqlPass123!"
+#    healthcheck:
+#      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "MssqlPass123!", "-C", "-Q", "SELECT 1"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 20
 
-  redis:
-    image: redis:7
-    ports:
-      - "16379:6379"
-    command: >
-      redis-server
-      --requirepass redis_password
-      --aclfile /dev/null
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redis_password", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+#  redis:
+#    image: redis:7
+#    ports:
+#      - "16379:6379"
+#    command: >
+#      redis-server
+#      --requirepass redis_password
+#      --aclfile /dev/null
+#    healthcheck:
+#      test: ["CMD", "redis-cli", "-a", "redis_password", "ping"]
+#      interval: 5s
+#      timeout: 3s
+#      retries: 20
 
-  cassandra:
-    image: cassandra:4
-    ports:
-      - "19042:9042"
-    environment:
-      CASSANDRA_AUTHENTICATOR: PasswordAuthenticator
-    healthcheck:
-      test: ["CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'describe cluster'"]
-      interval: 15s
-      timeout: 10s
-      retries: 20
-      start_period: 60s
+#  cassandra:
+#    image: cassandra:4
+#    ports:
+#      - "19042:9042"
+#    environment:
+#      CASSANDRA_AUTHENTICATOR: PasswordAuthenticator
+#    healthcheck:
+#      test: ["CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'describe cluster'"]
+#      interval: 15s
+#      timeout: 10s
+#      retries: 20
+#      start_period: 60s
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "25672:5672"
-      - "35672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: rabbitmq_password
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
+#  rabbitmq:
+#    image: rabbitmq:3-management
+#    ports:
+#      - "25672:5672"
+#      - "35672:15672"
+#    environment:
+#      RABBITMQ_DEFAULT_USER: admin
+#      RABBITMQ_DEFAULT_PASS: rabbitmq_password
+#    healthcheck:
+#      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 20

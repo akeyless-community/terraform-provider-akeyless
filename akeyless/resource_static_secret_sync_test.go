@@ -8,7 +8,7 @@ import (
 )
 
 func TestStaticSecretSyncResource(t *testing.T) {
-	t.Skip("requires USC target setup and read permissions")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	secretName := "test_static_secret_for_sync"

@@ -76,7 +76,6 @@ func resourceGitlabTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	gitlabAccessToken := d.Get("gitlab_access_token").(string)
@@ -97,12 +96,9 @@ func resourceGitlabTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
-	_, _, err := client.TargetCreateGitlab(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateGitlab(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -181,7 +177,6 @@ func resourceGitlabTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	gitlabAccessToken := d.Get("gitlab_access_token").(string)
@@ -204,12 +199,9 @@ func resourceGitlabTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err := client.TargetUpdateGitlab(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateGitlab(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

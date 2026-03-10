@@ -74,7 +74,6 @@ func resourceGatewayMigrationHashiCreate(d *schema.ResourceData, m interface{}) 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -94,12 +93,9 @@ func resourceGatewayMigrationHashiCreate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.HashiJson, hashiJson)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
-	_, _, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Gateway Migration HashiCorp Vault: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Gateway Migration HashiCorp Vault: %v", err)
+		return common.HandleError("can't create Gateway Migration HashiCorp Vault", resp, err)
 	}
 
 	d.SetId(name)
@@ -118,7 +114,6 @@ func resourceGatewayMigrationHashiRead(d *schema.ResourceData, m interface{}) er
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
-		Name:  &path,
 		Token: &token,
 	}
 
@@ -185,7 +180,6 @@ func resourceGatewayMigrationHashiUpdate(d *schema.ResourceData, m interface{}) 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -216,12 +210,9 @@ func resourceGatewayMigrationHashiUpdate(d *schema.ResourceData, m interface{}) 
 	id = d.Get("migration_id").(string)
 	body.Id = &id
 
-	_, _, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Gateway Migration HashiCorp Vault: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update Gateway Migration HashiCorp Vault: %v", err)
+		return common.HandleError("can't update Gateway Migration HashiCorp Vault", resp, err)
 	}
 
 	return nil

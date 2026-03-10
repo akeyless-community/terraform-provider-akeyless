@@ -154,7 +154,6 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -198,12 +197,9 @@ func resourceRotatedSecretCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.UserAttribute, userAttribute)
 	common.GetAkeylessPtr(&body.CustomPayload, customPayload)
 
-	_, _, err := client.CreateRotatedSecret(ctx).Body(body).Execute()
+	_, resp, err := client.CreateRotatedSecret(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -394,7 +390,6 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	key := d.Get("key").(string)
@@ -445,20 +440,14 @@ func resourceRotatedSecretUpdate(d *schema.ResourceData, m interface{}) error {
 		Token:   &token,
 	}
 
-	_, _, err = client.UpdateItem(ctx).Body(bodyItem).Execute()
+	_, resp, err := client.UpdateItem(ctx).Body(bodyItem).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update item: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update item: %v", err)
+		return common.HandleError("can't update item", resp, err)
 	}
 
-	_, _, err = client.UpdateRotatedSecret(ctx).Body(body).Execute()
+	_, resp, err = client.UpdateRotatedSecret(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

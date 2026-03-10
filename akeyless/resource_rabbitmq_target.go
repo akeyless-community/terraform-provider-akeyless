@@ -76,7 +76,6 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	rabbitmqServerUser := d.Get("rabbitmq_server_user").(string)
@@ -97,12 +96,9 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
-	_, _, err := client.TargetCreateRabbitMq(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateRabbitMq(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -179,7 +175,6 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	rabbitmqServerUser := d.Get("rabbitmq_server_user").(string)
@@ -202,12 +197,9 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err := client.TargetUpdateRabbitMq(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateRabbitMq(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

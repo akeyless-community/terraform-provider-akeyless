@@ -262,13 +262,9 @@ func resourceAuthMethodKerberosCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.UserDn, userDn)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
 
-	var apiErr akeyless_api.GenericOpenAPIError
-	rOut, _, err := client.AuthMethodCreateKerberos(ctx).Body(body).Execute()
+	rOut, resp, err := client.AuthMethodCreateKerberos(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create auth method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create auth method: %v", err)
+		return common.HandleError("can't create auth method", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -565,13 +561,9 @@ func resourceAuthMethodKerberosUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.UserDn, userDn)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
 
-	var apiErr akeyless_api.GenericOpenAPIError
-	_, _, err := client.AuthMethodUpdateKerberos(ctx).Body(body).Execute()
+	_, resp, err := client.AuthMethodUpdateKerberos(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update auth method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update auth method: %v", err)
+		return common.HandleError("can't update auth method", resp, err)
 	}
 
 	d.SetId(name)

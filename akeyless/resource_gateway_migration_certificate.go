@@ -68,7 +68,6 @@ func resourceGatewayMigrationCertificateCreate(d *schema.ResourceData, m interfa
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -86,12 +85,9 @@ func resourceGatewayMigrationCertificateCreate(d *schema.ResourceData, m interfa
 	}
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
-	_, _, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Gateway Migration Certificate: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Gateway Migration Certificate: %v", err)
+		return common.HandleError("can't create Gateway Migration Certificate", resp, err)
 	}
 
 	d.SetId(name)
@@ -110,7 +106,6 @@ func resourceGatewayMigrationCertificateRead(d *schema.ResourceData, m interface
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
-		Name:  &path,
 		Token: &token,
 	}
 
@@ -170,7 +165,6 @@ func resourceGatewayMigrationCertificateUpdate(d *schema.ResourceData, m interfa
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
@@ -198,12 +192,9 @@ func resourceGatewayMigrationCertificateUpdate(d *schema.ResourceData, m interfa
 	id = d.Get("migration_id").(string)
 	body.Id = &id
 
-	_, _, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
+	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Gateway Migration Certificate: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update Gateway Migration Certificate: %v", err)
+		return common.HandleError("can't update Gateway Migration Certificate", resp, err)
 	}
 
 	return nil

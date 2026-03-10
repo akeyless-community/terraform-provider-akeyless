@@ -114,6 +114,7 @@ func resourceRotatedSecretMongo() *schema.Resource {
 			"max_versions": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Set the maximum number of versions, limited by the account settings defaults.",
 			},
 			"rotate_after_disconnect": {
@@ -456,7 +457,6 @@ func resourceRotatedSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -533,12 +533,9 @@ func resourceRotatedSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 		body.SecureAccessHost = secureAccessHost
 	}
 
-	_, _, err = client.RotatedSecretUpdateMongodb(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretUpdateMongodb(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

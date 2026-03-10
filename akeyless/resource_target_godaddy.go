@@ -108,7 +108,6 @@ func resourceGodaddyTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	apiKey := d.Get("api_key").(string)
@@ -139,12 +138,9 @@ func resourceGodaddyTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
-	_, _, err := client.CreateGodaddyTarget(ctx).Body(body).Execute()
+	_, resp, err := client.CreateGodaddyTarget(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to create target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to create target: %w", err)
+		return common.HandleError("failed to create target", resp, err)
 	}
 
 	d.SetId(name)
@@ -270,7 +266,6 @@ func resourceGodaddyTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	apiKey := d.Get("api_key").(string)
@@ -303,12 +298,9 @@ func resourceGodaddyTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err := client.UpdateGodaddyTarget(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateGodaddyTarget(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update target: %w", err)
+		return common.HandleError("failed to update target", resp, err)
 	}
 
 	d.SetId(name)

@@ -134,7 +134,6 @@ func resourceOidcAppCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessibility := d.Get("accessibility").(string)
@@ -178,12 +177,9 @@ func resourceOidcAppCreate(d *schema.ResourceData, m interface{}) error {
 		body.Tags = tags
 	}
 
-	_, _, err := client.CreateOidcApp(ctx).Body(body).Execute()
+	_, resp, err := client.CreateOidcApp(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create OIDC App: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create OIDC App: %v", err)
+		return common.HandleError("can't create OIDC App", resp, err)
 	}
 
 	d.SetId(name)
@@ -361,7 +357,6 @@ func resourceOidcAppUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessibility := d.Get("accessibility").(string)
@@ -397,12 +392,9 @@ func resourceOidcAppUpdate(d *schema.ResourceData, m interface{}) error {
 		common.GetAkeylessPtr(&body.Scopes, scopesStr)
 	}
 
-	_, _, err := client.UpdateOidcApp(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateOidcApp(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	// Update common item properties LAST (to restore/set common fields after UpdateOidcApp)
@@ -430,12 +422,9 @@ func resourceOidcAppUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, _, err = client.UpdateItem(ctx).Body(itemBody).Execute()
+	_, resp, err = client.UpdateItem(ctx).Body(itemBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

@@ -8,7 +8,6 @@ import (
 )
 
 func TestGatewayMigrationAws(t *testing.T) {
-	t.Skip("GatewayGetMigration returns error after create — gateway requires migration_id for read but create only returns name")
 	skipIfNoGateway(t)
 	t.Parallel()
 
@@ -39,7 +38,7 @@ func TestGatewayMigrationAws(t *testing.T) {
 }
 
 func TestGatewayMigrationAzureKv(t *testing.T) {
-	t.Skip("gateway validates Azure KV credentials on create")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-migration-azure-kv"
@@ -70,7 +69,7 @@ func TestGatewayMigrationAzureKv(t *testing.T) {
 }
 
 func TestGatewayMigrationGcp(t *testing.T) {
-	t.Skip("gateway validates GCP key on create")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-migration-gcp"
@@ -95,7 +94,7 @@ func TestGatewayMigrationGcp(t *testing.T) {
 }
 
 func TestGatewayMigrationHashi(t *testing.T) {
-	t.Skip("gateway validates HashiCorp Vault URL on create")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-migration-hashi"
@@ -123,7 +122,7 @@ func TestGatewayMigrationHashi(t *testing.T) {
 }
 
 func TestGatewayMigrationK8s(t *testing.T) {
-	t.Skip("gateway validates K8s URL on create")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-migration-k8s"
@@ -155,7 +154,6 @@ func TestGatewayMigrationK8s(t *testing.T) {
 }
 
 func TestGatewayMigrationCertificate(t *testing.T) {
-	t.Skip("GatewayGetMigration returns error after create — gateway requires migration_id for read but create only returns name")
 	skipIfNoGateway(t)
 	t.Parallel()
 
@@ -184,7 +182,7 @@ func TestGatewayMigrationCertificate(t *testing.T) {
 }
 
 func TestGatewayMigrationActiveDirectory(t *testing.T) {
-	t.Skip("gateway validates AD target on create")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-migration-ad"
@@ -224,7 +222,7 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 }
 
 func TestGatewayMigrationServerInventory(t *testing.T) {
-	t.Skip("gateway validates SI target on create")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-migration-si"

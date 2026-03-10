@@ -83,7 +83,6 @@ func resourcePasskeyCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
@@ -122,12 +121,9 @@ func resourcePasskeyCreate(d *schema.ResourceData, m interface{}) error {
 		body.Tags = tags
 	}
 
-	_, _, err := client.CreatePasskey(ctx).Body(body).Execute()
+	_, resp, err := client.CreatePasskey(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Passkey: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Passkey: %v", err)
+		return common.HandleError("can't create Passkey", resp, err)
 	}
 
 	d.SetId(name)
@@ -240,13 +236,9 @@ func resourcePasskeyUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateItem(ctx).Body(body).Execute()
 	if err != nil {
-		var updateApiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &updateApiErr) {
-			return fmt.Errorf("can't update Passkey: %v", string(updateApiErr.Body()))
-		}
-		return fmt.Errorf("can't update Passkey: %v", err)
+		return common.HandleError("can't update Passkey", resp, err)
 	}
 
 	d.SetId(name)

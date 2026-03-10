@@ -205,7 +205,6 @@ func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -282,12 +281,9 @@ func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.DynamicSecretCreateK8s(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Producer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create producer: %v", err)
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -472,7 +468,6 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -549,12 +544,9 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.DynamicSecretUpdateK8s(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Producer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update producer: %v", err)
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

@@ -162,7 +162,6 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -224,12 +223,9 @@ func resourceAuthMethodAwsIamCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.UniqueIdentifier, uniqueIdentifier)
 
-	rOut, _, err := client.AuthMethodCreateAwsIam(ctx).Body(body).Execute()
+	rOut, resp, err := client.AuthMethodCreateAwsIam(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create auth method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create auth method: %v", err)
+		return common.HandleError("can't create auth method", resp, err)
 	}
 	if rOut.AccessId != nil {
 		err = d.Set("access_id", *rOut.AccessId)
@@ -440,7 +436,6 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -503,12 +498,9 @@ func resourceAuthMethodAwsIamUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.UniqueIdentifier, uniqueIdentifier)
 
-	_, _, err := client.AuthMethodUpdateAwsIam(ctx).Body(body).Execute()
+	_, resp, err := client.AuthMethodUpdateAwsIam(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

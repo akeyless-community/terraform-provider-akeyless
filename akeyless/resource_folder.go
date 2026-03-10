@@ -67,7 +67,6 @@ func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.FolderCreate{
@@ -78,12 +77,9 @@ func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tagsList)
 
-	rOut, _, err := client.FolderCreate(ctx).Body(body).Execute()
+	rOut, resp, err := client.FolderCreate(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Folder: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Folder: %v", err)
+		return common.HandleError("can't create Folder", resp, err)
 	}
 
 	if rOut.FolderId != nil {
@@ -173,7 +169,6 @@ func resourceFolderUpdate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.FolderUpdate{
@@ -198,12 +193,9 @@ func resourceFolderUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, _, err := client.FolderUpdate(ctx).Body(body).Execute()
+	_, resp, err := client.FolderUpdate(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Folder: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update Folder: %v", err)
+		return common.HandleError("can't update Folder", resp, err)
 	}
 
 	d.SetId(name)

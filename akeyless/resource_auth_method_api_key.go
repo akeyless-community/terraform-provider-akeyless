@@ -115,7 +115,6 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -152,12 +151,9 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 
-	rOut, _, err := client.AuthMethodCreateApiKey(ctx).Body(body).Execute()
+	rOut, resp, err := client.AuthMethodCreateApiKey(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to create Secret: %w", err)
+		return common.HandleError("failed to create Secret", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -321,7 +317,6 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -359,12 +354,9 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 
-	_, _, err := client.AuthMethodUpdateApiKey(ctx).Body(body).Execute()
+	_, resp, err := client.AuthMethodUpdateApiKey(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update : %w", err)
+		return common.HandleError("failed to update ", resp, err)
 	}
 
 	d.SetId(name)

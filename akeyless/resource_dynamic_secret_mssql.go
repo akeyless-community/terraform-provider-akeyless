@@ -177,7 +177,6 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -243,12 +242,9 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.SecureAccessDelay, secureAccessDelay)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretCreateMsSql(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateMsSql(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -405,7 +401,6 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -471,12 +466,9 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.SecureAccessDelay, secureAccessDelay)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretUpdateMsSql(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateMsSql(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

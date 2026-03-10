@@ -61,6 +61,7 @@ func resourceUsc() *schema.Resource {
 			"use_prefix_as_filter": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     "false",
 				Description: "Whether to filter the USC secret list using the specified usc-prefix [true/false]",
 			},
 			"item_custom_fields": {

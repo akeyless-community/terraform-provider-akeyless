@@ -117,7 +117,6 @@ func resourceGatewayUpdateDefaultsUpdate(d *schema.ResourceData, m interface{}) 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	samlAccessId := d.Get("saml_access_id").(string)
 	oidcAccessId := d.Get("oidc_access_id").(string)
@@ -138,12 +137,9 @@ func resourceGatewayUpdateDefaultsUpdate(d *schema.ResourceData, m interface{}) 
 		body.HvpRouteVersion = akeyless_api.PtrInt64(int64(hvpRouteVersion))
 	}
 
-	_, _, err := client.GatewayUpdateDefaults(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateDefaults(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update defaults settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update defaults settings: %v", err)
+		return common.HandleError("can't update defaults settings", resp, err)
 	}
 
 	if d.Id() == "" {

@@ -80,7 +80,6 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	groupAlias := d.Get("group_alias").(string)
@@ -95,12 +94,9 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.UserAssignment, userAssignment)
 
-	_, _, err := client.CreateGroup(ctx).Body(body).Execute()
+	_, resp, err := client.CreateGroup(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to create group: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to create group: %w", err)
+		return common.HandleError("failed to create group", resp, err)
 	}
 
 	d.SetId(name)
@@ -188,7 +184,6 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	groupAlias := d.Get("group_alias").(string)
@@ -203,12 +198,9 @@ func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.UserAssignment, userAssignment)
 
-	_, _, err := client.UpdateGroup(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateGroup(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update group: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update group: %w", err)
+		return common.HandleError("failed to update group", resp, err)
 	}
 
 	d.SetId(name)

@@ -109,6 +109,7 @@ func resourceRotatedSecretCassandra() *schema.Resource {
 			"max_versions": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Set the maximum number of versions, limited by the account settings defaults",
 			},
 			"rotation_event_in": {
@@ -333,7 +334,6 @@ func resourceRotatedSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -388,12 +388,9 @@ func resourceRotatedSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 
-	_, _, err = client.RotatedSecretUpdateCassandra(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretUpdateCassandra(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

@@ -891,7 +891,8 @@ func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
 }
 
 func TestAuthMethodKerberosResourceCreateNew(t *testing.T) {
-	t.Skip("Skipping Kerberos auth method resource test")
+	skipIfNoGateway(t)
+	t.Parallel()
 	name := "test_auth_method_kerberos"
 	path := testPath("auth_method_kerberos")
 	deleteAuthMethod(path, "kerberos")

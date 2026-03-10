@@ -74,7 +74,6 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	baseUrl := d.Get("base_url").(string)
@@ -95,12 +94,9 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
-	_, _, err := client.TargetCreateArtifactory(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -176,7 +172,6 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	baseUrl := d.Get("base_url").(string)
@@ -199,12 +194,9 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err := client.TargetUpdateArtifactory(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

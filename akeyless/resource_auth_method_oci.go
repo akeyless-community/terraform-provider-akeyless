@@ -120,7 +120,6 @@ func resourceAuthMethodOciCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	tenantOcid := d.Get("tenant_ocid").(string)
@@ -162,12 +161,9 @@ func resourceAuthMethodOciCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 
-	rOut, _, err := client.CreateAuthMethodOCI(ctx).Body(body).Execute()
+	rOut, resp, err := client.CreateAuthMethodOCI(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to create auth method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to create auth method: %w", err)
+		return common.HandleError("failed to create auth method", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -340,7 +336,6 @@ func resourceAuthMethodOciUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	tenantOcid := d.Get("tenant_ocid").(string)
@@ -382,12 +377,9 @@ func resourceAuthMethodOciUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 
-	_, _, err := client.UpdateAuthMethodOCI(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateAuthMethodOCI(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update auth method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update auth method: %w", err)
+		return common.HandleError("failed to update auth method", resp, err)
 	}
 
 	d.SetId(name)

@@ -108,7 +108,6 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	tokenizerType := d.Get("tokenizer_type").(string)
@@ -148,12 +147,9 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 		body.ItemCustomFields = &itemCustomFields
 	}
 
-	_, _, err := client.CreateTokenizer(ctx).Body(body).Execute()
+	_, resp, err := client.CreateTokenizer(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create tokenizer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create tokenizer: %v", err)
+		return common.HandleError("can't create tokenizer", resp, err)
 	}
 
 	d.SetId(name)
@@ -313,7 +309,6 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -338,12 +333,9 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update tokenizer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update tokenizer: %v", err)
+		return common.HandleError("can't update tokenizer", resp, err)
 	}
 
 	d.SetId(name)

@@ -18,8 +18,8 @@ test:
     go test $(TEST) -timeout=30s
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v -count 1 -timeout 120m
-
+	TF_ACC=1 go test $(TEST) -v -count 1 -parallel 4 -timeout 120m
+	
 testgw-up:
 	docker compose -f docker-compose.test.yml up -d --wait
 	@echo "All services are healthy."

@@ -115,7 +115,6 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	deleteProtection := d.Get("delete_protection").(string)
@@ -161,12 +160,9 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 		body.ItemCustomFields = &customFieldsMap
 	}
 
-	_, _, err := client.DynamicSecretCreateGithub(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateGithub(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -326,7 +322,6 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	deleteProtection := d.Get("delete_protection").(string)
@@ -372,12 +367,9 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 		body.ItemCustomFields = &customFieldsMap
 	}
 
-	_, _, err := client.DynamicSecretUpdateGithub(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateGithub(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

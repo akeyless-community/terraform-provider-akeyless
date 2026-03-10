@@ -158,7 +158,6 @@ func resourceProducerK8sCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -212,12 +211,9 @@ func resourceProducerK8sCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.GatewayCreateProducerNativeK8S(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayCreateProducerNativeK8S(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Producer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create producer: %v", err)
+		return common.HandleError("can't create producer", resp, err)
 	}
 
 	d.SetId(name)
@@ -352,7 +348,6 @@ func resourceProducerK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -406,12 +401,9 @@ func resourceProducerK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.GatewayUpdateProducerNativeK8S(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateProducerNativeK8S(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Producer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update producer: %v", err)
+		return common.HandleError("can't update producer", resp, err)
 	}
 
 	d.SetId(name)

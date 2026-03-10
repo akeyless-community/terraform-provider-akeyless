@@ -127,7 +127,6 @@ func resourceGatewayUpdateCacheUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enableCache := d.Get("enable_cache").(string)
 	staleTimeout := d.Get("stale_timeout").(string)
@@ -144,12 +143,9 @@ func resourceGatewayUpdateCacheUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MinimumFetchInterval, minimumFetchInterval)
 	common.GetAkeylessPtr(&body.BackupInterval, backupInterval)
 
-	_, _, err := client.GatewayUpdateCache(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateCache(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update cache settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update cache settings: %v", err)
+		return common.HandleError("can't update cache settings", resp, err)
 	}
 
 	if d.Id() == "" {
