@@ -53,7 +53,8 @@ var db_attr = fmt.Sprintf(`
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
 
 func TestK8sProducerResource(t *testing.T) {
-	t.Skip("requires real K8s cluster credentials")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	name := "k8s_test"
 	itemPath := testPath(name)
@@ -91,7 +92,8 @@ func TestK8sProducerResource(t *testing.T) {
 }
 
 func TestGithubProducerResource(t *testing.T) {
-	t.Skip("requires real GitHub App credentials")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	name := "github_test"
 	itemPath := testPath(name)
@@ -119,7 +121,8 @@ func TestGithubProducerResource(t *testing.T) {
 }
 
 func TestGitlabProducerResource(t *testing.T) {
-	t.Skip("requires real GitLab credentials")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	name := "gitlab_test"
 	itemPath := testPath(name)
@@ -162,6 +165,7 @@ func TestGitlabProducerResource(t *testing.T) {
 
 func TestCustomProducerResource(t *testing.T) {
 	skipIfNoGateway(t)
+	t.Parallel()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -227,7 +231,8 @@ func TestMySqlProducerResource(t *testing.T) {
 }
 
 func TestGcpProducerResource(t *testing.T) {
-	t.Skip("requires real GCP credentials")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	name := "gcp_test"
 	itemPath := testPath(name)

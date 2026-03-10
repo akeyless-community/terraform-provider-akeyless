@@ -643,6 +643,8 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 }
 
 func TestRoleResourceWithSraRule(t *testing.T) {
+	skipIfNoGateway(t)
+	t.Parallel()
 	rolePath := testPath("test_role_resource_sra_rule")
 	deleteRole(rolePath)
 
@@ -1172,14 +1174,12 @@ func deleteAuthMethod(path string, authMethodType string) error {
 			// Retry deletion
 			_, _, retryErr := client.AuthMethodDelete(context.Background()).Body(gsvBody).Execute()
 			if retryErr != nil {
-				fmt.Println("error delete auth method after removing protection:", retryErr)
 				return retryErr
 			}
 			fmt.Println("deleted auth method:", path)
 			return nil
 		}
 
-		fmt.Println("error delete auth method:", err)
 		return err
 	}
 

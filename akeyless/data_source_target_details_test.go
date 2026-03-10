@@ -355,6 +355,8 @@ func TestTargetDataSourceLdap(t *testing.T) {
 }
 
 func TestTargetDataSourceLinkedTarget(t *testing.T) {
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	parentTargetName := "target-db-for-linked-target"
 	parentTargetPath := testPath(parentTargetName)
