@@ -36,11 +36,59 @@ jobs:
           go-version-file: go.mod
         id: go
 
+      - name: Checkout akeyless-main-repo
+        uses: actions/checkout@v4
+        with:
+          repository: akeylesslabs/akeyless-main-repo
+          path: akeyless-main-repo
+          token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
+
+      - name: Build local gateway artifacts
+        run: |
+          GITHUB_WORKSPACE="${{ github.workspace }}/akeyless-main-repo" \
+          SKIP_UI_BUILD="TRUE" \
+          CGO_ENABLED=0 \
+          "${{ github.workspace }}/akeyless-main-repo/tools/deployment/base/build_artifacts.sh" \
+            --files_destination "/tmp/akeyless_shared_vol/akeyless-api-proxy" \
+            --microservice akeyless-api-proxy \
+            --version "local_build" \
+            --development_or_release "development"
+
+      - name: Start local gateway
+        env:
+          API_GW_TEST_ACC_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
+          API_GW_TEST_ACC_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
+        run: |
+          compose_file="${{ github.workspace }}/akeyless-main-repo/.github/scripts/sanity-tests/api-gw/docker-compose.yml"
+          cluster_name=$(openssl rand -base64 12 | tr /+ A)
+          sed -i "s/__CLUSTER_NAME__/${cluster_name}/g" "${compose_file}"
+          sed -i "s/__API_GW_TEST_ACC_ID__/${API_GW_TEST_ACC_ID}/g" "${compose_file}"
+          sed -i "s/__API_GW_TEST_ACC_KEY__/${API_GW_TEST_ACC_KEY}/g" "${compose_file}"
+          docker compose -f "${compose_file}" -p api-gw-acc-tests up -d
+          sleep 30
+          docker network connect bridge api_gw_compose || true
+          docker network connect bridge api_gw_compose2 || true
+          docker restart api_gw_compose api_gw_compose2
+          for i in $(seq 1 18); do
+            if curl --output /dev/null --silent --fail -d "cmd=help" http://127.0.0.1:8080; then
+              break
+            fi
+            sleep 10
+          done
+
       - name: Run Acceptance Tests
         env:
+          AKEYLESS_GATEWAY: http://127.0.0.1:8080/v2
           AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
           AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
           TF_ACC_GCP_SERVICE_ACCOUNT: ${{ secrets.TF_ACC_GCP_SERVICE_ACCOUNT }}
           TF_ACC_GCP_BOUND_SERVICE_ACC: ${{ secrets.TF_ACC_GCP_BOUND_SERVICE_ACC }}
         run: |
           TF_ACC=1 go test ./... -v -count 1 -timeout 120m
+
+      - name: Stop local gateway
+        if: always()
+        run: |
+          compose_file="${{ github.workspace }}/akeyless-main-repo/.github/scripts/sanity-tests/api-gw/docker-compose.yml"
+          docker compose -f "${compose_file}" -p api-gw-acc-tests stop || true
+          docker compose -f "${compose_file}" -p api-gw-acc-tests rm -f || true
