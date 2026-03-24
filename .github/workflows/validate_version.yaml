@@ -59,7 +59,7 @@ jobs:
           docker network connect bridge api_gw_compose || true
           docker restart api_gw_compose
           ready="false"
-          for i in $(seq 1 18); do
+          for i in $(seq 1 20); do
             echo "Waiting for gateway curl proxy on http://127.0.0.1:8080 (attempt ${i}/18)..."
             if curl --output /dev/null --silent --fail -d "cmd=help" http://127.0.0.1:8080; then
               echo "Gateway curl proxy is up."
