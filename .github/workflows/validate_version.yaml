@@ -36,31 +36,22 @@ jobs:
           go-version-file: go.mod
         id: go
 
-      - name: Checkout akeyless-main-repo
-        uses: actions/checkout@v4
-        with:
-          repository: akeylesslabs/akeyless-main-repo
-          path: akeyless-main-repo
-          token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
-
       - name: Start local gateway
         env:
-          API_GW_TEST_ACC_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
-          API_GW_TEST_ACC_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
+          GATEWAY_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
+          GATEWAY_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
         run: |
-          compose_file="${{ github.workspace }}/akeyless-main-repo/.github/scripts/sanity-tests/api-gw/docker-compose.yml"
-          cluster_name=$(openssl rand -base64 12 | tr /+ A)
-          sed -i "s/__CLUSTER_NAME__/${cluster_name}/g" "${compose_file}"
-          sed -i "s/__API_GW_TEST_ACC_ID__/${API_GW_TEST_ACC_ID}/g" "${compose_file}"
-          sed -i "s/__API_GW_TEST_ACC_KEY__/${API_GW_TEST_ACC_KEY}/g" "${compose_file}"
-          docker compose -f "${compose_file}" -p api-gw-acc-tests pull
-          docker compose -f "${compose_file}" -p api-gw-acc-tests up -d api-gw1
-          sleep 30
-          docker network connect bridge api_gw_compose || true
-          docker restart api_gw_compose
+          docker pull akeyless/base:latest
+          docker rm -f gateway || true
+          docker run -d \
+            -p 8000:8000 -p 8200:8200 -p 18888:18888 -p 8080:8080 -p 8081:8081 -p 5696:5696 \
+            -e GATEWAY_ACCESS_ID="${GATEWAY_ACCESS_ID}" \
+            -e GATEWAY_ACCESS_KEY="${GATEWAY_ACCESS_KEY}" \
+            -e AKEYLESS_URL="https://vault.akeyless.io" \
+            --name gateway akeyless/base:latest
           ready="false"
           for i in $(seq 1 20); do
-            echo "Waiting for gateway curl proxy on http://127.0.0.1:8080 (attempt ${i}/18)..."
+            echo "Waiting for gateway curl proxy on http://127.0.0.1:8080 (attempt ${i}/20)..."
             if curl --output /dev/null --silent --fail -d "cmd=help" http://127.0.0.1:8080; then
               echo "Gateway curl proxy is up."
               ready="true"
@@ -71,8 +62,8 @@ jobs:
           if [[ "${ready}" != "true" ]]; then
             echo "Gateway did not become ready in time. Container status:"
             docker ps -a
-            echo "Gateway logs (api_gw_compose):"
-            docker logs api_gw_compose || true
+            echo "Gateway logs:"
+            docker logs gateway || true
             exit 1
           fi
 
@@ -89,6 +80,5 @@ jobs:
       - name: Stop local gateway
         if: always()
         run: |
-          compose_file="${{ github.workspace }}/akeyless-main-repo/.github/scripts/sanity-tests/api-gw/docker-compose.yml"
-          docker compose -f "${compose_file}" -p api-gw-acc-tests stop || true
-          docker compose -f "${compose_file}" -p api-gw-acc-tests rm -f || true
+          docker logs gateway || true
+          docker rm -f gateway || true
