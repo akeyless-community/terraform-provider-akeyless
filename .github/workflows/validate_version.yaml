@@ -53,17 +53,28 @@ jobs:
           sed -i "s/__CLUSTER_NAME__/${cluster_name}/g" "${compose_file}"
           sed -i "s/__API_GW_TEST_ACC_ID__/${API_GW_TEST_ACC_ID}/g" "${compose_file}"
           sed -i "s/__API_GW_TEST_ACC_KEY__/${API_GW_TEST_ACC_KEY}/g" "${compose_file}"
-          docker compose -f "${compose_file}" -p api-gw-acc-tests up -d
+          docker compose -f "${compose_file}" -p api-gw-acc-tests pull
+          docker compose -f "${compose_file}" -p api-gw-acc-tests up -d api-gw1
           sleep 30
           docker network connect bridge api_gw_compose || true
-          docker network connect bridge api_gw_compose2 || true
-          docker restart api_gw_compose api_gw_compose2
+          docker restart api_gw_compose
+          ready="false"
           for i in $(seq 1 18); do
+            echo "Waiting for gateway curl proxy on http://127.0.0.1:8080 (attempt ${i}/18)..."
             if curl --output /dev/null --silent --fail -d "cmd=help" http://127.0.0.1:8080; then
+              echo "Gateway curl proxy is up."
+              ready="true"
               break
             fi
             sleep 10
           done
+          if [[ "${ready}" != "true" ]]; then
+            echo "Gateway did not become ready in time. Container status:"
+            docker ps -a
+            echo "Gateway logs (api_gw_compose):"
+            docker logs api_gw_compose || true
+            exit 1
+          fi
 
       - name: Run Acceptance Tests
         env:
