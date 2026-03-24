@@ -44,6 +44,7 @@ jobs:
           token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
 
       - name: Build local gateway artifacts
+        working-directory: ${{ github.workspace }}/akeyless-main-repo
         run: |
           GITHUB_WORKSPACE="${{ github.workspace }}/akeyless-main-repo" \
           SKIP_UI_BUILD="TRUE" \
