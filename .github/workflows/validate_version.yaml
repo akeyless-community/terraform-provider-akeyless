@@ -43,20 +43,6 @@ jobs:
           path: akeyless-main-repo
           token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
 
-      - name: Build local gateway artifacts
-        working-directory: ${{ github.workspace }}/akeyless-main-repo
-        env:
-          GITHUB_TOKEN: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
-        run: |
-          GITHUB_WORKSPACE="${{ github.workspace }}/akeyless-main-repo" \
-          SKIP_UI_BUILD="TRUE" \
-          CGO_ENABLED=0 \
-          "${{ github.workspace }}/akeyless-main-repo/tools/deployment/base/build_artifacts.sh" \
-            --files_destination "/tmp/akeyless_shared_vol/akeyless-api-proxy" \
-            --microservice akeyless-api-proxy \
-            --version "local_build" \
-            --development_or_release "development"
-
       - name: Start local gateway
         env:
           API_GW_TEST_ACC_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
