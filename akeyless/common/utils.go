@@ -658,10 +658,14 @@ func ReadAuthExpirationEventInParam(expirationEvents []akeyless_api.AuthExpirati
 	return expirationEventsList
 }
 
-var gatewayURL = os.Getenv("AKEYLESS_GATEWAY")
-
-func IsLocalEnv() bool {
-	if gatewayURL == "http://localhost:8080/v2" || gatewayURL == "http://127.0.0.1:8080/v2" {
+// IsCICDEnv returns true if the test is running in Terraform CI/CD pipeline.
+// Terraform CI/CD pipeline is using a restricted user that have 1 deny rule for some items path.
+// This deny rule is reflected in the number of role rules that are returned (extra rule).
+// Note:
+// - except for this restriction, the user has an admin privileges.
+// - the account is dedicated for terraform CI/CD pipeline tests and should not contain any sensitive data.
+func IsCICDEnv() bool {
+	if strings.ToLower(os.Getenv("GITHUB_ACTIONS")) == "true" {
 		return true
 	}
 	return false

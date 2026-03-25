@@ -164,25 +164,25 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 5),
+					checkAddRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 5),
+					checkUpdateRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 4),
+					checkRemoveRoleRemotely(t, rolePath, 3),
 				),
 			},
 		},
@@ -265,13 +265,13 @@ func TestRoleResourceRuleWithNoLeadingSlash(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 5),
+					checkAddRoleRemotely(t, rolePath, 4),
 				),
 			},
 		},
@@ -396,25 +396,25 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath, 4),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath, 3),
 				),
 			},
 			{
 				Config: configAddRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 5),
+					checkAddRoleRemotely(t, rolePath, 4),
 				),
 			},
 			{
 				Config: configUpdateRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkUpdateRoleRemotely(t, rolePath, 4),
+					checkUpdateRoleRemotely(t, rolePath, 3),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 3),
+					checkRemoveRoleRemotely(t, rolePath, 2),
 				),
 			},
 		},
@@ -489,19 +489,19 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkRoleExistsRemotely(t, rolePath, authMethodPath1, 3),
+					checkRoleExistsRemotely(t, rolePath, authMethodPath1, 2),
 				),
 			},
 			{
 				Config: configAddAssoc,
 				Check: resource.ComposeTestCheckFunc(
-					checkAddRoleRemotely(t, rolePath, 2),
+					checkAddRoleRemotely(t, rolePath, 1),
 				),
 			},
 			{
 				Config: configRemoveRole,
 				Check: resource.ComposeTestCheckFunc(
-					checkRemoveRoleRemotely(t, rolePath, 3),
+					checkRemoveRoleRemotely(t, rolePath, 2),
 				),
 			},
 		},
@@ -726,8 +726,8 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rule
 
 		rules := res.GetRules()
 
-		if common.IsLocalEnv() {
-			rulesNum--
+		if common.IsCICDEnv() {
+			rulesNum++
 		}
 
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
@@ -814,8 +814,8 @@ func checkAddRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
 
-		if common.IsLocalEnv() {
-			rulesNum--
+		if common.IsCICDEnv() {
+			rulesNum++
 		}
 
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
@@ -845,8 +845,8 @@ func checkUpdateRole(t *testing.T, roleName string, accnum, rulesNum int) resour
 		assert.Equal(t, accnum, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
 
-		if common.IsLocalEnv() {
-			rulesNum--
+		if common.IsCICDEnv() {
+			rulesNum++
 		}
 
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
@@ -870,8 +870,8 @@ func checkRemoveRoleRemotely(t *testing.T, roleName string, rulesNum int) resour
 		assert.Equal(t, 1, len(res.GetRoleAuthMethodsAssoc()), "can't find Auth Method association")
 		rules := res.GetRules()
 
-		if common.IsLocalEnv() {
-			rulesNum--
+		if common.IsCICDEnv() {
+			rulesNum++
 		}
 
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
