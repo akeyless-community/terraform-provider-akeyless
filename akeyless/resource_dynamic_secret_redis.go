@@ -191,6 +191,7 @@ func resourceDynamicSecretRedisRead(d *schema.ResourceData, m interface{}) error
 		Token: &token,
 	}
 
+	client.DynamicSecretGetValue(ctx).Body(body).Execute()
 	rOut, res, err := client.DynamicSecretGet(ctx).Body(body).Execute()
 	if err != nil {
 		if errors.As(err, &apiErr) {

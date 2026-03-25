@@ -897,9 +897,8 @@ func TestAuthMethodKerberosResourceCreateNew(t *testing.T) {
 	path := testPath("auth_method_kerberos")
 	deleteAuthMethod(path, "kerberos")
 
-	// Base64 encoded test data
-	krb5ConfData := "dGVzdC1rcmI1LWNvbmY=" // base64 of "test-krb5-conf"
-	keytabData := "dGVzdC1rZXl0YWI="       // base64 of "test-keytab"
+	krb5ConfData := "dGVzdC1rcmI1LWNvbmY="
+	keytabData := "BQIAAAAA" // minimal valid keytab (starts with 0x0502)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_kerberos" "%v" {
@@ -915,8 +914,8 @@ func TestAuthMethodKerberosResourceCreateNew(t *testing.T) {
 		}
 	`, name, path, krb5ConfData, keytabData)
 
-	krb5ConfDataUpdated := "dGVzdC1rcmI1LWNvbmYtdXBkYXRlZA==" // base64 of "test-krb5-conf-updated"
-	keytabDataUpdated := "dGVzdC1rZXl0YWItdXBkYXRlZA=="       // base64 of "test-keytab-updated"
+	krb5ConfDataUpdated := "dGVzdC1rcmI1LWNvbmYtdXBkYXRlZA=="
+	keytabDataUpdated := "BQIAAAAA"
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_kerberos" "%v" {

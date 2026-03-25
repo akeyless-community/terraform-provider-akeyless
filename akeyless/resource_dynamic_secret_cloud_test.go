@@ -334,23 +334,39 @@ func TestDynamicSecretOpenai(t *testing.T) {
 	skipIfNoGateway(t)
 	t.Parallel()
 
+	targetName := "ds_openai_target"
+	targetPath := testPath(targetName)
 	name := "ds_openai_test"
 	itemPath := testPath(name)
 
 	config := fmt.Sprintf(`
-		resource "akeyless_dynamic_secret_openai" "%v" {
-			name     = "%v"
-			user_ttl = "30m"
+		resource "akeyless_target_openai" "%v" {
+			name       = "%v"
+			openai_key = "sk-dummy-key-1234567890"
 		}
-	`, name, itemPath)
+		resource "akeyless_dynamic_secret_openai" "%v" {
+			name        = "%v"
+			target_name = "%v"
+			user_ttl    = "30m"
+			depends_on  = [akeyless_target_openai.%v]
+		}
+	`, targetName, targetPath,
+		name, itemPath, targetPath, targetName)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_dynamic_secret_openai" "%v" {
-			name     = "%v"
-			user_ttl = "60m"
-			tags     = ["test1", "test2"]
+		resource "akeyless_target_openai" "%v" {
+			name       = "%v"
+			openai_key = "sk-dummy-key-1234567890"
 		}
-	`, name, itemPath)
+		resource "akeyless_dynamic_secret_openai" "%v" {
+			name        = "%v"
+			target_name = "%v"
+			user_ttl    = "60m"
+			tags        = ["test1", "test2"]
+			depends_on  = [akeyless_target_openai.%v]
+		}
+	`, targetName, targetPath,
+		name, itemPath, targetPath, targetName)
 
 	testItemResource(t, itemPath, config, configUpdate)
 }
@@ -364,22 +380,24 @@ func TestDynamicSecretPing(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_ping" "%v" {
-			name                = "%v"
-			ping_url            = "https://ping.example.com"
+			name                 = "%v"
+			ping_url             = "https://ping.example.com"
 			ping_privileged_user = "admin"
-			ping_password       = "DummyPass123"
-			user_ttl            = "30m"
+			ping_password        = "DummyPass123"
+			ping_redirect_uris   = "https://ping.example.com/callback"
+			user_ttl             = "30m"
 		}
 	`, name, itemPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_ping" "%v" {
-			name                = "%v"
-			ping_url            = "https://ping.example.com"
+			name                 = "%v"
+			ping_url             = "https://ping.example.com"
 			ping_privileged_user = "admin"
-			ping_password       = "DummyPass123"
-			user_ttl            = "60m"
-			tags                = ["test1", "test2"]
+			ping_password        = "DummyPass123"
+			ping_redirect_uris   = "https://ping.example.com/callback"
+			user_ttl             = "60m"
+			tags                 = ["test1", "test2"]
 		}
 	`, name, itemPath)
 
@@ -395,24 +413,26 @@ func TestDynamicSecretRdp(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_rdp" "%v" {
-			name           = "%v"
-			rdp_admin_name = "administrator"
-			rdp_admin_pwd  = "DummyPass123"
-			rdp_host_name  = "rdp.example.com"
-			rdp_host_port  = "3389"
-			user_ttl       = "30m"
+			name            = "%v"
+			rdp_admin_name  = "administrator"
+			rdp_admin_pwd   = "DummyPass123"
+			rdp_host_name   = "rdp.example.com"
+			rdp_host_port   = "3389"
+			rdp_user_groups = "Administrators"
+			user_ttl        = "30m"
 		}
 	`, name, itemPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_rdp" "%v" {
-			name           = "%v"
-			rdp_admin_name = "administrator"
-			rdp_admin_pwd  = "DummyPass123"
-			rdp_host_name  = "rdp.example.com"
-			rdp_host_port  = "3389"
-			user_ttl       = "60m"
-			tags           = ["test1", "test2"]
+			name            = "%v"
+			rdp_admin_name  = "administrator"
+			rdp_admin_pwd   = "DummyPass123"
+			rdp_host_name   = "rdp.example.com"
+			rdp_host_port   = "3389"
+			rdp_user_groups = "Administrators"
+			user_ttl        = "60m"
+			tags            = ["test1", "test2"]
 		}
 	`, name, itemPath)
 
@@ -432,6 +452,7 @@ func TestDynamicSecretSnowflake(t *testing.T) {
 			account_username = "admin"
 			account_password = "DummyPass123"
 			account          = "test-account.snowflakecomputing.com"
+			db_name          = "TESTDB"
 			user_ttl         = "30m"
 		}
 	`, name, itemPath)
@@ -442,6 +463,7 @@ func TestDynamicSecretSnowflake(t *testing.T) {
 			account_username = "admin"
 			account_password = "DummyPass123"
 			account          = "test-account.snowflakecomputing.com"
+			db_name          = "TESTDB"
 			user_ttl         = "60m"
 			tags             = ["test1", "test2"]
 		}

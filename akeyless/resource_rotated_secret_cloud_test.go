@@ -193,6 +193,7 @@ func TestRotatedSecretHanadb(t *testing.T) {
 			db_type   = "hanadb"
 			host      = "hana-db.example.com"
 			port      = "30015"
+			db_name   = "SYSTEMDB"
 			user_name = "SYSTEM"
 			pwd       = "DummyPass123"
 		}
@@ -212,6 +213,7 @@ func TestRotatedSecretHanadb(t *testing.T) {
 			db_type   = "hanadb"
 			host      = "hana-db.example.com"
 			port      = "30015"
+			db_name   = "SYSTEMDB"
 			user_name = "SYSTEM"
 			pwd       = "DummyPass123"
 		}
