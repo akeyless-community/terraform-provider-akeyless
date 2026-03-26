@@ -48,7 +48,6 @@ func resourceGatewayUpdateDefaults() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "The name of the gateway default encryption key",
-				Default:     "Default",
 			},
 			"event_on_status_change": {
 				Type:        schema.TypeString,
