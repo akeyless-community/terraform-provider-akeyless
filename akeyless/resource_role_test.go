@@ -96,10 +96,8 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 	defer deleteAuthMethod(authMethodPath, "api_key")
 
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -119,16 +117,14 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			analytics_access 	= "own"
 			
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
 
 	configAddRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -153,16 +149,14 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			analytics_access 	= "all"
 			  
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, RULE_PATH, RULE_PATH)
 
 	configUpdateRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -187,7 +181,7 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 			analytics_access 	= "all"
 
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, RULE_PATH, RULE_PATH)
@@ -235,10 +229,8 @@ func TestRoleResourceRuleWithNoLeadingSlash(t *testing.T) {
 	rulePath := "terraform-tests/*"
 
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -258,16 +250,14 @@ func TestRoleResourceRuleWithNoLeadingSlash(t *testing.T) {
 			analytics_access 	= "own"
 			
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, rulePath)
 
 	configAddRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -292,7 +282,7 @@ func TestRoleResourceRuleWithNoLeadingSlash(t *testing.T) {
 			analytics_access 	= "all"
 			  
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, rulePath, rulePath)
@@ -325,10 +315,8 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 	defer deleteAuthMethod(authMethodPath, "api_key")
 
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -349,16 +337,14 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			analytics_access 	= "all"
 			
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, RULE_PATH)
 
 	configAddRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -383,16 +369,14 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			analytics_access 	= "all"
 			  
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, authMethodPath, RULE_PATH, RULE_PATH)
 
 	configUpdateRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -407,16 +391,14 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			analytics_access 	= "own"
 
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath, RULE_PATH)
 
 	configRemoveRole := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -425,7 +407,7 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 			analytics_access 	= "own"
 
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath, rolePath)
@@ -473,10 +455,8 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 	defer deleteAuthMethod(authMethodPath2, "api_key")
 
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -496,16 +476,14 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 			audit_access 		= "all"
 			
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath1, rolePath, authMethodPath1, RULE_PATH)
 
 	configAddAssoc := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 
 		resource "akeyless_role" "test_role" {
@@ -519,7 +497,7 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 			audit_access 		= "all"
 			  
 			depends_on = [
-    			akeyless_auth_method.test_auth_method,
+    			akeyless_auth_method_api_key.test_auth_method,
   			]
 		}
 	`, authMethodPath2, rolePath, authMethodPath2)
@@ -560,10 +538,8 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 	defer deleteAuthMethod(authMethodPath, "api_key")
 
 	config := fmt.Sprintf(`
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 		resource "akeyless_role" "test_role" {
 			name = "%v"
@@ -584,7 +560,7 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 			case_sensitive = "true"
 
 		depends_on = [
-				akeyless_auth_method.test_auth_method,
+				akeyless_auth_method_api_key.test_auth_method,
 				akeyless_role.test_role,
 	 		]
 		}
@@ -592,10 +568,8 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 
 	configUpdateRole := fmt.Sprintf(`
 
-		resource "akeyless_auth_method" "test_auth_method" {
-			path = "%v"
-			api_key {
-			}
+		resource "akeyless_auth_method_api_key" "test_auth_method" {
+			name = "%v"
 		}
 		resource "akeyless_role" "test_role" {
 			name = "%v"
@@ -618,7 +592,7 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 			case_sensitive = "true"
 
 		depends_on = [
-				akeyless_auth_method.test_auth_method,
+				akeyless_auth_method_api_key.test_auth_method,
 				akeyless_role.test_role,
 	 		]
 		}
