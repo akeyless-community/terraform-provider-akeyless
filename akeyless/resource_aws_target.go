@@ -14,7 +14,6 @@ import (
 func resourceAwsTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "AWS Target resource",
-		DeprecationMessage: "use akeyless_target_aws resource instead",
 		Create:             resourceAwsTargetCreate,
 		Read:               resourceAwsTargetRead,
 		Update:             resourceAwsTargetUpdate,

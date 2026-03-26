@@ -15,7 +15,6 @@ import (
 func resourceGcpTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "GCP Target resource",
-		DeprecationMessage: "use akeyless_target_gcp resource instead",
 		Create:             resourceGcpTargetCreate,
 		Read:               resourceGcpTargetRead,
 		Update:             resourceGcpTargetUpdate,

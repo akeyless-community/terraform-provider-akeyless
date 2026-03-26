@@ -14,7 +14,6 @@ import (
 func resourceGitlabTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "Gitlab Target resource",
-		DeprecationMessage: "use akeyless_target_gitlab resource instead",
 		Create:             resourceGitlabTargetCreate,
 		Read:               resourceGitlabTargetRead,
 		Update:             resourceGitlabTargetUpdate,

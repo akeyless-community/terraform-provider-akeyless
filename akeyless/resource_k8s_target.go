@@ -15,7 +15,6 @@ import (
 func resourceK8sTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "K8S Target resource",
-		DeprecationMessage: "use akeyless_target_k8s resource instead",
 		Create:             resourceK8sTargetCreate,
 		Read:               resourceK8sTargetRead,
 		Update:             resourceK8sTargetUpdate,

@@ -15,7 +15,6 @@ import (
 func resourceGlobalsignTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "GlobalSign Target resource",
-		DeprecationMessage: "use akeyless_target_globalsign resource instead",
 		Create:             resourceGlobalsignTargetCreate,
 		Read:               resourceGlobalsignTargetRead,
 		Update:             resourceGlobalsignTargetUpdate,

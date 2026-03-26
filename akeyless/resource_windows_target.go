@@ -16,7 +16,6 @@ import (
 func resourceWindowsTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "windows Target resource",
-		DeprecationMessage: "use akeyless_target_windows resource instead",
 		Create:             resourceWindowsTargetCreate,
 		Read:               resourceWindowsTargetRead,
 		Update:             resourceWindowsTargetUpdate,

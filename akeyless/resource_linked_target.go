@@ -17,7 +17,6 @@ import (
 func resourceLinkedTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "Linked Target resource",
-		DeprecationMessage: "use akeyless_target_linked resource instead",
 		Create:             resourceLinkedTargetCreate,
 		Read:               resourceLinkedTargetRead,
 		Update:             resourceLinkedTargetUpdate,

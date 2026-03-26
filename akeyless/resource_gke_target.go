@@ -15,7 +15,6 @@ import (
 func resourceGkeTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "GKE Target resource",
-		DeprecationMessage: "use akeyless_target_gke resource instead",
 		Create:             resourceGkeTargetCreate,
 		Read:               resourceGkeTargetRead,
 		Update:             resourceGkeTargetUpdate,

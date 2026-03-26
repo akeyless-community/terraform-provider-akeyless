@@ -15,7 +15,6 @@ import (
 func resourceRabbitmqTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "RabbitMQT Target resource",
-		DeprecationMessage: "use akeyless_target_rabbit resource instead",
 		Create:             resourceRabbitmqTargetCreate,
 		Read:               resourceRabbitmqTargetRead,
 		Update:             resourceRabbitmqTargetUpdate,

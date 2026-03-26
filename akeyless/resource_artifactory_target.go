@@ -14,7 +14,6 @@ import (
 func resourceArtifactoryTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "Artifactory Target resource",
-		DeprecationMessage: "use akeyless_target_artifactory resource instead",
 		Create:             resourceArtifactoryTargetCreate,
 		Read:               resourceArtifactoryTargetRead,
 		Update:             resourceArtifactoryTargetUpdate,

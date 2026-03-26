@@ -14,7 +14,6 @@ import (
 func resourceGithubTarget() *schema.Resource {
 	return &schema.Resource{
 		Description:        "Github Target resource",
-		DeprecationMessage: "use akeyless_target_github resource instead",
 		Create:             resourceGithubTargetCreate,
 		Read:               resourceGithubTargetRead,
 		Update:             resourceGithubTargetUpdate,
