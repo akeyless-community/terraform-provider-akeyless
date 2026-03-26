@@ -9,9 +9,9 @@ services:
     environment:
       ADMIN_ACCESS_ID: ${AKEYLESS_ACCESS_ID}
       ADMIN_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY}
-      CLUSTER_URL: http://localhost:8081
-      VALIDATION_TEST: "true"
-      VERSION: 4.47.0-test
+      BYPASS_DRY_RUN: "true"
+      DEVELOPMENT_OR_RELEASE: "development"
+      VERSION: 4.47.0-bypass-dry-run-43646e8d0f3f73e00ce2f261b71e00cdeda66776
     healthcheck:
       test: ["CMD", "curl", "-sf", "-X", "POST", "http://localhost:8081/health"]
       interval: 10s
