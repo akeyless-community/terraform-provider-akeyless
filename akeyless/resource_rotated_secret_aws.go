@@ -346,12 +346,6 @@ func resourceRotatedSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
-		if rsd.RotationStatement != nil {
-			err := d.Set("rotator_custom_cmd", *rsd.RotationStatement)
-			if err != nil {
-				return err
-			}
-		}
 		if rsd.GraceRotation != nil {
 			if *rsd.GraceRotation || d.Get("grace_rotation").(string) != "" {
 				err := d.Set("grace_rotation", strconv.FormatBool(*rsd.GraceRotation))

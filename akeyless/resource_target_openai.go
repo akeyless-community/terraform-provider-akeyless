@@ -150,7 +150,7 @@ func resourceOpenAITargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.OpenaiTargetDetails != nil {
+	if rOut.Value != nil && rOut.Value.OpenaiTargetDetails != nil {
 		if rOut.Value.OpenaiTargetDetails.ApiKey != nil {
 			err = d.Set("api_key", *rOut.Value.OpenaiTargetDetails.ApiKey)
 			if err != nil {
@@ -182,13 +182,13 @@ func resourceOpenAITargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 	}
-	if rOut.Target.Comment != nil {
+	if rOut.Target != nil && rOut.Target.Comment != nil {
 		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Target.ProtectionKeyName != nil {
+	if rOut.Target != nil && rOut.Target.ProtectionKeyName != nil {
 		err = d.Set("key", *rOut.Target.ProtectionKeyName)
 		if err != nil {
 			return err

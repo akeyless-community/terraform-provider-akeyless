@@ -267,12 +267,6 @@ func resourceRotatedSecretDockerHubRead(d *schema.ResourceData, m interface{}) e
 				return err
 			}
 		}
-		if rsd.RotationStatement != nil {
-			err = d.Set("rotator_custom_cmd", *rsd.RotationStatement)
-			if err != nil {
-				return err
-			}
-		}
 		if rsd.MaxVersions != nil {
 			err = d.Set("max_versions", strconv.Itoa(int(*rsd.MaxVersions)))
 			if err != nil {

@@ -134,31 +134,31 @@ func resourceRabbitmqTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.RabbitMqTargetDetails.RabbitmqServerUser != nil {
+	if rOut.Value != nil && rOut.Value.RabbitMqTargetDetails != nil && rOut.Value.RabbitMqTargetDetails.RabbitmqServerUser != nil {
 		err = d.Set("rabbitmq_server_user", *rOut.Value.RabbitMqTargetDetails.RabbitmqServerUser)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.RabbitMqTargetDetails.RabbitmqServerPassword != nil {
+	if rOut.Value != nil && rOut.Value.RabbitMqTargetDetails != nil && rOut.Value.RabbitMqTargetDetails.RabbitmqServerPassword != nil {
 		err = d.Set("rabbitmq_server_password", *rOut.Value.RabbitMqTargetDetails.RabbitmqServerPassword)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Value.RabbitMqTargetDetails.RabbitmqServerUri != nil {
+	if rOut.Value != nil && rOut.Value.RabbitMqTargetDetails != nil && rOut.Value.RabbitMqTargetDetails.RabbitmqServerUri != nil {
 		err = d.Set("rabbitmq_server_uri", *rOut.Value.RabbitMqTargetDetails.RabbitmqServerUri)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Target.ProtectionKeyName != nil {
+	if rOut.Target != nil && rOut.Target.ProtectionKeyName != nil {
 		err = d.Set("key", *rOut.Target.ProtectionKeyName)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Target.Comment != nil {
+	if rOut.Target != nil && rOut.Target.Comment != nil {
 		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err

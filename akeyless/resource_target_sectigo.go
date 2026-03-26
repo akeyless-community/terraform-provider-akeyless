@@ -161,7 +161,7 @@ func resourceSectigoTargetRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("can't get value: %v", err)
 	}
 
-	if rOut.Value.SectigoTargetDetails != nil {
+	if rOut.Value != nil && rOut.Value.SectigoTargetDetails != nil {
 		if rOut.Value.SectigoTargetDetails.CertificateProfileId != nil {
 			err = d.Set("certificate_profile_id", int(*rOut.Value.SectigoTargetDetails.CertificateProfileId))
 			if err != nil {
@@ -208,13 +208,13 @@ func resourceSectigoTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 	}
-	if rOut.Target.Comment != nil {
+	if rOut.Target != nil && rOut.Target.Comment != nil {
 		err := d.Set("description", *rOut.Target.Comment)
 		if err != nil {
 			return err
 		}
 	}
-	if rOut.Target.ProtectionKeyName != nil {
+	if rOut.Target != nil && rOut.Target.ProtectionKeyName != nil {
 		err = d.Set("key", *rOut.Target.ProtectionKeyName)
 		if err != nil {
 			return err

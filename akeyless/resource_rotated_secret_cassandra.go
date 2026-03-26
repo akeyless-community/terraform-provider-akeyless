@@ -281,12 +281,6 @@ func resourceRotatedSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 				return err
 			}
 		}
-		if rsd.RotationStatement != nil {
-			err := d.Set("rotator_custom_cmd", *rsd.RotationStatement)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()

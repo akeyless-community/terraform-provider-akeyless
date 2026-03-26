@@ -341,8 +341,8 @@ func TestDynamicSecretOpenai(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
-			name       = "%v"
-			openai_key = "sk-dummy-key-1234567890"
+			name    = "%v"
+			api_key = "sk-dummy-key-1234567890"
 		}
 		resource "akeyless_dynamic_secret_openai" "%v" {
 			name        = "%v"
@@ -355,8 +355,8 @@ func TestDynamicSecretOpenai(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
-			name       = "%v"
-			openai_key = "sk-dummy-key-1234567890"
+			name    = "%v"
+			api_key = "sk-dummy-key-1234567890"
 		}
 		resource "akeyless_dynamic_secret_openai" "%v" {
 			name        = "%v"
