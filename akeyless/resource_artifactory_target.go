@@ -13,11 +13,11 @@ import (
 
 func resourceArtifactoryTarget() *schema.Resource {
 	return &schema.Resource{
-		Description:        "Artifactory Target resource",
-		Create:             resourceArtifactoryTargetCreate,
-		Read:               resourceArtifactoryTargetRead,
-		Update:             resourceArtifactoryTargetUpdate,
-		Delete:             resourceArtifactoryTargetDelete,
+		Description: "Artifactory Target resource",
+		Create:      resourceArtifactoryTargetCreate,
+		Read:        resourceArtifactoryTargetRead,
+		Update:      resourceArtifactoryTargetUpdate,
+		Delete:      resourceArtifactoryTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceArtifactoryTargetImport,
 		},
@@ -47,6 +47,7 @@ func resourceArtifactoryTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "The name of a key used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"description": {

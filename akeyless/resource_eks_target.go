@@ -13,11 +13,11 @@ import (
 
 func resourceEksTarget() *schema.Resource {
 	return &schema.Resource{
-		Description:        "EKS Target resource",
-		Create:             resourceEksTargetCreate,
-		Read:               resourceEksTargetRead,
-		Update:             resourceEksTargetUpdate,
-		Delete:             resourceEksTargetDelete,
+		Description: "EKS Target resource",
+		Create:      resourceEksTargetCreate,
+		Read:        resourceEksTargetRead,
+		Update:      resourceEksTargetUpdate,
+		Delete:      resourceEksTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceEksTargetImport,
 		},
@@ -72,6 +72,7 @@ func resourceEksTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"description": {

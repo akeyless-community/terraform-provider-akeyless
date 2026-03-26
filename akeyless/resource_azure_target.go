@@ -14,11 +14,11 @@ import (
 
 func resourceAzureTarget() *schema.Resource {
 	return &schema.Resource{
-		Description:        "Azure Target resource",
-		Create:             resourceAzureTargetCreate,
-		Read:               resourceAzureTargetRead,
-		Update:             resourceAzureTargetUpdate,
-		Delete:             resourceAzureTargetDelete,
+		Description: "Azure Target resource",
+		Create:      resourceAzureTargetCreate,
+		Read:        resourceAzureTargetRead,
+		Update:      resourceAzureTargetUpdate,
+		Delete:      resourceAzureTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAzureTargetImport,
 		},
@@ -87,6 +87,7 @@ func resourceAzureTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "Key name. The key is used to encrypt the target secret value. If the key name is not specified, the account default protection key is used",
 			},
 			"description": {

@@ -14,11 +14,11 @@ import (
 
 func resourceDbTarget() *schema.Resource {
 	return &schema.Resource{
-		Description:        "DB Target resource",
-		Create:             resourceDbTargetCreate,
-		Read:               resourceDbTargetRead,
-		Update:             resourceDbTargetUpdate,
-		Delete:             resourceDbTargetDelete,
+		Description: "DB Target resource",
+		Create:      resourceDbTargetCreate,
+		Read:        resourceDbTargetRead,
+		Update:      resourceDbTargetUpdate,
+		Delete:      resourceDbTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDbTargetImport,
 		},
@@ -190,6 +190,7 @@ func resourceDbTarget() *schema.Resource {
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"description": {

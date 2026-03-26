@@ -14,11 +14,11 @@ import (
 
 func resourceGcpTarget() *schema.Resource {
 	return &schema.Resource{
-		Description:        "GCP Target resource",
-		Create:             resourceGcpTargetCreate,
-		Read:               resourceGcpTargetRead,
-		Update:             resourceGcpTargetUpdate,
-		Delete:             resourceGcpTargetDelete,
+		Description: "GCP Target resource",
+		Create:      resourceGcpTargetCreate,
+		Read:        resourceGcpTargetRead,
+		Update:      resourceGcpTargetUpdate,
+		Delete:      resourceGcpTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGcpTargetImport,
 		},
@@ -51,6 +51,7 @@ func resourceGcpTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Computed:    true,
 				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"description": {

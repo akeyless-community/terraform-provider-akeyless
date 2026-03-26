@@ -68,7 +68,6 @@ func resourceRotatedSecretDockerHub() *schema.Resource {
 			},
 			"key": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Computed:    true,
 				Description: "The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)",

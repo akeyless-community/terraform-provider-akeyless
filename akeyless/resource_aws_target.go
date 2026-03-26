@@ -13,11 +13,11 @@ import (
 
 func resourceAwsTarget() *schema.Resource {
 	return &schema.Resource{
-		Description:        "AWS Target resource",
-		Create:             resourceAwsTargetCreate,
-		Read:               resourceAwsTargetRead,
-		Update:             resourceAwsTargetUpdate,
-		Delete:             resourceAwsTargetDelete,
+		Description: "AWS Target resource",
+		Create:      resourceAwsTargetCreate,
+		Read:        resourceAwsTargetRead,
+		Update:      resourceAwsTargetUpdate,
+		Delete:      resourceAwsTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsTargetImport,
 		},
@@ -57,6 +57,7 @@ func resourceAwsTarget() *schema.Resource {
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"description": {
