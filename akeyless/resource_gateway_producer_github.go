@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -90,7 +90,6 @@ func resourceProducerGithubCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
@@ -117,12 +116,9 @@ func resourceProducerGithubCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
 
-	_, _, err := client.GatewayCreateProducerGithub(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayCreateProducerGithub(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -230,7 +226,6 @@ func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	installationId := d.Get("installation_id").(int)
@@ -257,12 +252,9 @@ func resourceProducerGithubUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
 
-	_, _, err := client.GatewayUpdateProducerGithub(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateProducerGithub(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

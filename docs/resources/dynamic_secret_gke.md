@@ -21,15 +21,20 @@ Google Kubernetes Engine (GKE) dynamic secret resource
 
 ### Optional
 
-- `encryption_key_name` (String) Encrypt dynamic secret details with following key
-- `gke_account_key` (String) GKE service account key
-- `gke_cluster_cert` (String) GKE Base-64 encoded cluster certificate
-- `gke_cluster_endpoint` (String) GKE cluster endpoint, i.e., cluster URI https://<DNS/IP>.
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
+- `encryption_key_name` (String) Dynamic producer encryption key
+- `gke_account_key` (String) GKE Service Account key file path
+- `gke_cluster_cert` (String) GKE cluster CA certificate
+- `gke_cluster_endpoint` (String) GKE cluster URL endpoint
 - `gke_cluster_name` (String) GKE cluster name
 - `gke_service_account_email` (String) GKE service account email
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `secure_access_allow_port_forwading` (Boolean) Enable Port forwarding while using CLI access.
-- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_cluster_endpoint` (String) The K8s cluster endpoint URL
+- `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2

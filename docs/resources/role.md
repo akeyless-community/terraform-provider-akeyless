@@ -77,15 +77,17 @@ output "demo-role" {
 
 - `analytics_access` (String) Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
 - `assoc_auth_method` (Block Set, Deprecated) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
-- `audit_access` (String) Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.
-- `delete_protection` (String) Protection from accidental deletion of this role, [true/false]
+- `audit_access` (String) Allow this role to view audit logs. Currently only 'none', 'own', 'scoped' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
-- `event_center_access` (String) Allow this role to view Event Center. Currently only 'none', 'own' and 'all' values are supported.
+- `event_center_access` (String) Allow this role to view Event Center. Currently only 'none', 'scoped' and 'all' values are supported.
 - `event_forwarders_access` (String) Allow this role to manage Event Forwarders. Currently only 'none' and 'all' values are supported.
-- `gw_analytics_access` (String) Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
+- `event_forwarders_name` (Set of String) Allow this role to manage the following Event Forwarders.
+- `gw_analytics_access` (String) Allow this role to view gw analytics. Currently only 'none', 'scoped', 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
+- `reverse_rbac_access` (String) Allow this role to view Reverse RBAC. Supported values: 'scoped', 'all'.
 - `rules` (Block Set) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
-- `sra_reports_access` (String) Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.
-- `usage_reports_access` (String) Allow this role to view Usage reports. Currently only 'none' and 'all' values are supported.
+- `sra_reports_access` (String) Allow this role to view SRA Clusters. Currently only 'none', 'scoped', 'all' values are supported.
+- `usage_reports_access` (String) Allow this role to view Usage Report. Currently only 'none' and 'all' values are supported.
 
 ### Read-Only
 

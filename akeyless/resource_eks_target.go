@@ -6,18 +6,19 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceEksTarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "EKS Target resource",
-		Create:      resourceEksTargetCreate,
-		Read:        resourceEksTargetRead,
-		Update:      resourceEksTargetUpdate,
-		Delete:      resourceEksTargetDelete,
+		Description:        "EKS Target resource",
+		DeprecationMessage: "use akeyless_target_eks resource instead",
+		Create:             resourceEksTargetCreate,
+		Read:               resourceEksTargetRead,
+		Update:             resourceEksTargetUpdate,
+		Delete:             resourceEksTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceEksTargetImport,
 		},
@@ -36,24 +37,24 @@ func resourceEksTarget() *schema.Resource {
 			"eks_cluster_endpoint": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "EKS cluster endpoint (i.e., https://<IP> of the cluster)",
+				Description: "EKS cluster URL endpoint",
 			},
 			"eks_cluster_ca_cert": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
-				Description: "EKS cluster base-64 encoded certificate",
+				Description: "EKS cluster CA certificate",
 			},
 			"eks_access_key_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "EKS access key ID",
+				Description: "Access Key ID",
 			},
 			"eks_secret_access_key": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
-				Description: "EKS secret access key",
+				Description: "Secret Access Key",
 			},
 			"use_gw_cloud_identity": {
 				Type:        schema.TypeBool,
@@ -65,19 +66,29 @@ func resourceEksTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "EKS region",
+				Description: "Region",
 				Default:     "us-east-2",
 			},
 			"key": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.",
+				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the object",
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
 		},
 	}
@@ -88,7 +99,6 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
@@ -100,6 +110,7 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	eksRegion := d.Get("eks_region").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
 
 	body := akeyless_api.TargetCreateEks{
 		Name:               name,
@@ -114,13 +125,11 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
-	_, _, err := client.TargetCreateEks(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateEks(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -221,7 +230,6 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
@@ -233,6 +241,8 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	eksRegion := d.Get("eks_region").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.TargetUpdateEks{
 		Name:               name,
@@ -247,13 +257,12 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err := client.TargetUpdateEks(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateEks(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

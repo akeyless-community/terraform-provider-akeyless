@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,13 +26,13 @@ func resourceRotatedSecretGcp() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Secret name",
+				Description: "Rotated secret name",
 				ForceNew:    true,
 			},
 			"target_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The target name to associate",
+				Description: "Target name",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -42,12 +42,12 @@ func resourceRotatedSecretGcp() *schema.Resource {
 			"rotator_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The rotator type [target/service-account-rotator]",
+				Description: "The rotator type. options: [target/service-account-rotator]",
 			},
 			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The credentials to connect with [use-self-creds/use-target-creds]",
+				Description: "The credentials to connect with use-self-creds/use-target-creds",
 				Default:     "use-self-creds",
 			},
 			"gcp_key": {
@@ -59,22 +59,22 @@ func resourceRotatedSecretGcp() *schema.Resource {
 			"gcp_service_account_email": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The email of the gcp service account to rotate (relevant only when rotator-type=servcie-account-rotator)",
+				Description: "The email of the gcp service account to rotate",
 			},
 			"gcp_service_account_key_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The key id of the gcp service account to rotate (relevant only when rotator-type=servcie-account-rotator)",
+				Description: "The key id of the gcp service account to rotate",
 			},
 			"auto_rotate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation",
+				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]",
 			},
 			"rotation_interval": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes",
+				Description: "The number of days to wait between every automatic key rotation (1-365)",
 			},
 			"rotation_hour": {
 				Type:        schema.TypeInt,
@@ -95,8 +95,52 @@ func resourceRotatedSecretGcp() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Description: "Add tags attached to this object",
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"grace_rotation": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Create a new access key without deleting the old key from AWS/Azure/GCP for backup (relevant only for AWS/Azure/GCP) [true/false]",
+			},
+			"grace_rotation_hour": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The Hour of the grace rotation in UTC",
+			},
+			"grace_rotation_interval": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The number of days to wait before deleting the old key (must be bigger than rotation-interval)",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"rotation_event_in": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "How many days before the rotation of the item would you like to be notified",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
 		},
 	}
@@ -107,7 +151,6 @@ func resourceRotatedSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -124,6 +167,11 @@ func resourceRotatedSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	gcpKey := d.Get("gcp_key").(string)
 	gcpServiceAccountEmail := d.Get("gcp_service_account_email").(string)
 	gcpServiceAccountKeyId := d.Get("gcp_service_account_key_id").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	graceRotation := d.Get("grace_rotation").(string)
+	graceRotationHour := d.Get("grace_rotation_hour").(int)
+	graceRotationInterval := d.Get("grace_rotation_interval").(string)
+	maxVersions := d.Get("max_versions").(string)
 
 	body := akeyless_api.RotatedSecretCreateGcp{
 		Name:        name,
@@ -142,13 +190,29 @@ func resourceRotatedSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GcpServiceAccountEmail, gcpServiceAccountEmail)
 	common.GetAkeylessPtr(&body.GcpServiceAccountKeyId, gcpServiceAccountKeyId)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.GraceRotation, graceRotation)
+	common.GetAkeylessPtr(&body.GraceRotationHour, graceRotationHour)
+	common.GetAkeylessPtr(&body.GraceRotationInterval, graceRotationInterval)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
-	_, _, err := client.RotatedSecretCreateGcp(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
+	if v, ok := d.GetOk("item_custom_fields"); ok {
+		itemCustomFields := v.(map[string]interface{})
+		fields := make(map[string]string)
+		for k, val := range itemCustomFields {
+			fields[k] = val.(string)
 		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		body.ItemCustomFields = &fields
+	}
+
+	if v, ok := d.GetOk("rotation_event_in"); ok {
+		rotationEventIn := common.ExpandStringList(v.([]interface{}))
+		body.RotationEventIn = rotationEventIn
+	}
+
+	_, resp, err := client.RotatedSecretCreateGcp(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -308,7 +372,6 @@ func resourceRotatedSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -323,11 +386,18 @@ func resourceRotatedSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	gcpKey := d.Get("gcp_key").(string)
 	gcpServiceAccountEmail := d.Get("gcp_service_account_email").(string)
 	gcpServiceAccountKeyId := d.Get("gcp_service_account_key_id").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	graceRotation := d.Get("grace_rotation").(string)
+	graceRotationHour := d.Get("grace_rotation_hour").(int)
+	graceRotationInterval := d.Get("grace_rotation_interval").(string)
+	maxVersions := d.Get("max_versions").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
+	rotatorType := d.Get("rotator_type").(string)
 
 	body := akeyless_api.RotatedSecretUpdateGcp{
-		Name:    name,
-		NewName: akeyless_api.PtrString(name),
-		Token:   &token,
+		Name:        name,
+		RotatorType: rotatorType,
+		Token:       &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
 	if err == nil {
@@ -349,13 +419,31 @@ func resourceRotatedSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GcpServiceAccountKeyId, gcpServiceAccountKeyId)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.GraceRotation, graceRotation)
+	common.GetAkeylessPtr(&body.GraceRotationHour, graceRotationHour)
+	common.GetAkeylessPtr(&body.GraceRotationInterval, graceRotationInterval)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err = client.RotatedSecretUpdateGcp(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
+	if v, ok := d.GetOk("item_custom_fields"); ok {
+		itemCustomFields := v.(map[string]interface{})
+		fields := make(map[string]string)
+		for k, val := range itemCustomFields {
+			fields[k] = val.(string)
 		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		body.ItemCustomFields = &fields
+	}
+
+	if v, ok := d.GetOk("rotation_event_in"); ok {
+		rotationEventIn := common.ExpandStringList(v.([]interface{}))
+		body.RotationEventIn = rotationEventIn
+	}
+
+	var resp *http.Response
+	_, resp, err = client.RotatedSecretUpdateGcp(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

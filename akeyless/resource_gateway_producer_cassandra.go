@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -97,7 +97,6 @@ func resourceProducerCassandraCreate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -125,12 +124,9 @@ func resourceProducerCassandraCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 
-	_, _, err := client.GatewayCreateProducerCassandra(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayCreateProducerCassandra(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -232,7 +228,6 @@ func resourceProducerCassandraUpdate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -263,12 +258,9 @@ func resourceProducerCassandraUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 
-	_, _, err := client.GatewayUpdateProducerCassandra(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateProducerCassandra(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

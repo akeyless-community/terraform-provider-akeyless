@@ -33,11 +33,43 @@ data "akeyless_static_secret" "secret" {
 ### Read-Only
 
 - `custom_field` (Map of String, Sensitive) Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')
+- `format` (String) StaticSecretFormat defines the format of static secret (e.g. Text)
 - `id` (String) The ID of this resource.
 - `inject_url` (Set of String) List of URLs associated with the item (relevant only for type 'password')
 - `key_value_pairs` (Map of String, Sensitive) The key value pairs for key/value secrets.
+- `max_versions` (Number) The maximum number of versions to keep for the secret.
+- `notify_on_change_event` (Boolean) Whether to send notifications on secret change events.
 - `password` (String, Sensitive) Password value (relevant only for type 'password')
+- `password_security_info` (List of Object) Password security information (relevant only for type 'password') (see [below for nested schema](#nestedatt--password_security_info))
 - `username` (String) Username value (relevant only for type 'password')
 - `value` (String, Sensitive) The secret contents.
+
+<a id="nestedatt--password_security_info"></a>
+### Nested Schema for `password_security_info`
+
+Read-Only:
+
+- `breach_info` (List of Object) (see [below for nested schema](#nestedobjatt--password_security_info--breach_info))
+- `score_info` (List of Object) (see [below for nested schema](#nestedobjatt--password_security_info--score_info))
+
+<a id="nestedobjatt--password_security_info--breach_info"></a>
+### Nested Schema for `password_security_info.breach_info`
+
+Read-Only:
+
+- `breach_check_date` (String)
+- `breach_count` (Number)
+- `breach_suggestions` (List of String)
+- `status` (String)
+
+
+<a id="nestedobjatt--password_security_info--score_info"></a>
+### Nested Schema for `password_security_info.score_info`
+
+Read-Only:
+
+- `score` (Number)
+- `status` (String)
+- `suggestions` (List of String)
 
 

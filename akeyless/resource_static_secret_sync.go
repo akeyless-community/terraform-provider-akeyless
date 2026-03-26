@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -31,7 +31,7 @@ func resourceStaticSecretSync() *schema.Resource {
 			"usc_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Universal Secret Connector name",
+				Description: "Universal Secret Connector name, If not provided all attached USC's will be synced",
 				ForceNew:    true,
 			},
 			"remote_secret_name": {
@@ -50,6 +50,16 @@ func resourceStaticSecretSync() *schema.Resource {
 				Optional:    true,
 				Description: "JQ expression to filter or transform the secret value",
 			},
+			"delete_remote": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Delete the secret from remote secret manager (for association create/update)",
+			},
+			"delete_from_usc": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Delete the secret from the remote target USC as well",
+			},
 		},
 	}
 }
@@ -66,6 +76,7 @@ func resourceStaticSecretSyncCreate(d *schema.ResourceData, m any) error {
 	remoteSecretName := d.Get("remote_secret_name").(string)
 	namespace := d.Get("namespace").(string)
 	filterSecretValue := d.Get("filter_secret_value").(string)
+	deleteRemote := d.Get("delete_remote").(bool)
 
 	body := akeyless_api.StaticSecretSync{
 		Name:  secretName,
@@ -75,6 +86,7 @@ func resourceStaticSecretSyncCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.RemoteSecretName, remoteSecretName)
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.FilterSecretValue, filterSecretValue)
+	common.GetAkeylessPtr(&body.DeleteRemote, deleteRemote)
 
 	_, resp, err := client.StaticSecretSync(ctx).Body(body).Execute()
 	if err != nil {
@@ -141,16 +153,20 @@ func resourceStaticSecretSyncDelete(d *schema.ResourceData, m any) error {
 
 	ctx := context.Background()
 
-	secretName, uscName, _, err := extractStaticUscSyncFromId(d.Id())
+	secretName, uscName, remoteSecretName, err := extractStaticUscSyncFromId(d.Id())
 	if err != nil {
 		return err
 	}
+
+	deleteFromUsc := d.Get("delete_from_usc").(bool)
 
 	deleteItem := akeyless_api.StaticSecretDeleteSync{
 		Token:   &token,
 		Name:    secretName,
 		UscName: uscName,
 	}
+	common.GetAkeylessPtr(&deleteItem.DeleteFromUsc, deleteFromUsc)
+	common.GetAkeylessPtr(&deleteItem.RemoteSecretName, remoteSecretName)
 
 	_, _, err = client.StaticSecretDeleteSync(ctx).Body(deleteItem).Execute()
 	if err != nil {

@@ -21,7 +21,7 @@ Gitlab dynamic secret resource.
 
 ### Optional
 
-- `delete_protection` (String) Protection from accidental deletion of this item, [true/false]
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `gitlab_access_token` (String, Sensitive) Gitlab access token
 - `gitlab_access_type` (String) Gitlab access token type [project,group]
@@ -31,8 +31,9 @@ Gitlab dynamic secret resource.
 - `gitlab_url` (String) Gitlab base url
 - `group_name` (String) Gitlab group name, required for access-type=group
 - `installation_organization` (String) Gitlab project name, required for access-type=project
-- `tags` (Set of String) A comma-separated list of tags attached to this secret
-- `target_name` (String) Name of an existing target
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `tags` (Set of String) Add tags attached to this object
+- `target_name` (String) Target name
 - `ttl` (String) Access Token TTL
 
 ### Read-Only

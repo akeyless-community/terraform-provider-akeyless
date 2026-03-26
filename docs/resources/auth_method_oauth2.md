@@ -23,17 +23,25 @@ AOAuth2 Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
+- `allowed_client_type` (Set of String) Limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]
 - `audience` (String) The audience in the JWT
-- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs, e.g "--audit-logs-claims email --audit-logs-claims username"
 - `bound_client_ids` (Set of String) The clients ids that the access is restricted to
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
-- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
-- `force_sub_claims` (Boolean) enforce role-association must include sub claims
+- `cert` (String) CertificateFile Path to a file that contain the certificate in a PEM format.
+- `cert_file_data` (String) CertificateFileData PEM Certificate in a Base64 format.
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Auth Method description
+- `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified
+- `force_sub_claims` (Boolean) if true: enforce role-association must include sub claims
 - `gateway_url` (String) Akeyless Gateway URL (Configuration Management port). Relevant only when the jwks-uri is accessible only from the gateway.
+- `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
 - `issuer` (String) Issuer URL
-- `jwks_json_data` (String) The JSON Web Key Set (JWKS) containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization serve, in base64 format.
+- `jwks_json_data` (String) The JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server. base64 encoded string
 - `jwks_uri` (String) The URL to the JSON Web Key Set (JWKS) that containing the public keys that should be used to verify any JSON Web Token (JWT) issued by the authorization server.
-- `jwt_ttl` (Number) Creds expiration time in minutes
+- `jwt_ttl` (Number) Jwt TTL
+- `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
+- `subclaims_delimiters` (Set of String) A list of additional sub claims delimiters (relevant only for SAML, OIDC, OAuth2/JWT)
 
 ### Read-Only
 

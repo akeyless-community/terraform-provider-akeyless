@@ -25,7 +25,7 @@ Rotated secret resource
 
 - `api_id` (String) API ID to rotate (relevant only for rotator-type=api-key)
 - `api_key` (String) API key to rotate (relevant only for rotator-type=api-key)
-- `authentication_credentials` (String) The credentials to connect with use-user-creds/use-target-creds
+- `authentication_credentials` (String) The credentials to connect with use-self-creds/use-target-creds
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation
 - `custom_payload` (String) Secret payload to be sent with rotation request (relevant only for rotator-type=custom)
 - `description` (String) Description of the object

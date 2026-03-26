@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,13 +26,13 @@ func resourceRotatedSecretMongo() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Secret name",
+				Description: "Rotated secret name",
 				ForceNew:    true,
 			},
 			"target_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The target name to associate",
+				Description: "Target name",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -42,12 +42,12 @@ func resourceRotatedSecretMongo() *schema.Resource {
 			"rotator_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The rotator type [target/password]",
+				Description: "The rotator type. options: [target/password]",
 			},
 			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The credentials to connect with [use-self-creds/use-target-creds]",
+				Description: "The credentials to connect with use-self-creds/use-target-creds",
 				Default:     "use-self-creds",
 			},
 			"rotated_username": {
@@ -65,12 +65,12 @@ func resourceRotatedSecretMongo() *schema.Resource {
 			"auto_rotate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation",
+				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]",
 			},
 			"rotation_interval": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes",
+				Description: "The number of days to wait between every automatic key rotation (1-365)",
 			},
 			"rotation_hour": {
 				Type:        schema.TypeInt,
@@ -91,8 +91,70 @@ func resourceRotatedSecretMongo() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Description: "Add tags attached to this object",
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"rotate_after_disconnect": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Rotate the value of the secret after SRA session ends [true/false]",
+				Default:     "false",
+			},
+			"rotation_event_in": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "How many days before the rotation of the item would you like to be notified",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_certificate_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
+			},
+			"secure_access_db_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The DB name (relevant only for DB Dynamic-Secret)",
+			},
+			"secure_access_enable": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Enable/Disable secure remote access [true/false]",
+			},
+			"secure_access_host": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_web": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Web Secure Remote Access",
+				Default:     false,
 			},
 		},
 	}
@@ -103,7 +165,6 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -119,6 +180,25 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
 	rotatedPassword := d.Get("rotated_password").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	maxVersions := d.Get("max_versions").(string)
+	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessDbName := d.Get("secure_access_db_name").(string)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
+	secureAccessWeb := d.Get("secure_access_web").(bool)
+
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
+
+	rotationEventInSet := d.Get("rotation_event_in").(*schema.Set)
+	rotationEventIn := common.ExpandStringList(rotationEventInSet.List())
+
+	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
+	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 
 	body := akeyless_api.RotatedSecretCreateMongodb{
 		Name:        name,
@@ -136,13 +216,26 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessDbName, secureAccessDbName)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
+	if len(rotationEventIn) > 0 {
+		body.RotationEventIn = rotationEventIn
+	}
+	if len(secureAccessHost) > 0 {
+		body.SecureAccessHost = secureAccessHost
+	}
 
-	_, _, err := client.RotatedSecretCreateMongodb(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretCreateMongodb(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -217,6 +310,28 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 			}
 		}
 	}
+	deleteProtectionVal := "false"
+	if itemOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if itemOut.ItemCustomFieldsDetails != nil && len(itemOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range itemOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err = d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
 
 	var rotatorType = ""
 
@@ -245,6 +360,52 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 		}
 		if rsd.RotationStatement != nil {
 			err = d.Set("rotator_custom_cmd", *rsd.RotationStatement)
+			if err != nil {
+				return err
+			}
+		}
+		if rsd.MaxVersions != nil {
+			err = d.Set("max_versions", strconv.FormatInt(*rsd.MaxVersions, 10))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.SecureRemoteAccessDetails != nil {
+		sra := itemOut.ItemGeneralInfo.SecureRemoteAccessDetails
+		if sra.Enable != nil {
+			err = d.Set("secure_access_enable", strconv.FormatBool(*sra.Enable))
+			if err != nil {
+				return err
+			}
+		}
+		if sra.BastionIssuer != nil {
+			err = d.Set("secure_access_certificate_issuer", *sra.BastionIssuer)
+			if err != nil {
+				return err
+			}
+		}
+		if sra.DbName != nil {
+			err = d.Set("secure_access_db_name", *sra.DbName)
+			if err != nil {
+				return err
+			}
+		}
+		if sra.Host != nil && len(sra.Host) > 0 {
+			err = d.Set("secure_access_host", sra.Host)
+			if err != nil {
+				return err
+			}
+		}
+		if sra.IsWeb != nil {
+			err = d.Set("secure_access_web", *sra.IsWeb)
+			if err != nil {
+				return err
+			}
+		}
+		if sra.RotateAfterDisconnect != nil {
+			err = d.Set("rotate_after_disconnect", strconv.FormatBool(*sra.RotateAfterDisconnect))
 			if err != nil {
 				return err
 			}
@@ -296,7 +457,6 @@ func resourceRotatedSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -310,6 +470,26 @@ func resourceRotatedSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	rotatedPassword := d.Get("rotated_password").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
+	maxVersions := d.Get("max_versions").(string)
+	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessDbName := d.Get("secure_access_db_name").(string)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
+	secureAccessWeb := d.Get("secure_access_web").(bool)
+
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
+
+	rotationEventInSet := d.Get("rotation_event_in").(*schema.Set)
+	rotationEventIn := common.ExpandStringList(rotationEventInSet.List())
+
+	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
+	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 
 	body := akeyless_api.RotatedSecretUpdateMongodb{
 		Name:    name,
@@ -335,13 +515,27 @@ func resourceRotatedSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessDbName, secureAccessDbName)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
+	if len(rotationEventIn) > 0 {
+		body.RotationEventIn = rotationEventIn
+	}
+	if len(secureAccessHost) > 0 {
+		body.SecureAccessHost = secureAccessHost
+	}
 
-	_, _, err = client.RotatedSecretUpdateMongodb(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretUpdateMongodb(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

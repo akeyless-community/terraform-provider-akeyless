@@ -26,6 +26,7 @@ DFC Key resource
 - `cert_data_base64` (String) PEM Certificate in a Base64 format. Used for updating RSA keys' certificates
 - `certificate_common_name` (String) Common name for the generated certificate. Relevant only for generate-self-signed-certificate.
 - `certificate_country` (String) Country name for the generated certificate. Relevant only for generate-self-signed-certificate.
+- `certificate_digest_algo` (String) Digest algorithm to be used for the certificate key signing.
 - `certificate_format` (String) The format of the returned certificate [pem/der]
 - `certificate_locality` (String) Locality for the generated certificate. Relevant only for generate-self-signed-certificate.
 - `certificate_organization` (String) Organization name for the generated certificate. Relevant only for generate-self-signed-certificate.
@@ -33,10 +34,12 @@ DFC Key resource
 - `certificate_ttl` (Number) TTL in days for the generated certificate. Required only for generate-self-signed-certificate.
 - `conf_file_data` (String) The csr config data in base64 encoding
 - `customer_frg_id` (String) The customer fragment ID that will be used to create the DFC key (if empty, the key will be created independently of a customer fragment)
-- `delete_protection` (Boolean) Protection from accidental deletion of this item, [true/false]
+- `delete_protection` (Boolean) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified.
 - `generate_self_signed_certificate` (Boolean) Whether to generate a self signed certificate with the key. If set, certificate-ttl must be provided.
+- `hash_algorithm` (String) Specifies the hash algorithm used for the encryption key's operations, available options: [SHA256, SHA384, SHA512]
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `rotation_event_in` (Set of String) How many days before the rotation of the item would you like to be notified.
 - `rotation_interval` (String) The number of days to wait between every automatic rotation (7-365)
 - `split_level` (Number) The number of fragments that the item will be split into (not includes customer fragment)

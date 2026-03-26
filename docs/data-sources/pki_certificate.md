@@ -24,17 +24,19 @@ Generates PKI certificate data source
 - `alt_names` (String) The Subject Alternative Names to be included in the PKI certificate (in a comma-delimited list)
 - `common_name` (String) The common name to be included in the PKI certificate
 - `csr_data_base64` (String) Certificate Signing Request contents encoded in base64 to generate the certificate with
-- `extended_key_usage` (String) A comma-separated list of extended key usage requests which will be used for certificate issuance. Supported values: 'clientauth', 'serverauth'.
+- `extended_key_usage` (String) A comma-separated list of extended key usage requests which will be used for certificate issuance. Supported values: 'clientauth', 'serverauth', 'codesigning'.
 - `key_data_base64` (String, Sensitive) pki key file contents encoded using Base64
 - `ttl` (Number) Updated certificate lifetime in seconds (must be less than the Certificate Issuer default TTL)
 - `uri_sans` (String) The URI Subject Alternative Names to be included in the PKI certificate (in a comma-delimited list)
 
 ### Read-Only
 
-- `cert_display_id` (String)
-- `data` (String)
+- `cert_display_id` (String) The certificate display ID
+- `cert_item_id` (Number) The certificate item ID
+- `data` (String) The certificate data
 - `id` (String) The ID of this resource.
-- `parent_cert` (String)
-- `reading_token` (String)
+- `parent_cert` (String) The parent certificate
+- `path` (String) The path of the certificate
+- `reading_token` (String) The reading token
 
 

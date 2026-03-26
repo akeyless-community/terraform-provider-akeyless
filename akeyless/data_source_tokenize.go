@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,7 +35,7 @@ func dataSourceTokenize() *schema.Resource {
 			"result": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "The encrypted result",
 			},
 		},
 	}

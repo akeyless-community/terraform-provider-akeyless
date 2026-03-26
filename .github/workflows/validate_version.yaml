@@ -36,11 +36,22 @@ jobs:
           go-version-file: go.mod
         id: go
 
+      - name: Start test infrastructure
+        env:
+          AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
+          AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
+        run: docker compose -f docker-compose.test.yml up -d --wait
+
       - name: Run Acceptance Tests
         env:
           AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
           AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
+          AKEYLESS_GATEWAY: http://localhost:18081
           TF_ACC_GCP_SERVICE_ACCOUNT: ${{ secrets.TF_ACC_GCP_SERVICE_ACCOUNT }}
           TF_ACC_GCP_BOUND_SERVICE_ACC: ${{ secrets.TF_ACC_GCP_BOUND_SERVICE_ACC }}
         run: |
-          TF_ACC=1 go test ./... -v -count 1 -timeout 120m
+          TF_ACC=1 go test ./... -v -count 1 -parallel 4 -timeout 120m
+
+      - name: Tear down test infrastructure
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v

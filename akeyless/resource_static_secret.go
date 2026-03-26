@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,6 +35,17 @@ func resourceStaticSecret() *schema.Resource {
 				Optional:    true,
 				Description: "Secret type [generic/password]",
 				Default:     "generic",
+			},
+			"accessibility": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "For personal password manager",
+				Default:     "regular",
+			},
+			"change_event": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Trigger an event when a secret value changed [true/false] (Relevant only for Static Secret)",
 			},
 			"value": {
 				Type:        schema.TypeString,
@@ -114,8 +125,8 @@ func resourceStaticSecret() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true, // if not provided on update - keep the existing value
 				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Default:     "false",
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
@@ -141,12 +152,6 @@ func resourceStaticSecret() *schema.Resource {
 				Optional:    true,
 				Description: "Secure browser via Akeyless's Secure Remote Access (SRA)",
 			},
-			"secure_access_bastion_issuer": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
-				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
-			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
 				Required:    false,
@@ -167,6 +172,37 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "Enable Web Secure Remote Access ",
 				Computed:    true,
 			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults",
+			},
+			"secure_access_certificate_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
+			},
+			"secure_access_gateway": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Secure Remote Access Gateway",
+			},
+			"secure_access_rdp_user": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Remote Desktop Username",
+			},
+			"secure_access_web_proxy": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Web-Proxy via Akeyless's Secure Remote Access (SRA)",
+			},
 		},
 	}
 }
@@ -180,6 +216,8 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	secretType := d.Get("type").(string)
 	value := d.Get("value").(string)
 	format := d.Get("format").(string)
+	accessibility := d.Get("accessibility").(string)
+	changeEvent := d.Get("change_event").(string)
 	injectUrlSet := d.Get("inject_url").(*schema.Set)
 	injectUrl := common.ExpandStringList(injectUrlSet.List())
 	password := d.Get("password").(string)
@@ -192,16 +230,20 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	secureAccessSshCreds := d.Get("secure_access_ssh_creds").(string)
 	secureAccessUrl := d.Get("secure_access_url").(string)
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
-	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
 	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]any)
+	maxVersions := d.Get("max_versions").(string)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessGateway := d.Get("secure_access_gateway").(string)
+	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
+	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
 
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	body := akeyless_api.CreateSecret{
 		Name:           path,
@@ -215,6 +257,8 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	}
 	common.GetAkeylessPtr(&body.Tags, tagsList)
 
+	common.GetAkeylessPtr(&body.Accessibility, accessibility)
+	common.GetAkeylessPtr(&body.ChangeEvent, changeEvent)
 	common.GetAkeylessPtr(&body.Format, format)
 	common.GetAkeylessPtr(&body.InjectUrl, injectUrl)
 	common.GetAkeylessPtr(&body.Password, password)
@@ -225,17 +269,19 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.SecureAccessSshCreds, secureAccessSshCreds)
 	common.GetAkeylessPtr(&body.SecureAccessUrl, secureAccessUrl)
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
-	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessGateway, secureAccessGateway)
+	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
+	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 
-	_, _, err := client.CreateSecret(ctx).Body(body).Execute()
+	_, resp, err := client.CreateSecret(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	item := akeyless_api.DescribeItem{
@@ -338,11 +384,13 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if itemOut.DeleteProtection != nil {
-		err := d.Set("delete_protection", strconv.FormatBool(*itemOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 
 	info := itemOut.ItemGeneralInfo
@@ -408,7 +456,6 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Get("path").(string)
@@ -446,18 +493,16 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 			common.GetAkeylessPtr(&body.CustomField, customField)
 		}
 
-		_, _, err := client.UpdateSecretVal(ctx).Body(body).Execute()
+		_, resp, err := client.UpdateSecretVal(ctx).Body(body).Execute()
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				return fmt.Errorf("can't update Secret: %v", string(apiErr.Body()))
-			}
-			return fmt.Errorf("can't update Secret: %v", err)
+			return common.HandleError("can't update Secret", resp, err)
 		}
 	}
 
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
 	description := d.Get("description").(string)
+	changeEvent := d.Get("change_event").(string)
 
 	secureAccessHost := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHostList := common.ExpandStringList(secureAccessHost.List())
@@ -465,9 +510,14 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	secureAccessSshCreds := d.Get("secure_access_ssh_creds").(string)
 	secureAccessUrl := d.Get("secure_access_url").(string)
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
-	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
 	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]any)
+	maxVersions := d.Get("max_versions").(string)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessGateway := d.Get("secure_access_gateway").(string)
+	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
+	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
 
 	bodyItem := akeyless_api.UpdateItem{
 		Name:    path,
@@ -486,22 +536,25 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	}
 
 	common.GetAkeylessPtr(&bodyItem.Description, description)
+	common.GetAkeylessPtr(&bodyItem.ChangeEvent, changeEvent)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCreds, secureAccessSshCreds)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessUrl, secureAccessUrl)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessWebBrowsing, secureAccessWebBrowsing)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCredsUser, secureAccessSshUser)
 	common.GetAkeylessPtr(&bodyItem.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&bodyItem.ItemCustomFields, itemCustomFields)
+	common.GetAkeylessPtr(&bodyItem.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&bodyItem.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&bodyItem.SecureAccessGateway, secureAccessGateway)
+	common.GetAkeylessPtr(&bodyItem.SecureAccessRdpUser, secureAccessRdpUser)
+	common.GetAkeylessPtr(&bodyItem.SecureAccessWebProxy, secureAccessWebProxy)
 
-	_, _, err = client.UpdateItem(ctx).Body(bodyItem).Execute()
+	_, resp, err := client.UpdateItem(ctx).Body(bodyItem).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update item: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update item: %v", err)
+		return common.HandleError("can't update item", resp, err)
 	}
 
 	item := akeyless_api.DescribeItem{

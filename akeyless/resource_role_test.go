@@ -10,7 +10,7 @@ import (
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
@@ -21,12 +21,15 @@ const RULE_PATH = "/terraform-tests/*"
 func TestRoleResourceBasic(t *testing.T) {
 	rolePath := testPath("test_role_resource")
 	deleteRole(rolePath)
+	defer deleteRole(rolePath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_role" "test_role" {
 			name 				= "%v"
 			description 		= "aaaa"
 			delete_protection 	= "true"
+			audit_access 		= "all"
+			analytics_access 	= "own"
 		}
 	`, rolePath)
 
@@ -35,19 +38,50 @@ func TestRoleResourceBasic(t *testing.T) {
 			name 				= "%v"
 			description 		= "bbbb"
 			delete_protection 	= "false"
+			audit_access 		= "own"
+			analytics_access 	= "all"
 		}
 	`, rolePath)
 
+	var checkRoleDestroyed = func(s *terraform.State) error {
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type == "akeyless_role" {
+				body := akeyless_api.GetRole{
+					Name:  rs.Primary.ID,
+					Token: &token,
+				}
+				_, res, err := client.GetRole(context.Background()).Body(body).Execute()
+				if err == nil {
+					return fmt.Errorf("role %s still exists", rs.Primary.ID)
+				}
+				if res != nil && res.StatusCode != 404 {
+					return fmt.Errorf("role %s: unexpected status %d", rs.Primary.ID, res.StatusCode)
+				}
+			}
+		}
+		return nil
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
+		CheckDestroy:      checkRoleDestroyed,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "aaaa"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "delete_protection", "true"),
+				),
 			},
 			{
 				Config: configUpdate,
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "bbbb"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "delete_protection", "false"),
+				),
 			},
 		},
 	})
@@ -57,7 +91,9 @@ func TestRoleResourceUpdateRules(t *testing.T) {
 	rolePath := testPath("test_role_resource")
 	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
-	deleteAuthMethod(authMethodPath)
+	defer deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath, "api_key")
+	defer deleteAuthMethod(authMethodPath, "api_key")
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "test_auth_method" {
@@ -192,7 +228,9 @@ func TestRoleResourceRuleWithNoLeadingSlash(t *testing.T) {
 	rolePath := testPath("test_role_resource")
 	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
-	deleteAuthMethod(authMethodPath)
+	defer deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath, "api_key")
+	defer deleteAuthMethod(authMethodPath, "api_key")
 
 	rulePath := "terraform-tests/*"
 
@@ -282,7 +320,9 @@ func TestRoleResourceUpdateAssoc(t *testing.T) {
 	rolePath := testPath("test_role_resource")
 	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
-	deleteAuthMethod(authMethodPath)
+	defer deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath, "api_key")
+	defer deleteAuthMethod(authMethodPath, "api_key")
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "test_auth_method" {
@@ -426,8 +466,11 @@ func TestRoleResourceAddAssoc(t *testing.T) {
 	authMethodPath1 := testPath("test_am_resource1")
 	authMethodPath2 := testPath("test_am_resource2")
 	deleteRole(rolePath)
-	deleteAuthMethod(authMethodPath1)
-	deleteAuthMethod(authMethodPath2)
+	defer deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath1, "api_key")
+	defer deleteAuthMethod(authMethodPath1, "api_key")
+	deleteAuthMethod(authMethodPath2, "api_key")
+	defer deleteAuthMethod(authMethodPath2, "api_key")
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "test_auth_method" {
@@ -512,7 +555,9 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 	rolePath := testPath("test_role_resource")
 	authMethodPath := testPath("test_am_resource")
 	deleteRole(rolePath)
-	deleteAuthMethod(authMethodPath)
+	defer deleteRole(rolePath)
+	deleteAuthMethod(authMethodPath, "api_key")
+	defer deleteAuthMethod(authMethodPath, "api_key")
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method" "test_auth_method" {
@@ -598,8 +643,8 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 }
 
 func TestRoleResourceWithSraRule(t *testing.T) {
-	//todo need to fix this test
-	t.Skip()
+	skipIfNoGateway(t)
+	t.Parallel()
 	rolePath := testPath("test_role_resource_sra_rule")
 	deleteRole(rolePath)
 
@@ -645,14 +690,15 @@ func TestRoleResourceWithSraRule(t *testing.T) {
 func TestRoleResourceWithFewAssocs(t *testing.T) {
 	resourceName := "test_role_few_assocs"
 	rolePath := testPath(resourceName)
+	defer deleteRole(rolePath)
 
 	amPath1 := testPath("test_am1")
 	createTestAuthMethod(amPath1)
-	defer deleteAuthMethod(amPath1)
+	defer deleteAuthMethod(amPath1, "api_key")
 
 	amPath2 := testPath("test_am2")
 	createTestAuthMethod(amPath2)
-	defer deleteAuthMethod(amPath2)
+	defer deleteAuthMethod(amPath2, "api_key")
 
 	config := fmt.Sprintf(`
 		resource "akeyless_role" "%v" {
@@ -728,6 +774,10 @@ func checkRoleExistsRemotely(t *testing.T, roleName, authMethodPath string, rule
 
 		if common.IsCICDEnv() {
 			rulesNum++
+		}
+		if rulesNum != len(rules.GetPathRules()) {
+			fmt.Println("rulesNum:", res.GetRules())
+			fmt.Println("len(rules.GetPathRules()):", rules.GetPathRules())
 		}
 
 		assert.Equal(t, rulesNum, len(rules.GetPathRules()))
@@ -934,7 +984,7 @@ func createTestAuthMethod(path string) error {
 	return nil
 }
 
-func deleteAuthMethod(path string) error {
+func deleteAuthMethod(path string, authMethodType string) error {
 	p, err := getProviderMeta()
 	if err != nil {
 		panic(err)
@@ -943,16 +993,196 @@ func deleteAuthMethod(path string) error {
 	client := p.client
 	token := *p.token
 
-	gsvBody := akeyless_api.DeleteAuthMethod{
+	// Try to delete with the exact path first
+	gsvBody := akeyless_api.AuthMethodDelete{
 		Name:  path,
 		Token: &token,
 	}
 
-	_, _, err = client.DeleteAuthMethod(context.Background()).Body(gsvBody).Execute()
+	_, _, err = client.AuthMethodDelete(context.Background()).Body(gsvBody).Execute()
 	if err != nil {
-		fmt.Println("error delete auth method:", err)
+		// If 404 and path doesn't start with /, try with leading slash
+		if strings.Contains(err.Error(), "404") && !strings.HasPrefix(path, "/") {
+			pathWithSlash := "/" + path
+			gsvBody.Name = pathWithSlash
+			_, _, err2 := client.AuthMethodDelete(context.Background()).Body(gsvBody).Execute()
+			if err2 == nil {
+				fmt.Println("deleted auth method:", pathWithSlash)
+				return nil
+			}
+			err = err2 // Use the new error for further processing
+		}
+	} else {
+		// Deletion succeeded
+		fmt.Println("deleted auth method:", path)
+		return nil
+	}
+
+	if err != nil {
+		// Check if error is due to delete protection
+		errStr := err.Error()
+		if strings.Contains(errStr, "delete protection") || strings.Contains(errStr, "delete_protection") {
+			fmt.Println("delete protection enabled, removing protection and retrying...")
+
+			// Update to remove delete protection based on auth method type
+			switch authMethodType {
+			case "api_key":
+				updateBody := akeyless_api.AuthMethodUpdateApiKey{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateApiKey(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "aws_iam":
+				updateBody := akeyless_api.AuthMethodUpdateAwsIam{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateAwsIam(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "azure_ad":
+				updateBody := akeyless_api.AuthMethodUpdateAzureAD{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateAzureAD(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "cert":
+				updateBody := akeyless_api.AuthMethodUpdateCert{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateCert(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "gcp":
+				updateBody := akeyless_api.AuthMethodUpdateGcp{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateGcp(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "k8s":
+				updateBody := akeyless_api.AuthMethodUpdateK8s{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateK8s(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "ldap":
+				updateBody := akeyless_api.AuthMethodUpdateLdap{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateLdap(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "oauth2":
+				updateBody := akeyless_api.AuthMethodUpdateOauth2{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateOauth2(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "oidc":
+				updateBody := akeyless_api.AuthMethodUpdateOIDC{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateOIDC(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "saml":
+				updateBody := akeyless_api.AuthMethodUpdateSAML{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateSAML(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "universal_identity":
+				updateBody := akeyless_api.AuthMethodUpdateUniversalIdentity{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateUniversalIdentity(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "kerberos":
+				updateBody := akeyless_api.AuthMethodUpdateKerberos{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateKerberos(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			case "oci":
+				updateBody := akeyless_api.AuthMethodUpdateOCI{
+					Name:             path,
+					Token:            &token,
+					DeleteProtection: akeyless_api.PtrString("false"),
+				}
+				_, _, updateErr := client.AuthMethodUpdateOCI(context.Background()).Body(updateBody).Execute()
+				if updateErr != nil {
+					fmt.Println("error updating auth method:", updateErr)
+					return err
+				}
+			}
+
+			// Retry deletion
+			_, _, retryErr := client.AuthMethodDelete(context.Background()).Body(gsvBody).Execute()
+			if retryErr != nil {
+				return retryErr
+			}
+			fmt.Println("deleted auth method:", path)
+			return nil
+		}
+
 		return err
 	}
-	fmt.Println("deleted auth method:", path)
+
+	// Should not reach here
 	return nil
 }

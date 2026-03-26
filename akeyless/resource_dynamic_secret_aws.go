@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -76,7 +77,7 @@ func resourceDynamicSecretAws() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Enable AWS User console access",
-				Default:     "false",
+				Default:     false,
 			},
 			"aws_user_programmatic_access": {
 				Type:        schema.TypeBool,
@@ -105,6 +106,69 @@ func resourceDynamicSecretAws() *schema.Resource {
 				Optional:    true,
 				Description: "Customize how temporary usernames are generated using go template",
 			},
+			"admin_rotation_interval_days": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Admin credentials rotation interval (days)",
+			},
+			"aws_external_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The AWS External ID associated with the AWS role (relevant only for assume_role mode)",
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"enable_admin_rotation": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Automatic admin credentials rotation",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_certificate_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
+			},
+			"secure_access_bastion_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
+				Deprecated:  "use secure_access_certificate_issuer instead",
+			},
+			"secure_access_delay": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds",
+			},
+			"secure_access_web_proxy": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Web-Proxy via Akeyless's Secure Remote Access (SRA)",
+			},
+			"session_tags": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "String of Key value session tags comma separated, relevant only for Assumed Role",
+			},
+			"transitive_tag_keys": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "String of transitive tag keys space separated, relevant only for Assumed Role",
+			},
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -131,11 +195,6 @@ func resourceDynamicSecretAws() *schema.Resource {
 				Optional:    true,
 				Description: "Secure browser via Akeyless Web Access Bastion",
 			},
-			"secure_access_bastion_issuer": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
-			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -152,6 +211,11 @@ func resourceDynamicSecretAws() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"use_gw_cloud_identity": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Use the GW's Cloud IAM",
+			},
 		},
 	}
 }
@@ -161,7 +225,6 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -178,13 +241,30 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
+	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
+	awsExternalId := d.Get("aws_external_id").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	if secureAccessCertificateIssuer == "" {
+		secureAccessCertificateIssuer = d.Get("secure_access_bastion_issuer").(string)
+	}
+	secureAccessDelay := d.Get("secure_access_delay").(int)
+	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
+	sessionTags := d.Get("session_tags").(string)
+	transitiveTagKeys := d.Get("transitive_tag_keys").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessAwsAccountId := d.Get("secure_access_aws_account_id").(string)
 	secureAccessAwsNativeCli := d.Get("secure_access_aws_native_cli").(bool)
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
-	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
 	body := akeyless_api.DynamicSecretCreateAws{
@@ -205,20 +285,33 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
+	if adminRotationIntervalDays != 0 {
+		body.AdminRotationIntervalDays = &[]int64{int64(adminRotationIntervalDays)}[0]
+	}
+	common.GetAkeylessPtr(&body.AwsExternalId, awsExternalId)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	if secureAccessDelay != 0 {
+		body.SecureAccessDelay = &[]int64{int64(secureAccessDelay)}[0]
+	}
+	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
+	common.GetAkeylessPtr(&body.SessionTags, sessionTags)
+	common.GetAkeylessPtr(&body.TransitiveTagKeys, transitiveTagKeys)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessAwsAccountId, secureAccessAwsAccountId)
 	common.GetAkeylessPtr(&body.SecureAccessAwsNativeCli, secureAccessAwsNativeCli)
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
-	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretCreateAws(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateAws(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -338,10 +431,63 @@ func resourceDynamicSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.AwsUserConsoleAccess != nil {
-		err = d.Set("aws_user_console_access", *rOut.AwsUserConsoleAccess)
+	if rOut.AdminRotationIntervalDays != nil {
+		err = d.Set("admin_rotation_interval_days", *rOut.AdminRotationIntervalDays)
 		if err != nil {
 			return err
+		}
+	}
+	if rOut.AwsExternalId != nil {
+		err = d.Set("aws_external_id", *rOut.AwsExternalId)
+		if err != nil {
+			return err
+		}
+	}
+	deleteProtectionVal := "false"
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if rOut.Metadata != nil {
+		err = d.Set("description", *rOut.Metadata)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.EnableAdminRotation != nil {
+		err = d.Set("enable_admin_rotation", *rOut.EnableAdminRotation)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AwsSessionTags != nil {
+		err = d.Set("session_tags", *rOut.AwsSessionTags)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AwsTransitiveTagKeys != nil {
+		err = d.Set("transitive_tag_keys", *rOut.AwsTransitiveTagKeys)
+		if err != nil {
+			return err
+		}
+	}
+
+	if rOut.ItemCustomFieldsDetails != nil && len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err = d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -364,7 +510,6 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -381,13 +526,30 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
+	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
+	awsExternalId := d.Get("aws_external_id").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	if secureAccessCertificateIssuer == "" {
+		secureAccessCertificateIssuer = d.Get("secure_access_bastion_issuer").(string)
+	}
+	secureAccessDelay := d.Get("secure_access_delay").(int)
+	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
+	sessionTags := d.Get("session_tags").(string)
+	transitiveTagKeys := d.Get("transitive_tag_keys").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessAwsAccountId := d.Get("secure_access_aws_account_id").(string)
 	secureAccessAwsNativeCli := d.Get("secure_access_aws_native_cli").(bool)
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
-	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
 	body := akeyless_api.DynamicSecretUpdateAws{
@@ -408,20 +570,33 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
+	if adminRotationIntervalDays != 0 {
+		body.AdminRotationIntervalDays = &[]int64{int64(adminRotationIntervalDays)}[0]
+	}
+	common.GetAkeylessPtr(&body.AwsExternalId, awsExternalId)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	if secureAccessDelay != 0 {
+		body.SecureAccessDelay = &[]int64{int64(secureAccessDelay)}[0]
+	}
+	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
+	common.GetAkeylessPtr(&body.SessionTags, sessionTags)
+	common.GetAkeylessPtr(&body.TransitiveTagKeys, transitiveTagKeys)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessAwsAccountId, secureAccessAwsAccountId)
 	common.GetAkeylessPtr(&body.SecureAccessAwsNativeCli, secureAccessAwsNativeCli)
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
-	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretUpdateAws(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateAws(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

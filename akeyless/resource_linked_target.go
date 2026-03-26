@@ -9,18 +9,19 @@ import (
 	"reflect"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceLinkedTarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "Linked Target resource",
-		Create:      resourceLinkedTargetCreate,
-		Read:        resourceLinkedTargetRead,
-		Update:      resourceLinkedTargetUpdate,
-		Delete:      resourceLinkedTargetDelete,
+		Description:        "Linked Target resource",
+		DeprecationMessage: "use akeyless_target_linked resource instead",
+		Create:             resourceLinkedTargetCreate,
+		Read:               resourceLinkedTargetRead,
+		Update:             resourceLinkedTargetUpdate,
+		Delete:             resourceLinkedTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceLinkedTargetImport,
 		},
@@ -51,6 +52,21 @@ func resourceLinkedTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Description of the object",
 			},
+			"add_hosts": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A comma seperated list of new server hosts and server descriptions joined by semicolon ';' that will be added to the Linked Target hosts.",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
+			"rm_hosts": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Comma separated list of existing hosts that will be removed from Linked Target hosts.",
+			},
 		},
 	}
 }
@@ -60,7 +76,6 @@ func resourceLinkedTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	hosts := d.Get("hosts").(string)
@@ -77,12 +92,9 @@ func resourceLinkedTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Type, hostType)
 	common.GetAkeylessPtr(&body.Description, description)
 
-	_, _, err := client.TargetCreateLinked(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateLinked(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -190,13 +202,15 @@ func resourceLinkedTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	hosts := d.Get("hosts").(string)
 	parentTargetName := d.Get("parent_target_name").(string)
 	hostType := d.Get("type").(string)
 	description := d.Get("description").(string)
+	addHosts := d.Get("add_hosts").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
+	rmHosts := d.Get("rm_hosts").(string)
 
 	body := akeyless_api.TargetUpdateLinked{
 		Name:  name,
@@ -206,13 +220,13 @@ func resourceLinkedTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ParentTargetName, parentTargetName)
 	common.GetAkeylessPtr(&body.Type, hostType)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.AddHosts, addHosts)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+	common.GetAkeylessPtr(&body.RmHosts, rmHosts)
 
-	_, _, err := client.TargetUpdateLinked(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateLinked(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

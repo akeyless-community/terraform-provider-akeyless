@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceK8sTarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "K8S Target resource",
-		Create:      resourceK8sTargetCreate,
-		Read:        resourceK8sTargetRead,
-		Update:      resourceK8sTargetUpdate,
-		Delete:      resourceK8sTargetDelete,
+		Description:        "K8S Target resource",
+		DeprecationMessage: "use akeyless_target_k8s resource instead",
+		Create:             resourceK8sTargetCreate,
+		Read:               resourceK8sTargetRead,
+		Update:             resourceK8sTargetUpdate,
+		Delete:             resourceK8sTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceK8sTargetImport,
 		},
@@ -32,29 +33,66 @@ func resourceK8sTarget() *schema.Resource {
 			"k8s_cluster_endpoint": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "K8S Cluster endpoint. https:// , <DNS / IP> of the cluster.",
+				Description: "K8S cluster URL endpoint",
 			},
 			"k8s_cluster_ca_cert": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
-				Description: "K8S Cluster certificate. Base 64 encoded certificate.",
+				Description: "K8S cluster CA certificate",
 			},
 			"k8s_cluster_token": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "K8S Cluster authentication token.",
+				Description: "K8S cluster Bearer token",
+			},
+			"k8s_auth_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "K8S auth type [token/certificate]",
+			},
+			"k8s_client_certificate": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Content of the k8 client certificate (PEM format) in a Base64 format",
+			},
+			"k8s_client_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Content of the k8 client private key (PEM format) in a Base64 format",
+			},
+			"k8s_cluster_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "K8S cluster name",
+			},
+			"use_gw_service_account": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Use the GW's service account",
 			},
 			"key": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.",
+				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the object",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
 		},
 	}
@@ -65,13 +103,18 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
 	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
 	k8sClusterToken := d.Get("k8s_cluster_token").(string)
+	k8sAuthType := d.Get("k8s_auth_type").(string)
+	k8sClientCertificate := d.Get("k8s_client_certificate").(string)
+	k8sClientKey := d.Get("k8s_client_key").(string)
+	k8sClusterName := d.Get("k8s_cluster_name").(string)
+	useGwServiceAccount := d.Get("use_gw_service_account").(bool)
 	key := d.Get("key").(string)
+	maxVersions := d.Get("max_versions").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless_api.TargetCreateK8s{
@@ -83,13 +126,18 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.K8sClusterEndpoint, k8sClusterEndpoint)
 	common.GetAkeylessPtr(&body.K8sClusterCaCert, k8sClusterCaCert)
 	common.GetAkeylessPtr(&body.K8sClusterToken, k8sClusterToken)
+	common.GetAkeylessPtr(&body.K8sAuthType, k8sAuthType)
+	common.GetAkeylessPtr(&body.K8sClientCertificate, k8sClientCertificate)
+	common.GetAkeylessPtr(&body.K8sClientKey, k8sClientKey)
+	common.GetAkeylessPtr(&body.K8sClusterName, k8sClusterName)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	if d.HasChange("use_gw_service_account") {
+		body.UseGwServiceAccount = &useGwServiceAccount
+	}
 
-	_, _, err := client.TargetCreateK8s(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -143,6 +191,39 @@ func resourceK8sTargetRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.Value.NativeK8sTargetDetails.K8sAuthType != nil {
+		// Only set k8s_auth_type if it was explicitly configured by the user
+		if _, ok := d.GetOk("k8s_auth_type"); ok {
+			err = d.Set("k8s_auth_type", *rOut.Value.NativeK8sTargetDetails.K8sAuthType)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if rOut.Value.NativeK8sTargetDetails.K8sClientCertData != nil {
+		err = d.Set("k8s_client_certificate", *rOut.Value.NativeK8sTargetDetails.K8sClientCertData)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Value.NativeK8sTargetDetails.K8sClientKeyData != nil {
+		err = d.Set("k8s_client_key", *rOut.Value.NativeK8sTargetDetails.K8sClientKeyData)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Value.NativeK8sTargetDetails.K8sClusterName != nil {
+		err = d.Set("k8s_cluster_name", *rOut.Value.NativeK8sTargetDetails.K8sClusterName)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Value.NativeK8sTargetDetails.UseGwServiceAccount != nil {
+		err = d.Set("use_gw_service_account", *rOut.Value.NativeK8sTargetDetails.UseGwServiceAccount)
+		if err != nil {
+			return err
+		}
+	}
 	if rOut.Target.ProtectionKeyName != nil {
 		err = d.Set("key", *rOut.Target.ProtectionKeyName)
 		if err != nil {
@@ -166,14 +247,20 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
 	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
 	k8sClusterToken := d.Get("k8s_cluster_token").(string)
+	k8sAuthType := d.Get("k8s_auth_type").(string)
+	k8sClientCertificate := d.Get("k8s_client_certificate").(string)
+	k8sClientKey := d.Get("k8s_client_key").(string)
+	k8sClusterName := d.Get("k8s_cluster_name").(string)
+	useGwServiceAccount := d.Get("use_gw_service_account").(bool)
 	key := d.Get("key").(string)
+	maxVersions := d.Get("max_versions").(string)
 	description := d.Get("description").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.TargetUpdateK8s{
 		Name:  name,
@@ -184,13 +271,19 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.K8sClusterEndpoint, k8sClusterEndpoint)
 	common.GetAkeylessPtr(&body.K8sClusterCaCert, k8sClusterCaCert)
 	common.GetAkeylessPtr(&body.K8sClusterToken, k8sClusterToken)
+	common.GetAkeylessPtr(&body.K8sAuthType, k8sAuthType)
+	common.GetAkeylessPtr(&body.K8sClientCertificate, k8sClientCertificate)
+	common.GetAkeylessPtr(&body.K8sClientKey, k8sClientKey)
+	common.GetAkeylessPtr(&body.K8sClusterName, k8sClusterName)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+	if d.HasChange("use_gw_service_account") {
+		body.UseGwServiceAccount = &useGwServiceAccount
+	}
 
-	_, _, err := client.TargetUpdateK8s(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

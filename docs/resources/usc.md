@@ -23,10 +23,15 @@ Universal Secrets Connector resource
 ### Optional
 
 - `azure_kv_name` (String) Azure Key Vault name (Relevant only for Azure targets)
-- `delete_protection` (String) Protection from accidental deletion of this object, [true/false]
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the Universal Secrets Connector
+- `gcp_project_id` (String) GCP Project ID (Relevant only for GCP targets)
+- `gcp_sm_regions` (String) GCP Secret Manager regions to query for regional secrets (comma-separated, e.g., us-east1,us-west1). Max 12 regions. Required when listing with object-type=regional-secrets
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `k8s_namespace` (String) K8s namespace (Relevant to Kubernetes targets)
 - `tags` (Set of String) List of the tags attached to this Universal Secrets Connector
+- `usc_prefix` (String) Prefix for all secrets created in AWS Secrets Manager
+- `use_prefix_as_filter` (String) Whether to filter the USC secret list using the specified usc-prefix [true/false]
 
 ### Read-Only
 

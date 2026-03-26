@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceGlobalsignTarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "GlobalSign Target resource",
-		Create:      resourceGlobalsignTargetCreate,
-		Read:        resourceGlobalsignTargetRead,
-		Update:      resourceGlobalsignTargetUpdate,
-		Delete:      resourceGlobalsignTargetDelete,
+		Description:        "GlobalSign Target resource",
+		DeprecationMessage: "use akeyless_target_globalsign resource instead",
+		Create:             resourceGlobalsignTargetCreate,
+		Read:               resourceGlobalsignTargetRead,
+		Update:             resourceGlobalsignTargetUpdate,
+		Delete:             resourceGlobalsignTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGlobalsignTargetImport,
 		},
@@ -68,18 +69,28 @@ func resourceGlobalsignTarget() *schema.Resource {
 			"timeout": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Timeout waiting for certificate validation",
+				Description: "Timeout waiting for certificate validation in Duration format (1h - 1 Hour, 20m - 20 Minutes, 33m3s - 33 Minutes and 3 Seconds), maximum 1h.",
 				Default:     "5m",
 			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used",
+				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the object",
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
 		},
 	}
@@ -90,7 +101,6 @@ func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	username := d.Get("username").(string)
@@ -103,6 +113,7 @@ func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error
 	timeout := d.Get("timeout").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
 
 	body := akeyless_api.TargetCreateGlobalSign{
 		Name:             name,
@@ -118,13 +129,11 @@ func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Timeout, timeout)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
-	_, _, err := client.TargetCreateGlobalSign(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateGlobalSign(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to create target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to create target: %w", err)
+		return common.HandleError("failed to create target", resp, err)
 	}
 
 	d.SetId(name)
@@ -243,7 +252,6 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	username := d.Get("username").(string)
@@ -256,6 +264,8 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 	timeout := d.Get("timeout").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.TargetUpdateGlobalSign{
 		Name:             name,
@@ -271,13 +281,12 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Timeout, timeout)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err := client.TargetUpdateGlobalSign(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateGlobalSign(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update target: %w", err)
+		return common.HandleError("failed to update target", resp, err)
 	}
 
 	d.SetId(name)

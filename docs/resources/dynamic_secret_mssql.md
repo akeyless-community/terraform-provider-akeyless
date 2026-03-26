@@ -22,20 +22,26 @@ Microsoft SQL Server dynamic secret resource
 ### Optional
 
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
-- `mssql_create_statements` (String) MSSQL Server Creation Statements
-- `mssql_dbname` (String) MSSQL Server DB Name
-- `mssql_host` (String) MS SQL Server host name
-- `mssql_password` (String) MS SQL Server password
-- `mssql_port` (String) MS SQL Server port
-- `mssql_revocation_statements` (String) MSSQL Server Revocation Statements
-- `mssql_username` (String) MS SQL Server user
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `mssql_allowed_db_names` (String) CSV of allowed DB names for runtime selection when getting the secret value. Empty => use target DB only; "*" => any DB allowed; One or more names => user must choose from this list
+- `mssql_create_statements` (String) MSSQL Creation statements
+- `mssql_dbname` (String) MSSQL Name
+- `mssql_host` (String) MSSQL Host
+- `mssql_password` (String) MSSQL Password
+- `mssql_port` (String) MSSQL Port
+- `mssql_revocation_statements` (String) MSSQL Revocation statements
+- `mssql_username` (String) MSSQL Username
 - `password_length` (String) The length of the password to be generated
-- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_db_name` (String) The DB Name
 - `secure_access_db_schema` (String) The db schema
+- `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
-- `secure_access_host` (Set of String) Target DB servers for connections., For multiple values repeat this flag.
+- `secure_access_host` (Set of String) Target DB servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation

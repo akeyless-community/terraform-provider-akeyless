@@ -45,25 +45,32 @@ resource "akeyless_static_secret" "secret" {
 
 ### Optional
 
+- `accessibility` (String) For personal password manager
+- `change_event` (String) Trigger an event when a secret value changed [true/false] (Relevant only for Static Secret)
 - `custom_field` (Map of String, Sensitive) Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')
 - `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `description` (String) Description of the object
 - `format` (String) Secret format [text/json/key-value] (relevant only for type 'generic')
 - `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `inject_url` (Set of String) List of URLs associated with the item (relevant only for type 'password')
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `multiline_value` (Boolean) The provided value is a multiline value (separated by '
 ')
 - `password` (String, Sensitive) Password value (relevant only for type 'password')
 - `protection_key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
-- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
+- `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_gateway` (String) Secure Remote Access Gateway
 - `secure_access_host` (Set of String) Target servers for connections., For multiple values repeat this flag.
+- `secure_access_rdp_user` (String) Remote Desktop Username
 - `secure_access_ssh_creds` (String) Static-Secret values contains SSH Credentials, either Private Key or Password [password/private-key]
 - `secure_access_ssh_user` (String) Override the SSH username as indicated in SSH Certificate Issuer
 - `secure_access_url` (String) Destination URL to inject secrets.
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
+- `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `type` (String) Secret type [generic/password]
 - `username` (String) Username value (relevant only for type 'password')

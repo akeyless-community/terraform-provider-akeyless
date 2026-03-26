@@ -18,7 +18,7 @@ ZeroSSL Target resource
 ### Required
 
 - `api_key` (String, Sensitive) API Key of the ZeroSSLTarget account
-- `imap_fqdn` (String) FQDN of the IMAP service
+- `imap_fqdn` (String) FQDN or IPv4 address of the IMAP service. Must be FQDN if the IMAP is using TLS
 - `imap_password` (String, Sensitive) Password to access the IMAP service
 - `imap_username` (String) Username to access the IMAP service
 - `name` (String) Target name
@@ -27,9 +27,11 @@ ZeroSSL Target resource
 
 - `description` (String) Description of the object
 - `imap_port` (String) Port of the IMAP service
-- `imap_target_email` (String) Email to use when asking ZeroSSL to send a validation email, if empty will use username
+- `imap_target_email` (String) Validation email to use when asking ZeroSSL to send a validation email, if empty will use imap-username
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
-- `timeout` (String) Timeout waiting for certificate validation
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
+- `timeout` (String) Timeout waiting for certificate validation in Duration format (1h - 1 Hour, 20m - 20 Minutes, 33m3s - 33 Minutes and 3 Seconds), maximum 1h
 
 ### Read-Only
 

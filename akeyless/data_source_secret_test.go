@@ -18,10 +18,10 @@ const (
 
 	staticSecretValueForTest string = "1234"
 	mysqlTestUsername        string = "root"
-	mysqlTestPassword        string = "password"
-	mysqlTestHost            string = "127.0.0.1"
+	mysqlTestPassword        string = "root_password"
+	mysqlTestHost            string = "mysql"
 	mysqlTestPort            string = "3306"
-	mysqlTestDBName          string = "mysql"
+	mysqlTestDBName          string = "testdb"
 )
 
 func TestSecretDataSource(t *testing.T) {
@@ -57,8 +57,7 @@ func testSecretDataSourceStatic(t *testing.T) {
 }
 
 func testSecretDataSourceDynamic(t *testing.T) {
-
-	t.Skip("dynamic secret requires gateway")
+	skipIfNoGateway(t)
 
 	secretName := "test_secret_dynamic"
 	secretPath := testPath(secretName)
@@ -88,8 +87,7 @@ func testSecretDataSourceDynamic(t *testing.T) {
 }
 
 func testSecretDataSourceRotated(t *testing.T) {
-
-	t.Skip("rotated secret requires gateway")
+	skipIfNoGateway(t)
 
 	targetName := "test-target-db-for-rotator"
 	targetPath := testPath(targetName)

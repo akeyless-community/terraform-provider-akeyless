@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -32,7 +33,7 @@ func resourceDynamicSecretMysql() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in dynamic secret creation",
+				Description: "Target name",
 			},
 			"mysql_dbname": {
 				Type:        schema.TypeString,
@@ -42,7 +43,7 @@ func resourceDynamicSecretMysql() *schema.Resource {
 			"mysql_username": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "MySQL user",
+				Description: "MySQL Username",
 			},
 			"mysql_password": {
 				Type:        schema.TypeString,
@@ -53,7 +54,7 @@ func resourceDynamicSecretMysql() *schema.Resource {
 			"mysql_host": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "MySQL host name",
+				Description: "MySQL Host",
 				Default:     "127.0.0.1",
 			},
 			"mysql_port": {
@@ -77,23 +78,23 @@ func resourceDynamicSecretMysql() *schema.Resource {
 			"db_server_certificates": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "the set of root certificate authorities in base64 encoding that clients use when verifying server certificates",
+				Description: "(Optional) DB server certificates",
 			},
 			"db_server_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is given. It is also included in the client's handshake to support virtual hosting unless it is an IP address",
+				Description: "(Optional) Server name for certificate verification",
 			},
 			"ssl": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Enable/Disable SSL [true/false]",
-				Default:     "false",
+				Default:     false,
 			},
 			"ssl_certificate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)",
+				Description: "SSL connection certificate",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
@@ -109,7 +110,7 @@ func resourceDynamicSecretMysql() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Encrypt dynamic secret details with following key",
+				Description: "Dynamic producer encryption key",
 			},
 			"custom_username_template": {
 				Type:        schema.TypeString,
@@ -119,7 +120,7 @@ func resourceDynamicSecretMysql() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Description: "Add tags attached to this object",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
@@ -127,28 +128,56 @@ func resourceDynamicSecretMysql() *schema.Resource {
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
-			"secure_access_bastion_issuer": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
-			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Target DB servers for connections., For multiple values repeat this flag.",
+				Description: "Target DB servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts)",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     "false",
+				Default:     false,
 				Description: "Enable Web Secure Remote Access",
 			},
 			"secure_access_db_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Enable Web Secure Remote Access",
+				Description: "The DB name (relevant only for DB Dynamic-Secret)",
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_certificate_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
+			},
+			"secure_access_bastion_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
+				Deprecated:  "use secure_access_certificate_issuer instead",
+			},
+			"secure_access_delay": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds",
 			},
 		},
 	}
@@ -159,7 +188,6 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -181,10 +209,17 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
-	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessWeb := d.Get("secure_access_web").(bool)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	if secureAccessCertificateIssuer == "" {
+		secureAccessCertificateIssuer = d.Get("secure_access_bastion_issuer").(string)
+	}
+	secureAccessDelay := d.Get("secure_access_delay").(int)
 
 	body := akeyless_api.DynamicSecretCreateMySql{
 		Name:  name,
@@ -208,16 +243,26 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.DbServerCertificates, dbServerCertificates)
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
-	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
-
-	_, _, err := client.DynamicSecretCreateMySql(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		common.GetAkeylessPtr(&body.ItemCustomFields, &customFieldsMap)
+	}
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	if secureAccessDelay > 0 {
+		secureAccessDelayInt64 := int64(secureAccessDelay)
+		common.GetAkeylessPtr(&body.SecureAccessDelay, &secureAccessDelayInt64)
+	}
+
+	_, resp, err := client.DynamicSecretCreateMySql(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -351,6 +396,14 @@ func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
 
 	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
@@ -364,7 +417,6 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -386,10 +438,17 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
-	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessWeb := d.Get("secure_access_web").(bool)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	if secureAccessCertificateIssuer == "" {
+		secureAccessCertificateIssuer = d.Get("secure_access_bastion_issuer").(string)
+	}
+	secureAccessDelay := d.Get("secure_access_delay").(int)
 
 	body := akeyless_api.DynamicSecretUpdateMySql{
 		Name:  name,
@@ -413,16 +472,26 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.DbServerCertificates, dbServerCertificates)
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
-	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
-
-	_, _, err := client.DynamicSecretUpdateMySql(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't update : %v", err)
+		common.GetAkeylessPtr(&body.ItemCustomFields, &customFieldsMap)
+	}
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	if secureAccessDelay > 0 {
+		secureAccessDelayInt64 := int64(secureAccessDelay)
+		common.GetAkeylessPtr(&body.SecureAccessDelay, &secureAccessDelayInt64)
+	}
+
+	_, resp, err := client.DynamicSecretUpdateMySql(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

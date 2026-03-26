@@ -22,31 +22,43 @@ AWS dynamic secret resource
 ### Optional
 
 - `access_mode` (String) The types of credentials to retrieve from AWS. Options:[iam_user,assume_role]
+- `admin_rotation_interval_days` (Number) Admin credentials rotation interval (days)
 - `aws_access_key_id` (String) Access Key ID
 - `aws_access_secret_key` (String, Sensitive) Access Secret Key
+- `aws_external_id` (String) The AWS External ID associated with the AWS role (relevant only for assume_role mode)
 - `aws_role_arns` (String) AWS Role ARNs to be use in the Assume Role operation. Multiple values should be separated by comma
 - `aws_user_console_access` (Boolean) Enable AWS User console access
 - `aws_user_groups` (String) UserGroup name(s). Multiple values should be separated by comma
 - `aws_user_policies` (String) Policy ARN(s). Multiple values should be separated by comma
 - `aws_user_programmatic_access` (Boolean) Enable AWS User programmatic access
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
+- `enable_admin_rotation` (Boolean) Automatic admin credentials rotation
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
 - `region` (String) Region
 - `secure_access_aws_account_id` (String) The aws account id
 - `secure_access_aws_native_cli` (Boolean) The aws native cli
 - `secure_access_aws_region` (String)
-- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
+- `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
 - `secure_access_url` (String)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
+- `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
+- `session_tags` (String) String of Key value session tags comma separated, relevant only for Assumed Role
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
+- `transitive_tag_keys` (String) String of transitive tag keys space separated, relevant only for Assumed Role
 - `user_ttl` (String) User TTL
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
 
 

@@ -26,7 +26,25 @@ Get target details data source
 
 ### Read-Only
 
+- `access_date` (String) Access date
+- `access_date_display` (String) Access date display
+- `access_request_status` (String) Access request status
+- `attributes` (Map of String) Target attributes
+- `client_permissions` (List of String) Client permissions
+- `comment` (String) Comment about the target
+- `creation_date` (String) Creation date
 - `id` (String) The ID of this resource.
+- `is_access_request_enabled` (Boolean) Whether access request is enabled for this target
+- `last_version` (Number) Last version of the target
+- `modification_date` (String) Modification date
+- `parent_target_name` (String) Parent target name
+- `protection_key_name` (String) Protection key name
+- `target_details` (String) Target details
+- `target_id` (Number) Target ID
+- `target_name` (String) Target name
+- `target_sub_type` (String) Target sub type
+- `target_type` (String) Target type
 - `value` (Map of String)
+- `with_customer_fragment` (Boolean) Whether the target has customer fragment
 
 

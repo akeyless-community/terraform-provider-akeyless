@@ -17,7 +17,9 @@ Remote access config
 
 ### Optional
 
+- `allowed_ssh_url` (String) Specify a valid SSH-URL to tunnel to SSH session
 - `allowed_urls` (String) List of valid URLs to redirect from the Portal back to the remote access server (in a comma-delimited list)
+- `default_session_ttl_minutes` (String) Default session TTL in minutes
 - `hide_session_recording` (String) Specifies whether to show/hide if the session is currently recorded [true/false]
 - `kexalgs` (String) Decide which algorithm will be used as part of the SSH initial hand-shake process
 - `keyboard_layout` (String) Enable support for additional keyboard layouts

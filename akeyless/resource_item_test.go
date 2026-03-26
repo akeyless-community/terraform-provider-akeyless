@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
@@ -156,8 +156,7 @@ func TestRsaPublicResource(t *testing.T) {
 }
 
 func TestClassicKey(t *testing.T) {
-
-	t.Skip("not authorized to create classic key on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test_classic_key"
@@ -231,8 +230,7 @@ func TestClassicKey(t *testing.T) {
 }
 
 func TestClassicGpgKey(t *testing.T) {
-
-	t.Skip("not authorized to create classic key on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test_classic_gpg_key"
@@ -259,8 +257,7 @@ func TestClassicGpgKey(t *testing.T) {
 }
 
 func TestClassicAESKey(t *testing.T) {
-
-	t.Skip("not authorized to create classic key on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test_classic_aes_key"
@@ -320,6 +317,7 @@ func TestPkiResource(t *testing.T) {
 			protect_certificates  	= true
 			is_ca                   = true
 			enable_acme             = false
+			max_path_len          	= 0
 			expiration_event_in   	= ["1"]
 			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value2\"],\"1.2.3.4.6\":[\"value3\",\"value4\"]}"
 			allow_copy_ext_from_csr = true
@@ -356,6 +354,7 @@ func TestPkiResource(t *testing.T) {
 			protect_certificates  	= false
 			is_ca                   = false
 			enable_acme             = false
+			max_path_len          	= 0
 			expiration_event_in   	= []
 			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value5\"]}"
 			allow_copy_ext_from_csr = false
@@ -368,7 +367,7 @@ func TestPkiResource(t *testing.T) {
 }
 
 func TestPkiResourceWithLocalGw(t *testing.T) {
-	t.Skip("not supported on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	keyPath := testPath("test-dfc-for-pki-with-gw")
@@ -382,7 +381,7 @@ func TestPkiResourceWithLocalGw(t *testing.T) {
 		resource "akeyless_pki_cert_issuer" "%v" {
 			name 					= "%v"
 			signer_key_name 		= "/%v"
-			ttl                   	= "50"
+			ttl                   	= "8760h"
 			gw_cluster_url 			= "http://localhost:8000"
 			destination_path      	= "/terraform-tests"
 			allowed_domains       	= "domains"
@@ -526,16 +525,21 @@ func TestSshCertResource(t *testing.T) {
 
 	name := "test_ssh"
 	itemPath := testPath(name)
+	defer deleteItem(t, itemPath)
+
+	key := "test_ssh_key"
+	keyPath := testPath(key)
+	defer deleteItem(t, keyPath)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dfc_key" "key_ssh" {
-			name = "terraform-tests/test_ssh_key"
+			name = "%v"
 			alg = "RSA1024"
 		}
 		resource "akeyless_ssh_cert_issuer" "%v" {
 			name 							= "%v"
 			ttl 							= "500"
-			signer_key_name 				= "/terraform-tests/test_ssh_key"
+			signer_key_name 				= "/%v"
 			tags     						= ["t1", "t2"]
 			allowed_users 					= "aaaa"
 			secure_access_enable 			= "true"
@@ -549,11 +553,11 @@ func TestSshCertResource(t *testing.T) {
     			akeyless_dfc_key.key_ssh,
   			]
 		}
-	`, name, itemPath)
+	`, keyPath, name, itemPath, keyPath)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_dfc_key" "key_ssh" {
-			name = "terraform-tests/test_ssh_key"
+			resource "akeyless_dfc_key" "key_ssh" {
+			name = "%v"
 			alg = "RSA1024"
 			tags     = ["t1", "t2"]
 		}
@@ -561,7 +565,7 @@ func TestSshCertResource(t *testing.T) {
 		resource "akeyless_ssh_cert_issuer" "%v" {
 			name 							= "%v"
 			ttl 							= "290"
-			signer_key_name 				= "/terraform-tests/test_ssh_key"
+			signer_key_name 				= "/%v"
 			tags     						= ["t1", "t3"]
 			allowed_users 					= "aaaa2,fffff"
 			secure_access_enable 			= "true"
@@ -574,7 +578,7 @@ func TestSshCertResource(t *testing.T) {
     			akeyless_dfc_key.key_ssh,
   			]
 		}
-	`, name, itemPath)
+	`, keyPath, name, itemPath, keyPath)
 
 	testItemResource(t, itemPath, config, configUpdate)
 }

@@ -27,7 +27,18 @@ data "akeyless_role" "demo-role" {
 
 ### Read-Only
 
-- `assoc_auth_method_with_rules` (String)
+- `access_date` (String) Access date of the role
+- `access_date_display` (String) Access date display format
+- `assoc_auth_method_with_rules` (String) Association between auth method and role with rules (JSON format)
+- `client_permissions` (List of String) Client permissions associated with the role
+- `comment` (String) Comment about the role
+- `creation_date` (String) Creation date of the role
+- `delete_protection` (Boolean) Protection from accidental deletion
 - `id` (String) The ID of this resource.
+- `modification_date` (String) Last modification date of the role
+- `role_auth_methods_assoc` (String) Role auth methods association (JSON format)
+- `role_id` (Number) Role ID
+- `role_name` (String) Role name
+- `rules` (String) Role rules (JSON format)
 
 

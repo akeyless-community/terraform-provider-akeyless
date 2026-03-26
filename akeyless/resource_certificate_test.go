@@ -5,10 +5,32 @@ import (
 	"fmt"
 	"testing"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+var checkCertificateDestroyed = func(s *terraform.State) error {
+	client := *testAccProvider.Meta().(*providerMeta).client
+	token := *testAccProvider.Meta().(*providerMeta).token
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type == "akeyless_certificate" {
+			body := akeyless_api.DescribeItem{
+				Name:  rs.Primary.ID,
+				Token: &token,
+			}
+			_, res, err := client.DescribeItem(context.Background()).Body(body).Execute()
+			if err == nil {
+				return fmt.Errorf("certificate %s still exists", rs.Primary.ID)
+			}
+			if res != nil && res.StatusCode != 404 {
+				return fmt.Errorf("certificate %s: unexpected status %d", rs.Primary.ID, res.StatusCode)
+			}
+		}
+	}
+	return nil
+}
 
 func TestCertificateResource(t *testing.T) {
 
@@ -29,6 +51,7 @@ func TestCertificateResource(t *testing.T) {
 			expiration_event_in = ["30"]
 			tags 				= ["t1", "t2"]
 			description 		= "certificate description"
+			keep_prev_version	= "true"
 			delete_protection  	= "true"
 		}
 	`, certificateName, certificatePath, cert, keyData)
@@ -40,6 +63,7 @@ func TestCertificateResource(t *testing.T) {
 			format 				= "crt"
 			tags 				= ["t1", "t3"]
 			description 		= "updated certificate description"
+			keep_prev_version	= "false"
 		}
 	`, certificateName, certificatePath, crt2)
 
@@ -55,7 +79,39 @@ func TestCertificateResource(t *testing.T) {
 		}
 	`, certificateName, certificatePath, cert2, keyData2)
 
-	testCertificateResource(t, certificatePath, config, configUpdate, configUpdate2)
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkCertificateDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkCertificateExistsRemotely(certificatePath),
+					resource.TestCheckResourceAttr("akeyless_certificate."+certificateName, "keep_prev_version", "true"),
+					resource.TestCheckResourceAttr("akeyless_certificate."+certificateName, "delete_protection", "true"),
+					resource.TestCheckResourceAttr("akeyless_certificate."+certificateName, "description", "certificate description"),
+					resource.TestCheckResourceAttr("akeyless_certificate."+certificateName, "format", "pem"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkCertificateExistsRemotely(certificatePath),
+					resource.TestCheckResourceAttr("akeyless_certificate."+certificateName, "description", "updated certificate description"),
+					resource.TestCheckResourceAttr("akeyless_certificate."+certificateName, "format", "crt"),
+				),
+			},
+			{
+				Config: configUpdate2,
+				Check: resource.ComposeTestCheckFunc(
+					checkCertificateExistsRemotely(certificatePath),
+					resource.TestCheckResourceAttr("akeyless_certificate."+certificateName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr("akeyless_certificate."+certificateName, "description", "updated certificate description again"),
+					resource.TestCheckResourceAttr("akeyless_certificate."+certificateName, "format", "p12"),
+				),
+			},
+		},
+	})
 }
 
 func testCertificateResource(t *testing.T, certificatePath string, configs ...string) {
@@ -71,6 +127,7 @@ func testCertificateResource(t *testing.T, certificatePath string, configs ...st
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
+		CheckDestroy:      checkCertificateDestroyed,
 		Steps:             steps,
 	})
 }

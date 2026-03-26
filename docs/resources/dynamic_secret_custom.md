@@ -17,18 +17,21 @@ Custom dynamic secret resource
 
 ### Required
 
-- `create_sync_url` (String) URL of an endpoint that implements /sync/create method
+- `create_sync_url` (String) URL of an endpoint that implements /sync/create method, for example https://webhook.example.com/sync/create
 - `name` (String) Dynamic secret name
-- `revoke_sync_url` (String) URL of an endpoint that implements /sync/revoke method
+- `revoke_sync_url` (String) URL of an endpoint that implements /sync/revoke method, for example https://webhook.example.com/sync/revoke
 
 ### Optional
 
-- `admin_rotation_interval_days` (Number) Rotation period in days
-- `enable_admin_rotation` (Boolean) Enable automatic admin credentials rotation
-- `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `admin_rotation_interval_days` (Number) Define rotation interval in days
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
+- `enable_admin_rotation` (Boolean) Should admin credentials be rotated
+- `encryption_key_name` (String) Dynamic producer encryption key
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `payload` (String) Secret payload to be sent with each create/revoke webhook request
-- `rotate_sync_url` (String) URL of an endpoint that implements /sync/rotate method
-- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `rotate_sync_url` (String) URL of an endpoint that implements /sync/rotate method, for example https://webhook.example.com/sync/rotate
+- `tags` (Set of String) Add tags attached to this object
 - `timeout_sec` (Number) Maximum allowed time in seconds for the webhook to return the results
 - `user_ttl` (String) User TTL
 

@@ -19,6 +19,7 @@ Defaults settings
 
 - `cert_access_id` (String) Default Certificate access-id for UI login
 - `event_on_status_change` (String) Trigger an event when Gateway status is changed [true/false]
+- `hvp_route_version` (Number) Hvp route version to use [1/2]
 - `key` (String) The name of the gateway default encryption key
 - `oidc_access_id` (String) Default OIDC access-id for UI login
 - `saml_access_id` (String) Default SAML access-id for UI login

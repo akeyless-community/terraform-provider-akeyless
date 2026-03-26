@@ -24,8 +24,12 @@ AWS Target resource
 
 - `access_key` (String) AWS secret access key
 - `description` (String) Description of the object
-- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `generate_external_id` (Boolean) A unique auto-generated value used in your AWS account when configuring your AWS IAM role to securely delegate access to Akeyless. Relevant only when using GW cloud ID
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
+- `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `region` (String) AWS region
+- `role_arn` (String) AWS IAM role identifier that Gateway will assume in your AWS account, relevant only when using external ID
 - `session_token` (String) Required only for temporary security credentials retrieved using STS
 - `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
 

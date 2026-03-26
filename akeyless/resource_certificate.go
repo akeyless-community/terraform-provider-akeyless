@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -38,7 +38,7 @@ func resourceCertificate() *schema.Resource {
 			"format": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "CertificateFormat of the certificate and private key, possible values: cer,crt,pem,pfx,p12.",
+				Description: "CertificateFormat of the certificate and private key, possible values: cer,crt,pem,pfx,p12. Required when passing inline certificate content with --certificate-data or --key-data, otherwise format is derived from the file extension.",
 				Default:     "pem",
 			},
 			"key_data": {
@@ -62,7 +62,7 @@ func resourceCertificate() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Add tags attached to this object. To specify multiple tags use argument multiple times: --tag Tag1 -t Tag2",
+				Description: "Add tags attached to this object",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"description": {
@@ -73,8 +73,19 @@ func resourceCertificate() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 				Description: "Protection from accidental deletion of this object, [true/false]",
+				Default:     "false",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
 		},
 	}
@@ -97,6 +108,7 @@ func resourceCertificateCreate(d *schema.ResourceData, m interface{}) error {
 	tags := common.ExpandStringList(tagsSet.List())
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
 	body := akeyless_api.CreateCertificate{
 		Name:  name,
@@ -110,6 +122,13 @@ func resourceCertificateCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	if len(itemCustomFields) > 0 {
+		customFields := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFields[k] = v.(string)
+		}
+		body.ItemCustomFields = &customFields
+	}
 
 	_, resp, err := client.CreateCertificate(ctx).Body(body).Execute()
 	if err != nil {
@@ -175,11 +194,13 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 
 	certBody := akeyless_api.GetCertificateValue{
@@ -228,6 +249,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 	deleteProtection := d.Get("delete_protection").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.UpdateCertificateValue{
 		Name:  name,
@@ -238,6 +260,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.KeyData, keyData)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.Key, key)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
 	_, resp, err := client.UpdateCertificateValue(ctx).Body(body).Execute()
 	if err != nil {

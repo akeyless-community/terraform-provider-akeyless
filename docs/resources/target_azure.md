@@ -23,8 +23,14 @@ Azure Target resource
 
 - `client_id` (String) Azure client/application id
 - `client_secret` (String) Azure client secret
+- `connection_type` (String) Type of connection [credentials/cloud-identity]
 - `description` (String) Description of the object
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) Key name. The key is used to encrypt the target secret value. If the key name is not specified, the account default protection key is used
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
+- `resource_group_name` (String) The Resource Group name in your Azure subscription
+- `resource_name` (String) The name of the relevant Resource
+- `subscription_id` (String) Azure Subscription Id
 - `tenant_id` (String) Azure tenant id
 - `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
 

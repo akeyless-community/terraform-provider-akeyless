@@ -6,18 +6,19 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceArtifactoryTarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "Artifactory Target resource",
-		Create:      resourceArtifactoryTargetCreate,
-		Read:        resourceArtifactoryTargetRead,
-		Update:      resourceArtifactoryTargetUpdate,
-		Delete:      resourceArtifactoryTargetDelete,
+		Description:        "Artifactory Target resource",
+		DeprecationMessage: "use akeyless_target_artifactory resource instead",
+		Create:             resourceArtifactoryTargetCreate,
+		Read:               resourceArtifactoryTargetRead,
+		Update:             resourceArtifactoryTargetUpdate,
+		Delete:             resourceArtifactoryTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceArtifactoryTargetImport,
 		},
@@ -31,28 +32,38 @@ func resourceArtifactoryTarget() *schema.Resource {
 			"base_url": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Artifactory REST URL, must end with artifactory postfix",
+				Description: "Base URL",
 			},
 			"artifactory_admin_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Admin name",
+				Description: "Artifactory Admin Name",
 			},
 			"artifactory_admin_pwd": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Admin API Key/Password",
+				Description: "Artifactory Admin password",
 			},
 			"key": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
+				Description: "The name of a key used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the object",
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
 		},
 	}
@@ -63,7 +74,6 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	baseUrl := d.Get("base_url").(string)
@@ -71,6 +81,7 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
 
 	body := akeyless_api.TargetCreateArtifactory{
 		Name:                 name,
@@ -81,13 +92,11 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	}
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
-	_, _, err := client.TargetCreateArtifactory(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -163,7 +172,6 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	baseUrl := d.Get("base_url").(string)
@@ -171,6 +179,8 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.TargetUpdateArtifactory{
 		Name:                 name,
@@ -181,13 +191,12 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	}
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err := client.TargetUpdateArtifactory(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

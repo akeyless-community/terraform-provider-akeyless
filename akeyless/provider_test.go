@@ -2,17 +2,25 @@ package akeyless
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
+
+	"os"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"os"
-
-	"testing"
 )
 
 var testAccProvider *schema.Provider
 var providerFactories map[string]func() (*schema.Provider, error)
+var testRunID string
 
 func TestMain(m *testing.M) {
+	// Initialize random seed and generate unique test run ID
+	rand.Seed(time.Now().UnixNano())
+	testRunID = fmt.Sprintf("%d", rand.Intn(1000000))
+
 	testAccProvider = Provider()
 	providerFactories = map[string]func() (*schema.Provider, error){
 		"akeyless": func() (*schema.Provider, error) {
@@ -40,5 +48,5 @@ func TestProvider(t *testing.T) {
 }
 
 func testPath(path string) string {
-	return fmt.Sprintf("terraform-tests/%v", path)
+	return fmt.Sprintf("terraform-tests/%s/%v", testRunID, path)
 }

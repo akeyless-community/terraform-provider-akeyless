@@ -3,14 +3,15 @@ package akeyless
 import (
 	"context"
 	"fmt"
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	"testing"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 func TestEventForwarderEmail(t *testing.T) {
-	t.Skip("not supported on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	eventForwarderName := "test-event-forwarder-email"
@@ -27,6 +28,7 @@ func TestEventForwarderEmail(t *testing.T) {
 			include_error = "true"
 			runner_type = "periodic"
 			every = "1"
+			enable = "true"
 			description = "test email event forwarder"
 		}
 	`, eventForwarderName, eventForwarderName)
@@ -43,6 +45,8 @@ func TestEventForwarderEmail(t *testing.T) {
 			include_error = "false"
 			runner_type = "periodic"
 			every = "1"
+			enable = "true"
+			keep_prev_version = "true"
 			description = "test email event forwarder update"
         }
 	`, eventForwarderName, eventForwarderName)
@@ -51,7 +55,7 @@ func TestEventForwarderEmail(t *testing.T) {
 }
 
 func TestEventForwarderWebhook(t *testing.T) {
-	t.Skip("not supported on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	eventForwarderName := "test-event-forwarder-webhook"
@@ -69,6 +73,7 @@ func TestEventForwarderWebhook(t *testing.T) {
 			username = "myusername"
 			password = "mypassword"
 			runner_type = "immediate"
+			enable = "true"
 			description = "test webhook event forwarder"
 		}
 	`, eventForwarderName, eventForwarderName)
@@ -85,7 +90,10 @@ func TestEventForwarderWebhook(t *testing.T) {
 			auth_type = "user-pass"
 			username = "myusername2"
 			password = "mypassword2"
-			runner_type = "immediate"
+			runner_type = "periodic"
+			every = "2"
+			enable = "true"
+			keep_prev_version = "true"
 			description = "test webhook event forwarder update"
 		}
 	`, eventForwarderName, eventForwarderName)
@@ -94,7 +102,7 @@ func TestEventForwarderWebhook(t *testing.T) {
 }
 
 func TestEventForwarderServicenow(t *testing.T) {
-	t.Skip("not supported on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	eventForwarderName := "test-event-forwarder-servicenow"
@@ -139,7 +147,7 @@ func TestEventForwarderServicenow(t *testing.T) {
 }
 
 func TestEventForwarderSlack(t *testing.T) {
-	t.Skip("not supported on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	eventForwarderName := "test-event-forwarder-slack"
@@ -169,6 +177,43 @@ func TestEventForwarderSlack(t *testing.T) {
 			url = "https://example2.com"
 			runner_type = "immediate"
 			description = "test slack event forwarder update"
+		}
+	`, eventForwarderName, eventForwarderName)
+
+	testEventForwarderResource(t, eventForwarderName, config, configUpdate)
+}
+
+func TestEventForwarderTeams(t *testing.T) {
+	skipIfNoGateway(t)
+	t.Parallel()
+
+	eventForwarderName := "test-event-forwarder-teams"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_event_forwarder_teams" "%v" {
+			name = "%v"
+			items_event_source_locations = ["/items/*"]
+			targets_event_source_locations = ["/targets/*"]
+			auth_methods_event_source_locations = ["/auth-methods/*"]
+			gateway_event_source_locations = ["http://localhost:8000"]
+			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
+			url = "https://example.webhook.office.com"
+			runner_type = "immediate"
+			description = "test teams event forwarder"
+		}
+	`, eventForwarderName, eventForwarderName)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_event_forwarder_teams" "%v" {
+			name = "%v"
+			items_event_source_locations = ["items/*", "items2"]
+			targets_event_source_locations = ["targets/*", "targets2/*"]
+			auth_methods_event_source_locations = ["/auth/"]
+			gateway_event_source_locations = ["http://localhost:8000"]
+			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
+			url = "https://example2.webhook.office.com"
+			runner_type = "immediate"
+			description = "test teams event forwarder update"
 		}
 	`, eventForwarderName, eventForwarderName)
 

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -355,8 +355,8 @@ func TestTargetDataSourceLdap(t *testing.T) {
 }
 
 func TestTargetDataSourceLinkedTarget(t *testing.T) {
-
-	t.Skip("fail due to unmarshal error with Target.target.attributes")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	parentTargetName := "target-db-for-linked-target"
 	parentTargetPath := testPath(parentTargetName)

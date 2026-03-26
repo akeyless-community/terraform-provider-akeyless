@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -94,6 +94,23 @@ func resourceDfcKey() *schema.Resource {
 				Optional:    true,
 				Description: "Province name for the generated certificate. Relevant only for generate-self-signed-certificate.",
 			},
+			"certificate_digest_algo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Digest algorithm to be used for the certificate key signing.",
+			},
+			"hash_algorithm": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specifies the hash algorithm used for the encryption key's operations, available options: [SHA256, SHA384, SHA512]",
+				Default:     "SHA256",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"cert_data_base64": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -137,7 +154,7 @@ func resourceDfcKey() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Protection from accidental deletion of this item, [true/false]",
+				Description: "Protection from accidental deletion of this object [true/false]",
 			},
 		},
 	}
@@ -154,7 +171,6 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
@@ -170,6 +186,13 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	certificateCountry := d.Get("certificate_country").(string)
 	certificateLocality := d.Get("certificate_locality").(string)
 	certificateProvince := d.Get("certificate_province").(string)
+	certificateDigestAlgo := d.Get("certificate_digest_algo").(string)
+	hashAlgorithm := d.Get("hash_algorithm").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
 	confFileData := d.Get("conf_file_data").(string)
 	certificateFormat := d.Get("certificate_format").(string)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
@@ -196,6 +219,9 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.CertificateCountry, certificateCountry)
 	common.GetAkeylessPtr(&body.CertificateLocality, certificateLocality)
 	common.GetAkeylessPtr(&body.CertificateProvince, certificateProvince)
+	common.GetAkeylessPtr(&body.CertificateDigestAlgo, certificateDigestAlgo)
+	common.GetAkeylessPtr(&body.HashAlgorithm, hashAlgorithm)
+	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
 	common.GetAkeylessPtr(&body.ConfFileData, confFileData)
 	common.GetAkeylessPtr(&body.CertificateFormat, certificateFormat)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
@@ -204,12 +230,9 @@ func resourceDfcKeyCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 
-	_, _, err = client.CreateDFCKey(ctx).Body(body).Execute()
+	_, resp, err := client.CreateDFCKey(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to create key: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to create key: %w", err)
+		return common.HandleError("failed to create key", resp, err)
 	}
 
 	d.SetId(name)
@@ -252,11 +275,13 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := false
 	if rOut.DeleteProtection != nil {
-		err := d.Set("delete_protection", *rOut.DeleteProtection)
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = *rOut.DeleteProtection
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 	if rOut.AutoRotate != nil {
 		err = d.Set("auto_rotate", strconv.FormatBool(*rOut.AutoRotate))
@@ -268,6 +293,20 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 		err = d.Set("rotation_interval", strconv.FormatInt(*rOut.RotationInterval, 10))
 		if err != nil {
 			return err
+		}
+	}
+	if rOut.ItemCustomFieldsDetails != nil && len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFieldsMap := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFieldsMap[*field.Name] = *field.Value
+			}
+		}
+		if len(customFieldsMap) > 0 {
+			err = d.Set("item_custom_fields", customFieldsMap)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if rOut.ItemGeneralInfo != nil {
@@ -364,7 +403,6 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -375,6 +413,11 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	deleteProtection := d.Get("delete_protection").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventInList := common.ExpandStringList(expirationEventInSet.List())
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
 
 	body := akeyless_api.UpdateItem{
 		Name:  name,
@@ -385,6 +428,7 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.CertificateFormat, certificateFormat)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventInList)
+	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
 
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tagList, client)
 	if err == nil {
@@ -396,12 +440,9 @@ func resourceDfcKeyUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update key: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update key: %w", err)
+		return common.HandleError("failed to update key", resp, err)
 	}
 
 	if d.HasChanges("auto_rotate", "rotation_interval", "rotation_event_in") {
@@ -522,12 +563,12 @@ func validateDfcKeyUpdateParams(d *schema.ResourceData) error {
 		"generate_self_signed_certificate", "certificate_ttl",
 		"certificate_common_name", "certificate_organization",
 		"certificate_country", "certificate_locality", "certificate_province",
+		"certificate_digest_algo", "hash_algorithm",
 		"conf_file_data"}
 	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }
 
 func updateRotationSettings(d *schema.ResourceData, name string, token string, client akeyless_api.V2ApiService) error {
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	autoRotate := d.Get("auto_rotate").(string)
@@ -551,12 +592,9 @@ func updateRotationSettings(d *schema.ResourceData, name string, token string, c
 	common.GetAkeylessPtr(&rotationSettingsBody.RotationInterval, rotationIntervalInt)
 	common.GetAkeylessPtr(&rotationSettingsBody.RotationEventIn, rotationEventInList)
 
-	_, _, err = client.UpdateRotationSettings(ctx).Body(rotationSettingsBody).Execute()
+	_, resp, err := client.UpdateRotationSettings(ctx).Body(rotationSettingsBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update rotation settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update rotation settings: %w", err)
+		return common.HandleError("failed to update rotation settings", resp, err)
 	}
 	return nil
 }

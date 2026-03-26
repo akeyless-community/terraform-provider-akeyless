@@ -18,7 +18,7 @@ PKI Cert Issuer  resource
 ### Required
 
 - `name` (String) PKI certificate issuer name
-- `ttl` (String) The maximum requested Time To Live for issued certificate by default in seconds, supported formats are s,m,h,d. In case of Public CA, this is based on the CA target's supported maximum TTLs
+- `ttl` (String) The maximum requested Time To Live for issued certificates, in seconds. In case of Public CA, this is based on the CA target's supported maximum TTLs
 
 ### Optional
 
@@ -26,8 +26,8 @@ PKI Cert Issuer  resource
 - `allow_copy_ext_from_csr` (Boolean) If set, will allow copying the extra extensions from the csr file (if given)
 - `allow_subdomains` (Boolean) If set, clients can request certificates for subdomains and wildcard subdomains of the allowed domains
 - `allowed_domains` (String) A list of the allowed domains that clients can request to be included in the certificate (in a comma-delimited list)
-- `allowed_extra_extensions` (String) A json string that defines the allowed extra extensions for the pki cert issuer
-- `allowed_ip_sans` (String) A list of the allowed CIDRs for IPs that clients can request to be included in the certificate as part of the IP Subject Alternative Names (in a comma-delimited list)
+- `allowed_extra_extensions` (String) A json string containing the allowed extra extensions for the pki cert issuer
+- `allowed_ip_sans` (String) A list of the allowed CIDRs for ips that clients can request to be included in the certificate as part of the IP Subject Alternative Names (in a comma-delimited list)
 - `allowed_uri_sans` (String) A list of the allowed URIs that clients can request to be included in the certificate as part of the URI Subject Alternative Names (in a comma-delimited list)
 - `auto_renew` (Boolean) Automatically renew certificates before expiration
 - `ca_target` (String) The name of an existing CA target to attach this PKI Certificate Issuer to, required in Public CA mode
@@ -35,19 +35,25 @@ PKI Cert Issuer  resource
 - `code_signing_flag` (Boolean) If set, certificates will be flagged for code signing use
 - `country` (String) A comma-separated list of countries that will be set in the issued certificate
 - `create_private_crl` (Boolean) Set this to allow the issuer will expose a CRL endpoint in the Gateway
+- `create_private_ocsp` (Boolean) Set this to enable an OCSP endpoint in the Gateway and include its URL in AIA
 - `create_public_crl` (Boolean) Set this to allow the cert issuer will expose a public CRL endpoint
+- `create_public_ocsp` (Boolean) Set this to enable a public OCSP endpoint and include its URL in AIA (served by UAM and includes account id)
 - `critical_key_usage` (String) Mark key usage as critical [true/false]
-- `delete_protection` (Boolean) Protection from accidental deletion of this item, [true/false]
+- `delete_protection` (Boolean) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
-- `destination_path` (String) A path in Akeyless which to save generated certificates
+- `destination_path` (String) A path in which to save generated certificates
+- `disable_wildcards` (Boolean) If set, generation of wildcard certificates will be disabled.
 - `enable_acme` (Boolean) If set, the cert issuer will support the acme protocol
-- `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified
-- `gw_cluster_url` (String) The GW cluster URL to issue the certificate from, required in Public CA mode
+- `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified.
+- `gw_cluster_url` (String) The GW cluster URL to issue the certificate from. Required in Public CA mode, to allow CRLs on private CA, or to enable ACME
 - `is_ca` (Boolean) If set, the basic constraints extension will be added to certificate
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `key_usage` (String) A comma-separated string or list of key usages
 - `locality` (String) A comma-separated list of localities that will be set in the issued certificate
+- `max_path_len` (Number) The maximum path length for the generated certificate. -1, means unlimited
 - `not_enforce_hostnames` (Boolean) If set, any names are allowed for CN and SANs in the certificate and not only a valid host name
 - `not_require_cn` (Boolean) If set, clients can request certificates without a CN
+- `ocsp_ttl` (String) OCSP NextUpdate window for OCSP responses (min 10m). Supports s,m,h,d suffix.
 - `organizational_units` (String) A comma-separated list of organizational units (OU) that will be set in the issued certificate
 - `organizations` (String) A comma-separated list of organizations (O) that will be set in the issued certificate
 - `postal_code` (String) A comma-separated list of postal codes that will be set in the issued certificate

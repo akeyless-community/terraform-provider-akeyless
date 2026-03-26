@@ -5,10 +5,32 @@ import (
 	"fmt"
 	"testing"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+var checkStaticSecretDestroyed = func(s *terraform.State) error {
+	client := *testAccProvider.Meta().(*providerMeta).client
+	token := *testAccProvider.Meta().(*providerMeta).token
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type == "akeyless_static_secret" {
+			body := akeyless_api.GetSecretValue{
+				Names: []string{rs.Primary.ID},
+				Token: &token,
+			}
+			_, res, err := client.GetSecretValue(context.Background()).Body(body).Execute()
+			if err == nil {
+				return fmt.Errorf("static secret %s still exists", rs.Primary.ID)
+			}
+			if res != nil && res.StatusCode != 404 {
+				return fmt.Errorf("static secret %s: unexpected status %d", rs.Primary.ID, res.StatusCode)
+			}
+		}
+	}
+	return nil
+}
 
 func TestStaticResource(t *testing.T) {
 
@@ -22,12 +44,15 @@ func TestStaticResource(t *testing.T) {
 			path 				= "%v"
 			value 				= "{\"secret value\":\"abc\"}"
 			format 				= "json"
+			max_versions		= "5"
 			tags 				= ["t1", "t2"]
 			description 		= "aaaa"
             keep_prev_version	= "true"
 			delete_protection  	= "true"
-			# exercise ignore_cache in Read
-			ignore_cache       = "true"
+			ignore_cache       	= "true"
+			accessibility 		= "regular"
+			multiline_value 	= false
+			change_event 		= "true"
 		}
 	`, secretName, secretPath)
 
@@ -54,7 +79,44 @@ func TestStaticResource(t *testing.T) {
 		}
 	`, secretName, secretPath)
 
-	testStaticSecretResource(t, secretPath, config, configUpdate, configUpdate2)
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkStaticSecretDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "max_versions", "5"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "format", "json"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "delete_protection", "true"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "description", "aaaa"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "accessibility", "regular"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "multiline_value", "false"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "change_event", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "description", "bbbb"),
+				),
+			},
+			{
+				Config: configUpdate2,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+				),
+			},
+			{
+				ResourceName:            "akeyless_static_secret.test_secret",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"value", "password", "ignore_cache", "accessibility", "format", "keep_prev_version", "max_versions", "multiline_value", "secure_access_enable", "change_event"},
+			},
+		},
+	})
 }
 
 func TestStaticPasswordResource(t *testing.T) {
@@ -127,6 +189,7 @@ func testStaticSecretResource(t *testing.T, secretPath string, configs ...string
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
+		CheckDestroy:      checkStaticSecretDestroyed,
 		Steps:             steps,
 	})
 }

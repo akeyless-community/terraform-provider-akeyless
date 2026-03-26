@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,7 +35,7 @@ func resourceAuthMethodAzureAd() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
-				Default:     "0",
+				Default:     0,
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
@@ -74,7 +74,7 @@ func resourceAuthMethodAzureAd() *schema.Resource {
 			"audience": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The audience in the JWT",
+				Description: "Deprecated (Deprecated) The audience in the JWT",
 				Default:     "https://management.azure.com/",
 			},
 			"bound_spid": {
@@ -128,14 +128,48 @@ func resourceAuthMethodAzureAd() *schema.Resource {
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Subclaims to include in audit logs",
+				Description: "Subclaims to include in audit logs, e.g \"--audit-logs-claims email --audit-logs-claims username\"",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Description: "Protection from accidental deletion of this object [true/false]",
 				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Auth Method description",
+			},
+			"allowed_client_type": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"expiration_event_in": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "How many days before the expiration of the auth method would you like to be notified.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"gw_bound_ips": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "A CIDR whitelist with the GW IPs that the access is restricted to",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"product_type": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"unique_identifier": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A unique identifier (ID) value which is a \"sub claim\" name that contains details uniquely identifying that resource. This \"sub claim\" is used to distinguish between different identities.",
 			},
 			"access_id": {
 				Type:        schema.TypeString,
@@ -151,7 +185,6 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -182,6 +215,16 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	allowedClientTypeSet := d.Get("allowed_client_type").(*schema.Set)
+	allowedClientType := common.ExpandStringList(allowedClientTypeSet.List())
+	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
+	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
+	gwBoundIpsSet := d.Get("gw_bound_ips").(*schema.Set)
+	gwBoundIps := common.ExpandStringList(gwBoundIpsSet.List())
+	productTypeSet := d.Get("product_type").(*schema.Set)
+	productType := common.ExpandStringList(productTypeSet.List())
+	uniqueIdentifier := d.Get("unique_identifier").(string)
 
 	body := akeyless_api.AuthMethodCreateAzureAD{
 		Name:          name,
@@ -205,13 +248,16 @@ func resourceAuthMethodAzureAdCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.BoundResourceId, boundResourceId)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.AllowedClientType, allowedClientType)
+	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
+	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
+	common.GetAkeylessPtr(&body.ProductType, productType)
+	common.GetAkeylessPtr(&body.UniqueIdentifier, uniqueIdentifier)
 
-	rOut, _, err := client.AuthMethodCreateAzureAD(ctx).Body(body).Execute()
+	rOut, resp, err := client.AuthMethodCreateAzureAD(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Auth Method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Auth Method: %v", err)
+		return common.HandleError("can't create Auth Method", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -375,8 +421,62 @@ func resourceAuthMethodAzureAdRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+
+	if rOut.AccessInfo.AllowedClientType != nil && len(rOut.AccessInfo.AllowedClientType) > 0 {
+		// Only set allowed_client_type if it was explicitly configured by the user
+		if _, ok := d.GetOk("allowed_client_type"); ok {
+			err = d.Set("allowed_client_type", rOut.AccessInfo.AllowedClientType)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if rOut.Description != nil {
+		err = d.Set("description", *rOut.Description)
+		if err != nil {
+			return err
+		}
+	}
+
+	if rOut.AccessInfo.GwCidrWhitelist != nil && *rOut.AccessInfo.GwCidrWhitelist != "" {
+		err = d.Set("gw_bound_ips", strings.Split(*rOut.AccessInfo.GwCidrWhitelist, ","))
+		if err != nil {
+			return err
+		}
+	}
+
+	if rOut.AccessInfo.ProductTypes != nil {
+		err = d.Set("product_type", rOut.AccessInfo.ProductTypes)
+		if err != nil {
+			return err
+		}
+	}
+
+	if rOut.AccessInfo.AzureAdAccessRules.UniqueIdentifier != nil {
+		err = d.Set("unique_identifier", *rOut.AccessInfo.AzureAdAccessRules.UniqueIdentifier)
+		if err != nil {
+			return err
+		}
+	}
+
+	if rOut.ExpirationEvents != nil && len(rOut.ExpirationEvents) > 0 {
+		expirationEventIn := make([]string, 0, len(rOut.ExpirationEvents))
+		for _, event := range rOut.ExpirationEvents {
+			if event.SecondsBefore != nil {
+				days := *event.SecondsBefore / 86400
+				expirationEventIn = append(expirationEventIn, strconv.FormatInt(days, 10))
+			}
+		}
+		err = d.Set("expiration_event_in", expirationEventIn)
 		if err != nil {
 			return err
 		}
@@ -392,7 +492,6 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -423,6 +522,16 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	allowedClientTypeSet := d.Get("allowed_client_type").(*schema.Set)
+	allowedClientType := common.ExpandStringList(allowedClientTypeSet.List())
+	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
+	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
+	gwBoundIpsSet := d.Get("gw_bound_ips").(*schema.Set)
+	gwBoundIps := common.ExpandStringList(gwBoundIpsSet.List())
+	productTypeSet := d.Get("product_type").(*schema.Set)
+	productType := common.ExpandStringList(productTypeSet.List())
+	uniqueIdentifier := d.Get("unique_identifier").(string)
 
 	body := akeyless_api.AuthMethodUpdateAzureAD{
 		Name:          name,
@@ -447,13 +556,16 @@ func resourceAuthMethodAzureAdUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.AllowedClientType, allowedClientType)
+	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
+	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
+	common.GetAkeylessPtr(&body.ProductType, productType)
+	common.GetAkeylessPtr(&body.UniqueIdentifier, uniqueIdentifier)
 
-	_, _, err := client.AuthMethodUpdateAzureAD(ctx).Body(body).Execute()
+	_, resp, err := client.AuthMethodUpdateAzureAD(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

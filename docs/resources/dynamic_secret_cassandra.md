@@ -21,19 +21,22 @@ Cassandra dynamic secret resource
 
 ### Optional
 
-- `cassandra_creation_statements` (String) Cassandra Creation Statements
-- `cassandra_hosts` (String) Cassandra hosts names or IP addresses, comma separated
+- `cassandra_creation_statements` (String) Cassandra creation statements
+- `cassandra_hosts` (String) Cassandra hosts IP or addresses, comma separated
 - `cassandra_password` (String) Cassandra superuser password
 - `cassandra_port` (String) Cassandra port
-- `cassandra_username` (String) Cassandra superuser user name
+- `cassandra_username` (String) Cassandra superuser username
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
-- `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
+- `encryption_key_name` (String) Dynamic producer encryption key
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
 - `ssl_certificate` (String) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
-- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in dynamic secret creation
-- `user_ttl` (String) User TTL (<=60m for access token)
+- `tags` (Set of String) Add tags attached to this object
+- `target_name` (String) Target name
+- `user_ttl` (String) User TTL
 
 ### Read-Only
 

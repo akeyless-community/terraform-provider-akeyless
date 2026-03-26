@@ -3,10 +3,11 @@ package akeyless
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 )
 
 const (
@@ -21,11 +22,11 @@ const (
 	GCP_TOKEN_SCOPES            = "XXXXXXXX"
 	KEY                         = "XXXXXXXX"
 	PRODUCER_NAME               = "terraform-tests/mysql_for_rs_test"
-	MYSQL_USERNAME              = "XXXXXXXX"
-	MYSQL_PASSWORD              = "XXXXXXXX"
-	MYSQL_HOST                  = "127.0.0.1"
+	MYSQL_USERNAME              = "root"
+	MYSQL_PASSWORD              = "root_password"
+	MYSQL_HOST                  = "mysql"
 	MYSQL_PORT                  = "3306"
-	MYSQL_DBNAME                = "XXXXXXXX"
+	MYSQL_DBNAME                = "testdb"
 	K8S_HOST                    = "https://kubernetes.docker.internal:6443"
 )
 
@@ -52,8 +53,8 @@ var db_attr = fmt.Sprintf(`
 `, MYSQL_HOST, MYSQL_PORT, MYSQL_DBNAME)
 
 func TestK8sProducerResource(t *testing.T) {
-
-	t.Skip("for now the requested values are fictive")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	name := "k8s_test"
 	itemPath := testPath(name)
@@ -91,8 +92,8 @@ func TestK8sProducerResource(t *testing.T) {
 }
 
 func TestGithubProducerResource(t *testing.T) {
-
-	t.Skip("for now the requested values are fictive")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	name := "github_test"
 	itemPath := testPath(name)
@@ -120,8 +121,8 @@ func TestGithubProducerResource(t *testing.T) {
 }
 
 func TestGitlabProducerResource(t *testing.T) {
-
-	t.Skip("for now the requested values are fictive")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	name := "gitlab_test"
 	itemPath := testPath(name)
@@ -163,15 +164,26 @@ func TestGitlabProducerResource(t *testing.T) {
 }
 
 func TestCustomProducerResource(t *testing.T) {
-	t.Skip("must run with server listen the following addresses")
+	skipIfNoGateway(t)
+	t.Parallel()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `{"id":"mock-cred"}`)
+	})
+	srv := &http.Server{Addr: ":7890", Handler: mux}
+	go srv.ListenAndServe()
+	defer srv.Close()
 
 	name := "custom_test"
 	itemPath := testPath(name)
 	config := fmt.Sprintf(`
 		resource "akeyless_producer_custom" "%v" {
 			name            = "%v"
-			create_sync_url = "http://localhost:7890/sync/create"
-			revoke_sync_url = "http://localhost:7890/sync/revoke"
+			create_sync_url = "http://host.docker.internal:7890/sync/create"
+			revoke_sync_url = "http://host.docker.internal:7890/sync/revoke"
 			payload         = "aaaa"
 		}
 	`, name, itemPath)
@@ -179,8 +191,8 @@ func TestCustomProducerResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_producer_custom" "%v" {
 			name            = "%v"
-			create_sync_url = "http://localhost:7890/sync/create"
-			revoke_sync_url = "http://localhost:7890/sync/revoke"
+			create_sync_url = "http://host.docker.internal:7890/sync/create"
+			revoke_sync_url = "http://host.docker.internal:7890/sync/revoke"
 			payload         = "bbbb"
 			enable_admin_rotation = "true"
 			timeout_sec 	= "30"
@@ -193,8 +205,7 @@ func TestCustomProducerResource(t *testing.T) {
 }
 
 func TestMySqlProducerResource(t *testing.T) {
-
-	t.Skip("for now the requested values are fictive")
+	skipIfNoGateway(t)
 
 	name := "mysql_test"
 	itemPath := testPath(name)
@@ -220,8 +231,8 @@ func TestMySqlProducerResource(t *testing.T) {
 }
 
 func TestGcpProducerResource(t *testing.T) {
-
-	t.Skip("for now the requested values are fictive")
+	skipIfNoGateway(t)
+	t.Parallel()
 
 	name := "gcp_test"
 	itemPath := testPath(name)
@@ -252,8 +263,7 @@ func TestGcpProducerResource(t *testing.T) {
 }
 
 func TestRotatedSecretResource(t *testing.T) {
-
-	t.Skip("for now the requested values are fictive")
+	t.Skip("replaced by TestRotatedSecretMysqlGw; uses legacy GatewayCreateProducerMySQL API")
 
 	client, token := getClient()
 	user, password := generateDynamicSecret(client, token)

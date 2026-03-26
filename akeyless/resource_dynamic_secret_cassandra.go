@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -32,17 +33,17 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in dynamic secret creation",
+				Description: "Target name",
 			},
 			"cassandra_hosts": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Cassandra hosts names or IP addresses, comma separated",
+				Description: "Cassandra hosts IP or addresses, comma separated",
 			},
 			"cassandra_username": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Cassandra superuser user name",
+				Description: "Cassandra superuser username",
 			},
 			"cassandra_password": {
 				Type:        schema.TypeString,
@@ -58,14 +59,14 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 			"cassandra_creation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Cassandra Creation Statements",
+				Description: "Cassandra creation statements",
 				Default:     "CREATE ROLE '{{username}}' WITH PASSWORD = '{{password}}' AND LOGIN = true; GRANT SELECT ON ALL KEYSPACES TO '{{username}}';",
 			},
 			"ssl": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Enable/Disable SSL [true/false]",
-				Default:     "false",
+				Default:     false,
 			},
 			"ssl_certificate": {
 				Type:        schema.TypeString,
@@ -75,7 +76,7 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 			"user_ttl": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "User TTL (<=60m for access token)",
+				Description: "User TTL",
 				Default:     "60m",
 			},
 			"password_length": {
@@ -86,7 +87,7 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Encrypt dynamic secret details with following key",
+				Description: "Dynamic producer encryption key",
 			},
 			"custom_username_template": {
 				Type:        schema.TypeString,
@@ -96,7 +97,24 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Description: "Add tags attached to this object",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -108,7 +126,6 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -125,6 +142,9 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	tags := common.ExpandStringList(tagsSet.List())
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
 	body := akeyless_api.DynamicSecretCreateCassandra{
 		Name:  name,
@@ -143,13 +163,19 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)
-
-	_, _, err := client.DynamicSecretCreateCassandra(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		body.ItemCustomFields = &customFieldsMap
+	}
+
+	_, resp, err := client.DynamicSecretCreateCassandra(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -259,6 +285,14 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
 
 	d.SetId(path)
 
@@ -270,7 +304,6 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -287,6 +320,9 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	tags := common.ExpandStringList(tagsSet.List())
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
 	body := akeyless_api.DynamicSecretUpdateCassandra{
 		Name:  name,
@@ -305,13 +341,19 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)
-
-	_, _, err := client.DynamicSecretUpdateCassandra(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't update : %v", err)
+		body.ItemCustomFields = &customFieldsMap
+	}
+
+	_, resp, err := client.DynamicSecretUpdateCassandra(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update Secret", resp, err)
 	}
 
 	d.SetId(name)

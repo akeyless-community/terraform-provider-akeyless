@@ -20,7 +20,7 @@ Log Forwarding config for logz-io
 - `enable` (String) Enable Log Forwarding [true/false]
 - `logz_io_token` (String, Sensitive) Logz-io token
 - `output_format` (String) Logs format [text/json]
-- `protocol` (String) Logz-io protocol [tcp/https]
+- `protocol` (String) LogzIo protocol [tcp/https]
 - `pull_interval` (String) Pull interval in seconds
 
 ### Read-Only

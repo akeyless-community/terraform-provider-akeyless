@@ -9,18 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// When enabling the tests, the certificate should be returned from an elastic docker instance. It isn't a secret.
-const ElasticCertForTest string = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURTakNDQWpLZ0F3SUJBZ0lWQU9RMGZzQUJLbUZleFdqVG5sT1BZZVc0alJOMU1BMEdDU3FHU0liM0RRRUIKQ3dVQU1EUXhNakF3QmdOVkJBTVRLVVZzWVhOMGFXTWdRMlZ5ZEdsbWFXTmhkR1VnVkc5dmJDQkJkWFJ2WjJWdQpaWEpoZEdWa0lFTkJNQjRYRFRJME1EUXdNVEUwTXpFeU0xb1hEVEkzTURRd01URTBNekV5TTFvd05ERXlNREFHCkExVUVBeE1wUld4aGMzUnBZeUJEWlhKMGFXWnBZMkYwWlNCVWIyOXNJRUYxZEc5blpXNWxjbUYwWldRZ1EwRXcKZ2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRQzZoMVBIN1hkMHpyaGk4MllwTy9IQwpWeDY4amlBK0w1V3pHYWJrNXl3Q3lqKzFERExPSHBKREVXOFpRSVdMa3RZMFBhRlF2Z041NDk5MDVQL0pjS3BQCmFHNnlZbGdNd29IckJzOWQvK2ZrMGpHL29ueU5GY25hR3BBWHVHNS91UWsyeU02TGdHZVp6c20wdzcrTWhzaEUKcHUrNzUvMlhPUTE3ejRSTmRlZ3BGSjl0SUlQVHI2dHRpR2E1bVpDaWdNbVluQm1pWXRzZG9TbzdvSDQ4eXVTeApCYnhaVFl3QVBCR0svWWRGVkYrekJwaW56YU5wNGd4Z3FYV2tIbUlHUXZUQ2hqQ1ZIYldSKzhnSm5VUHB5NmF3Cm93d1F5ZnhDOFZzNjREeXpDWlBiQVJ3eGZvYTVSeWRlN2pLZDJHSGhaaWg2VndhdGpLaE92MlpZOGp0dUxPdngKQWdNQkFBR2pVekJSTUIwR0ExVWREZ1FXQkJRcHA5VVlVeVhqcC9XSTQySEJpeHc1OVpiNnN6QWZCZ05WSFNNRQpHREFXZ0JRcHA5VVlVeVhqcC9XSTQySEJpeHc1OVpiNnN6QVBCZ05WSFJNQkFmOEVCVEFEQVFIL01BMEdDU3FHClNJYjNEUUVCQ3dVQUE0SUJBUUJVaXMyMzF6SzVrR2VoZjVjalZna2psdVNQRi9yNDArRlh4L3BVMFNjaTc1U3MKVUxkemRYRnpnNjBVMENFOTdjU0VmeWVzQWJUUjBNY01yT0VRVkYybVo4bzVRb0FxZzdXK0ZRSVI0TnZHWVVrQQpNY0UzSm13TlJnSkNZZkt3Y1plbFZtSEp2Zy8zbS83RTZhcTY3bVVEVVRZMXVWNVIvcEdmQUh2enlFL1U1b0JECk9NRU80Wm5GUzlJVFFNOW5sZzRRcy9DcGJDbGpXbGM4MDRQT3UvTTZBb3FxYWRXeWhrT0RaaityWHIrWmV1dUUKQWxOZjdPOWR6VkRnNWtCeUltd0hnQWFzc1kyYzBRUGh2bWJhY0JsUlRZaTV1d2lST0lrcjc0Y2lENzZFdUU0ZgoyRVRUSHl5d3RrZWRSR1puOWloVkxpbmN1WDBPY1ltVW9BZUlMVHZiCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0="
-
 func TestGatewayUpdateLogForwardingAwsS3(t *testing.T) {
-	t.Skip("not supported on public gateway & fictive values")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	name := "test-gw-log-forwarding-aws-s3"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_aws_s3" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			log_folder 		= "folder1"
@@ -29,13 +25,20 @@ func TestGatewayUpdateLogForwardingAwsS3(t *testing.T) {
 			access_id 		= "id1"
 			access_key 		= "key1"
 			region 			= "us-east-2"
-			role_arn 		= ""
 		}
 	`, name)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_aws_s3" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
+			log_folder 		= "folder2"
+			bucket_name 	= "bucket2"
+			auth_type 		= "access_key"
+			access_id 		= "id2"
+			access_key 		= "key2"
+			region 			= "eu-west-1"
 		}
 	`, name)
 
@@ -43,14 +46,13 @@ func TestGatewayUpdateLogForwardingAwsS3(t *testing.T) {
 }
 
 func TestGatewayUpdateLogForwardingAzureAnalytics(t *testing.T) {
-	t.Skip("not supported on public gateway & fictive values")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	name := "test-gw-log-forwarding-azure-analytics"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_azure_analytics" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			workspace_id 	= "id1"
@@ -60,7 +62,11 @@ func TestGatewayUpdateLogForwardingAzureAnalytics(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_azure_analytics" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
+			workspace_id 	= "id2"
+			workspace_key 	= "key2"
 		}
 	`, name)
 
@@ -68,14 +74,13 @@ func TestGatewayUpdateLogForwardingAzureAnalytics(t *testing.T) {
 }
 
 func TestGatewayUpdateLogForwardingDatadog(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	name := "test-gw-log-forwarding-datadog"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_datadog" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			host 			= "datadoghq.com"
@@ -88,7 +93,14 @@ func TestGatewayUpdateLogForwardingDatadog(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_datadog" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
+			host 			= "datadoghq.com"
+			api_key 		= "key2"
+			log_source 		= "akeyless-updated"
+			log_tags 		= "env:prod"
+			log_service 	= "prod"
 		}
 	`, name)
 
@@ -96,44 +108,48 @@ func TestGatewayUpdateLogForwardingDatadog(t *testing.T) {
 }
 
 func TestGatewayUpdateLogForwardingElasticsearch(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
+	_, cert := generateCertForTest(t, 1024)
 	name := "test-gw-log-forwarding-elasticsearch"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_elasticsearch" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			index 			= "akeylesslog"
 			server_type 	= "nodes"
 			nodes 			= "https://localhost:9200"
-			cloud_id 		= ""
 			auth_type 		= "password"
-			api_key 		= ""
 			user_name 		= "elastic"
 			password 		= "12345678"
 			enable_tls 		= true
 			tls_certificate	= "%v"
 		}
-	`, name, ElasticCertForTest)
+	`, name, cert)
 
-	// the container accepts only https request, so must enable tls
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_elasticsearch" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
+			index 			= "akeylesslog2"
+			server_type 	= "nodes"
+			nodes 			= "https://localhost:9201"
+			auth_type 		= "password"
+			user_name 		= "admin"
+			password 		= "newpass"
 			enable_tls 		= true
 			tls_certificate	= "%v"
 		}
-	`, name, ElasticCertForTest)
+	`, name, cert)
 
 	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingGoogleChronicle(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	name := "test-gw-log-forwarding-google-chronicle"
 
@@ -151,7 +167,7 @@ func TestGatewayUpdateLogForwardingGoogleChronicle(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_google_chronicle" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			gcp_key 		= "%s"
@@ -163,24 +179,28 @@ func TestGatewayUpdateLogForwardingGoogleChronicle(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_google_chronicle" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
 			gcp_key 		= "%s"
+			customer_id 	= "%s"
+			region 			= "us_multi_region"
+			log_type 		= "prod"
 		}
-	`, name, saKey)
+	`, name, saKey, customerID)
 
 	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingLogstash(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	_, cert := generateCertForTest(t, 1024)
 	name := "test-gw-log-forwarding-logstash"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_logstash" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			dns 			= "127.0.0.1:8080"
@@ -192,22 +212,27 @@ func TestGatewayUpdateLogForwardingLogstash(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_logstash" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
+			dns 			= "127.0.0.1:9090"
+			protocol 		= "tcp"
+			enable_tls 		= true
+			tls_certificate	= "%v"
 		}
-	`, name)
+	`, name, cert)
 
 	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingLogzIo(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	name := "test-gw-log-forwarding-logz-io"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_logz_io" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			logz_io_token 	= "abcd"
@@ -217,7 +242,11 @@ func TestGatewayUpdateLogForwardingLogzIo(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_logz_io" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
+			logz_io_token 	= "efgh"
+			protocol 		= "tcp"
 		}
 	`, name)
 
@@ -225,15 +254,14 @@ func TestGatewayUpdateLogForwardingLogzIo(t *testing.T) {
 }
 
 func TestGatewayUpdateLogForwardingSplunk(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	_, cert := generateCertForTest(t, 1024)
 	name := "test-gw-log-forwarding-splunk"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_splunk" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			splunk_url 		= "127.0.0.1:8080"
@@ -248,16 +276,24 @@ func TestGatewayUpdateLogForwardingSplunk(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_splunk" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
+			splunk_url 		= "127.0.0.1:9090"
+			splunk_token 	= "efgh"
+			source 			= "/tmp/source2"
+			source_type 	= "type2"
+			index 			= "index2"
+			enable_tls 		= true
+			tls_certificate	= "%v"
 		}
-	`, name)
+	`, name, cert)
 
 	testGatewayConfigResource(t, config, configUpdate)
 }
 
 func TestGatewayUpdateLogForwardingStdout(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	name := "test-gw-log-forwarding-stdout"
 
@@ -271,6 +307,9 @@ func TestGatewayUpdateLogForwardingStdout(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_stdout" "%v" {
+ 			enable        	= "true"
+			output_format 	= "text"
+			pull_interval   = "10"
 		}
 	`, name)
 
@@ -278,14 +317,13 @@ func TestGatewayUpdateLogForwardingStdout(t *testing.T) {
 }
 
 func TestGatewayUpdateLogForwardingSumologic(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	name := "test-gw-log-forwarding-sumologic"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_sumologic" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			endpoint 		= "https://endpoint.collection.sumologic.com/receiver/v1/http/key"
@@ -296,7 +334,12 @@ func TestGatewayUpdateLogForwardingSumologic(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_sumologic" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
+			endpoint 		= "https://endpoint.collection.sumologic.com/receiver/v1/http/key2"
+			sumologic_tags 	= "tag4,tag5"
+			host 			= "sumologichost2.com"
 		}
 	`, name)
 
@@ -304,15 +347,14 @@ func TestGatewayUpdateLogForwardingSumologic(t *testing.T) {
 }
 
 func TestGatewayUpdateLogForwardingSyslog(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	_, cert := generateCertForTest(t, 1024)
 	name := "test-gw-log-forwarding-syslog"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_syslog" "%v" {
- 			enable        	= "true"
+ 			enable        	= "false"
 			output_format 	= "json"
 			pull_interval   = "20"
 			network 		= "tcp"
@@ -326,7 +368,15 @@ func TestGatewayUpdateLogForwardingSyslog(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_log_forwarding_syslog" "%v" {
-			enable        	= "true"
+ 			enable        	= "false"
+			output_format 	= "text"
+			pull_interval   = "10"
+			network 		= "udp"
+			host 			= "127.0.0.1:514"
+			target_tag 		= "tag2"
+			formatter 		= "text"
+			enable_tls 		= false
+			tls_certificate	= "use-existing"
 		}
 	`, name)
 

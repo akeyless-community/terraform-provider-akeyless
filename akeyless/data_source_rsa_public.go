@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -22,17 +22,23 @@ func dataSourceGetRSAPublic() *schema.Resource {
 				Description: "Name of RSA key to extract the public key from",
 				ForceNew:    true,
 			},
+			"pem": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Required:    false,
+				Description: "PEM formatted public key",
+			},
 			"raw": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Required:    false,
-				Description: "",
+				Description: "Raw format of the public key",
 			},
 			"ssh": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Required:    false,
-				Description: "",
+				Description: "SSH format of the public key",
 			},
 		},
 	}
@@ -56,6 +62,7 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 	var out rsaPublicOutput
 	var sshVal string
 	var rawVal string
+	var pemVal string
 
 	rOut, res, err := client.GetRSAPublic(ctx).Body(body).Execute()
 
@@ -77,6 +84,9 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 			} else {
 				return fmt.Errorf("can't get value: raw or ssh key")
 			}
+			if out.Pem != nil {
+				pemVal = *out.Pem
+			}
 		}
 		if err != nil {
 			return fmt.Errorf("can't get value: %v", err)
@@ -84,8 +94,17 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 	} else {
 		rawVal = string(*rOut.Raw)
 		sshVal = string(*rOut.Ssh)
+		if rOut.Pem != nil {
+			pemVal = string(*rOut.Pem)
+		}
 	}
 
+	if rOut.Pem != nil {
+		err = d.Set("pem", pemVal)
+		if err != nil {
+			return err
+		}
+	}
 	if rOut.Raw != nil {
 		err = d.Set("raw", rawVal)
 		if err != nil {
@@ -104,6 +123,7 @@ func dataSourceGetRSAPublicRead(d *schema.ResourceData, m interface{}) error {
 }
 
 type rsaPublicOutput struct {
+	Pem *string `json:"pem,omitempty"`
 	Raw *string `json:"raw,omitempty"`
 	Ssh *string `json:"ssh,omitempty"`
 }

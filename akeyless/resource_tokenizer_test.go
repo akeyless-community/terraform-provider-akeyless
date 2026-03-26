@@ -1,12 +1,14 @@
 package akeyless
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"math/rand"
 	"regexp"
 	"testing"
 
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
@@ -44,7 +46,50 @@ func TestTokenizerCreateUpdate(t *testing.T) {
 		}
 	`, name, itemPath)
 
-	testItemResource(t, itemPath, config, configUpdate)
+	var checkTokenizerDestroyed = func(s *terraform.State) error {
+		client := *testAccProvider.Meta().(*providerMeta).client
+		token := *testAccProvider.Meta().(*providerMeta).token
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type == "akeyless_tokenizer" {
+				body := akeyless_api.DescribeItem{
+					Name:  rs.Primary.ID,
+					Token: &token,
+				}
+				_, res, err := client.DescribeItem(context.Background()).Body(body).Execute()
+				if err == nil {
+					return fmt.Errorf("tokenizer %s still exists", rs.Primary.ID)
+				}
+				if res != nil && res.StatusCode != 404 {
+					return fmt.Errorf("tokenizer %s: unexpected status %d", rs.Primary.ID, res.StatusCode)
+				}
+			}
+		}
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkTokenizerDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkItemExistsRemotely(itemPath),
+					resource.TestCheckResourceAttr("akeyless_tokenizer."+name, "description", "aaaa"),
+					resource.TestCheckResourceAttr("akeyless_tokenizer."+name, "delete_protection", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkItemExistsRemotely(itemPath),
+					resource.TestCheckResourceAttr("akeyless_tokenizer."+name, "description", "bbbb"),
+					resource.TestCheckResourceAttr("akeyless_tokenizer."+name, "delete_protection", "false"),
+				),
+			},
+		},
+	})
 }
 
 func TestTokenizerCustomType(t *testing.T) {

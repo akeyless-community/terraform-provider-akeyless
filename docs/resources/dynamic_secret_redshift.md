@@ -21,22 +21,25 @@ Redshift dynamic secret resource
 
 ### Optional
 
-- `creation_statements` (String) Redshift Creation Statements
+- `creation_statements` (String) Redshift Creation statements
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
-- `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
+- `encryption_key_name` (String) Dynamic producer encryption key
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
-- `redshift_db_name` (String) Redshift DB name
-- `redshift_host` (String) Redshift host name
-- `redshift_password` (String) Redshift password
-- `redshift_port` (String) Redshift port
-- `redshift_username` (String) redshiftL user
+- `redshift_db_name` (String) Redshift DB Name
+- `redshift_host` (String) Redshift Host
+- `redshift_password` (String) Redshift Password
+- `redshift_port` (String) Redshift Port
+- `redshift_username` (String) Redshift Username
 - `secure_access_db_name` (String) The DB Name
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
-- `secure_access_host` (Set of String) Target DB servers for connections., For multiple values repeat this flag.
+- `secure_access_host` (Set of String) Target DB servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
-- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in dynamic secret creation
+- `tags` (Set of String) Add tags attached to this object
+- `target_name` (String) Target name
 - `user_ttl` (String) User TTL
 
 ### Read-Only

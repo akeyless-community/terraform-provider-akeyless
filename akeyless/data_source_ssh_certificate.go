@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -24,12 +24,12 @@ func dataSourceGetSSHCertificate() *schema.Resource {
 			"cert_username": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The username to sign in the SSH certificate (use a comma-separated list for more than one username)",
+				Description: "The username to sign in the SSH certificate",
 			},
 			"public_key_data": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "SSH public key file contents",
+				Description: "SSH public key file contents. If this option is used, the certificate will be printed to stdout",
 			},
 			"ttl": {
 				Type:        schema.TypeInt,
@@ -47,6 +47,11 @@ func dataSourceGetSSHCertificate() *schema.Resource {
 				Computed:    true,
 				Sensitive:   true,
 				Description: "",
+			},
+			"path": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The path of the SSH certificate",
 			},
 		},
 	}
@@ -89,6 +94,12 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 
 	if rOut.Data != nil {
 		err = d.Set("data", *rOut.Data)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Path != nil {
+		err = d.Set("path", *rOut.Path)
 		if err != nil {
 			return err
 		}

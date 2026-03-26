@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,52 +29,69 @@ func resourceDynamicSecretGithub() *schema.Resource {
 				Description: "Dynamic secret name",
 				ForceNew:    true,
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"tags": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Add tags attached to this object",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"installation_id": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: "Github application installation id",
+				Description: "GitHub application installation id",
 			},
 			"installation_organization": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Instead of installation id, set a GitHub organization name",
+				Description: "Optional, mutually exclusive with installation id, GitHub organization name",
 			},
 			"installation_repository": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Instead of installation id, set a GitHub repository '<owner>/<repo-name>'",
+				Description: "Optional, mutually exclusive with installation id, GitHub repository '<owner>/<repo-name>'",
 			},
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in dynamic secret creation",
+				Description: "Target name",
 			},
 			"github_app_id": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: "Github application id",
+				Description: "Github app id",
 			},
 			"github_app_private_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Github application private key (base64 encoded key)",
+				Description: "App private key",
 			},
 			"github_base_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Github base url",
+				Description: "Base URL",
 				Default:     "https://api.github.com/",
 			},
 			"token_permissions": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Tokens' allowed permissions. By default use installation allowed permissions. Input format: key=value pairs or JSON strings, e.g - -p contents=read -p issues=write or -p '{content:read}'",
+				Description: "Optional - installation token's allowed permissions",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"token_repositories": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Tokens' allowed repositories. By default use installation allowed repositories. To specify multiple repositories use argument multiple times: -r RepoName1 -r RepoName2",
+				Description: "Optional - installation token's allowed repositories",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"token_ttl": {
@@ -81,6 +99,12 @@ func resourceDynamicSecretGithub() *schema.Resource {
 				Optional:    true,
 				Description: "Token TTL",
 				Default:     "60m",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -91,9 +115,12 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	tagsSet := d.Get("tags").(*schema.Set)
+	tags := common.ExpandStringList(tagsSet.List())
 	installationId := d.Get("installation_id").(int)
 	installationOrganization := d.Get("installation_organization").(string)
 	installationRepository := d.Get("installation_repository").(string)
@@ -106,11 +133,15 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	tokenRepositoriesSet := d.Get("token_repositories").(*schema.Set)
 	tokenRepositories := common.ExpandStringList(tokenRepositoriesSet.List())
 	tokenTtl := d.Get("token_ttl").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
 	body := akeyless_api.DynamicSecretCreateGithub{
 		Name:  name,
 		Token: &token,
 	}
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.InstallationId, installationId)
 	common.GetAkeylessPtr(&body.InstallationOrganization, installationOrganization)
 	common.GetAkeylessPtr(&body.InstallationRepository, installationRepository)
@@ -121,13 +152,17 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
 	common.GetAkeylessPtr(&body.TokenTtl, tokenTtl)
-
-	_, _, err := client.DynamicSecretCreateGithub(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		body.ItemCustomFields = &customFieldsMap
+	}
+
+	_, resp, err := client.DynamicSecretCreateGithub(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -161,6 +196,26 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
 		}
 		return fmt.Errorf("can't get value: %v", err)
+	}
+	deleteProtectionVal := "false"
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if rOut.Metadata != nil {
+		err = d.Set("description", *rOut.Metadata)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Tags != nil {
+		err = d.Set("tags", rOut.Tags)
+		if err != nil {
+			return err
+		}
 	}
 	if rOut.GithubAppId != nil {
 		err = d.Set("github_app_id", *rOut.GithubAppId)
@@ -242,6 +297,21 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
+	if rOut.ItemCustomFieldsDetails != nil && len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err = d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -252,9 +322,12 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	tagsSet := d.Get("tags").(*schema.Set)
+	tags := common.ExpandStringList(tagsSet.List())
 	installationId := d.Get("installation_id").(int)
 	installationOrganization := d.Get("installation_organization").(string)
 	installationRepository := d.Get("installation_repository").(string)
@@ -267,11 +340,15 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	tokenRepositoriesSet := d.Get("token_repositories").(*schema.Set)
 	tokenRepositories := common.ExpandStringList(tokenRepositoriesSet.List())
 	tokenTtl := d.Get("token_ttl").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
 	body := akeyless_api.DynamicSecretUpdateGithub{
 		Name:  name,
 		Token: &token,
 	}
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.InstallationId, installationId)
 	common.GetAkeylessPtr(&body.InstallationOrganization, installationOrganization)
 	common.GetAkeylessPtr(&body.InstallationRepository, installationRepository)
@@ -282,13 +359,17 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)
 	common.GetAkeylessPtr(&body.TokenTtl, tokenTtl)
-
-	_, _, err := client.DynamicSecretUpdateGithub(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't update : %v", err)
+		body.ItemCustomFields = &customFieldsMap
+	}
+
+	_, resp, err := client.DynamicSecretUpdateGithub(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

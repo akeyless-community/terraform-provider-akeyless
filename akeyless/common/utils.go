@@ -14,10 +14,24 @@ import (
 	"strings"
 	"time"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func DiffSuppressDuration(_, old, new string, _ *schema.ResourceData) bool {
+	// Parse both durations and compare them
+	oldDuration, oldErr := time.ParseDuration(old)
+	newDuration, newErr := time.ParseDuration(new)
+
+	// If both parse successfully, compare the durations
+	if oldErr == nil && newErr == nil {
+		return oldDuration == newDuration
+	}
+
+	// If parsing fails, fall back to string comparison
+	return old == new
+}
 
 func DiffSuppressOnLeadingSlash(_, old, new string, _ *schema.ResourceData) bool {
 	return EnsureLeadingSlash(old) == EnsureLeadingSlash(new)
@@ -345,13 +359,6 @@ func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemTy
 		}
 	}
 
-	if s, ok := sra.GetBastionIssuerOk(); ok {
-		err = d.Set("secure_access_bastion_issuer", s)
-		if err != nil {
-			return err
-		}
-	}
-
 	if s, ok := sra.GetBastionApiOk(); ok {
 		err = d.Set("secure_access_bastion_api", s)
 		if err != nil {
@@ -480,8 +487,9 @@ func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemTy
 			return err
 		}
 	}
-	if s, ok := sra.GetRegionOk(); ok {
-		err = d.Set("secure_access_aws_region", s)
+
+	if s, ok := sra.GetBastionIssuerOk(); ok {
+		err = d.Set("secure_access_certificate_issuer", s)
 		if err != nil {
 			return err
 		}
@@ -621,6 +629,36 @@ func SecondsToTimeString(totalSeconds int) string {
 	return result.String()
 }
 
+// TimeStringToSeconds converts a formatted time string like "365d", "8760h", "1d2h3m4s"
+// back to total seconds. Returns -1 if the string cannot be parsed.
+func TimeStringToSeconds(s string) int {
+	total := 0
+	current := 0
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			current = current*10 + int(c-'0')
+		} else {
+			switch c {
+			case 'd':
+				total += current * 86400
+			case 'h':
+				total += current * 3600
+			case 'm':
+				total += current * 60
+			case 's':
+				total += current
+			default:
+				return -1
+			}
+			current = 0
+		}
+	}
+	if current > 0 {
+		total += current
+	}
+	return total
+}
+
 func ExtractLogForwardingFormat(isJson bool) string {
 	if isJson {
 		return "json"
@@ -682,17 +720,17 @@ func HandleError(msg string, resp *http.Response, err error) error {
 		return fmt.Errorf("%s: %s", msg, string(apiErr.Body()))
 	}
 
-	// resp is informative
-	if resp.Body != nil {
-		if errorMsg, errRead := io.ReadAll(resp.Body); errRead == nil {
-			return fmt.Errorf("%s: %s", msg, string(errorMsg))
+	if resp != nil {
+		if resp.Body != nil {
+			if errorMsg, errRead := io.ReadAll(resp.Body); errRead == nil {
+				return fmt.Errorf("%s: %s", msg, string(errorMsg))
+			}
+		}
+		if resp.StatusCode == http.StatusNotFound {
+			return fmt.Errorf("%s: not found: %w", msg, err)
 		}
 	}
 
-	// nothing informative
-	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("%s: not found: %w", msg, err)
-	}
 	return fmt.Errorf("%s: %w", msg, err)
 }
 

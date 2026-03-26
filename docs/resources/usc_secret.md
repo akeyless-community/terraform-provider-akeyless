@@ -22,13 +22,17 @@ Universal Secrets Connector secret resource
 
 ### Optional
 
-- `binary_value` (Boolean) Use this option if the universal secrets value is a base64 encoded binary. (relevant for aws/azure/gcp/k8s targets)
-- `description` (String) Description of the universal secret (relevant for aws/hashi target)
+- `binary_value` (Boolean) Use this option if the universal secrets value is a base64 encoded binary
+- `description` (String) Description of the universal secrets
+- `force_delete` (Boolean) Force delete objects that are soft deleted by default (relevant only for Azure target)
 - `namespace` (String) The namespace (relevant for Hashi vault target)
 - `object_type` (String) Either secret or certificate (Relevant only for Azure KV targets)
+- `pfx_password` (String, Sensitive) Optional, the passphrase that protects the private key within the pfx certificate (Relevant only for Azure KV certificates)
+- `region` (String) Optional, create secret in a specific region (GCP only). If empty, a global secret will be created (provider default).
 - `tags` (Set of String) Tags for the universal secrets
+- `usc_encryption_key` (String) Optional, The name of the remote key that used to encrypt the secret value (if empty, the default key will be used)
 - `value` (String, Sensitive) Value of the universal secrets item, either text or base64 encoded binary
-- `version_id` (String) Version ID of the secret (if not specified, will retrieve the last version)
+- `version_id` (String) The version id (if not specified, will retrieve the last version)
 
 ### Read-Only
 

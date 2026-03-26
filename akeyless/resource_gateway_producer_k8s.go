@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -135,18 +135,19 @@ func resourceProducerK8s() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access",
-				Default:     "false",
+				Default:     false,
 			},
 			"secure_access_web_proxy": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Web-Proxy via Akeyless Web Access Bastion",
-				Default:     "false",
+				Default:     false,
 			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this item [true/false]",
+				Default:     "false",
 			},
 		},
 	}
@@ -157,7 +158,6 @@ func resourceProducerK8sCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -211,12 +211,9 @@ func resourceProducerK8sCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.GatewayCreateProducerNativeK8S(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayCreateProducerNativeK8S(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Producer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create producer: %v", err)
+		return common.HandleError("can't create producer", resp, err)
 	}
 
 	d.SetId(name)
@@ -351,7 +348,6 @@ func resourceProducerK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -405,12 +401,9 @@ func resourceProducerK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.GatewayUpdateProducerNativeK8S(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateProducerNativeK8S(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Producer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update producer: %v", err)
+		return common.HandleError("can't update producer", resp, err)
 	}
 
 	d.SetId(name)

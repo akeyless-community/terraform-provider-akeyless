@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,12 +35,12 @@ func resourceDynamicSecretGcp() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in dynamic secret creation",
+				Description: "Target name",
 			},
 			"gcp_sa_email": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "GCP service account email",
+				Description: "The email of the fixed service account to generate keys or tokens for (Relevant only when --access-type=sa and --service-account-type=fixed)",
 			},
 			"access_type": {
 				Type:        schema.TypeString,
@@ -62,12 +62,12 @@ func resourceDynamicSecretGcp() *schema.Resource {
 			"gcp_token_scopes": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Access token scopes list, e.g. scope1,scope2",
+				Description: "Access token scopes list, e.g. scope1,scope2 (Relevant only when --access-type=sa; required when --gcp-cred-type=token)",
 			},
 			"gcp_key_algo": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Service account key algorithm, e.g. KEY_ALG_RSA_1024",
+				Description: "Service account key algorithm, e.g. KEY_ALG_RSA_1024 (Relevant only when --access-type=sa and --gcp-cred-type=key)",
 			},
 			"project_id": {
 				Type:        schema.TypeString,
@@ -78,34 +78,34 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "fixed",
-				Description: "The type of the gcp dynamic secret. Options[fixed, dynamic]",
+				Description: "The type of the GCP service account. Options [fixed, dynamic] (Relevant only when --access-type=sa)",
 			},
 			"role_names": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Comma-separated list of GCP roles to assign to the user",
+				Description: "Comma-separated list of GCP roles to assign to the user (Relevant only when --access-type=external)",
 			},
 			"fixed_user_claim_keyname": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "ext_email",
-				Description: "For externally provided users, denotes the key-name of IdP claim to extract the username from",
+				Description: "For externally provided users, denotes the key-name of IdP claim to extract the username from (Relevant only when --access-type=external)",
 			},
 			"role_binding": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Role binding definitions in json format",
+				Description: "Role binding definitions in JSON format (Relevant only when --access-type=sa and --service-account-type=dynamic)",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "User TTL (<=60m for access token)",
+				Description: "User TTL",
 				Default:     "60m",
 			},
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Encrypt dynamic secret details with following key",
+				Description: "Dynamic producer encryption key",
 			},
 			"custom_username_template": {
 				Type:        schema.TypeString,
@@ -115,13 +115,55 @@ func resourceDynamicSecretGcp() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2",
+				Description: "Add tags attached to this object",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Protection from accidental deletion of this item, [true/false]",
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"gcp_project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCP Project ID override for dynamic secret operations",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_delay": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds",
+			},
+			"secure_access_enable": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Enable/Disable secure remote access [true/false]",
+			},
+			"secure_access_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Destination URL to inject secrets",
+			},
+			"secure_access_web_browsing": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Secure browser via Akeyless's Secure Remote Access (SRA)",
+			},
+			"secure_access_web_proxy": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Web-Proxy via Akeyless's Secure Remote Access (SRA)",
 			},
 		},
 	}
@@ -132,7 +174,6 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -153,6 +194,14 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
+	description := d.Get("description").(string)
+	gcpProjectId := d.Get("gcp_project_id").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	secureAccessDelay := d.Get("secure_access_delay").(int)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
+	secureAccessUrl := d.Get("secure_access_url").(string)
+	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
+	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
 
 	body := akeyless_api.DynamicSecretCreateGcp{
 		Name:  name,
@@ -175,13 +224,34 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
-
-	_, _, err := client.DynamicSecretCreateGcp(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.AccessType, accessType)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
+	common.GetAkeylessPtr(&body.GcpProjectId, gcpProjectId)
+	common.GetAkeylessPtr(&body.RoleNames, roleNames)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	common.GetAkeylessPtr(&body.SecureAccessUrl, secureAccessUrl)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		body.ItemCustomFields = &customFieldsMap
+	}
+	if secureAccessDelay != 0 {
+		secureAccessDelay64 := int64(secureAccessDelay)
+		body.SecureAccessDelay = &secureAccessDelay64
+	}
+	if d.Get("secure_access_web_browsing") != nil {
+		body.SecureAccessWebBrowsing = &secureAccessWebBrowsing
+	}
+	if d.Get("secure_access_web_proxy") != nil {
+		body.SecureAccessWebProxy = &secureAccessWebProxy
+	}
+
+	_, resp, err := client.DynamicSecretCreateGcp(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -321,8 +391,54 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if rOut.GcpAccessType != nil {
+		err = d.Set("access_type", *rOut.GcpAccessType)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Metadata != nil {
+		err = d.Set("description", *rOut.Metadata)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GcpFixedUserClaimKeyname != nil {
+		err = d.Set("fixed_user_claim_keyname", *rOut.GcpFixedUserClaimKeyname)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.GcpProjectId != nil {
+		err = d.Set("gcp_project_id", *rOut.GcpProjectId)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.ItemCustomFieldsDetails != nil && len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFieldsMap := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFieldsMap[*field.Name] = *field.Value
+			}
+		}
+		if len(customFieldsMap) > 0 {
+			err = d.Set("item_custom_fields", customFieldsMap)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if rOut.GcpRoleNames != nil {
+		err = d.Set("role_names", *rOut.GcpRoleNames)
 		if err != nil {
 			return err
 		}
@@ -350,7 +466,6 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -371,6 +486,14 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
+	description := d.Get("description").(string)
+	gcpProjectId := d.Get("gcp_project_id").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	secureAccessDelay := d.Get("secure_access_delay").(int)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
+	secureAccessUrl := d.Get("secure_access_url").(string)
+	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
+	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
 
 	body := akeyless_api.DynamicSecretUpdateGcp{
 		Name:  name,
@@ -393,13 +516,34 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
-
-	_, _, err := client.DynamicSecretUpdateGcp(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.AccessType, accessType)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
+	common.GetAkeylessPtr(&body.GcpProjectId, gcpProjectId)
+	common.GetAkeylessPtr(&body.RoleNames, roleNames)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	common.GetAkeylessPtr(&body.SecureAccessUrl, secureAccessUrl)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't update : %v", err)
+		body.ItemCustomFields = &customFieldsMap
+	}
+	if secureAccessDelay != 0 {
+		secureAccessDelay64 := int64(secureAccessDelay)
+		body.SecureAccessDelay = &secureAccessDelay64
+	}
+	if d.Get("secure_access_web_browsing") != nil {
+		body.SecureAccessWebBrowsing = &secureAccessWebBrowsing
+	}
+	if d.Get("secure_access_web_proxy") != nil {
+		body.SecureAccessWebProxy = &secureAccessWebProxy
+	}
+
+	_, resp, err := client.DynamicSecretUpdateGcp(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

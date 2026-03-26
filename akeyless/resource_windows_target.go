@@ -8,18 +8,19 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceWindowsTarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "windows Target resource",
-		Create:      resourceWindowsTargetCreate,
-		Read:        resourceWindowsTargetRead,
-		Update:      resourceWindowsTargetUpdate,
-		Delete:      resourceWindowsTargetDelete,
+		Description:        "windows Target resource",
+		DeprecationMessage: "use akeyless_target_windows resource instead",
+		Create:             resourceWindowsTargetCreate,
+		Read:               resourceWindowsTargetRead,
+		Update:             resourceWindowsTargetUpdate,
+		Delete:             resourceWindowsTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceWindowsTargetImport,
 		},
@@ -79,6 +80,27 @@ func resourceWindowsTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Description of the object",
 			},
+			"connection_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Type of connection to Windows Server [credentials/parent-target]",
+				Default:     "credentials",
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults",
+			},
+			"parent_target_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Name of the parent target, relevant only when connection-type is parent-target",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
 		},
 	}
 }
@@ -88,7 +110,6 @@ func resourceWindowsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	hostname := d.Get("hostname").(string)
@@ -100,6 +121,9 @@ func resourceWindowsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	certificate := d.Get("certificate").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
+	connectionType := d.Get("connection_type").(string)
+	maxVersions := d.Get("max_versions").(string)
+	parentTargetName := d.Get("parent_target_name").(string)
 
 	body := akeyless_api.TargetCreateWindows{
 		Name:     name,
@@ -114,13 +138,13 @@ func resourceWindowsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Certificate, certificate)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.ConnectionType, connectionType)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.ParentTargetName, parentTargetName)
 
-	_, _, err := client.TargetCreateWindows(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateWindows(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -209,6 +233,18 @@ func resourceWindowsTargetRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.Value.WindowsTargetDetails.ConnectionType != nil {
+		err = d.Set("connection_type", *rOut.Value.WindowsTargetDetails.ConnectionType)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Target.ParentTargetName != nil {
+		err = d.Set("parent_target_name", *rOut.Target.ParentTargetName)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -220,7 +256,6 @@ func resourceWindowsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	hostname := d.Get("hostname").(string)
@@ -232,6 +267,10 @@ func resourceWindowsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	certificate := d.Get("certificate").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
+	connectionType := d.Get("connection_type").(string)
+	maxVersions := d.Get("max_versions").(string)
+	parentTargetName := d.Get("parent_target_name").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.TargetUpdateWindows{
 		Name:     name,
@@ -246,13 +285,14 @@ func resourceWindowsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Certificate, certificate)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.ConnectionType, connectionType)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.ParentTargetName, parentTargetName)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err := client.TargetUpdateWindows(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateWindows(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

@@ -18,6 +18,7 @@ Log Forwarding config for azure-analytics
 ### Optional
 
 - `enable` (String) Enable Log Forwarding [true/false]
+- `enable_batch` (String) Enable batch forwarding [true/false]
 - `output_format` (String) Logs format [text/json]
 - `pull_interval` (String) Pull interval in seconds
 - `workspace_id` (String) Azure workspace id

@@ -2,11 +2,9 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -42,20 +40,20 @@ func resourceRotatedSecretDockerHub() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "The credentials to connect with [use-self-creds/use-target-creds]",
+				Description: "The credentials to connect with use-self-creds/use-target-creds",
 				Default:     "use-self-creds",
 			},
 			"auto_rotate": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation",
+				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]",
 			},
 			"rotation_interval": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes",
+				Description: "The number of days to wait between every automatic key rotation (1-365)",
 			},
 			"rotation_hour": {
 				Type:        schema.TypeInt,
@@ -82,6 +80,35 @@ func resourceRotatedSecretDockerHub() *schema.Resource {
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"rotation_event_in": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "How many days before the rotation of the item would you like to be notified",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
 		},
 	}
 }
@@ -91,7 +118,6 @@ func resourceRotatedSecretDockerHubCreate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -104,6 +130,11 @@ func resourceRotatedSecretDockerHubCreate(d *schema.ResourceData, m interface{})
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	maxVersions := d.Get("max_versions").(string)
+	rotationEventInList := d.Get("rotation_event_in").([]interface{})
+	rotationEventIn := common.ExpandStringList(rotationEventInList)
 
 	body := akeyless_api.RotatedSecretCreateDockerhub{
 		Name:       name,
@@ -118,13 +149,20 @@ func resourceRotatedSecretDockerHubCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
-
-	_, _, err := client.RotatedSecretCreateDockerhub(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
+	if len(itemCustomFields) > 0 {
+		fields := make(map[string]string)
+		for k, v := range itemCustomFields {
+			fields[k] = v.(string)
 		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		body.ItemCustomFields = &fields
+	}
+
+	_, resp, err := client.RotatedSecretCreateDockerhub(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -194,6 +232,26 @@ func resourceRotatedSecretDockerHubRead(d *schema.ResourceData, m interface{}) e
 		}
 	}
 
+	deleteProtectionVal := "false"
+	if itemOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if itemOut.ItemCustomFieldsDetails != nil && len(itemOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range itemOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		err = d.Set("item_custom_fields", customFields)
+		if err != nil {
+			return err
+		}
+	}
 	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.RotatedSecretDetails != nil {
 		rsd := itemOut.ItemGeneralInfo.RotatedSecretDetails
 		if rsd.RotationHour != nil {
@@ -215,6 +273,12 @@ func resourceRotatedSecretDockerHubRead(d *schema.ResourceData, m interface{}) e
 				return err
 			}
 		}
+		if rsd.MaxVersions != nil {
+			err = d.Set("max_versions", strconv.Itoa(int(*rsd.MaxVersions)))
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(path)
@@ -228,7 +292,6 @@ func resourceRotatedSecretDockerHubUpdate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -240,6 +303,12 @@ func resourceRotatedSecretDockerHubUpdate(d *schema.ResourceData, m interface{})
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	maxVersions := d.Get("max_versions").(string)
+	rotationEventInList := d.Get("rotation_event_in").([]interface{})
+	rotationEventIn := common.ExpandStringList(rotationEventInList)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.RotatedSecretUpdateDockerhub{
 		Name:    name,
@@ -263,13 +332,21 @@ func resourceRotatedSecretDockerHubUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
-
-	_, _, err = client.RotatedSecretUpdateDockerhub(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+	if len(itemCustomFields) > 0 {
+		fields := make(map[string]string)
+		for k, v := range itemCustomFields {
+			fields[k] = v.(string)
 		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		body.ItemCustomFields = &fields
+	}
+
+	_, resp, err := client.RotatedSecretUpdateDockerhub(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

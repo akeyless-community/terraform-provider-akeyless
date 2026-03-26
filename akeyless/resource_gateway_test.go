@@ -6,40 +6,52 @@ import (
 )
 
 func TestGatewayAllowedAccess(t *testing.T) {
-	t.Skip("for now the requested values are fictive")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	name := "test_gw_allowed_access"
 	itemPath := testPath(name)
+	amName := "test_gw_allowed_access_am"
+	amPath := testPath(amName)
 	permissionsOnCreate := "defaults,automatic_migration,dynamic_secret,k8s_auth,event_forwarding,general"
 	emailSubClaimsOnCreate := "test.a@email.com,test.b@email.com"
 
 	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_api_key" "%v" {
+			name = "%v"
+		}
+
 		resource "akeyless_gateway_allowed_access" "%v" {
- 			name        = "%v"
-			description = "description one"
-  			access_id   = "p-1rs0cnnmjocu"
-  			sub_claims  = {
+ 			name           = "%v"
+			description    = "description one"
+  			access_id      = akeyless_auth_method_api_key.%v.access_id
+  			case_sensitive = "true"
+  			sub_claims     = {
     			"email" = "%v"
   			}
   			permissions = "%v"
 		}
-	`, name, itemPath, emailSubClaimsOnCreate, permissionsOnCreate)
+	`, amName, amPath, name, itemPath, amName, emailSubClaimsOnCreate, permissionsOnCreate)
 
 	permissionsOnUpdate := "defaults,automatic_migration,dynamic_secret,k8s_auth,log_forwarding,zero_knowledge_encryption,rotated_secret,caching,event_forwarding,general"
 	emailSubClaimsOnUpdate := "test.a@email.com,test.b@email.com,test.b@email.com"
 
 	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_api_key" "%v" {
+			name = "%v"
+		}
+
 		resource "akeyless_gateway_allowed_access" "%v" {
- 			name        = "%v"
-			description = "description two"
-  			access_id   = "p-1rs0cnnmjocu"
-  			sub_claims  = {
+ 			name                        = "%v"
+			description                 = "description two"
+  			access_id                   = akeyless_auth_method_api_key.%v.access_id
+  			case_sensitive              = "false"
+  			sub_claims_case_insensitive = true
+  			sub_claims                  = {
     			"email" = "%v"
   			}
   			permissions = "%v"
 		}
-	`, name, itemPath, emailSubClaimsOnUpdate, permissionsOnUpdate)
+	`, amName, amPath, name, itemPath, amName, emailSubClaimsOnUpdate, permissionsOnUpdate)
 
 	inputParams := &TestGatewayAllowedAccessResource{
 		Config:                 config,
@@ -55,8 +67,7 @@ func TestGatewayAllowedAccess(t *testing.T) {
 }
 
 func TestGatewayUpdateCache(t *testing.T) {
-	t.Skip("not supported on public gateway")
-	t.Parallel()
+	skipIfNoGateway(t)
 
 	name := "test-gw-cache"
 
@@ -72,6 +83,11 @@ func TestGatewayUpdateCache(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_cache" "%v" {
+			enable_cache        	= "false"
+			stale_timeout 			= "60"
+			enable_proactive   		= "false"
+			minimum_fetch_interval 	= "5"
+			backup_interval 		= "1"
 		}
 	`, name)
 
@@ -79,7 +95,7 @@ func TestGatewayUpdateCache(t *testing.T) {
 }
 
 func TestGatewayUpdateDefaults(t *testing.T) {
-	t.Skip("not supported on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	keyName := "/protection-key-for-gw-defaults"
@@ -95,6 +111,7 @@ func TestGatewayUpdateDefaults(t *testing.T) {
 			cert_access_id   		= "p-cert-1"
 			key 					= "%s"
 			event_on_status_change 	= "true"
+			hvp_route_version 		= 2
 		}
 	`, name, keyName)
 
@@ -107,7 +124,7 @@ func TestGatewayUpdateDefaults(t *testing.T) {
 }
 
 func TestGatewayUpdateRemoteAccess(t *testing.T) {
-	t.Skip("not supported on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-gw-remote-access"
@@ -115,22 +132,26 @@ func TestGatewayUpdateRemoteAccess(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		config := fmt.Sprintf(`
 		resource "akeyless_gateway_remote_access" "%v" {
-			allowed_urls			 = "https://test.com,https://test2.com"
-			legacy_ssh_algorithm 	 = "true"
-			rdp_target_configuration = "ext_username"
-			kexalgs 				 = "curve25519-sha256"
-			hide_session_recording 	 = "false"
-			keyboard_layout 		 = "en-us-qwerty"
+			allowed_urls			     = "https://test.com,https://test2.com"
+			allowed_ssh_url 		     = "ssh://test.com:22"
+			legacy_ssh_algorithm 	     = "true"
+			rdp_target_configuration     = "ext_username"
+			kexalgs 				     = "curve25519-sha256"
+			hide_session_recording 	     = "false"
+			keyboard_layout 		     = "en-us-qwerty"
+			default_session_ttl_minutes  = "30"
 		}
 	`, name)
 
 		configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_remote_access" "%v" {
-			allowed_urls			 = "https://test3.com,https://test4.com"
-			legacy_ssh_algorithm 	 = "false"
-			ssh_target_configuration = "ext_username"
-			hide_session_recording   = "true"
-			keyboard_layout 		 = "en-gb-qwerty"
+			allowed_urls			     = "https://test3.com,https://test4.com"
+			allowed_ssh_url 		     = "ssh://test2.com:22"
+			legacy_ssh_algorithm 	     = "false"
+			ssh_target_configuration     = "ext_username"
+			hide_session_recording       = "true"
+			keyboard_layout 		     = "en-gb-qwerty"
+			default_session_ttl_minutes  = "60"
 		}
 	`, name)
 
@@ -159,7 +180,7 @@ func TestGatewayUpdateRemoteAccess(t *testing.T) {
 }
 
 func TestGatewayUpdateRemoteAccessRdpRecording(t *testing.T) {
-	t.Skip("not supported on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	name := "test-gw-remote-access-rdp-recording"
@@ -167,13 +188,15 @@ func TestGatewayUpdateRemoteAccessRdpRecording(t *testing.T) {
 	t.Run("normal aws", func(t *testing.T) {
 		config := fmt.Sprintf(`
 		resource "akeyless_gateway_remote_access_rdp_recording" "%v" {
-			rdp_session_recording 	      = "true"
-			rdp_session_storage 	      = "aws"
-			aws_storage_region 		      = "us-west-2"
-			aws_storage_bucket_name       = "test-bucket"
-			aws_storage_bucket_prefix     = "test-prefix"
-			aws_storage_access_key_id     = "test-access-key"
-			aws_storage_secret_access_key = "test-secret-key"
+			rdp_session_recording 	              = "true"
+			rdp_session_storage 	              = "aws"
+			aws_storage_region 		              = "us-west-2"
+			aws_storage_bucket_name               = "test-bucket"
+			aws_storage_bucket_prefix             = "test-prefix"
+			aws_storage_access_key_id             = "test-access-key"
+			aws_storage_secret_access_key         = "test-secret-key"
+			rdp_session_recording_compress         = true
+			rdp_session_recording_quality          = "medium"
 		}
 	`, name)
 
@@ -324,4 +347,46 @@ func TestGatewayUpdateRemoteAccessRdpRecording(t *testing.T) {
 
 		testGatewayConfigResource(t, config, configUpdate)
 	})
+}
+
+func TestK8sAuthConfig(t *testing.T) {
+	skipIfNoGateway(t)
+	t.Parallel()
+
+	name := "test_k8s_auth"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_api_key" "k8s_auth_am" {
+			name = "%v"
+		}
+		resource "akeyless_k8s_auth_config" "%v" {
+			name                      = "%v"
+			access_id                 = akeyless_auth_method_api_key.k8s_auth_am.access_id
+			signing_key               = "LS0tLS1CRUdJTi..."
+			k8s_host                  = "https://k8s-api.example.com:6443"
+			k8s_ca_cert               = "LS0tLS1CRUdJTi..."
+			token_reviewer_jwt        = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
+			disable_issuer_validation = "true"
+			depends_on = [akeyless_auth_method_api_key.k8s_auth_am]
+		}
+	`, testPath("k8s_auth_am"), name, testPath(name))
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_api_key" "k8s_auth_am" {
+			name = "%v"
+		}
+		resource "akeyless_k8s_auth_config" "%v" {
+			name                      = "%v"
+			access_id                 = akeyless_auth_method_api_key.k8s_auth_am.access_id
+			signing_key               = "LS0tLS1CRUdJTi..."
+			k8s_host                  = "https://k8s-api.example.com:6443"
+			k8s_ca_cert               = "LS0tLS1CRUdJTi..."
+			token_reviewer_jwt        = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
+			token_exp                 = 600
+			disable_issuer_validation = "true"
+			depends_on = [akeyless_auth_method_api_key.k8s_auth_am]
+		}
+	`, testPath("k8s_auth_am"), name, testPath(name))
+
+	testGatewayConfigResource(t, config, configUpdate)
 }

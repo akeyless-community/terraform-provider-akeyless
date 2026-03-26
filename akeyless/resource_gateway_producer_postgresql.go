@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -51,6 +51,7 @@ func resourceProducerPostgresql() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "PostgreSQL password",
 			},
 			"postgresql_host": {
@@ -124,7 +125,7 @@ func resourceProducerPostgresql() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "Enable Web Secure Remote Access ",
-				Default:     "false",
+				Default:     false,
 			},
 			"secure_access_db_name": {
 				Type:        schema.TypeString,
@@ -142,7 +143,6 @@ func resourceProducerPostgresqlCreate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -183,12 +183,9 @@ func resourceProducerPostgresqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.GatewayCreateProducerPostgreSQL(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayCreateProducerPostgreSQL(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -298,7 +295,6 @@ func resourceProducerPostgresqlUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -339,12 +335,9 @@ func resourceProducerPostgresqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.GatewayUpdateProducerPostgreSQL(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateProducerPostgreSQL(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

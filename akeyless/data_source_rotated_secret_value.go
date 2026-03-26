@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,6 +28,11 @@ func dataSourceGetRotatedSecretValue() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "Secret version",
+			},
+			"host": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Get rotated secret value of specific Host (relevant only for Linked Target)",
 			},
 			"ignore_cache": {
 				Type:        schema.TypeString,
@@ -55,6 +60,7 @@ func dataSourceGetRotatedSecretValueRead(d *schema.ResourceData, m interface{}) 
 	ctx := context.Background()
 	names := d.Get("name").(string)
 	version := d.Get("version").(int)
+	host := d.Get("host").(string)
 	ignoreCache := d.Get("ignore_cache").(string)
 
 	body := akeyless_api.GetRotatedSecretValue{
@@ -62,6 +68,7 @@ func dataSourceGetRotatedSecretValueRead(d *schema.ResourceData, m interface{}) 
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Version, version)
+	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.IgnoreCache, ignoreCache)
 
 	rOut, res, err := client.GetRotatedSecretValue(ctx).Body(body).Execute()

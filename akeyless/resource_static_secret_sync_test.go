@@ -8,7 +8,7 @@ import (
 )
 
 func TestStaticSecretSyncResource(t *testing.T) {
-	t.Skip("not supported on public gateway")
+	skipIfNoGateway(t)
 	t.Parallel()
 
 	secretName := "test_static_secret_for_sync"

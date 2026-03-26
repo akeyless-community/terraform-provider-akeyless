@@ -17,31 +17,34 @@ Classic Key resource
 
 ### Required
 
-- `alg` (String) Key type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, AES128CBC, AES256CBC, RSA1024, RSA2048, RSA3072, RSA4096, EC256, EC384, GPG]
+- `alg` (String) Classic Key type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, AES128CBC, AES256CBC, RSA1024, RSA2048, RSA3072, RSA4096, EC256, EC384, GPG]
 - `name` (String) Classic key name
 
 ### Optional
 
-- `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]
-- `cert_file_data` (String) PEM Certificate in a Base64 format.
+- `auto_rotate` (String) Whether to automatically rotate every rotation_interval days, or disable existing automatic rotation [true/false]
+- `cert_file_data` (String) Certificate in a PEM format.
 - `certificate_common_name` (String) Common name for the generated certificate. Relevant only for generate-self-signed-certificate.
 - `certificate_country` (String) Country name for the generated certificate. Relevant only for generate-self-signed-certificate.
+- `certificate_digest_algo` (String) Digest algorithm to be used for the certificate key signing.
 - `certificate_format` (String) The format of the returned certificate [pem/der]
 - `certificate_locality` (String) Locality for the generated certificate. Relevant only for generate-self-signed-certificate.
 - `certificate_organization` (String) Organization name for the generated certificate. Relevant only for generate-self-signed-certificate.
 - `certificate_province` (String) Province name for the generated certificate. Relevant only for generate-self-signed-certificate.
 - `certificate_ttl` (Number) TTL in days for the generated certificate. Required only for generate-self-signed-certificate.
 - `conf_file_data` (String) The csr config data in base64 encoding
-- `delete_protection` (String) Protection from accidental deletion of this object, [true/false]
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified.
-- `generate_self_signed_certificate` (Boolean) Whether to generate a self signed certificate with the key. If set, certificate_ttl must be provided.
+- `generate_self_signed_certificate` (Boolean) Whether to generate a self signed certificate with the key. If set, --certificate-ttl must be provided.
 - `gpg_alg` (String) gpg alg: Relevant only if GPG key type selected; options: [RSA1024, RSA2048, RSA3072, RSA4096, Ed25519]
-- `key_data` (String, Sensitive) Base64-encoded classic key value provided by user
-- `protection_key_name` (String) The name of the key that protects the classic key value (if empty, the account default key will be used)
-- `rotation_event_in` (Set of String) How many days before the rotation of the item would you like to be notified.
+- `hash_algorithm` (String) Specifies the hash algorithm used for the encryption key's operations, available options: [SHA256, SHA384, SHA512]
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `key_data` (String, Sensitive) Base64-encoded classic key value
+- `protection_key_name` (String) The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `rotation_event_in` (Set of String) How many days before the rotation of the item would you like to be notified
 - `rotation_interval` (String) The number of days to wait between every automatic rotation (1-365)
-- `tags` (Set of String) List of the tags attached to this key
+- `tags` (Set of String) Add tags attached to this object
 
 ### Read-Only
 

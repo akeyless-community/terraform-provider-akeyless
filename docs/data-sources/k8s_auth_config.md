@@ -21,17 +21,23 @@ Gets K8S Auth config data source
 
 ### Read-Only
 
-- `am_token_expiration` (Number)
-- `auth_method_access_id` (String)
-- `auth_method_prv_key_pem` (String, Sensitive)
-- `disable_iss_validation` (Boolean)
-- `id` (String) The ID of this resource.
-- `k8s_ca_cert` (String)
-- `k8s_host` (String)
-- `k8s_issuer` (String)
-- `k8s_pub_keys_pem` (Set of String)
-- `k8s_token_reviewer_jwt` (String)
-- `protection_key` (String)
-- `use_local_ca_jwt` (Boolean)
+- `am_token_expiration` (Number) AuthMethodTokenExpiration is time in seconds of expiration of the Akeyless Kube Auth Method token
+- `auth_method_access_id` (String) AuthMethodAccessId of the Kubernetes auth method
+- `auth_method_prv_key_pem` (String, Sensitive) AuthMethodSigningKey is the private key (in base64 of the PEM format) associated with the public key defined in the Kubernetes auth method, that used to sign the internal token for the Akeyless Kubernetes Auth Method
+- `cluster_api_type` (String) Defines types of API access to cluster
+- `disable_iss_validation` (Boolean) DisableISSValidation is optional parameter to disable ISS validation
+- `id` (String) K8S Auth config ID
+- `k8s_auth_type` (String) Kubernetes authentication type
+- `k8s_ca_cert` (String) K8SCACert is the CA Cert to use to call into the kubernetes API
+- `k8s_client_cert_data` (String) K8sClientCertData is the client certificate for k8s client certificate authentication
+- `k8s_client_key_data` (String) K8sClientKeyData is the client key for k8s client certificate authentication
+- `k8s_host` (String) K8SHost is the url string for the kubernetes API
+- `k8s_issuer` (String) K8SIssuer is the claim that specifies who issued the Kubernetes token
+- `k8s_pub_keys_pem` (Set of String) K8SPublicKeysPEM is the list of public key in PEM format
+- `k8s_token_reviewer_jwt` (String) K8STokenReviewerJWT is the bearer for clusterApiTypeK8s, used during TokenReview API call
+- `protection_key` (String) The name of the key that protects the K8S Auth config
+- `rancher_api_key` (String) RancherApiKey the bear token for clusterApiTypeRancher
+- `rancher_cluster_id` (String) RancherClusterId cluster id as define in rancher (in case of clusterApiTypeRancher)
+- `use_local_ca_jwt` (Boolean) UseLocalCAJwt is an optional parameter to set defaulting to using the local service account when running in a Kubernetes pod
 
 

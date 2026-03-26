@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -96,6 +96,7 @@ func resourceProducerGcp() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this item, [true/false]",
+				Default:     "false",
 			},
 		},
 	}
@@ -106,7 +107,6 @@ func resourceProducerGcpCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -140,12 +140,9 @@ func resourceProducerGcpCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.GatewayCreateProducerGcp(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayCreateProducerGcp(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create Secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -254,11 +251,13 @@ func resourceProducerGcpRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 
 	d.SetId(path)
@@ -271,7 +270,6 @@ func resourceProducerGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -305,12 +303,9 @@ func resourceProducerGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RoleBinding, roleBinding)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.GatewayUpdateProducerGcp(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateProducerGcp(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

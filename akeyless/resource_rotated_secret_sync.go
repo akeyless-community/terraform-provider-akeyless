@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -50,6 +50,16 @@ func resourceRotatedSecretSync() *schema.Resource {
 				Optional:    true,
 				Description: "JQ expression to filter or transform the secret value",
 			},
+			"delete_remote": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Delete the secret from remote secret manager (for association create/update)",
+			},
+			"delete_from_usc": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Delete the secret from the remote target USC as well",
+			},
 		},
 	}
 }
@@ -66,6 +76,7 @@ func resourceRotatedSecretSyncCreate(d *schema.ResourceData, m any) error {
 	remoteSecretName := d.Get("remote_secret_name").(string)
 	namespace := d.Get("namespace").(string)
 	filterSecretValue := d.Get("filter_secret_value").(string)
+	deleteRemote := d.Get("delete_remote").(bool)
 
 	body := akeyless_api.RotatedSecretSync{
 		Name:  rsName,
@@ -75,6 +86,7 @@ func resourceRotatedSecretSyncCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.RemoteSecretName, remoteSecretName)
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.FilterSecretValue, filterSecretValue)
+	common.GetAkeylessPtr(&body.DeleteRemote, deleteRemote)
 
 	_, resp, err := client.RotatedSecretSync(ctx).Body(body).Execute()
 	if err != nil {
@@ -146,11 +158,14 @@ func resourceRotatedSecretSyncDelete(d *schema.ResourceData, m any) error {
 		return err
 	}
 
+	deleteFromUsc := d.Get("delete_from_usc").(bool)
+
 	deleteItem := akeyless_api.RotatedSecretDeleteSync{
 		Token:   &token,
 		Name:    rsName,
 		UscName: uscName,
 	}
+	common.GetAkeylessPtr(&deleteItem.DeleteFromUsc, deleteFromUsc)
 
 	_, _, err = client.RotatedSecretDeleteSync(ctx).Body(deleteItem).Execute()
 	if err != nil {

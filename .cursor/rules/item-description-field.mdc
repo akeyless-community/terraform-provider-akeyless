@@ -1,0 +1,32 @@
+# Item Description Field Pattern
+
+When reading item descriptions in resource Read functions, always use the correct field based on the API call:
+
+## For DescribeItem API Calls
+
+Use `ItemMetadata` for the description field:
+
+```go
+if rOut.ItemMetadata != nil {
+    err = d.Set("description", *rOut.ItemMetadata)
+    if err != nil {
+        return err
+    }
+}
+```
+
+**DO NOT use** `ItemGeneralInfo.DisplayMetadata`:
+
+```go
+// ❌ WRONG - Do not use this pattern
+if rOut.ItemGeneralInfo != nil && rOut.ItemGeneralInfo.DisplayMetadata != nil {
+    err = d.Set("description", *rOut.ItemGeneralInfo.DisplayMetadata)
+    if err != nil {
+        return err
+    }
+}
+
+## Summary
+
+- **DescribeItem response** → Use `ItemMetadata`
+- **Specific Get endpoints** → Use the direct `Description` field from the response structure

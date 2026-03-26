@@ -1,4 +1,4 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceGkeTarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "GKE Target resource",
-		Create:      resourceGkeTargetCreate,
-		Read:        resourceGkeTargetRead,
-		Update:      resourceGkeTargetUpdate,
-		Delete:      resourceGkeTargetDelete,
+		Description:        "GKE Target resource",
+		DeprecationMessage: "use akeyless_target_gke resource instead",
+		Create:             resourceGkeTargetCreate,
+		Read:               resourceGkeTargetRead,
+		Update:             resourceGkeTargetUpdate,
+		Delete:             resourceGkeTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGkeTargetImport,
 		},
@@ -39,19 +40,19 @@ func resourceGkeTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "GKE cluster endpoint, i.e., cluster URI https://<DNS/IP>.",
+				Description: "GKE cluster URL endpoint",
 			},
 			"gke_cluster_cert": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "GKE Base-64 encoded cluster certificate",
+				Description: "GKE cluster CA certificate",
 			},
 			"gke_account_key": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "GKE service account key",
+				Description: "GKE Service Account key file path",
 			},
 			"gke_cluster_name": {
 				Type:        schema.TypeString,
@@ -63,7 +64,7 @@ func resourceGkeTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
-				Description: "Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used",
+				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"use_gw_cloud_identity": {
 				Type:        schema.TypeBool,
@@ -76,6 +77,16 @@ func resourceGkeTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Description of the object",
 			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
 		},
 	}
 }
@@ -85,7 +96,6 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
@@ -96,6 +106,7 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
 
 	body := akeyless_api.TargetCreateGke{
 		Name:  name,
@@ -109,13 +120,11 @@ func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
-	_, _, err := client.TargetCreateGke(ctx).Body(body).Execute()
+	_, resp, err := client.TargetCreateGke(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Target: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Target: %v", err)
+		return common.HandleError("can't create Target", resp, err)
 	}
 
 	d.SetId(name)
@@ -210,7 +219,6 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
@@ -221,6 +229,8 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.TargetUpdateGke{
 		Name:  name,
@@ -234,13 +244,12 @@ func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err := client.TargetUpdateGke(ctx).Body(body).Execute()
+	_, resp, err := client.TargetUpdateGke(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update ", resp, err)
 	}
 
 	d.SetId(name)

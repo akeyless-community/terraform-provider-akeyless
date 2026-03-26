@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -128,7 +128,7 @@ func resourceRole() *schema.Resource {
 			"audit_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.",
+				Description: "Allow this role to view audit logs. Currently only 'none', 'own', 'scoped' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.",
 			},
 			"analytics_access": {
 				Type:        schema.TypeString,
@@ -138,32 +138,43 @@ func resourceRole() *schema.Resource {
 			"gw_analytics_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
+				Description: "Allow this role to view gw analytics. Currently only 'none', 'scoped', 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
 			},
 			"sra_reports_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.",
+				Description: "Allow this role to view SRA Clusters. Currently only 'none', 'scoped', 'all' values are supported.",
 			},
 			"usage_reports_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view Usage reports. Currently only 'none' and 'all' values are supported.",
+				Description: "Allow this role to view Usage Report. Currently only 'none' and 'all' values are supported.",
 			},
 			"event_center_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view Event Center. Currently only 'none', 'own' and 'all' values are supported.",
+				Description: "Allow this role to view Event Center. Currently only 'none', 'scoped' and 'all' values are supported.",
 			},
 			"event_forwarders_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Allow this role to manage Event Forwarders. Currently only 'none' and 'all' values are supported.",
 			},
+			"event_forwarders_name": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Allow this role to manage the following Event Forwarders.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"reverse_rbac_access": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Allow this role to view Reverse RBAC. Supported values: 'scoped', 'all'.",
+			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Protection from accidental deletion of this role, [true/false]",
+				Description: "Protection from accidental deletion of this object [true/false]",
 				Default:     "false",
 			},
 		},
@@ -208,6 +219,9 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	usageReportsAccess := d.Get("usage_reports_access").(string)
 	eventCenterAccess := d.Get("event_center_access").(string)
 	eventForwardersAccess := d.Get("event_forwarders_access").(string)
+	eventForwardersNameSet := d.Get("event_forwarders_name").(*schema.Set)
+	eventForwardersName := common.ExpandStringList(eventForwardersNameSet.List())
+	reverseRbacAccess := d.Get("reverse_rbac_access").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
 	var apiErr akeyless_api.GenericOpenAPIError
@@ -223,6 +237,10 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	common.GetAkeylessPtr(&body.UsageReportsAccess, usageReportsAccess)
 	common.GetAkeylessPtr(&body.EventCenterAccess, eventCenterAccess)
 	common.GetAkeylessPtr(&body.EventForwardersAccess, eventForwardersAccess)
+	if len(eventForwardersName) > 0 {
+		body.EventForwardersName = eventForwardersName
+	}
+	common.GetAkeylessPtr(&body.ReverseRbacAccess, reverseRbacAccess)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, _, err := client.CreateRole(ctx).Body(body).Execute()
@@ -345,10 +363,41 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		}
 	}
 
+	deleteProtectionVal := "false"
 	if role.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*role.DeleteProtection))
+		deleteProtectionVal = strconv.FormatBool(*role.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if role.Comment != nil {
+		err = d.Set("description", *role.Comment)
 		if err != nil {
 			return diag.FromErr(err)
+		}
+	}
+
+	if role.Rules != nil && role.Rules.PathRules != nil {
+		var eventForwarderNames []string
+		for _, rule := range role.Rules.PathRules {
+			if rule.Type == nil || rule.Path == nil {
+				continue
+			}
+			switch *rule.Type {
+			case "reverse-rbac-rule":
+				if err := d.Set("reverse_rbac_access", strings.TrimPrefix(*rule.Path, "/")); err != nil {
+					return diag.FromErr(err)
+				}
+			case "event-forwarder-rule":
+				eventForwarderNames = append(eventForwarderNames, *rule.Path)
+			}
+		}
+		if len(eventForwarderNames) > 0 {
+			if err := d.Set("event_forwarders_name", eventForwarderNames); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
@@ -430,10 +479,11 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	accessRulesOldValues := saveRoleAccessRuleOldValues(rules.PathRules)
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(string)
+	reverseRbacAccess := d.Get("reverse_rbac_access").(string)
 
-	err, ok = updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesNewValues, m)
+	err, ok = updateRoleAccessRules(ctx, name, description, deleteProtection, reverseRbacAccess, accessRulesNewValues, m)
 	if !ok {
-		errInner, okInner := updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesOldValues, m)
+		errInner, okInner := updateRoleAccessRules(ctx, name, description, deleteProtection, reverseRbacAccess, accessRulesOldValues, m)
 		if !okInner {
 			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
 		}
@@ -977,7 +1027,7 @@ func getNewAccessRules(d *schema.ResourceData) []interface{} {
 	return accessRules
 }
 
-func updateRoleAccessRules(ctx context.Context, name, description, deleteProtection string,
+func updateRoleAccessRules(ctx context.Context, name, description, deleteProtection, reverseRbacAccess string,
 	accessRules []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(*providerMeta)
@@ -1020,6 +1070,7 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 	}
 	common.GetAkeylessPtr(&updateBody.Description, description)
 	common.GetAkeylessPtr(&updateBody.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&updateBody.ReverseRbacAccess, reverseRbacAccess)
 
 	var apiErr akeyless_api.GenericOpenAPIError
 	_, _, err := client.UpdateRole(ctx).Body(updateBody).Execute()
