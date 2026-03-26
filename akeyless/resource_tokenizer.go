@@ -44,6 +44,7 @@ func resourceTokenizer() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "AES key name to use in vaultless tokenization",
 			},
 			"tweak_type": {

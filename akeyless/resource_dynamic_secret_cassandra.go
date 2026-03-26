@@ -87,6 +87,7 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Dynamic producer encryption key",
 			},
 			"custom_username_template": {

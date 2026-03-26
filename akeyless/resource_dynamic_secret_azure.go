@@ -97,6 +97,7 @@ func resourceDynamicSecretAzure() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Dynamic secret encryption key",
 			},
 			"custom_username_template": {

@@ -69,6 +69,7 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Encrypt dynamic secret details with following key",
 			},
 			"custom_username_template": {
