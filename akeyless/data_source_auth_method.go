@@ -2,10 +2,9 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -101,19 +100,15 @@ func dataSourceAuthMethodRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	gsvBody := akeyless_api.AuthMethodGet{
 		Name:  path,
 		Token: &token,
 	}
 
-	gsvOut, _, err := client.AuthMethodGet(ctx).Body(gsvBody).Execute()
+	gsvOut, res, err := client.AuthMethodGet(ctx).Body(gsvBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't get Auth Method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get Auth Method: %v", err)
+		return common.HandleReadError(d, "can't get auth method", res, err)
 	}
 
 	if err := d.Set("account_id", gsvOut.AccountId); err != nil {

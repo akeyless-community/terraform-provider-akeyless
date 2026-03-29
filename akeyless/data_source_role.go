@@ -3,10 +3,9 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -94,19 +93,15 @@ func dataSourceRoleRead(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Get("name").(string)
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	body := akeyless_api.GetRole{
 		Name:  name,
 		Token: &token,
 	}
 
-	role, _, err := client.GetRole(ctx).Body(body).Execute()
+	role, res, err := client.GetRole(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't get Role value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get Role value: %v", err)
+		return common.HandleReadError(d, "can't get role", res, err)
 	}
 
 	d.SetId(name)

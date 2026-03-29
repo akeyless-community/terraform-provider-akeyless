@@ -3,11 +3,9 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -37,7 +35,6 @@ func dataSourceGatewayGetProducerTmpCredsRead(d *schema.ResourceData, m interfac
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 
@@ -48,15 +45,7 @@ func dataSourceGatewayGetProducerTmpCredsRead(d *schema.ResourceData, m interfac
 
 	rOut, res, err := client.GatewayGetTmpUsers(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get value", res, err)
 	}
 	marshalValue, err := json.Marshal(rOut)
 	if err != nil {

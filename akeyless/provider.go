@@ -2,7 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
@@ -232,13 +231,9 @@ func getTokenByAuth(ctx context.Context, d *schema.ResourceData, client *akeyles
 		return "", err
 	}
 
-	authOut, _, err := client.Auth(ctx).Body(*authBody).Execute()
+	authOut, resp, err := client.Auth(ctx).Body(*authBody).Execute()
 	if err != nil {
-		var apiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &apiErr) {
-			return "", fmt.Errorf("authentication failed: %s", string(apiErr.Body()))
-		}
-		return "", fmt.Errorf("authentication failed: %w", err)
+		return "", common.HandleError("authentication failed", resp, err)
 	}
 	return authOut.GetToken(), nil
 }

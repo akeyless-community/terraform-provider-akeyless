@@ -3,9 +3,6 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
 	"reflect"
 	"sort"
 	"strconv"
@@ -380,7 +377,6 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -392,15 +388,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.DescribeItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get item: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get item: %w", err)
+		return common.HandleReadError(d, "failed to get item", res, err)
 	}
 
 	if rOut.CertIssuerSignerKeyName != nil {

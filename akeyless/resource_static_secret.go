@@ -3,9 +3,7 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -320,7 +318,6 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 
 	path := d.Id()
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	gsvBody := akeyless_api.GetSecretValue{
 		Names: []string{path},
@@ -332,15 +329,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 	gsvOut, res, err := client.GetSecretValue(ctx).Body(gsvBody).Execute()
 
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The secret was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get Secret value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get Secret value: %v", err)
+		return common.HandleReadError(d, "can't get Secret value", res, err)
 	}
 
 	item := akeyless_api.DescribeItem{

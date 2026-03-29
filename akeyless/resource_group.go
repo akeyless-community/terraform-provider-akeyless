@@ -3,9 +3,7 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -109,7 +107,6 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -121,15 +118,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.GetGroup(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get group: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get group: %w", err)
+		return common.HandleReadError(d, "failed to get group", res, err)
 	}
 
 	if rOut.GroupAlias != nil {

@@ -3,9 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -284,7 +281,6 @@ func resourceAuthMethodKerberosRead(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -296,14 +292,7 @@ func resourceAuthMethodKerberosRead(d *schema.ResourceData, m interface{}) error
 
 	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get auth method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get auth method: %v", err)
+		return common.HandleReadError(d, "can't get auth method", res, err)
 	}
 
 	if rOut.AuthMethodAccessId != nil {

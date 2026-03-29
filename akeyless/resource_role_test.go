@@ -2,7 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -919,17 +918,12 @@ func deleteRole(path string) error {
 		Token: &token,
 	}
 
-	var apiErr akeyless_api.GenericOpenAPIError
-
 	_, res, err := client.DeleteRole(context.Background()).Body(gsvBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode != http.StatusNotFound {
-				return fmt.Errorf("can't delete role: %v", string(apiErr.Body()))
-			}
-		} else {
-			return fmt.Errorf("can't delete role: %v", err)
+		if res != nil && res.StatusCode == http.StatusNotFound {
+			return nil
 		}
+		return common.HandleError("can't delete role", res, err)
 	}
 	fmt.Println("deleted", path)
 	return nil

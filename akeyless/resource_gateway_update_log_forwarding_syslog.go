@@ -3,8 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -283,13 +281,9 @@ func getGwLogForwardingConfig(m interface{}) (*akeyless_api.LogForwardingConfigP
 		Token: &token,
 	}
 
-	rOut, _, err := client.GatewayGetLogForwarding(ctx).Body(body).Execute()
+	rOut, resp, err := client.GatewayGetLogForwarding(ctx).Body(body).Execute()
 	if err != nil {
-		var apiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &apiErr) {
-			return &akeyless_api.LogForwardingConfigPart{}, fmt.Errorf("can't get log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return &akeyless_api.LogForwardingConfigPart{}, fmt.Errorf("can't get log forwarding settings: %w", err)
+		return nil, common.HandleError("can't get log forwarding settings", resp, err)
 	}
 
 	return rOut, nil

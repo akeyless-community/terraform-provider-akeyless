@@ -3,7 +3,6 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -160,7 +159,6 @@ func dataSourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	gsvBody := akeyless_api.GetSecretValue{
 		Names: []string{path},
@@ -174,12 +172,9 @@ func dataSourceStaticSecretRead(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&gsvBody.IgnoreCache, ignoreCache)
 
-	gsvOut, _, err := client.GetSecretValue(ctx).Body(gsvBody).Execute()
+	gsvOut, res, err := client.GetSecretValue(ctx).Body(gsvBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't get Secret value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get Secret value: %v", err)
+		return common.HandleReadError(d, "can't get secret value", res, err)
 	}
 
 	item := akeyless_api.DescribeItem{

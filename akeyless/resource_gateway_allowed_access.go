@@ -3,9 +3,7 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -160,7 +158,6 @@ func resourceGatewayAllowedAccessRead(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -172,15 +169,7 @@ func resourceGatewayAllowedAccessRead(d *schema.ResourceData, m interface{}) err
 
 	rOut, res, err := client.GatewayGetAllowedAccess(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get gateway allowed access: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get gateway allowed access: %v", err)
+		return common.HandleReadError(d, "can't get gateway allowed access", res, err)
 	}
 	if rOut.Name != nil {
 		err = d.Set("name", *rOut.Name)

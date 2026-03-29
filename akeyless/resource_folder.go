@@ -2,9 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -101,7 +98,6 @@ func resourceFolderRead(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Id()
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.FolderGet{
@@ -111,14 +107,7 @@ func resourceFolderRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.FolderGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res != nil && res.StatusCode == http.StatusNotFound {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get Folder: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get Folder: %v", err)
+		return common.HandleReadError(d, "can't get Folder", res, err)
 	}
 
 	if rOut.Folder == nil {
@@ -210,7 +199,6 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Id()
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.FolderDelete{
@@ -218,15 +206,9 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 
-	_, res, err := client.FolderDelete(ctx).Body(body).Execute()
+	_, resp, err := client.FolderDelete(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res != nil && res.StatusCode == http.StatusNotFound {
-				return nil
-			}
-			return fmt.Errorf("can't delete Folder: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't delete Folder: %v", err)
+		return common.HandleError("can't delete folder", resp, err)
 	}
 
 	return nil

@@ -3,9 +3,7 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -155,7 +153,6 @@ func resourceEventForwarderSlackRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	name := d.Id()
@@ -167,15 +164,7 @@ func resourceEventForwarderSlackRead(d *schema.ResourceData, m interface{}) erro
 
 	readOut, res, err := client.EventForwarderGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get value", res, err)
 	}
 
 	rOut := readOut.EventForwarder

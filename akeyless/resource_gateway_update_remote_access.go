@@ -3,8 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -303,13 +301,9 @@ func getGwRemoteAccessConfig(m interface{}) (*akeyless_api.BastionConfigReplyObj
 		Token: &token,
 	}
 
-	rOut, _, err := client.GatewayGetRemoteAccess(ctx).Body(body).Execute()
+	rOut, resp, err := client.GatewayGetRemoteAccess(ctx).Body(body).Execute()
 	if err != nil {
-		var apiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &apiErr) {
-			return &akeyless_api.BastionConfigReplyObj{}, fmt.Errorf("can't get remote access config: %v", string(apiErr.Body()))
-		}
-		return &akeyless_api.BastionConfigReplyObj{}, fmt.Errorf("can't get remote access config: %v", err)
+		return nil, common.HandleError("can't get remote access config", resp, err)
 	}
 	return rOut, nil
 }

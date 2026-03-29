@@ -710,6 +710,14 @@ func IsCICDEnv() bool {
 }
 
 func HandleError(msg string, resp *http.Response, err error) error {
+	return handleError(nil, msg, resp, err, false)
+}
+
+func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, err error) error {
+	return handleError(d, msg, resp, err, true)
+}
+
+func handleError(d *schema.ResourceData, msg string, resp *http.Response, err error, cleanup bool) error {
 	if err == nil {
 		return nil
 	}
@@ -720,35 +728,6 @@ func HandleError(msg string, resp *http.Response, err error) error {
 		return fmt.Errorf("%s: %s", msg, string(apiErr.Body()))
 	}
 
-	if resp != nil {
-		if resp.Body != nil {
-			if errorMsg, errRead := io.ReadAll(resp.Body); errRead == nil {
-				return fmt.Errorf("%s: %s", msg, string(errorMsg))
-			}
-		}
-		if resp.StatusCode == http.StatusNotFound {
-			return fmt.Errorf("%s: not found: %w", msg, err)
-		}
-	}
-
-	return fmt.Errorf("%s: %w", msg, err)
-}
-
-func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, err error) error {
-	if err == nil {
-		return nil
-	}
-
-	// err is informative
-	var apiErr akeyless_api.GenericOpenAPIError
-	if errors.As(err, &apiErr) && resp != nil {
-		if resp.StatusCode == http.StatusNotFound {
-			// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-			d.SetId("")
-		}
-		return fmt.Errorf("%s: %s", msg, string(apiErr.Body()))
-	}
-
 	// resp is informative
 	if resp != nil && resp.Body != nil {
 		if errorMsg, errRead := io.ReadAll(resp.Body); errRead == nil {
@@ -756,12 +735,15 @@ func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, er
 		}
 	}
 
-	// nothing informative
+	// not found
 	if resp != nil && resp.StatusCode == http.StatusNotFound {
-		// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-		d.SetId("")
+		if cleanup && d != nil {
+			// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+			d.SetId("")
+		}
 		return fmt.Errorf("%s: not found: %w", msg, err)
 	}
+
 	return fmt.Errorf("%s: %w", msg, err)
 }
 

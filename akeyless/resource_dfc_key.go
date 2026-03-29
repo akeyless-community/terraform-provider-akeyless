@@ -4,9 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/pem"
-	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -502,7 +500,6 @@ func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless_api.Item, error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -517,15 +514,7 @@ func getDfcKey(d *schema.ResourceData, m interface{}) (*akeyless_api.Item, error
 
 	rOut, res, err := client.DescribeItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil, nil
-			}
-			return nil, fmt.Errorf("failed to get key: %v", string(apiErr.Body()))
-		}
-		return nil, fmt.Errorf("failed to get key: %w", err)
+		return nil, common.HandleReadError(d, "failed to get key", res, err)
 	}
 
 	return rOut, nil

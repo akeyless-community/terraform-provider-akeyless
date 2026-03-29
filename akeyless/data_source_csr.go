@@ -2,9 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -116,7 +113,6 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	commonName := d.Get("common_name").(string)
@@ -159,15 +155,7 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.GenerateCsr(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't generate csr: %v, %v", string(apiErr.Body()), err)
-		}
-		return fmt.Errorf("can't generate csr: %v", err)
+		return common.HandleReadError(d, "can't generate csr", res, err)
 	}
 	err = d.Set("data", *rOut.Data)
 	if err != nil {

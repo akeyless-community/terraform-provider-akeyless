@@ -464,7 +464,7 @@ func handleError(resp *http.Response, err error) error {
 		return err
 	}
 
-	if resp.StatusCode == http.StatusNotFound {
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		return fmt.Errorf("not found: %w", err)
 	}
 

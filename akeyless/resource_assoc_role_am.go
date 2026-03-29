@@ -3,9 +3,7 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -199,17 +197,10 @@ func resourceAssocRoleAmDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	ctx := context.Background()
-	var apiErr akeyless_api.GenericOpenAPIError
 
 	_, res, err := client.DeleteRoleAssociation(ctx).Body(deleteItem).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode != http.StatusNotFound {
-				return fmt.Errorf("can't delete role association: %v", string(apiErr.Body()))
-			}
-		} else {
-			return fmt.Errorf("can't delete role association: %v", err)
-		}
+		return common.HandleError("can't delete role association", res, err)
 	}
 
 	return nil

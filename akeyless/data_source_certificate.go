@@ -2,8 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -52,7 +50,6 @@ func dataSourceGetCertificateValueRead(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	version := d.Get("version").(int)
@@ -65,12 +62,9 @@ func dataSourceGetCertificateValueRead(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.Version, version)
 	common.GetAkeylessPtr(&body.IgnoreCache, ignoreCache)
 
-	rOut, _, err := client.GetCertificateValue(ctx).Body(body).Execute()
+	rOut, res, err := client.GetCertificateValue(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't get certificate value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get certificate value: %w", err)
+		return common.HandleReadError(d, "can't get certificate value", res, err)
 	}
 
 	if rOut.CertificatePem != nil {

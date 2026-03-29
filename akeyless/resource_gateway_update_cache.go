@@ -3,8 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -226,13 +224,9 @@ func getGwCacheConfig(m interface{}) (*akeyless_api.CacheConfigPart, error) {
 		Token: &token,
 	}
 
-	rOut, _, err := client.GatewayGetCache(ctx).Body(body).Execute()
+	rOut, resp, err := client.GatewayGetCache(ctx).Body(body).Execute()
 	if err != nil {
-		var apiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &apiErr) {
-			return &akeyless_api.CacheConfigPart{}, fmt.Errorf("can't get cache settings: %v", string(apiErr.Body()))
-		}
-		return &akeyless_api.CacheConfigPart{}, fmt.Errorf("can't get cache settings: %w", err)
+		return nil, common.HandleError("can't get cache settings", resp, err)
 	}
 
 	return rOut, nil

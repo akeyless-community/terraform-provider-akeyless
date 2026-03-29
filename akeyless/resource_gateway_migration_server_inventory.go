@@ -2,9 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -141,7 +138,6 @@ func resourceGatewayMigrationServerInventoryRead(d *schema.ResourceData, m inter
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -152,18 +148,7 @@ func resourceGatewayMigrationServerInventoryRead(d *schema.ResourceData, m inter
 
 	rOut, res, err := client.GatewayGetMigration(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res != nil && res.StatusCode == http.StatusNotFound {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get Gateway Migration Server Inventory: %v", string(apiErr.Body()))
-		}
-		if res != nil && res.StatusCode == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("can't get Gateway Migration Server Inventory: %v", err)
+		return common.HandleReadError(d, "can't get Gateway Migration Server Inventory", res, err)
 	}
 
 	if rOut.Body != nil {

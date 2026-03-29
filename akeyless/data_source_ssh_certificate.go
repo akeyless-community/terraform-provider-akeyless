@@ -2,9 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -62,7 +59,6 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	certUsername := d.Get("cert_username").(string)
 	certIssuerName := d.Get("cert_issuer_name").(string)
@@ -81,15 +77,7 @@ func dataSourceGetSSHCertificateRead(d *schema.ResourceData, m interface{}) erro
 
 	rOut, res, err := client.GetSSHCertificate(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get ssh certificate: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get ssh certificate: %w", err)
+		return common.HandleReadError(d, "failed to get ssh certificate", res, err)
 	}
 
 	if rOut.Data != nil {

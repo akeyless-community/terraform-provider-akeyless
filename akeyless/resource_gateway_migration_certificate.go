@@ -2,9 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -100,7 +97,6 @@ func resourceGatewayMigrationCertificateRead(d *schema.ResourceData, m interface
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -111,18 +107,7 @@ func resourceGatewayMigrationCertificateRead(d *schema.ResourceData, m interface
 
 	rOut, res, err := client.GatewayGetMigration(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res != nil && res.StatusCode == http.StatusNotFound {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get Gateway Migration Certificate: %v", string(apiErr.Body()))
-		}
-		if res != nil && res.StatusCode == http.StatusNotFound {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("can't get Gateway Migration Certificate: %v", err)
+		return common.HandleReadError(d, "can't get Gateway Migration Certificate", res, err)
 	}
 
 	if rOut.Body != nil {

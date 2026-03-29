@@ -3,9 +3,6 @@ package akeyless
 import (
 	"context"
 	"encoding/base64"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -168,7 +165,6 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -236,14 +232,7 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.AuthMethodCreateCert(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to create auth method cert: %v", string(apiErr.Body()))
-		}
-		return common.HandleError("can't create Auth Method cert", res, err)
+		return common.HandleError("can't create auth method", res, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -264,7 +253,6 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -276,15 +264,7 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get value: %w", err)
+		return common.HandleReadError(d, "failed to get value", res, err)
 	}
 
 	if rOut.Description != nil {

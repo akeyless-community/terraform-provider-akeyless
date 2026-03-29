@@ -2,9 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -183,7 +180,6 @@ func resourceAuthMethodOciRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -195,15 +191,7 @@ func resourceAuthMethodOciRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get value: %w", err)
+		return common.HandleReadError(d, "failed to get value", res, err)
 	}
 
 	if rOut.AuthMethodAccessId != nil {
