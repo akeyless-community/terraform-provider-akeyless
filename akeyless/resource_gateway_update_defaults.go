@@ -3,8 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -215,13 +213,9 @@ func getGwDefaultsConfig(m interface{}) (*akeyless_api.GatewayGetDefaultsOutput,
 		Token: &token,
 	}
 
-	rOut, _, err := client.GatewayGetDefaults(ctx).Body(body).Execute()
+	rOut, resp, err := client.GatewayGetDefaults(ctx).Body(body).Execute()
 	if err != nil {
-		var apiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &apiErr) {
-			return &akeyless_api.GatewayGetDefaultsOutput{}, fmt.Errorf("can't get defaults settings: %v", string(apiErr.Body()))
-		}
-		return &akeyless_api.GatewayGetDefaultsOutput{}, fmt.Errorf("can't get defaults settings: %w", err)
+		return &akeyless_api.GatewayGetDefaultsOutput{}, common.HandleError("can't get defaults settings", resp, err)
 	}
 
 	return rOut, nil

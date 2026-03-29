@@ -2,9 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -248,7 +245,6 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -408,14 +404,7 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get rotated secret value: %v", err)
-		}
+		return common.HandleReadError(d, "can't get rotated secret value", res, err)
 	}
 
 	val, ok := rOut["value"]

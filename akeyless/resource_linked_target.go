@@ -3,9 +3,7 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"reflect"
 	"strings"
 
@@ -16,11 +14,11 @@ import (
 
 func resourceLinkedTarget() *schema.Resource {
 	return &schema.Resource{
-		Description:        "Linked Target resource",
-		Create:             resourceLinkedTargetCreate,
-		Read:               resourceLinkedTargetRead,
-		Update:             resourceLinkedTargetUpdate,
-		Delete:             resourceLinkedTargetDelete,
+		Description: "Linked Target resource",
+		Create:      resourceLinkedTargetCreate,
+		Read:        resourceLinkedTargetRead,
+		Update:      resourceLinkedTargetUpdate,
+		Delete:      resourceLinkedTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceLinkedTargetImport,
 		},
@@ -106,7 +104,6 @@ func resourceLinkedTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -118,15 +115,7 @@ func resourceLinkedTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get target details", res, err)
 	}
 
 	if rOut.Value.LinkedTargetDetails.Hosts != nil {
@@ -225,7 +214,7 @@ func resourceLinkedTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	_, resp, err := client.TargetUpdateLinked(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't update ", resp, err)
+		return common.HandleError("can't update target", resp, err)
 	}
 
 	d.SetId(name)

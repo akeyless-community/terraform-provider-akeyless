@@ -2,9 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"time"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -135,7 +132,6 @@ func resourceGlobalsignAtlasTargetRead(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -147,15 +143,7 @@ func resourceGlobalsignAtlasTargetRead(d *schema.ResourceData, m interface{}) er
 
 	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get target details: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get target details: %w", err)
+		return common.HandleReadError(d, "failed to get target details", res, err)
 	}
 
 	if rOut.Value != nil {

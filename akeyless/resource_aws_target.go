@@ -2,9 +2,7 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -137,7 +135,6 @@ func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	path := d.Id()
 
@@ -148,18 +145,10 @@ func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get target details", res, err)
 	}
 	if rOut.Value == nil || rOut.Target == nil {
-		return fmt.Errorf("can't get value")
+		return fmt.Errorf("can't get target details")
 	}
 
 	if rOut.Value.AwsTargetDetails.AwsAccessKeyId != nil {
@@ -254,7 +243,7 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	_, resp, err := client.TargetUpdateAws(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't update ", resp, err)
+		return common.HandleError("can't update target", resp, err)
 	}
 
 	d.SetId(name)

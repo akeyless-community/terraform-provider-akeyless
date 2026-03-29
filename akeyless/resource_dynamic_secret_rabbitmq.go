@@ -2,9 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -203,7 +200,7 @@ func resourceDynamicSecretRabbitmqCreate(d *schema.ResourceData, m interface{}) 
 
 	_, resp, err := client.DynamicSecretCreateRabbitMq(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't create Secret", resp, err)
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -216,7 +213,6 @@ func resourceDynamicSecretRabbitmqRead(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -228,14 +224,7 @@ func resourceDynamicSecretRabbitmqRead(d *schema.ResourceData, m interface{}) er
 
 	rOut, res, err := client.DynamicSecretGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get dynamic secret value", res, err)
 	}
 
 	deleteProtectionVal := "false"
@@ -357,7 +346,7 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 
 	_, resp, err := client.DynamicSecretUpdateRabbitMq(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't update Secret", resp, err)
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

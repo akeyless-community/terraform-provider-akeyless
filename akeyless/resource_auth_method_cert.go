@@ -524,7 +524,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 
 	_, resp, err := client.AuthMethodUpdateCert(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("failed to update ", resp, err)
+		return common.HandleError("failed to update auth method", resp, err)
 	}
 
 	d.SetId(name)

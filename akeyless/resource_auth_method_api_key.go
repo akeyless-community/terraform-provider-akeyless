@@ -153,7 +153,7 @@ func resourceAuthMethodApiKeyCreate(d *schema.ResourceData, m interface{}) error
 
 	rOut, resp, err := client.AuthMethodCreateApiKey(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("failed to create Secret", resp, err)
+		return common.HandleError("failed to create auth method", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -356,7 +356,7 @@ func resourceAuthMethodApiKeyUpdate(d *schema.ResourceData, m interface{}) error
 
 	_, resp, err := client.AuthMethodUpdateApiKey(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("failed to update ", resp, err)
+		return common.HandleError("failed to update auth method", resp, err)
 	}
 
 	d.SetId(name)

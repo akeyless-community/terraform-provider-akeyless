@@ -411,7 +411,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 
 	_, resp, err := client.AuthMethodUpdateSAML(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't update ", resp, err)
+		return common.HandleError("can't update auth method", resp, err)
 	}
 
 	d.SetId(name)

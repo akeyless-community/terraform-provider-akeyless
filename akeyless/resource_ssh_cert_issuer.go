@@ -397,7 +397,7 @@ func resourceSSHCertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 
 	_, resp, err := client.UpdateSSHCertIssuer(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("failed to update ", resp, err)
+		return common.HandleError("failed to update ssh cert issuer", resp, err)
 	}
 
 	d.SetId(name)

@@ -377,7 +377,7 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 
 	_, resp, err := client.AuthMethodUpdateUniversalIdentity(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't update ", resp, err)
+		return common.HandleError("can't update auth method", resp, err)
 	}
 
 	d.SetId(name)

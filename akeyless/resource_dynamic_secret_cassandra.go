@@ -3,9 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -176,7 +173,7 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 
 	_, resp, err := client.DynamicSecretCreateCassandra(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't create Secret", resp, err)
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -189,7 +186,6 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -201,15 +197,7 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 
 	rOut, res, err := client.DynamicSecretGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get dynamic secret value", res, err)
 	}
 	if rOut.CassandraCreationStatements != nil {
 		err = d.Set("cassandra_creation_statements", *rOut.CassandraCreationStatements)
@@ -354,7 +342,7 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 
 	_, resp, err := client.DynamicSecretUpdateCassandra(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't update Secret", resp, err)
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

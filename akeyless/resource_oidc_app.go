@@ -394,7 +394,7 @@ func resourceOidcAppUpdate(d *schema.ResourceData, m interface{}) error {
 
 	_, resp, err := client.UpdateOidcApp(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleError("can't update ", resp, err)
+		return common.HandleError("can't update OIDC app", resp, err)
 	}
 
 	// Update common item properties LAST (to restore/set common fields after UpdateOidcApp)
@@ -424,7 +424,7 @@ func resourceOidcAppUpdate(d *schema.ResourceData, m interface{}) error {
 
 	_, resp, err = client.UpdateItem(ctx).Body(itemBody).Execute()
 	if err != nil {
-		return common.HandleError("can't update ", resp, err)
+		return common.HandleError("can't update OIDC app", resp, err)
 	}
 
 	d.SetId(name)

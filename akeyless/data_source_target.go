@@ -3,9 +3,7 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -150,7 +148,6 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	showVersions := d.Get("show_versions").(bool)
@@ -163,15 +160,7 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.TargetGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get target", res, err)
 	}
 	if rOut.TargetName != nil {
 		err := d.Set("target_name", *rOut.TargetName)
