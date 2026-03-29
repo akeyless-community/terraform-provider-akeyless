@@ -46,7 +46,7 @@ jobs:
         env:
           AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
           AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
-          AKEYLESS_GATEWAY: http://localhost:18081
+          AKEYLESS_GATEWAY: http://localhost:8081
           TF_ACC_GCP_SERVICE_ACCOUNT: ${{ secrets.TF_ACC_GCP_SERVICE_ACCOUNT }}
           TF_ACC_GCP_BOUND_SERVICE_ACC: ${{ secrets.TF_ACC_GCP_BOUND_SERVICE_ACC }}
         run: |

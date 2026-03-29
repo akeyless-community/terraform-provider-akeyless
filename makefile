@@ -28,7 +28,7 @@ testgw-down:
 	docker compose -f docker-compose.test.yml down -v
 
 testgw: testgw-up
-	AKEYLESS_GATEWAY=http://localhost:18081 TF_ACC=1 go test $(TEST) -v -count 1 -parallel 4 -timeout 120m; \
+	AKEYLESS_GATEWAY=http://localhost:8081 TF_ACC=1 go test $(TEST) -v -count 1 -parallel 4 -timeout 120m; \
 	ret=$$?; \
 	$(MAKE) testgw-down; \
 	exit $$ret

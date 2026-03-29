@@ -3,9 +3,9 @@ services:
     image: akeyless/base:latest-akeyless
     platform: linux/amd64
     ports:
-      - "18000:8000"
-      - "18080:8080"
-      - "18081:8081"
+      - "8000:8000"
+      - "8080:8080"
+      - "8081:8081"
     environment:
       ADMIN_ACCESS_ID: ${AKEYLESS_ACCESS_ID}
       ADMIN_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY}

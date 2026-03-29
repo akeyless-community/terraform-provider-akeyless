@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 	}
 
 	if os.Getenv("AKEYLESS_GATEWAY") == "" {
-		os.Setenv("AKEYLESS_GATEWAY", "http://127.0.0.1:18081")
+		os.Setenv("AKEYLESS_GATEWAY", "http://127.0.0.1:8081")
 	}
 
 	resource.TestMain(m)
