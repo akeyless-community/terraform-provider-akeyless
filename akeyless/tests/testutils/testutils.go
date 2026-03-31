@@ -1049,7 +1049,7 @@ func DeleteTarget(t *testing.T, name string) {
 func DeleteRole(path string) error {
 	client, token, err := GetClient()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	gsvBody := akeyless_api.DeleteRole{
@@ -1071,7 +1071,7 @@ func DeleteRole(path string) error {
 func CreateTestAuthMethod(path string) error {
 	client, token, err := GetClient()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	gsvBody := akeyless_api.CreateAuthMethod{
@@ -1091,7 +1091,7 @@ func CreateTestAuthMethod(path string) error {
 func DeleteAuthMethod(path string, authMethodType string) error {
 	client, token, err := GetClient()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	gsvBody := akeyless_api.AuthMethodDelete{
