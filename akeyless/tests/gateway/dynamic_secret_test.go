@@ -128,6 +128,7 @@ func TestGitlabProducerResource(t *testing.T) {
 
 	name := "gitlab_test"
 	itemPath := testPath(name)
+	targetPath := testPath("gitlab_target")
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gitlab" "gitlab_test" {
 			name 				= "%v"
@@ -137,7 +138,7 @@ func TestGitlabProducerResource(t *testing.T) {
 		}
 		resource "akeyless_dynamic_secret_gitlab" "%v" {
 			name            	= "%v"
-			target_name         = "gitlab_target"
+			target_name         = "%v"
   			gitlab_url          = "http://127.0.0.1:81"
   			gitlab_token_scopes = "api"
   			gitlab_access_type  = "group"
@@ -148,19 +149,28 @@ func TestGitlabProducerResource(t *testing.T) {
     			akeyless_target_gitlab.gitlab_test,
   			]
 		}
-	`, t.Name(), GITLAB_TOKEN, name, itemPath, GITLAB_TOKEN)
+	`, targetPath, GITLAB_TOKEN, name, itemPath, targetPath, GITLAB_TOKEN)
 
 	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_gitlab" "gitlab_test" {
+			name 				= "%v"
+  			gitlab_access_token = "%v"
+  			gitlab_url 			= "http://127.0.0.1:81"
+  			description 		= "example"
+		}
 		resource "akeyless_dynamic_secret_gitlab" "%v" {
 			name            	= "%v"
-			target_name         = "gitlab_target"
+			target_name         = "%v"
   			gitlab_url          = "http://127.0.0.1:81"
   			gitlab_token_scopes = "api"
   			gitlab_access_type  = "group"
   			group_name          = "mygroup2"
   			gitlab_access_token = "%v"
+			depends_on = [
+    			akeyless_target_gitlab.gitlab_test,
+  			]
 		}
-	`, name, itemPath, GITLAB_TOKEN)
+	`, targetPath, GITLAB_TOKEN, name, itemPath, targetPath, GITLAB_TOKEN)
 
 	testutils.TestItemResource(t, providerFactories, itemPath, config, configUpdate)
 }
