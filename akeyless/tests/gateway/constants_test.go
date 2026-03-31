@@ -10,7 +10,6 @@ const (
 	AZURE_CLIENT_SECRET1   = "test"
 	AZURE_APP_ID1          = "app_id"
 	AZURE_USERNAME1        = "test@test.com"
-	KEY1                   = "test"
 	LDAP_PASS              = "test"
 	MYSQL_USERNAME1        = "test"
 	MYSQL_PASSWORD1        = "test"

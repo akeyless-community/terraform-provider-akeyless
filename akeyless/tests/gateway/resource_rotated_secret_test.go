@@ -36,10 +36,9 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_id 						= "%v"
 			api_key 					= "%v"
 			grace_rotation 				= "true"
-			key 						= "%v"
 			description 				= "aaaa"
 		}
-	`, rsName, rsPath, targetPath, AWS_ACCESS_KEY_ID1, AWS_SECRET_ACCESS_KEY1, KEY1)
+	`, rsName, rsPath, targetPath, AWS_ACCESS_KEY_ID1, AWS_SECRET_ACCESS_KEY1)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_aws" "%v" {
@@ -50,10 +49,9 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_id 						= "%v"
 			api_key 					= "%v"
 			grace_rotation 				= "true"
-			key 						= "%v"
 			description 				= "bbbb"
 		}
-	`, rsName, rsPath, targetPath, AWS_ACCESS_KEY_ID1, AWS_SECRET_ACCESS_KEY1, KEY1)
+	`, rsName, rsPath, targetPath, AWS_ACCESS_KEY_ID1, AWS_SECRET_ACCESS_KEY1)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -99,10 +97,9 @@ func testRotatedSecretAzurePassword(t *testing.T, targetPath string) {
 			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
 			username 					= "%v"
-			key 						= "%v"
 			description 				= "aaaa"
 		}
-	`, rsName, rsPath, targetPath, AZURE_USERNAME1, KEY1)
+	`, rsName, rsPath, targetPath, AZURE_USERNAME1)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_azure" "%v" {
@@ -111,10 +108,9 @@ func testRotatedSecretAzurePassword(t *testing.T, targetPath string) {
 			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
 			username 					= "%v"
-			key 						= "%v"
 			description 				= "bbbb"
 		}
-	`, rsName, rsPath, targetPath, AZURE_USERNAME1, KEY1)
+	`, rsName, rsPath, targetPath, AZURE_USERNAME1)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -135,10 +131,9 @@ func testRotatedSecretAzureApiKey(t *testing.T, targetPath string) {
 			api_id 						= "%v"
 			api_key 					= "%v"
 			app_id 						= "%v"
-			key 						= "%v"
 			description 				= "aaaa"
 		}
-	`, rsName, rsPath, targetPath, AZURE_CLIENT_ID1, AZURE_CLIENT_SECRET1, AZURE_APP_ID1, KEY1)
+	`, rsName, rsPath, targetPath, AZURE_CLIENT_ID1, AZURE_CLIENT_SECRET1, AZURE_APP_ID1)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_azure" "%v" {
@@ -149,10 +144,9 @@ func testRotatedSecretAzureApiKey(t *testing.T, targetPath string) {
 			api_id 						= "%v"
 			api_key 					= "%v"
 			app_id 						= "%v"
-			key 						= "%v"
 			description 				= "bbbb"
 		}
-	`, rsName, rsPath, targetPath, AZURE_CLIENT_ID1, AZURE_CLIENT_SECRET1, AZURE_APP_ID1, KEY1)
+	`, rsName, rsPath, targetPath, AZURE_CLIENT_ID1, AZURE_CLIENT_SECRET1, AZURE_APP_ID1)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -168,10 +162,9 @@ func testRotatedSecretAzureStorageAccount(t *testing.T, targetPath string) {
 			rotator_type 				= "azure-storage-account"
 			authentication_credentials 	= "use-target-creds"
 			storage_account_key_name 	= "key1"
-			key 						= "%v"
 			description 				= "aaaa"
 		}
-	`, rsName, rsPath, targetPath, KEY1)
+	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_azure" "%v" {
@@ -180,10 +173,9 @@ func testRotatedSecretAzureStorageAccount(t *testing.T, targetPath string) {
 			rotator_type 				= "azure-storage-account"
 			authentication_credentials 	= "use-target-creds"
 			storage_account_key_name 	= "kerb2"
-			key 						= "%v"
 			description 				= "bbbb"
 		}
-	`, rsName, rsPath, targetPath, KEY1)
+	`, rsName, rsPath, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -211,18 +203,16 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			name 						= "%v"
 			target_name 				= "%v"
 			custom_payload 				= "payload1"
-			key 						= "%v"
 		}
-	`, rsName, rsPath, targetPath, KEY1)
+	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_custom" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
 			custom_payload 				= "payload2"
-			key 						= "%v"
 		}
-	`, rsName, rsPath, targetPath, KEY1)
+	`, rsName, rsPath, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -253,9 +243,8 @@ func TestRotatedSecretGcpResource(t *testing.T) {
 			authentication_credentials 	= "use-target-creds"
 			gcp_key 					= "%v"
 			gcp_service_account_email 	= "%v"
-			key 						= "%v"
 		}
-	`, rsName, rsPath, targetPath, GCP_ROTATOR_KEY1, GCP_SA_ROTATOR_EMAIL1, KEY1)
+	`, rsName, rsPath, targetPath, GCP_ROTATOR_KEY1, GCP_SA_ROTATOR_EMAIL1)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_gcp" "%v" {
@@ -264,9 +253,8 @@ func TestRotatedSecretGcpResource(t *testing.T) {
 			rotator_type 				= "service-account-rotator"
 			authentication_credentials 	= "use-target-creds"
 			gcp_key 					= "%v"
-			key 						= "%v"
 		}
-	`, rsName, rsPath, targetPath, GCP_ROTATOR_KEY1, KEY1)
+	`, rsName, rsPath, targetPath, GCP_ROTATOR_KEY1)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -296,9 +284,8 @@ func TestRotatedSecretGcpTargetResource(t *testing.T) {
 			rotator_type 				= "target"
 			authentication_credentials 	= "use-target-creds"
 			gcp_service_account_email 	= "%v"
-			key 						= "%v"
 		}
-	`, rsName, rsPath, targetPath, GCP_SA_ROTATOR_EMAIL1, KEY1)
+	`, rsName, rsPath, targetPath, GCP_SA_ROTATOR_EMAIL1)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_gcp" "%v" {
@@ -307,9 +294,8 @@ func TestRotatedSecretGcpTargetResource(t *testing.T) {
 			rotator_type 				= "target"
 			authentication_credentials 	= "use-target-creds"
 			gcp_service_account_email 	= "%v"
-			key 						= "%v"
 		}
-	`, rsName, rsPath, targetPath, GCP_SA_ROTATOR_EMAIL1, KEY1)
+	`, rsName, rsPath, targetPath, GCP_SA_ROTATOR_EMAIL1)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -346,9 +332,8 @@ func TestRotatedSecretLdapResource(t *testing.T) {
 			rotated_password 			= "pass1"
 			user_dn 					= "dn1"
 			user_attribute 				= "attr1"
-			key 						= "%v"
 		}
-	`, rsName, rsPath, targetPath, KEY1)
+	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_ldap" "%v" {
@@ -360,9 +345,8 @@ func TestRotatedSecretLdapResource(t *testing.T) {
 			rotated_password 			= "pass2"
 			user_dn 					= "dn2"
 			user_attribute 				= "attr2"
-			key 						= "%v"
 		}
-	`, rsName, rsPath, targetPath, KEY1)
+	`, rsName, rsPath, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -396,10 +380,9 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			rotated_username 			= "%v"
   			rotated_password 			= "%v"
 			password_length 			= "9"
-			key 						= "%v"
 			tags 						= ["t1", "t2"]
 		}
-	`, rsName, rsPath, targetPath, MYSQL_USERNAME1, MYSQL_PASSWORD1, KEY1)
+	`, rsName, rsPath, targetPath, MYSQL_USERNAME1, MYSQL_PASSWORD1)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_mysql" "%v" {
@@ -410,10 +393,9 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			rotated_username 			= "%v"
   			rotated_password 			= "%v"
 			password_length 			= "9"
-			key 						= "%v"
 			tags 						= ["t1","t3"]
 		}
-	`, rsName, rsPath, targetPath, MYSQL_USERNAME1, MYSQL_PASSWORD1, KEY1)
+	`, rsName, rsPath, targetPath, MYSQL_USERNAME1, MYSQL_PASSWORD1)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
