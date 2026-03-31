@@ -294,6 +294,7 @@ func TestRotatedSecretOracle(t *testing.T) {
 			db_type   = "oracle"
 			host      = "oracle-db.example.com"
 			port      = "1521"
+			db_name   = "ORCL"
 			user_name = "admin"
 			pwd       = "DummyPass123"
 		}
@@ -313,6 +314,7 @@ func TestRotatedSecretOracle(t *testing.T) {
 			db_type   = "oracle"
 			host      = "oracle-db.example.com"
 			port      = "1521"
+			db_name   = "ORCL"
 			user_name = "admin"
 			pwd       = "DummyPass123"
 		}
@@ -394,6 +396,7 @@ func TestRotatedSecretRedshift(t *testing.T) {
 			db_type   = "redshift"
 			host      = "redshift-cluster.example.com"
 			port      = "5439"
+			db_name   = "dev"
 			user_name = "admin"
 			pwd       = "DummyPass123"
 		}
@@ -413,6 +416,7 @@ func TestRotatedSecretRedshift(t *testing.T) {
 			db_type   = "redshift"
 			host      = "redshift-cluster.example.com"
 			port      = "5439"
+			db_name   = "dev"
 			user_name = "admin"
 			pwd       = "DummyPass123"
 		}
@@ -440,12 +444,13 @@ func TestRotatedSecretSnowflake(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
-			name      = "%v"
-			db_type   = "snowflake"
-			host      = "test-account.snowflakecomputing.com"
-			port      = "443"
-			user_name = "admin"
-			pwd       = "DummyPass123"
+			name              = "%v"
+			db_type           = "snowflake"
+			host              = "test-account.snowflakecomputing.com"
+			port              = "443"
+			snowflake_account = "test-account"
+			user_name         = "admin"
+			pwd               = "DummyPass123"
 		}
 		resource "akeyless_rotated_secret_snowflake" "%v" {
 			name                       = "%v"
@@ -459,12 +464,13 @@ func TestRotatedSecretSnowflake(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
-			name      = "%v"
-			db_type   = "snowflake"
-			host      = "test-account.snowflakecomputing.com"
-			port      = "443"
-			user_name = "admin"
-			pwd       = "DummyPass123"
+			name              = "%v"
+			db_type           = "snowflake"
+			host              = "test-account.snowflakecomputing.com"
+			port              = "443"
+			snowflake_account = "test-account"
+			user_name         = "admin"
+			pwd               = "DummyPass123"
 		}
 		resource "akeyless_rotated_secret_snowflake" "%v" {
 			name                       = "%v"

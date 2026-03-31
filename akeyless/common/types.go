@@ -25,6 +25,7 @@ const (
 	LdapRotator           = "ldap-rotator"
 	ServiceAccountRotator = "service-account-rotator"
 	StorageAccountRotator = "azure-storage-account-rotator"
+	TargetRotator         = "target-rotator"
 
 	UseExisting = "use-existing"
 

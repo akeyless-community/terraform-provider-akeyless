@@ -56,6 +56,7 @@ func resourceGatewayUpdateDefaults() *schema.Resource {
 			"hvp_route_version": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "Hvp route version to use [1/2]",
 			},
 		},

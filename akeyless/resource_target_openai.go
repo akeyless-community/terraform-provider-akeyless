@@ -210,6 +210,7 @@ func resourceOpenAITargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
+	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.ApiKeyId, apiKeyId)
 	common.GetAkeylessPtr(&body.Model, model)

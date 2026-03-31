@@ -16,6 +16,8 @@ func setRotatorType(d *schema.ResourceData, rotatorType string) error {
 		mapped = "ldap"
 	case common.StorageAccountRotator:
 		mapped = "azure-storage-account"
+	case common.TargetRotator:
+		mapped = "target"
 	}
 
 	return d.Set("rotator_type", mapped)

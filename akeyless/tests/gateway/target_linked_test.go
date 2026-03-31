@@ -48,9 +48,7 @@ func TestTargetDataSourceLinkedTarget(t *testing.T) {
 	testTargetDataSource(t, config, targetPath, targetDetailsType, expect)
 }
 
-func createTarget(t *testing.T, targetName string) {
-	targetPath := testPath(targetName)
-
+func createTarget(t *testing.T, targetPath string) {
 	client, token := testutils.PrepareClient(t)
 
 	body := akeyless_api.CreateDBTarget{
