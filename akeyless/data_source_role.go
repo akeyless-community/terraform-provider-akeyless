@@ -42,10 +42,10 @@ func dataSourceRole() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"comment": {
+			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Comment about the role",
+				Description: "Description of the role",
 			},
 			"creation_date": {
 				Type:        schema.TypeString,
@@ -138,7 +138,7 @@ func dataSourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if role.Comment != nil {
-		err = d.Set("comment", *role.Comment)
+		err = d.Set("description", *role.Comment)
 		if err != nil {
 			return err
 		}

@@ -53,10 +53,10 @@ func dataSourceGetTargetDetails() *schema.Resource {
 				Computed:    true,
 				Description: "Target sub type",
 			},
-			"comment": {
+			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Comment about the target",
+				Description: "Description of the target",
 			},
 			"protection_key_name": {
 				Type:        schema.TypeString,
@@ -186,7 +186,7 @@ func dataSourceGetTargetDetailsRead(d *schema.ResourceData, m interface{}) error
 			}
 		}
 		if rOut.Target.Comment != nil {
-			if err := d.Set("comment", *rOut.Target.Comment); err != nil {
+			if err := d.Set("description", *rOut.Target.Comment); err != nil {
 				return err
 			}
 		}

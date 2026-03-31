@@ -3,7 +3,6 @@ name: Validate Release
 on:
   pull_request:
 
-
 jobs:
   validate:
     runs-on: ubuntu-22.04
@@ -24,6 +23,43 @@ jobs:
       - name: Validate Release Version
         run: .github/scripts/validate_release_version.sh
 
+  test-non-gateway:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.0.1
+          terraform_wrapper: false
+
+      - name: Set up GO
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+        id: go
+
+      - name: Run Non-Gateway Tests
+        env:
+          AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
+          AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
+          TF_ACC_GCP_SERVICE_ACCOUNT: ${{ secrets.TF_ACC_GCP_SERVICE_ACCOUNT }}
+          TF_ACC_GCP_BOUND_SERVICE_ACC: ${{ secrets.TF_ACC_GCP_BOUND_SERVICE_ACC }}
+        run: |
+          TF_ACC=1 go test ./akeyless/tests/no_gateway/ ./akeyless/common/ -v -count 1 -parallel 4 -timeout 120m
+
+  test-gateway-items:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -42,15 +78,51 @@ jobs:
           AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
         run: docker compose -f docker-compose.test.yml up -d --wait
 
-      - name: Run Acceptance Tests
+      - name: Run Gateway Item Tests
         env:
           AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
           AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
           AKEYLESS_GATEWAY: http://localhost:8081
-          TF_ACC_GCP_SERVICE_ACCOUNT: ${{ secrets.TF_ACC_GCP_SERVICE_ACCOUNT }}
-          TF_ACC_GCP_BOUND_SERVICE_ACC: ${{ secrets.TF_ACC_GCP_BOUND_SERVICE_ACC }}
         run: |
-          TF_ACC=1 go test ./... -v -count 1 -parallel 4 -timeout 120m
+          TF_ACC=1 go test ./akeyless/tests/gateway/ -v -count 1 -parallel 4 -timeout 120m
+
+      - name: Tear down test infrastructure
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v
+
+  test-gateway-config:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.0.1
+          terraform_wrapper: false
+
+      - name: Set up GO
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+        id: go
+
+      - name: Start test infrastructure
+        env:
+          AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
+          AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
+        run: docker compose -f docker-compose.test.yml up -d --wait
+
+      - name: Run Gateway Config Tests
+        env:
+          AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
+          AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
+          AKEYLESS_GATEWAY: http://localhost:8081
+        run: |
+          TF_ACC=1 go test ./akeyless/tests/gateway_config/ -v -count 1 -parallel 1 -timeout 120m
 
       - name: Tear down test infrastructure
         if: always()

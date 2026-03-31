@@ -82,11 +82,6 @@ func resourceOidcApp() *schema.Resource {
 				Computed:    true,
 				Description: "The name of a key that used to encrypt the OIDC application (if empty, the account default protectionKey key will be used)",
 			},
-			"metadata": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Deprecated - use description",
-			},
 			"permission_assignment": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -140,7 +135,6 @@ func resourceOidcAppCreate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	key := d.Get("key").(string)
-	metadata := d.Get("metadata").(string)
 	permissionAssignment := d.Get("permission_assignment").(string)
 	public := d.Get("public").(bool)
 	redirectUrisSet := d.Get("redirect_uris").(*schema.Set)
@@ -166,7 +160,6 @@ func resourceOidcAppCreate(d *schema.ResourceData, m interface{}) error {
 		body.ItemCustomFields = &customFieldsMap
 	}
 	common.GetAkeylessPtr(&body.Key, key)
-	common.GetAkeylessPtr(&body.Metadata, metadata)
 	common.GetAkeylessPtr(&body.PermissionAssignment, permissionAssignment)
 	common.GetAkeylessPtr(&body.Public, public)
 	common.GetAkeylessPtr(&body.RedirectUris, redirectUris)
