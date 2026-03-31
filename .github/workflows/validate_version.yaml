@@ -85,7 +85,7 @@ jobs:
           AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
           AKEYLESS_GATEWAY: http://localhost:8081
         run: |
-          TF_ACC=1 go test ./akeyless/tests/gateway/ -v -count 1 -parallel 4 -timeout 120m
+          TF_ACC=1 go test ./akeyless/tests/gateway/ -v -count 1 -parallel 1 -timeout 120m
 
       - name: Tear down test infrastructure
         if: always()

@@ -746,27 +746,29 @@ func TestGlobalSignAtlasTargetResource(t *testing.T) {
 	targetName := "globalsign_atlas_target"
 	targetPath := testPath(targetName)
 
+	testCert, testKey := testutils.GenerateSelfSignedCertBase64(t)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_globalsign_atlas" "%v" {
 			name 				= "%v"
 			api_key 			= "test-api-key"
 			api_secret 			= "test-api-secret"
-			mtls_cert_data_base64 = "dGVzdA=="
-			mtls_key_data_base64 = "dGVzdA=="
+			mtls_cert_data_base64 = "%v"
+			mtls_key_data_base64 = "%v"
 			description 		= "Test GlobalSign Atlas target"
 		}
-	`, targetName, targetPath)
+	`, targetName, targetPath, testCert, testKey)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_globalsign_atlas" "%v" {
 			name 				= "%v"
 			api_key 			= "test-api-key2"
 			api_secret 			= "test-api-secret2"
-			mtls_cert_data_base64 = "dGVzdA=="
-			mtls_key_data_base64 = "dGVzdA=="
+			mtls_cert_data_base64 = "%v"
+			mtls_key_data_base64 = "%v"
 			description 		= "Updated GlobalSign Atlas target"
 		}
-	`, targetName, targetPath)
+	`, targetName, targetPath, testCert, testKey)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
