@@ -2,6 +2,11 @@ package gateway
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
 	"fmt"
 	"testing"
 
@@ -55,7 +60,6 @@ func TestEventForwarderEmail(t *testing.T) {
 }
 
 func TestEventForwarderWebhook(t *testing.T) {
-	t.Skip("skipping: gateway rejects unregistered cluster URLs in gateways_event_source_locations")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
@@ -67,7 +71,7 @@ func TestEventForwarderWebhook(t *testing.T) {
 			items_event_source_locations = ["/items/*"]
 			targets_event_source_locations = ["/targets/*"]
 			auth_methods_event_source_locations = ["/auth-methods/*"]
-			gateways_event_source_locations = ["http://localhost:8000"]
+			gateways_event_source_locations = ["http://localhost:8081"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			url = "https://example.com"
 			auth_type = "user-pass"
@@ -85,14 +89,13 @@ func TestEventForwarderWebhook(t *testing.T) {
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			auth_methods_event_source_locations = ["/auth/"]
-			gateways_event_source_locations = ["http://localhost:8000"]
+			gateways_event_source_locations = ["http://localhost:8081"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
 			url = "https://example2.com"
 			auth_type = "user-pass"
 			username = "myusername2"
 			password = "mypassword2"
-			runner_type = "periodic"
-			every = "2"
+			runner_type = "immediate"
 			enable = "true"
 			keep_prev_version = "true"
 			description = "test webhook event forwarder update"
@@ -103,7 +106,6 @@ func TestEventForwarderWebhook(t *testing.T) {
 }
 
 func TestEventForwarderServicenow(t *testing.T) {
-	t.Skip("skipping: gateway rejects unregistered cluster URLs in gateways_event_source_locations")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
@@ -115,7 +117,7 @@ func TestEventForwarderServicenow(t *testing.T) {
 			items_event_source_locations = ["/items/*"]
 			targets_event_source_locations = ["/targets/*"]
 			auth_methods_event_source_locations = ["/auth-methods/*"]
-			gateways_event_source_locations = ["http://localhost:8000"]
+			gateways_event_source_locations = ["http://localhost:8081"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			host = "https://example.com"
 			admin_name = "myusername"
@@ -125,14 +127,23 @@ func TestEventForwarderServicenow(t *testing.T) {
 		}
 	`, eventForwarderName, eventForwarderName)
 
-	base64Key := "XXXXXX"
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("failed to generate RSA key: %v", err)
+	}
+	keyBytes, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		t.Fatalf("failed to marshal private key: %v", err)
+	}
+	pemBlock := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyBytes})
+	base64Key := base64.StdEncoding.EncodeToString(pemBlock)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_event_forwarder_service_now" "%v" {
 			name = "%v"
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			auth_methods_event_source_locations = ["/auth/"]
-			gateways_event_source_locations = ["http://localhost:8000"]
+			gateways_event_source_locations = ["http://localhost:8081"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
 			host = "https://example2.com"
 			auth_type = "jwt"
@@ -149,7 +160,6 @@ func TestEventForwarderServicenow(t *testing.T) {
 }
 
 func TestEventForwarderSlack(t *testing.T) {
-	t.Skip("skipping: gateway rejects unregistered cluster URLs in gateways_event_source_locations")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
@@ -161,7 +171,7 @@ func TestEventForwarderSlack(t *testing.T) {
 			items_event_source_locations = ["/items/*"]
 			targets_event_source_locations = ["/targets/*"]
 			auth_methods_event_source_locations = ["/auth-methods/*"]
-			gateways_event_source_locations = ["http://localhost:8000"]
+			gateways_event_source_locations = ["http://localhost:8081"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			url = "https://example.com"
 			runner_type = "immediate"
@@ -175,7 +185,7 @@ func TestEventForwarderSlack(t *testing.T) {
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			auth_methods_event_source_locations = ["/auth/"]
-			gateways_event_source_locations = ["http://localhost:8000"]
+			gateways_event_source_locations = ["http://localhost:8081"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
 			url = "https://example2.com"
 			runner_type = "immediate"
@@ -187,7 +197,7 @@ func TestEventForwarderSlack(t *testing.T) {
 }
 
 func TestEventForwarderTeams(t *testing.T) {
-	t.Skip("skipping: gateway rejects unregistered cluster URLs in gateways_event_source_locations")
+	t.Skip("TODO: GW is broken. params are not set properly in update command")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
@@ -199,7 +209,7 @@ func TestEventForwarderTeams(t *testing.T) {
 			items_event_source_locations = ["/items/*"]
 			targets_event_source_locations = ["/targets/*"]
 			auth_methods_event_source_locations = ["/auth-methods/*"]
-			gateway_event_source_locations = ["http://localhost:8000"]
+			gateway_event_source_locations = ["http://localhost:8081"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			url = "https://example.webhook.office.com"
 			runner_type = "immediate"
@@ -213,7 +223,7 @@ func TestEventForwarderTeams(t *testing.T) {
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			auth_methods_event_source_locations = ["/auth/"]
-			gateway_event_source_locations = ["http://localhost:8000"]
+			gateway_event_source_locations = ["http://localhost:8081"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
 			url = "https://example2.webhook.office.com"
 			runner_type = "immediate"

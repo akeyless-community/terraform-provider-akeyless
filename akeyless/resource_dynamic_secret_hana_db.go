@@ -176,7 +176,7 @@ func resourceDynamicSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
-	body := akeyless_api.GatewayCreateProducerHanaDb{
+	body := akeyless_api.DynamicSecretCreateHanaDb{
 		Name:  name,
 		Token: &token,
 	}
@@ -208,7 +208,7 @@ func resourceDynamicSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 		body.ItemCustomFields = &fields
 	}
 
-	_, resp, err := client.GatewayCreateProducerHanaDb(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateHanaDb(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create dynamic secret", resp, err)
 	}
@@ -325,7 +325,7 @@ func resourceDynamicSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
-	body := akeyless_api.GatewayUpdateProducerHanaDb{
+	body := akeyless_api.DynamicSecretUpdateHanaDb{
 		Name:  name,
 		Token: &token,
 	}
@@ -357,7 +357,7 @@ func resourceDynamicSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 		body.ItemCustomFields = &fields
 	}
 
-	_, resp, err := client.GatewayUpdateProducerHanaDb(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateHanaDb(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update dynamic secret", resp, err)
 	}

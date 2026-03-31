@@ -378,7 +378,6 @@ func TestDynamicSecretOpenai(t *testing.T) {
 }
 
 func TestDynamicSecretPing(t *testing.T) {
-	t.Skip("skipping: dynamic-secret-create-ping command not available in gateway")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
@@ -388,10 +387,10 @@ func TestDynamicSecretPing(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_ping" "%v" {
 			name                 = "%v"
-			ping_url             = "https://ping.example.com"
+			ping_url             = "https://example.com"
 			ping_privileged_user = "admin"
 			ping_password        = "DummyPass123"
-			ping_redirect_uris   = ["https://ping.example.com/callback"]
+			ping_redirect_uris   = ["https://example.com/callback"]
 			user_ttl             = "30m"
 		}
 	`, name, itemPath)
@@ -399,10 +398,10 @@ func TestDynamicSecretPing(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_ping" "%v" {
 			name                 = "%v"
-			ping_url             = "https://ping.example.com"
+			ping_url             = "https://example.com"
 			ping_privileged_user = "admin"
 			ping_password        = "DummyPass123"
-			ping_redirect_uris   = ["https://ping.example.com/callback"]
+			ping_redirect_uris   = ["https://example.com/callback"]
 			user_ttl             = "60m"
 			tags                 = ["test1", "test2"]
 		}

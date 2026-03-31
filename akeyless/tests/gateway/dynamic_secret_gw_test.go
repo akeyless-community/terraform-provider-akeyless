@@ -78,7 +78,7 @@ func TestDynamicSecretPostgresql(t *testing.T) {
 }
 
 func TestDynamicSecretMongo(t *testing.T) {
-	t.Skip("skipping: dynamic-secret-update-mongo command not available in gateway")
+	t.Skip("TODO: SDK is broken. Need to send to mongodb, not to mongo.")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
@@ -215,7 +215,7 @@ func TestDynamicSecretCassandra(t *testing.T) {
 }
 
 func TestDynamicSecretOracle(t *testing.T) {
-	t.Skip("skipping: dynamic-secret-create-oracle command not available in gateway")
+	t.Skip("TODO: SDK is broken. Need to send to oracledb, not to oracle.")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
@@ -251,7 +251,7 @@ func TestDynamicSecretOracle(t *testing.T) {
 }
 
 func TestDynamicSecretHanaDb(t *testing.T) {
-	t.Skip("skipping: gateway-create-producer-hana command not available in gateway")
+	t.Skip("TODO: SDK is broken. Need to send to hanadb, not to hana.")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
