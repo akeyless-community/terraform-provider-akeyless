@@ -50,6 +50,7 @@ func TestDynamicSecretAzure(t *testing.T) {
 			azure_tenant_id     = "00000000-0000-0000-0000-000000000001"
 			azure_client_id     = "00000000-0000-0000-0000-000000000002"
 			azure_client_secret = "dummy-client-secret"
+			app_obj_id          = "00000000-0000-0000-0000-000000000003"
 			user_ttl            = "30m"
 		}
 	`, name, itemPath)
@@ -60,6 +61,7 @@ func TestDynamicSecretAzure(t *testing.T) {
 			azure_tenant_id     = "00000000-0000-0000-0000-000000000001"
 			azure_client_id     = "00000000-0000-0000-0000-000000000002"
 			azure_client_secret = "dummy-client-secret-2"
+			app_obj_id          = "00000000-0000-0000-0000-000000000003"
 			user_ttl            = "60m"
 			tags                = ["test1", "test2"]
 		}
@@ -80,6 +82,7 @@ func TestDynamicSecretGcp(t *testing.T) {
 			gcp_sa_email      = "test@test.com"
 			gcp_key           = "eyJkdW1teSI6ICJ0ZXN0In0="
 			service_account_type = "fixed"
+			gcp_token_scopes  = "https://www.googleapis.com/auth/cloud-platform"
 			user_ttl          = "30m"
 		}
 	`, name, itemPath)
@@ -90,6 +93,7 @@ func TestDynamicSecretGcp(t *testing.T) {
 			gcp_sa_email      = "test@test.com"
 			gcp_key           = "eyJkdW1teSI6ICJ0ZXN0In0="
 			service_account_type = "fixed"
+			gcp_token_scopes  = "https://www.googleapis.com/auth/cloud-platform"
 			user_ttl          = "60m"
 			tags              = ["test1", "test2"]
 		}
@@ -176,24 +180,26 @@ func TestDynamicSecretK8s(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_k8s" "%v" {
-			name                 = "%v"
-			k8s_cluster_endpoint = "https://k8s-api.example.com:6443"
-			k8s_cluster_ca_cert  = "dGVzdA=="
-			k8s_cluster_token    = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
-			k8s_namespace        = "default"
-			user_ttl             = "30m"
+			name                   = "%v"
+			k8s_cluster_endpoint   = "https://k8s-api.example.com:6443"
+			k8s_cluster_ca_cert    = "dGVzdA=="
+			k8s_cluster_token      = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
+			k8s_namespace          = "default"
+			k8s_service_account    = "test-sa"
+			user_ttl               = "30m"
 		}
 	`, name, itemPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_k8s" "%v" {
-			name                 = "%v"
-			k8s_cluster_endpoint = "https://k8s-api.example.com:6443"
-			k8s_cluster_ca_cert  = "dGVzdA=="
-			k8s_cluster_token    = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
-			k8s_namespace        = "production"
-			user_ttl             = "60m"
-			tags                 = ["test1", "test2"]
+			name                   = "%v"
+			k8s_cluster_endpoint   = "https://k8s-api.example.com:6443"
+			k8s_cluster_ca_cert    = "dGVzdA=="
+			k8s_cluster_token      = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
+			k8s_namespace          = "production"
+			k8s_service_account    = "test-sa"
+			user_ttl               = "60m"
+			tags                   = ["test1", "test2"]
 		}
 	`, name, itemPath)
 

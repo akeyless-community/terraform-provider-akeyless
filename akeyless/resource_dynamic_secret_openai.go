@@ -62,6 +62,7 @@ func resourceDynamicSecretOpenAI() *schema.Resource {
 			"producer_encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Dynamic producer encryption key",
 			},
 			"custom_username_template": {

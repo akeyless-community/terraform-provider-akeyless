@@ -194,7 +194,7 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 			ad_target_name      = "dummy-ad-target"
 			ad_user_base_dn     = "OU=Users,DC=example,DC=com"
 			ad_computer_base_dn = "OU=Computers,DC=example,DC=com"
-			ad_discovery_types  = ["domain-users", "computers"]
+			ad_discovery_types  = ["domain-users", "computers", "local-users"]
 			ad_targets_type     = "ssh"
 			ad_ssh_port         = "22"
 		}
@@ -232,7 +232,7 @@ func TestGatewayMigrationServerInventory(t *testing.T) {
 			target_location        = "terraform-tests/migrations/si"
 			hosts                  = "192.168.1.0/24"
 			si_target_name         = "dummy-ssh-target"
-			si_users_path_template = "terraform-tests/migrations/si/Users/{COMPUTER_NAME}/{USERNAME}"
+			si_users_path_template = "terraform-tests/migrations/si/Users/{{COMPUTER_NAME}}/{{USERNAME}}"
 		}
 	`, name, migrationName)
 
@@ -242,7 +242,7 @@ func TestGatewayMigrationServerInventory(t *testing.T) {
 			target_location        = "terraform-tests/migrations/si-updated"
 			hosts                  = "192.168.1.0/24,10.0.0.0/16"
 			si_target_name         = "dummy-ssh-target"
-			si_users_path_template = "terraform-tests/migrations/si/Users/{COMPUTER_NAME}/{USERNAME}"
+			si_users_path_template = "terraform-tests/migrations/si/Users/{{COMPUTER_NAME}}/{{USERNAME}}"
 			si_auto_rotate         = "true"
 			si_rotation_interval   = 30
 			si_rotation_hour       = 2

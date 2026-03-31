@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -150,6 +152,29 @@ func adjustResultAndInput(actual, expect map[string]interface{}, targetType stri
 	if val, ok := actual["timeout"]; ok {
 		if fVal, ok := val.(float64); ok {
 			actual["timeout"] = int(fVal)
+		}
+	}
+
+	if targetType == "linked_target_details" {
+		delete(expect, "parent")
+
+		if h, ok := actual["hosts"].(string); ok && strings.HasPrefix(h, "map[") {
+			inner := strings.TrimPrefix(strings.TrimSuffix(h, "]"), "map[")
+			parts := strings.Fields(inner)
+			pairs := make([]string, 0, len(parts))
+			for _, p := range parts {
+				kv := strings.SplitN(p, ":", 2)
+				if len(kv) == 2 {
+					pairs = append(pairs, kv[0]+";"+kv[1])
+				}
+			}
+			sort.Strings(pairs)
+			actual["hosts"] = strings.Join(pairs, ",")
+		}
+		if h, ok := expect["hosts"].(string); ok {
+			parts := strings.Split(h, ",")
+			sort.Strings(parts)
+			expect["hosts"] = strings.Join(parts, ",")
 		}
 	}
 

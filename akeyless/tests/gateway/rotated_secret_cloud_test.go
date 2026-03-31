@@ -72,6 +72,7 @@ func TestRotatedSecretAzure(t *testing.T) {
 			target_name                = "%v"
 			rotator_type               = "api-key"
 			authentication_credentials = "use-target-creds"
+			api_id                     = "00000000-0000-0000-0000-000000000002"
 			depends_on = [akeyless_target_azure.%v]
 		}
 	`, targetName, targetPath,
@@ -89,6 +90,7 @@ func TestRotatedSecretAzure(t *testing.T) {
 			target_name                = "%v"
 			rotator_type               = "api-key"
 			authentication_credentials = "use-target-creds"
+			api_id                     = "00000000-0000-0000-0000-000000000002"
 			tags                       = ["test1", "test2"]
 			depends_on = [akeyless_target_azure.%v]
 		}
@@ -112,9 +114,10 @@ func TestRotatedSecretCustom(t *testing.T) {
 			url  = "https://webhook.example.com"
 		}
 		resource "akeyless_rotated_secret_custom" "%v" {
-			name        = "%v"
-			target_name = "%v"
-			depends_on  = [akeyless_target_web.%v]
+			name           = "%v"
+			target_name    = "%v"
+			custom_payload = "test-payload"
+			depends_on     = [akeyless_target_web.%v]
 		}
 	`, targetName, targetPath,
 		rsName, rsPath, targetPath, targetName)
@@ -125,10 +128,11 @@ func TestRotatedSecretCustom(t *testing.T) {
 			url  = "https://webhook.example.com"
 		}
 		resource "akeyless_rotated_secret_custom" "%v" {
-			name        = "%v"
-			target_name = "%v"
-			tags        = ["test1", "test2"]
-			depends_on  = [akeyless_target_web.%v]
+			name           = "%v"
+			target_name    = "%v"
+			custom_payload = "test-payload"
+			tags           = ["test1", "test2"]
+			depends_on     = [akeyless_target_web.%v]
 		}
 	`, targetName, targetPath,
 		rsName, rsPath, targetPath, targetName)
@@ -448,6 +452,7 @@ func TestRotatedSecretSnowflake(t *testing.T) {
 			db_type           = "snowflake"
 			host              = "test-account.snowflakecomputing.com"
 			port              = "443"
+			db_name           = "TESTDB"
 			snowflake_account = "test-account"
 			user_name         = "admin"
 			pwd               = "DummyPass123"
@@ -468,6 +473,7 @@ func TestRotatedSecretSnowflake(t *testing.T) {
 			db_type           = "snowflake"
 			host              = "test-account.snowflakecomputing.com"
 			port              = "443"
+			db_name           = "TESTDB"
 			snowflake_account = "test-account"
 			user_name         = "admin"
 			pwd               = "DummyPass123"
