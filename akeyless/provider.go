@@ -1,9 +1,14 @@
 package akeyless
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
@@ -447,6 +452,10 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 func getProviderClient(ctx context.Context, d *schema.ResourceData) *akeyless_api.V2ApiService {
 	apiGwAddress := d.Get("api_gateway_address").(string)
 
+	httpClient := &http.Client{
+		Transport: &retryTransport{base: http.DefaultTransport, retries: 3},
+	}
+
 	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
 		Servers: []akeyless_api.ServerConfiguration{
 			{
@@ -454,9 +463,56 @@ func getProviderClient(ctx context.Context, d *schema.ResourceData) *akeyless_ap
 			},
 		},
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
+		HTTPClient:    httpClient,
 	}).V2Api
 
 	return client
+}
+
+type retryTransport struct {
+	base    http.RoundTripper
+	retries int
+}
+
+func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	var bodyBytes []byte
+	if req.Body != nil {
+		var err error
+		bodyBytes, err = io.ReadAll(req.Body)
+		req.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var lastErr error
+	for attempt := range t.retries {
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt*2) * time.Second)
+		}
+		if bodyBytes != nil {
+			req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+		}
+		resp, err := t.base.RoundTrip(req)
+		if err == nil {
+			return resp, nil
+		}
+		lastErr = err
+		if !isTransientConnError(err) {
+			return nil, err
+		}
+	}
+	return nil, lastErr
+}
+
+func isTransientConnError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "EOF") ||
+		strings.Contains(msg, "connection reset by peer") ||
+		strings.Contains(msg, "connection refused")
 }
 
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
