@@ -26,6 +26,11 @@ func TestMain(m *testing.M) {
 	if os.Getenv("AKEYLESS_GATEWAY") == "" {
 		os.Setenv("AKEYLESS_GATEWAY", "http://127.0.0.1:8081")
 	}
+
+	if err := testutils.EnableSRA(); err != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: failed to enable SRA: %v\n", err)
+	}
+
 	resource.TestMain(m)
 }
 

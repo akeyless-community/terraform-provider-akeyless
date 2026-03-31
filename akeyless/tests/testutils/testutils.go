@@ -1,19 +1,28 @@
 package testutils
 
 import (
+	"bytes"
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
+	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -88,6 +97,8 @@ func TestPath(testRunID, name string) string {
 }
 
 // GetClient creates an SDK client and authenticates using env vars.
+// Retries on transient connection errors (EOF, connection reset) to
+// survive Docker gateway restarts during CI.
 func GetClient() (*akeyless_api.V2ApiService, string, error) {
 	apiGwAddress := os.Getenv("AKEYLESS_GATEWAY")
 	if apiGwAddress == "" {
@@ -104,12 +115,31 @@ func GetClient() (*akeyless_api.V2ApiService, string, error) {
 	authBody.AccessKey = akeyless_api.PtrString(os.Getenv("AKEYLESS_ACCESS_KEY"))
 	authBody.AccessType = akeyless_api.PtrString(common.ApiKey)
 
-	authOut, _, err := client.Auth(context.Background()).Body(*authBody).Execute()
-	if err != nil {
-		return nil, "", err
+	var lastErr error
+	for attempt := range 5 {
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt*2) * time.Second)
+		}
+		authOut, _, err := client.Auth(context.Background()).Body(*authBody).Execute()
+		if err == nil {
+			return client, authOut.GetToken(), nil
+		}
+		lastErr = err
+		if !isTransientError(err) {
+			return nil, "", err
+		}
 	}
-	token := authOut.GetToken()
-	return client, token, nil
+	return nil, "", lastErr
+}
+
+func isTransientError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "EOF") ||
+		strings.Contains(msg, "connection reset by peer") ||
+		strings.Contains(msg, "connection refused")
 }
 
 func PrepareClient(t *testing.T) (*akeyless_api.V2ApiService, string) {
@@ -1236,6 +1266,182 @@ func GenerateSelfSignedCertBase64(t *testing.T) (certB64, keyB64 string) {
 	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
 
 	return base64.StdEncoding.EncodeToString(certPEM), base64.StdEncoding.EncodeToString(keyPEM)
+}
+
+// EnableSRA sends a bastion keep-alive to the Gator service so that the
+// gateway's cluster is marked as SRA-active. Without this, any gateway
+// config update that touches SshBastion/Global/WebBastion fields is rejected
+// with "sra is not activate for cluster ...".
+func EnableSRA() error {
+	accessID := os.Getenv("AKEYLESS_ACCESS_ID")
+	accessKey := os.Getenv("AKEYLESS_ACCESS_KEY")
+	if accessID == "" || accessKey == "" {
+		return fmt.Errorf("AKEYLESS_ACCESS_ID and AKEYLESS_ACCESS_KEY must be set")
+	}
+
+	gatorDNS, authDNS, err := getServiceDNS()
+	if err != nil {
+		return fmt.Errorf("get service DNS: %w", err)
+	}
+
+	uamCreds, err := authenticateUAM(authDNS, accessID, accessKey)
+	if err != nil {
+		return fmt.Errorf("authenticate UAM: %w", err)
+	}
+
+	return sendBastionKeepAlive(gatorDNS, uamCreds)
+}
+
+func getServiceDNS() (gatorDNS, authDNS string, err error) {
+	resp, err := http.Get(PublicAPI + "/status")
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", "", fmt.Errorf("status %d: %s", resp.StatusCode, body)
+	}
+
+	var status struct {
+		GatorDNS string `json:"gator_dns"`
+		AuthDNS  string `json:"auth_dns"`
+	}
+	if err := json.Unmarshal(body, &status); err != nil {
+		return "", "", err
+	}
+	return status.GatorDNS, status.AuthDNS, nil
+}
+
+func authenticateUAM(authDNS, accessID, accessKeyB64 string) (string, error) {
+	seed, err := base64.StdEncoding.DecodeString(accessKeyB64)
+	if err != nil {
+		return "", fmt.Errorf("decode access key: %w", err)
+	}
+
+	privKey := restoreECDSAKey(seed)
+
+	serverTime, err := getAuthTime(authDNS)
+	if err != nil {
+		return "", fmt.Errorf("get auth time: %w", err)
+	}
+
+	nonceBytes := make([]byte, 8)
+	if _, err := rand.Read(nonceBytes); err != nil {
+		return "", err
+	}
+	nonce := hex.EncodeToString(nonceBytes)
+
+	stringToSign := "signatureForTemporaryCredential;access_id=" + accessID +
+		";nonce=" + nonce + ";time=" + strconv.FormatInt(serverTime, 10)
+
+	digest := sha256.Sum256([]byte(stringToSign))
+	sig, err := privKey.Sign(rand.Reader, digest[:], nil)
+	if err != nil {
+		return "", fmt.Errorf("sign: %w", err)
+	}
+	sigB64 := base64.StdEncoding.EncodeToString(sig)
+
+	params := url.Values{}
+	params.Set("access_id", accessID)
+	params.Set("timestamp", strconv.FormatInt(serverTime, 10))
+	params.Set("nonce", nonce)
+	params.Set("signature", sigB64)
+	params.Set("creds_expiry", "60")
+
+	authURL := authDNS + "/auth-uam?" + params.Encode()
+	resp, err := http.Get(authURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("auth-uam status %d: %s", resp.StatusCode, body)
+	}
+
+	var creds struct {
+		UAMCreds string `json:"uam_creds"`
+	}
+	if err := json.Unmarshal(body, &creds); err != nil {
+		return "", err
+	}
+	return creds.UAMCreds, nil
+}
+
+func restoreECDSAKey(seed []byte) *ecdsa.PrivateKey {
+	k := new(big.Int).SetBytes(seed)
+	prv := new(ecdsa.PrivateKey)
+	prv.PublicKey.Curve = elliptic.P256()
+	prv.D = k
+	prv.PublicKey.X, prv.PublicKey.Y = elliptic.P256().ScalarBaseMult(k.Bytes())
+	return prv
+}
+
+func getAuthTime(authDNS string) (int64, error) {
+	resp, err := http.Get(authDNS + "/time")
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("time status %d: %s", resp.StatusCode, body)
+	}
+
+	var t struct {
+		Time int64 `json:"time"`
+	}
+	if err := json.Unmarshal(body, &t); err != nil {
+		return 0, err
+	}
+	return t.Time, nil
+}
+
+func sendBastionKeepAlive(gatorDNS, uamCreds string) error {
+	bastionInfo := map[string]interface{}{
+		"cluster_name":         "defaultCluster",
+		"instance_id":          "terraform-test",
+		"version":              "1.0.0",
+		"bastion_type":         "ztb",
+		"has_gateway_identity": true,
+	}
+
+	reqBody, err := json.Marshal(bastionInfo)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, gatorDNS+"/bastions/keep-alive", bytes.NewReader(reqBody))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("akeylessuam-accesscreds", uamCreds)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusAccepted {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("bastion keep-alive status %d: %s", resp.StatusCode, body)
+	}
+	return nil
 }
 
 // CheckRoleDestroyed checks that a role is deleted after destroy.

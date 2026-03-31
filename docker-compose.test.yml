@@ -2,6 +2,7 @@ services:
   akeyless-gateway:
     image: akeyless/base:latest-akeyless
     platform: linux/amd64
+    restart: on-failure
     ports:
       - "8000:8000"
       - "8080:8080"
