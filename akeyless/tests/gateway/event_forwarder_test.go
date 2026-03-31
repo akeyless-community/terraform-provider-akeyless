@@ -18,7 +18,6 @@ import (
 
 func TestEventForwarderEmail(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	eventForwarderName := "test-event-forwarder-email"
 
@@ -61,7 +60,6 @@ func TestEventForwarderEmail(t *testing.T) {
 
 func TestEventForwarderWebhook(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	eventForwarderName := "test-event-forwarder-webhook"
 
@@ -107,7 +105,6 @@ func TestEventForwarderWebhook(t *testing.T) {
 
 func TestEventForwarderServicenow(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	eventForwarderName := "test-event-forwarder-servicenow"
 
@@ -161,7 +158,6 @@ func TestEventForwarderServicenow(t *testing.T) {
 
 func TestEventForwarderSlack(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	eventForwarderName := "test-event-forwarder-slack"
 
@@ -199,7 +195,6 @@ func TestEventForwarderSlack(t *testing.T) {
 func TestEventForwarderTeams(t *testing.T) {
 	t.Skip("TODO: GW is broken. params are not set properly in update command")
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	eventForwarderName := "test-event-forwarder-teams"
 

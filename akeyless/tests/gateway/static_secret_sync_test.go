@@ -10,7 +10,6 @@ import (
 
 func TestStaticSecretSyncResource(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	secretName := "test_static_secret_for_sync"
 	secretPath := testPath(secretName)

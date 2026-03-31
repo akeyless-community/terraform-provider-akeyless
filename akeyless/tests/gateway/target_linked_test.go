@@ -18,7 +18,6 @@ import (
 
 func TestTargetDataSourceLinkedTarget(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	parentTargetName := "target-db-for-linked-target"
 	parentTargetPath := testPath(parentTargetName)

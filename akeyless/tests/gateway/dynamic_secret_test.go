@@ -23,7 +23,6 @@ var (
 
 func TestGithubDynamicSecretResource(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "github_test"
 	itemPath := testPath(name)
@@ -124,7 +123,6 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 
 func TestGitlabProducerResource(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "gitlab_test"
 	itemPath := testPath(name)

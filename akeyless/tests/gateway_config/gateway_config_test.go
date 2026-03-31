@@ -98,7 +98,6 @@ func TestGatewayUpdateCache(t *testing.T) {
 
 func TestGatewayUpdateDefaults(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	keyName := "/protection-key-for-gw-defaults"
 	testutils.CreateProtectionKey(t, keyName)
@@ -131,7 +130,6 @@ func TestGatewayUpdateDefaults(t *testing.T) {
 
 func TestGatewayUpdateRemoteAccess(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "test-gw-remote-access"
 
@@ -187,7 +185,6 @@ func TestGatewayUpdateRemoteAccess(t *testing.T) {
 
 func TestGatewayUpdateRemoteAccessRdpRecording(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "test-gw-remote-access-rdp-recording"
 
@@ -357,7 +354,6 @@ func TestGatewayUpdateRemoteAccessRdpRecording(t *testing.T) {
 
 func TestK8sAuthConfig(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "test_k8s_auth"
 

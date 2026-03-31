@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAuthMethodKerberosResourceCreateNew(t *testing.T) {
+func TestAuthMethodKerberosResource(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
+
 	name := "test_auth_method_kerberos"
 	path := testPath("auth_method_kerberos")
 	testutils.DeleteAuthMethod(path, "kerberos")

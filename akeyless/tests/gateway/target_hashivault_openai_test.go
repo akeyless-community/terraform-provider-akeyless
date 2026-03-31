@@ -9,7 +9,7 @@ import (
 
 func TestHashivaultTargetResource(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
+
 	targetName := "hashivault_target"
 	targetPath := testPath(targetName)
 
@@ -36,7 +36,7 @@ func TestHashivaultTargetResource(t *testing.T) {
 
 func TestOpenAITargetResource(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
+
 	targetName := "openai_target"
 	targetPath := testPath(targetName)
 

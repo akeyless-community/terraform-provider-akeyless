@@ -9,7 +9,6 @@ import (
 
 func TestDynamicSecretMysql(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_mysql_test"
 	itemPath := testPath(name)
@@ -44,7 +43,6 @@ func TestDynamicSecretMysql(t *testing.T) {
 
 func TestDynamicSecretPostgresql(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_postgres_test"
 	itemPath := testPath(name)
@@ -80,7 +78,6 @@ func TestDynamicSecretPostgresql(t *testing.T) {
 func TestDynamicSecretMongo(t *testing.T) {
 	t.Skip("TODO: SDK is broken. Need to send to mongodb, not to mongo.")
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_mongo_test"
 	itemPath := testPath(name)
@@ -115,7 +112,6 @@ func TestDynamicSecretMongo(t *testing.T) {
 
 func TestDynamicSecretMssql(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_mssql_test"
 	itemPath := testPath(name)
@@ -150,7 +146,6 @@ func TestDynamicSecretMssql(t *testing.T) {
 
 func TestDynamicSecretRedis(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_redis_test"
 	itemPath := testPath(name)
@@ -183,7 +178,6 @@ func TestDynamicSecretRedis(t *testing.T) {
 
 func TestDynamicSecretCassandra(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_cassandra_test"
 	itemPath := testPath(name)
@@ -217,7 +211,6 @@ func TestDynamicSecretCassandra(t *testing.T) {
 func TestDynamicSecretOracle(t *testing.T) {
 	t.Skip("TODO: SDK is broken. Need to send to oracledb, not to oracle.")
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_oracle_test"
 	itemPath := testPath(name)
@@ -253,7 +246,6 @@ func TestDynamicSecretOracle(t *testing.T) {
 func TestDynamicSecretHanaDb(t *testing.T) {
 	t.Skip("TODO: SDK is broken. Need to send to hanadb, not to hana.")
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_hana_test"
 	itemPath := testPath(name)
@@ -288,7 +280,6 @@ func TestDynamicSecretHanaDb(t *testing.T) {
 
 func TestDynamicSecretRedshift(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_redshift_test"
 	itemPath := testPath(name)
@@ -323,7 +314,6 @@ func TestDynamicSecretRedshift(t *testing.T) {
 
 func TestDynamicSecretRabbitmq(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_rabbitmq_test"
 	itemPath := testPath(name)

@@ -10,7 +10,6 @@ import (
 
 func TestGatewayMigrationAws(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "migration_aws"
 	migrationName := testPath(name)
@@ -40,7 +39,6 @@ func TestGatewayMigrationAws(t *testing.T) {
 
 func TestGatewayMigrationAzureKv(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "migration_azure_kv"
 	migrationName := testPath(name)
@@ -72,7 +70,6 @@ func TestGatewayMigrationAzureKv(t *testing.T) {
 
 func TestGatewayMigrationGcp(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "migration_gcp"
 	migrationName := testPath(name)
@@ -98,7 +95,6 @@ func TestGatewayMigrationGcp(t *testing.T) {
 
 func TestGatewayMigrationHashi(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "migration_hashi"
 	migrationName := testPath(name)
@@ -127,7 +123,6 @@ func TestGatewayMigrationHashi(t *testing.T) {
 
 func TestGatewayMigrationK8s(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "migration_k8s"
 	migrationName := testPath(name)
@@ -160,7 +155,6 @@ func TestGatewayMigrationK8s(t *testing.T) {
 
 func TestGatewayMigrationCertificate(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "migration_cert"
 	migrationName := testPath(name)
@@ -188,7 +182,6 @@ func TestGatewayMigrationCertificate(t *testing.T) {
 
 func TestGatewayMigrationActiveDirectory(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "migration_ad"
 	migrationName := testPath(name)
@@ -229,7 +222,6 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 
 func TestGatewayMigrationServerInventory(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "migration_si"
 	migrationName := testPath(name)

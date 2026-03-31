@@ -10,7 +10,7 @@ import (
 
 func TestRoleResourceWithSraRule(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
+
 	rolePath := testPath("test_role_resource_sra_rule")
 	testutils.DeleteRole(rolePath)
 

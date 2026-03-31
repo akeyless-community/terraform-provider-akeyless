@@ -9,7 +9,6 @@ import (
 
 func TestClassicKey(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "test_classic_key"
 	itemPath := testPath(name)
@@ -83,7 +82,6 @@ func TestClassicKey(t *testing.T) {
 
 func TestClassicGpgKey(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "test_classic_gpg_key"
 	itemPath := testPath(name)
@@ -110,7 +108,6 @@ func TestClassicGpgKey(t *testing.T) {
 
 func TestClassicAESKey(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "test_classic_aes_key"
 	itemPath := testPath(name)
@@ -135,7 +132,6 @@ func TestClassicAESKey(t *testing.T) {
 
 func TestPkiResourceWithLocalGw(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	keyPath := testPath("test-dfc-for-pki-with-gw")
 	testutils.CreateDfcKey(t, keyPath)

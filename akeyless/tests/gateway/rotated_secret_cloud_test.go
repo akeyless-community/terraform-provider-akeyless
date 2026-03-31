@@ -10,7 +10,6 @@ import (
 
 func TestRotatedSecretAws(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_aws_target"
 	targetPath := testPath(targetName)
@@ -55,7 +54,6 @@ func TestRotatedSecretAws(t *testing.T) {
 
 func TestRotatedSecretAzure(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_azure_target"
 	targetPath := testPath(targetName)
@@ -102,7 +100,6 @@ func TestRotatedSecretAzure(t *testing.T) {
 
 func TestRotatedSecretCustom(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_custom_target"
 	targetPath := testPath(targetName)
@@ -141,7 +138,6 @@ func TestRotatedSecretCustom(t *testing.T) {
 
 func TestRotatedSecretDockerhub(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_dockerhub_target"
 	targetPath := testPath(targetName)
@@ -182,7 +178,6 @@ func TestRotatedSecretDockerhub(t *testing.T) {
 
 func TestRotatedSecretHanadb(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_hana_target"
 	targetPath := testPath(targetName)
@@ -235,7 +230,6 @@ func TestRotatedSecretHanadb(t *testing.T) {
 
 func TestRotatedSecretLdap(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_ldap_target"
 	targetPath := testPath(targetName)
@@ -288,7 +282,6 @@ func TestRotatedSecretLdap(t *testing.T) {
 
 func TestRotatedSecretOracle(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_oracle_target"
 	targetPath := testPath(targetName)
@@ -339,7 +332,6 @@ func TestRotatedSecretOracle(t *testing.T) {
 
 func TestRotatedSecretRedis(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_redis_target"
 	targetPath := testPath(targetName)
@@ -390,7 +382,6 @@ func TestRotatedSecretRedis(t *testing.T) {
 
 func TestRotatedSecretRedshift(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_redshift_target"
 	targetPath := testPath(targetName)
@@ -441,7 +432,6 @@ func TestRotatedSecretRedshift(t *testing.T) {
 
 func TestRotatedSecretSnowflake(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_snowflake_target"
 	targetPath := testPath(targetName)
@@ -492,7 +482,6 @@ func TestRotatedSecretSnowflake(t *testing.T) {
 
 func TestRotatedSecretSsh(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_ssh_target"
 	targetPath := testPath(targetName)
@@ -541,7 +530,6 @@ func TestRotatedSecretSsh(t *testing.T) {
 
 func TestRotatedSecretWindows(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_windows_target"
 	targetPath := testPath(targetName)

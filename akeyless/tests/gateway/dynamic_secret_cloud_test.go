@@ -10,7 +10,6 @@ import (
 
 func TestDynamicSecretAws(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_aws_test"
 	itemPath := testPath(name)
@@ -41,7 +40,6 @@ func TestDynamicSecretAws(t *testing.T) {
 
 func TestDynamicSecretAzure(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_azure_test"
 	itemPath := testPath(name)
@@ -72,7 +70,6 @@ func TestDynamicSecretAzure(t *testing.T) {
 
 func TestDynamicSecretGcp(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_gcp_test"
 	itemPath := testPath(name)
@@ -103,7 +100,6 @@ func TestDynamicSecretGcp(t *testing.T) {
 
 func TestDynamicSecretEks(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_eks_test"
 	itemPath := testPath(name)
@@ -140,7 +136,6 @@ func TestDynamicSecretEks(t *testing.T) {
 
 func TestDynamicSecretGke(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_gke_test"
 	itemPath := testPath(name)
@@ -175,7 +170,6 @@ func TestDynamicSecretGke(t *testing.T) {
 
 func TestDynamicSecretK8s(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_k8s_test"
 	itemPath := testPath(name)
@@ -208,7 +202,6 @@ func TestDynamicSecretK8s(t *testing.T) {
 
 func TestDynamicSecretLdap(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_ldap_test"
 	itemPath := testPath(name)
@@ -241,7 +234,6 @@ func TestDynamicSecretLdap(t *testing.T) {
 
 func TestDynamicSecretArtifactory(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_artifactory_test"
 	itemPath := testPath(name)
@@ -276,7 +268,6 @@ func TestDynamicSecretArtifactory(t *testing.T) {
 
 func TestDynamicSecretCustom(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_custom_test"
 	itemPath := testPath(name)
@@ -305,7 +296,6 @@ func TestDynamicSecretCustom(t *testing.T) {
 
 func TestDynamicSecretDockerhub(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_dockerhub_test"
 	itemPath := testPath(name)
@@ -334,7 +324,6 @@ func TestDynamicSecretDockerhub(t *testing.T) {
 
 func TestDynamicSecretOpenai(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "ds_openai_target"
 	targetPath := testPath(targetName)
@@ -379,7 +368,6 @@ func TestDynamicSecretOpenai(t *testing.T) {
 
 func TestDynamicSecretPing(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_ping_test"
 	itemPath := testPath(name)
@@ -412,7 +400,6 @@ func TestDynamicSecretPing(t *testing.T) {
 
 func TestDynamicSecretRdp(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_rdp_test"
 	itemPath := testPath(name)
@@ -447,7 +434,6 @@ func TestDynamicSecretRdp(t *testing.T) {
 
 func TestDynamicSecretSnowflake(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_snowflake_test"
 	itemPath := testPath(name)
@@ -480,7 +466,6 @@ func TestDynamicSecretSnowflake(t *testing.T) {
 
 func TestDynamicSecretVenafi(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	name := "ds_venafi_test"
 	itemPath := testPath(name)

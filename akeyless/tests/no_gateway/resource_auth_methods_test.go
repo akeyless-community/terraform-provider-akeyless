@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
+func TestAuthMethodApiKeyResource(t *testing.T) {
 	name := "test_auth_method_api_key"
 	path := testPath(name)
 	testutils.DeleteAuthMethod(path, "api_key")
@@ -78,7 +78,7 @@ func TestAuthMethodApiKeyResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
+func TestAuthMethodAWSResource(t *testing.T) {
 	name := "test_auth_method_aws_iam"
 	path := testPath("path_auth_method_aws_iam")
 	testutils.DeleteAuthMethod(path, "aws_iam")
@@ -170,7 +170,7 @@ func TestAuthMethodAWSResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodAzureResourceCreateNew(t *testing.T) {
+func TestAuthMethodAzureResource(t *testing.T) {
 	name := "test_auth_method_azure_ad"
 	path := testPath("path_auth_method_azure_ad")
 	testutils.DeleteAuthMethod(path, "azure_ad")
@@ -320,7 +320,7 @@ func TestAuthMethodCertResource(t *testing.T) {
 	})
 }
 
-func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
+func TestAuthMethodGCPResource(t *testing.T) {
 	if os.Getenv("TF_ACC_GCP_SERVICE_ACCOUNT") == "" || os.Getenv("TF_ACC_GCP_BOUND_SERVICE_ACC") == "" {
 		return
 	}
@@ -376,7 +376,7 @@ func TestAuthMethodGCPResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
+func TestAuthMethodK8sResource(t *testing.T) {
 	name := "test_auth_method_K8s_3"
 	path := testPath("auth_method_K8s_test")
 	testutils.DeleteAuthMethod(path, "k8s")
@@ -445,7 +445,7 @@ func TestAuthMethodK8sResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodLDAPResourceCreateNew(t *testing.T) {
+func TestAuthMethodLDAPResource(t *testing.T) {
 	name := "test_auth_method_ldap"
 	path := testPath("auth_method_ldap")
 	testutils.DeleteAuthMethod(path, "ldap")
@@ -507,7 +507,7 @@ func TestAuthMethodLDAPResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
+func TestAuthMethodOauth2Resource(t *testing.T) {
 	name := "test_akeyless_auth_method_oauth"
 	path := testPath("auth_method_oauth")
 	testutils.DeleteAuthMethod(path, "oauth2")
@@ -585,7 +585,7 @@ func TestAuthMethodOauth2ResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodOidcResourceCreateNew(t *testing.T) {
+func TestAuthMethodOidcResource(t *testing.T) {
 	name := "test_auth_method_oidc"
 	path := testPath("auth_method_oidc")
 	testutils.DeleteAuthMethod(path, "oidc")
@@ -671,7 +671,7 @@ func TestAuthMethodOidcResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
+func TestAuthMethodSAMLResource(t *testing.T) {
 	name := "test_auth_method_saml"
 	path := testPath(name)
 	testutils.DeleteAuthMethod(path, "saml")
@@ -743,7 +743,7 @@ func TestAuthMethodSAMLResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodSAMLWithXmlResourceCreateNew(t *testing.T) {
+func TestAuthMethodSAMLWithXmlResource(t *testing.T) {
 	name := "test_auth_method_saml_xml"
 	path := testPath(name)
 	testutils.DeleteAuthMethod(path, "saml")
@@ -791,7 +791,7 @@ func TestAuthMethodSAMLWithXmlResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
+func TestAuthMethodUIDResource(t *testing.T) {
 	name := "test_auth_method_universal_identity"
 	path := testPath("auth_method_universal_identity")
 	testutils.DeleteAuthMethod(path, "universal_identity")
@@ -855,7 +855,7 @@ func TestAuthMethodUIDResourceCreateNew(t *testing.T) {
 	})
 }
 
-func TestAuthMethodOCIResourceCreateNew(t *testing.T) {
+func TestAuthMethodOCIResource(t *testing.T) {
 	name := "test_auth_method_oci"
 	path := testPath("auth_method_oci")
 	testutils.DeleteAuthMethod(path, "oci")

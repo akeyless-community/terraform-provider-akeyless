@@ -9,7 +9,6 @@ import (
 
 func TestRotatedSecretMysqlGw(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_mysql_target"
 	targetPath := testPath(targetName)
@@ -62,7 +61,6 @@ func TestRotatedSecretMysqlGw(t *testing.T) {
 
 func TestRotatedSecretPostgresqlGw(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_pg_target"
 	targetPath := testPath(targetName)
@@ -115,7 +113,6 @@ func TestRotatedSecretPostgresqlGw(t *testing.T) {
 
 func TestRotatedSecretMongoGw(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_mongo_target"
 	targetPath := testPath(targetName)
@@ -168,7 +165,6 @@ func TestRotatedSecretMongoGw(t *testing.T) {
 
 func TestRotatedSecretMssqlGw(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_mssql_target"
 	targetPath := testPath(targetName)
@@ -221,7 +217,6 @@ func TestRotatedSecretMssqlGw(t *testing.T) {
 
 func TestRotatedSecretCassandraGw(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	targetName := "rs_cass_target"
 	targetPath := testPath(targetName)

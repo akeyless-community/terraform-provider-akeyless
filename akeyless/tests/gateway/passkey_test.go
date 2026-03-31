@@ -9,7 +9,6 @@ import (
 
 func TestPasskeyResource(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	passkeyName := "test_passkey"
 	passkeyPath := testPath(passkeyName)
@@ -39,7 +38,6 @@ func TestPasskeyResource(t *testing.T) {
 
 func TestPasskeyResourceEC384(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	t.Parallel()
 
 	passkeyName := "test_passkey_ec384"
 	passkeyPath := testPath(passkeyName)
