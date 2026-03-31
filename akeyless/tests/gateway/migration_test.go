@@ -42,7 +42,8 @@ func TestGatewayMigrationAzureKv(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
-	name := "test-migration-azure-kv"
+	name := "migration_azure_kv"
+	migrationName := testPath(name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_azure_kv" "%v" {
@@ -53,7 +54,7 @@ func TestGatewayMigrationAzureKv(t *testing.T) {
 			azure_secret    = "dummy-secret-value"
 			azure_tenant_id = "00000000-0000-0000-0000-000000000001"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_azure_kv" "%v" {
@@ -64,7 +65,7 @@ func TestGatewayMigrationAzureKv(t *testing.T) {
 			azure_secret    = "dummy-secret-value-2"
 			azure_tenant_id = "00000000-0000-0000-0000-000000000001"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	testMigrationResource(t, config, configUpdate)
 }
@@ -73,7 +74,8 @@ func TestGatewayMigrationGcp(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
-	name := "test-migration-gcp"
+	name := "migration_gcp"
+	migrationName := testPath(name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_gcp" "%v" {
@@ -81,7 +83,7 @@ func TestGatewayMigrationGcp(t *testing.T) {
 			target_location = "terraform-tests/migrations/gcp"
 			gcp_key         = "eyJkdW1teSI6ICJ0ZXN0In0="
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_gcp" "%v" {
@@ -89,7 +91,7 @@ func TestGatewayMigrationGcp(t *testing.T) {
 			target_location = "terraform-tests/migrations/gcp-updated"
 			gcp_key         = "eyJkdW1teSI6ICJ0ZXN0MiJ9"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	testMigrationResource(t, config, configUpdate)
 }
@@ -98,7 +100,8 @@ func TestGatewayMigrationHashi(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
-	name := "test-migration-hashi"
+	name := "migration_hashi"
+	migrationName := testPath(name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_hashi" "%v" {
@@ -107,7 +110,7 @@ func TestGatewayMigrationHashi(t *testing.T) {
 			hashi_url       = "https://vault.example.com:8200"
 			hashi_token     = "hvs.dummy-token-value"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_hashi" "%v" {
@@ -117,7 +120,7 @@ func TestGatewayMigrationHashi(t *testing.T) {
 			hashi_token     = "hvs.dummy-token-value-2"
 			hashi_json      = "true"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	testMigrationResource(t, config, configUpdate)
 }
@@ -126,7 +129,8 @@ func TestGatewayMigrationK8s(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
-	name := "test-migration-k8s"
+	name := "migration_k8s"
+	migrationName := testPath(name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_k8s" "%v" {
@@ -137,7 +141,7 @@ func TestGatewayMigrationK8s(t *testing.T) {
 			k8s_namespace   = "default"
 			k8s_skip_system = true
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_k8s" "%v" {
@@ -149,7 +153,7 @@ func TestGatewayMigrationK8s(t *testing.T) {
 			k8s_namespace   = "production"
 			k8s_skip_system = false
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	testMigrationResource(t, config, configUpdate)
 }
@@ -186,7 +190,8 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
-	name := "test-migration-ad"
+	name := "migration_ad"
+	migrationName := testPath(name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_active_directory" "%v" {
@@ -200,7 +205,7 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 			ad_targets_type     = "ssh"
 			ad_ssh_port         = "22"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_active_directory" "%v" {
@@ -217,7 +222,7 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 			ad_rotation_interval = 7
 			ad_rotation_hour     = 3
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	testMigrationResource(t, config, configUpdate)
 }
@@ -226,7 +231,8 @@ func TestGatewayMigrationServerInventory(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
-	name := "test-migration-si"
+	name := "migration_si"
+	migrationName := testPath(name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_server_inventory" "%v" {
@@ -236,7 +242,7 @@ func TestGatewayMigrationServerInventory(t *testing.T) {
 			si_target_name         = "dummy-ssh-target"
 			si_users_path_template = "terraform-tests/migrations/si/Users/{COMPUTER_NAME}/{USERNAME}"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_server_inventory" "%v" {
@@ -250,7 +256,7 @@ func TestGatewayMigrationServerInventory(t *testing.T) {
 			si_rotation_hour       = 2
 			si_sra_enable_rdp      = "true"
 		}
-	`, name, name)
+	`, name, migrationName)
 
 	testMigrationResource(t, config, configUpdate)
 }

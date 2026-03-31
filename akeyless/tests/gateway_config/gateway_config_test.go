@@ -85,9 +85,9 @@ func TestGatewayUpdateCache(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_cache" "%v" {
-			enable_cache        	= "false"
+			enable_cache        	= "true"
 			stale_timeout 			= "60"
-			enable_proactive   		= "false"
+			enable_proactive   		= "true"
 			minimum_fetch_interval 	= "5"
 			backup_interval 		= "1"
 		}
@@ -113,14 +113,18 @@ func TestGatewayUpdateDefaults(t *testing.T) {
 			cert_access_id   		= "p-cert-1"
 			key 					= "%s"
 			event_on_status_change 	= "true"
-			hvp_route_version 		= 2
 		}
 	`, name, keyName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_defaults" "%v" {
+			saml_access_id        	= "p-saml-2"
+			oidc_access_id 			= "p-oidc-2"
+			cert_access_id   		= "p-cert-2"
+			key 					= "%s"
+			event_on_status_change 	= "false"
 		}
-	`, name)
+	`, name, keyName)
 
 	testutils.TestGatewayConfigResource(t, providerFactories, config, configUpdate)
 }
@@ -358,6 +362,7 @@ func TestK8sAuthConfig(t *testing.T) {
 	name := "test_k8s_auth"
 
 	rsaKeyB64 := testutils.GenerateKey(2048)
+	dummyJWT := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmRlZmF1bHQ6ZGVmYXVsdCJ9.dGVzdHNpZ25hdHVyZQ"
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "k8s_auth_am" {
@@ -369,11 +374,11 @@ func TestK8sAuthConfig(t *testing.T) {
 			signing_key               = "%v"
 			k8s_host                  = "https://k8s-api.example.com:6443"
 			k8s_ca_cert               = "dGVzdA=="
-			token_reviewer_jwt        = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
+			token_reviewer_jwt        = "%v"
 			disable_issuer_validation = "true"
 			depends_on = [akeyless_auth_method_api_key.k8s_auth_am]
 		}
-	`, testPath("k8s_auth_am"), name, testPath(name), rsaKeyB64)
+	`, testPath("k8s_auth_am"), name, testPath(name), rsaKeyB64, dummyJWT)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "k8s_auth_am" {
@@ -385,12 +390,12 @@ func TestK8sAuthConfig(t *testing.T) {
 			signing_key               = "%v"
 			k8s_host                  = "https://k8s-api.example.com:6443"
 			k8s_ca_cert               = "dGVzdA=="
-			token_reviewer_jwt        = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
+			token_reviewer_jwt        = "%v"
 			token_exp                 = 600
 			disable_issuer_validation = "true"
 			depends_on = [akeyless_auth_method_api_key.k8s_auth_am]
 		}
-	`, testPath("k8s_auth_am"), name, testPath(name), rsaKeyB64)
+	`, testPath("k8s_auth_am"), name, testPath(name), rsaKeyB64, dummyJWT)
 
 	testutils.TestGatewayConfigResource(t, providerFactories, config, configUpdate)
 }

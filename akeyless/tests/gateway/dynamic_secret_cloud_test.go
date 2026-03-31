@@ -343,8 +343,9 @@ func TestDynamicSecretOpenai(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
-			name    = "%v"
-			api_key = "sk-dummy-key-1234567890"
+			name       = "%v"
+			api_key    = "sk-dummy-key-1234567890"
+			openai_url = "https://api.openai.com"
 		}
 		resource "akeyless_dynamic_secret_openai" "%v" {
 			name        = "%v"
@@ -358,8 +359,9 @@ func TestDynamicSecretOpenai(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
-			name    = "%v"
-			api_key = "sk-dummy-key-1234567890"
+			name       = "%v"
+			api_key    = "sk-dummy-key-1234567890"
+			openai_url = "https://api.openai.com"
 		}
 		resource "akeyless_dynamic_secret_openai" "%v" {
 			name        = "%v"
@@ -376,6 +378,7 @@ func TestDynamicSecretOpenai(t *testing.T) {
 }
 
 func TestDynamicSecretPing(t *testing.T) {
+	t.Skip("skipping: dynamic-secret-create-ping command not available in gateway")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 

@@ -78,6 +78,7 @@ func TestDynamicSecretPostgresql(t *testing.T) {
 }
 
 func TestDynamicSecretMongo(t *testing.T) {
+	t.Skip("skipping: dynamic-secret-update-mongo command not available in gateway")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
@@ -214,6 +215,7 @@ func TestDynamicSecretCassandra(t *testing.T) {
 }
 
 func TestDynamicSecretOracle(t *testing.T) {
+	t.Skip("skipping: dynamic-secret-create-oracle command not available in gateway")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
@@ -249,6 +251,7 @@ func TestDynamicSecretOracle(t *testing.T) {
 }
 
 func TestDynamicSecretHanaDb(t *testing.T) {
+	t.Skip("skipping: gateway-create-producer-hana command not available in gateway")
 	testutils.SkipIfNoGateway(t)
 	t.Parallel()
 
