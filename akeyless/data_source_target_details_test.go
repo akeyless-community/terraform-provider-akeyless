@@ -788,7 +788,7 @@ func createArtifactoryTarget(t *testing.T, name string, details map[string]inter
 	}
 
 	_, resp, err := client.CreateArtifactoryTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create artifactory target for test", resp, err))
 }
 
 func createAwsTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -810,7 +810,7 @@ func createAwsTarget(t *testing.T, name string, details map[string]interface{}) 
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, details["use_gw_cloud_identity"])
 
 	_, resp, err := client.CreateAWSTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create aws target for test", resp, err))
 }
 
 func createAzureTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -834,7 +834,7 @@ func createAzureTarget(t *testing.T, name string, details map[string]interface{}
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, details["use_gw_cloud_identity"])
 
 	_, resp, err := client.CreateAzureTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create azure target for test", resp, err))
 }
 
 func createDbTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -859,7 +859,7 @@ func createDbTarget(t *testing.T, name string, details map[string]interface{}) {
 	common.GetAkeylessPtr(&body.SslCertificate, details["ssl_connection_certificate"])
 
 	_, resp, err := client.CreateDBTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create db target for test", resp, err))
 }
 
 func createDockerHubTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -878,7 +878,7 @@ func createDockerHubTarget(t *testing.T, name string, details map[string]interfa
 	common.GetAkeylessPtr(&body.DockerhubPassword, details["password"])
 
 	_, resp, err := client.CreateDockerhubTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create dockerhub target for test", resp, err))
 }
 
 func createEksTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -901,7 +901,7 @@ func createEksTarget(t *testing.T, name string, details map[string]interface{}) 
 	common.GetAkeylessPtr(&body.EksRegion, details["region"])
 
 	_, resp, err := client.CreateEKSTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create eks target for test", resp, err))
 }
 
 func createGcpTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -919,7 +919,7 @@ func createGcpTarget(t *testing.T, name string, details map[string]interface{}) 
 	common.GetAkeylessPtr(&body.GcpKey, details["gcp_service_account_key"])
 
 	_, resp, err := client.CreateGcpTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create gcp target for test", resp, err))
 }
 
 func createGithubTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -939,7 +939,7 @@ func createGithubTarget(t *testing.T, name string, details map[string]interface{
 	common.GetAkeylessPtr(&body.GithubBaseUrl, details["base_url"])
 
 	_, resp, err := client.CreateGithubTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create github target for test", resp, err))
 }
 
 func createGkeTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -961,7 +961,7 @@ func createGkeTarget(t *testing.T, name string, details map[string]interface{}) 
 	common.GetAkeylessPtr(&body.GkeClusterName, details["cluster_name"])
 
 	_, resp, err := client.CreateGKETarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create gke target for test", resp, err))
 }
 
 func createGlobalSignAtlasTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -983,7 +983,7 @@ func createGlobalSignAtlasTarget(t *testing.T, name string, details map[string]i
 	common.GetAkeylessPtr(&body.Timeout, details["timeout"])
 
 	_, resp, err := client.CreateGlobalSignAtlasTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create globalsign atlas target for test", resp, err))
 }
 
 func createGlobalSignTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1008,7 +1008,7 @@ func createGlobalSignTarget(t *testing.T, name string, details map[string]interf
 	common.GetAkeylessPtr(&body.Timeout, details["timeout"])
 
 	_, resp, err := client.CreateGlobalSignTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create globalsign target for test", resp, err))
 }
 
 func createHashiTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1028,7 +1028,7 @@ func createHashiTarget(t *testing.T, name string, details map[string]interface{}
 	common.GetAkeylessPtr(&body.Namespace, details["vault_namespaces"])
 
 	_, resp, err := client.CreateHashiVaultTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create hashi vault target for test", resp, err))
 }
 
 func createLdapTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1051,7 +1051,7 @@ func createLdapTarget(t *testing.T, name string, details map[string]interface{})
 	common.GetAkeylessPtr(&body.ServerType, details["implementation_type"])
 
 	_, resp, err := client.CreateldapTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create ldap target for test", resp, err))
 }
 
 func createLinkedTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1070,7 +1070,7 @@ func createLinkedTarget(t *testing.T, name string, details map[string]interface{
 	common.GetAkeylessPtr(&body.ParentTargetName, details["parent"])
 
 	_, resp, err := client.CreateLinkedTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create linked target for test", resp, err))
 }
 
 func createK8sTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1090,7 +1090,7 @@ func createK8sTarget(t *testing.T, name string, details map[string]interface{}) 
 	common.GetAkeylessPtr(&body.K8sClusterToken, details["bearer_token"].(string))
 
 	_, resp, err := client.CreateNativeK8STarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create k8s target for test", resp, err))
 }
 
 func createMongoDbTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1119,7 +1119,7 @@ func createMongoDbTarget(t *testing.T, name string, details map[string]interface
 	common.GetAkeylessPtr(&body.Port, port)
 
 	_, resp, err := client.CreateDBTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create mongodb target for test", resp, err))
 }
 
 func createPingTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1141,7 +1141,7 @@ func createPingTarget(t *testing.T, name string, details map[string]interface{})
 	common.GetAkeylessPtr(&body.AuthorizationPort, details["authorization_port"])
 
 	_, resp, err := client.CreatePingTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create ping target for test", resp, err))
 }
 
 func createRabbitMqTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1161,7 +1161,7 @@ func createRabbitMqTarget(t *testing.T, name string, details map[string]interfac
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, details["server_uri"])
 
 	_, resp, err := client.CreateRabbitMQTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create rabbitmq target for test", resp, err))
 }
 
 func createSalesforceTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1185,7 +1185,7 @@ func createSalesforceTarget(t *testing.T, name string, details map[string]interf
 	common.GetAkeylessPtr(&body.SecurityToken, details["security_token"])
 
 	_, resp, err := client.CreateSalesforceTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create salesforce target for test", resp, err))
 }
 
 func createSshTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1208,7 +1208,7 @@ func createSshTarget(t *testing.T, name string, details map[string]interface{}) 
 	common.GetAkeylessPtr(&body.PrivateKeyPassword, details["private_key_password"])
 
 	_, resp, err := client.CreateSSHTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create ssh target for test", resp, err))
 }
 
 func createWebTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1226,7 +1226,7 @@ func createWebTarget(t *testing.T, name string, details map[string]interface{}) 
 	common.GetAkeylessPtr(&body.Url, details["url"])
 
 	_, resp, err := client.CreateWebTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create web target for test", resp, err))
 }
 
 func createWindowsTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1250,7 +1250,7 @@ func createWindowsTarget(t *testing.T, name string, details map[string]interface
 	common.GetAkeylessPtr(&body.UseTls, details["use_tls"])
 
 	_, resp, err := client.CreateWindowsTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create windows target for test", resp, err))
 }
 
 func createZeroSslTarget(t *testing.T, name string, details map[string]interface{}) {
@@ -1274,7 +1274,7 @@ func createZeroSslTarget(t *testing.T, name string, details map[string]interface
 	common.GetAkeylessPtr(&body.Timeout, details["timeout"])
 
 	_, resp, err := client.CreateZeroSSLTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create zerossl target for test", resp, err))
 }
 
 func createTarget(t *testing.T, targetName string) {
@@ -1299,5 +1299,5 @@ func createTarget(t *testing.T, targetName string) {
 	common.GetAkeylessPtr(&body.DbName, "abcd")
 
 	_, resp, err := client.CreateDBTarget(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(resp, err))
+	require.NoError(t, common.HandleError("can't create db target for test", resp, err))
 }

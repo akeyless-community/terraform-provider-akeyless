@@ -10,9 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"math/big"
-	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -169,7 +167,7 @@ func createDfcKey(t *testing.T, name string) {
 
 	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
 	if err != nil && !isAlreadyExistError(err) {
-		require.Fail(t, handleError(res, err).Error(), "failed to create key for test")
+		require.Fail(t, common.HandleError("can't create dfc key for test", res, err).Error())
 	}
 }
 
@@ -186,7 +184,7 @@ func createProtectionKey(t *testing.T, name string) {
 
 	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
 	if err != nil && !isAlreadyExistError(err) {
-		require.Fail(t, handleError(res, err).Error(), "failed to create key for test")
+		require.Fail(t, common.HandleError("can't create protection key for test", res, err).Error())
 	}
 }
 
@@ -199,7 +197,7 @@ func getRsaPublicKey(t *testing.T, name string) *akeyless_api.GetRSAPublicOutput
 	}
 
 	rOut, res, err := client.GetRSAPublic(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(res, err), "failed to get rsa public key for test")
+	require.NoError(t, common.HandleError("can't get rsa public key for test", res, err))
 	require.NotNil(t, rOut.Ssh)
 
 	return rOut
@@ -221,7 +219,7 @@ func createPkiCertIssuer(t *testing.T, keyName, issuerName, destPath, cn, uriSan
 	common.GetAkeylessPtr(&body.AllowedUriSans, uriSan)
 
 	_, res, err := client.CreatePKICertIssuer(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(res, err), "failed to create pki cert issuer for test")
+	require.NoError(t, common.HandleError("can't create pki cert issuer for test", res, err))
 }
 
 func createSshCertIssuer(t *testing.T, keyName, issuerName, users string) {
@@ -238,7 +236,7 @@ func createSshCertIssuer(t *testing.T, keyName, issuerName, users string) {
 	common.GetAkeylessPtr(&body.ExternalUsername, "false")
 
 	_, res, err := client.CreateSSHCertIssuer(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(res, err), "failed to create ssh cert issuer for test")
+	require.NoError(t, common.HandleError("can't create ssh cert issuer for test", res, err))
 }
 
 func createCertificate(t *testing.T, certName, certBase64, keyBase64 string) {
@@ -253,7 +251,7 @@ func createCertificate(t *testing.T, certName, certBase64, keyBase64 string) {
 	common.GetAkeylessPtr(&body.KeyData, keyBase64)
 
 	_, res, err := client.CreateCertificate(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(res, err), "failed to create certificate for test")
+	require.NoError(t, common.HandleError("can't create certificate for test", res, err))
 }
 
 type testSecret struct {
@@ -284,7 +282,7 @@ func createSecret(t *testing.T, secret *testSecret) {
 	common.GetAkeylessPtr(&body.InjectUrl, secret.injectUrl)
 
 	_, res, err := client.CreateSecret(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(res, err), fmt.Sprintf("failed to create secret for test: %v", handleError(res, err)))
+	require.NoError(t, common.HandleError("can't create secret for test", res, err))
 }
 
 func deleteItemIfExists(t *testing.T, path string) {
@@ -380,7 +378,7 @@ func createMysqlDynamicSecret(t *testing.T, secret *testMysqlDynamicSecret) {
 	common.GetAkeylessPtr(&body.MysqlDbname, secret.dbName)
 
 	_, res, err := client.DynamicSecretCreateMySql(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(res, err), fmt.Sprintf("failed to create mysql dynamic secret for test: %v", handleError(res, err)))
+	require.NoError(t, common.HandleError("can't create mysql dynamic secret for test", res, err))
 }
 
 type testMysqlRotatedSecret struct {
@@ -402,7 +400,7 @@ func createMysqlRotatedSecret(t *testing.T, secret *testMysqlRotatedSecret) {
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, "use-target-creds")
 
 	_, res, err := client.RotatedSecretCreateMysql(context.Background()).Body(body).Execute()
-	require.NoError(t, handleError(res, err), fmt.Sprintf("failed to create mysql rotated secret for test: %v", handleError(res, err)))
+	require.NoError(t, common.HandleError("can't create mysql rotated secret for test", res, err))
 }
 
 func skipIfNoGateway(t *testing.T) {
@@ -452,23 +450,6 @@ func prepareClient(t *testing.T) (*akeyless_api.V2ApiService, string) {
 	token := *p.token
 
 	return client, token
-}
-
-func handleError(resp *http.Response, err error) error {
-	if err == nil {
-		return nil
-	}
-
-	var apiErr akeyless_api.GenericOpenAPIError
-	if !errors.As(err, &apiErr) {
-		return err
-	}
-
-	if resp != nil && resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("not found: %w", err)
-	}
-
-	return errors.New(string(apiErr.Body()))
 }
 
 func isAlreadyExistError(err error) bool {
