@@ -386,7 +386,7 @@ func TestDynamicSecretPing(t *testing.T) {
 			ping_url             = "https://ping.example.com"
 			ping_privileged_user = "admin"
 			ping_password        = "DummyPass123"
-			ping_redirect_uris   = "https://ping.example.com/callback"
+			ping_redirect_uris   = ["https://ping.example.com/callback"]
 			user_ttl             = "30m"
 		}
 	`, name, itemPath)
@@ -397,7 +397,7 @@ func TestDynamicSecretPing(t *testing.T) {
 			ping_url             = "https://ping.example.com"
 			ping_privileged_user = "admin"
 			ping_password        = "DummyPass123"
-			ping_redirect_uris   = "https://ping.example.com/callback"
+			ping_redirect_uris   = ["https://ping.example.com/callback"]
 			user_ttl             = "60m"
 			tags                 = ["test1", "test2"]
 		}

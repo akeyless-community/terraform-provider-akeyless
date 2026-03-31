@@ -84,6 +84,7 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Protection from accidental deletion of this item",
+				Default:     false,
 			},
 			"description": {
 				Type:        schema.TypeString,

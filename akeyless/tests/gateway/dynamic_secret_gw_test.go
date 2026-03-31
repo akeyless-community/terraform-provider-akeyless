@@ -262,6 +262,7 @@ func TestDynamicSecretHanaDb(t *testing.T) {
 			hanadb_password  = "DummyPass123"
 			hanadb_host      = "hana-db.example.com"
 			hanadb_port      = "30015"
+			hana_dbname      = "testdb"
 			user_ttl         = "30m"
 		}
 	`, name, itemPath)
@@ -273,6 +274,7 @@ func TestDynamicSecretHanaDb(t *testing.T) {
 			hanadb_password  = "DummyPass123"
 			hanadb_host      = "hana-db.example.com"
 			hanadb_port      = "30015"
+			hana_dbname      = "testdb"
 			user_ttl         = "60m"
 			tags             = ["test1", "test2"]
 		}
