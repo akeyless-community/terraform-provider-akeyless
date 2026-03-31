@@ -115,6 +115,7 @@ func resourceGatewayMigrationK8sCreate(d *schema.ResourceData, m interface{}) er
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
+	body.Type = akeyless_api.PtrString("k8s")
 	common.GetAkeylessPtr(&body.K8sUrl, k8sUrl)
 	common.GetAkeylessPtr(&body.K8sToken, k8sToken)
 	common.GetAkeylessPtr(&body.K8sUsername, k8sUsername)
@@ -164,6 +165,7 @@ func resourceGatewayMigrationK8sRead(d *schema.ResourceData, m interface{}) erro
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
+		Name:  &path,
 		Token: &token,
 	}
 

@@ -87,6 +87,7 @@ func resourceGatewayMigrationAzureKvCreate(d *schema.ResourceData, m interface{}
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
+	body.Type = akeyless_api.PtrString("azure_kv")
 	common.GetAkeylessPtr(&body.AzureKvName, azureKvName)
 	common.GetAkeylessPtr(&body.AzureClientId, azureClientId)
 	common.GetAkeylessPtr(&body.AzureSecret, azureSecret)
@@ -119,6 +120,7 @@ func resourceGatewayMigrationAzureKvRead(d *schema.ResourceData, m interface{}) 
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
+		Name:  &path,
 		Token: &token,
 	}
 

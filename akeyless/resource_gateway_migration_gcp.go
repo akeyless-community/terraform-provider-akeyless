@@ -63,6 +63,7 @@ func resourceGatewayMigrationGcpCreate(d *schema.ResourceData, m interface{}) er
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
+	body.Type = akeyless_api.PtrString("gcp")
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
@@ -86,6 +87,7 @@ func resourceGatewayMigrationGcpRead(d *schema.ResourceData, m interface{}) erro
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
+		Name:  &path,
 		Token: &token,
 	}
 

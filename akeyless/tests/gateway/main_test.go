@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"testing"
@@ -26,6 +27,11 @@ func TestMain(m *testing.M) {
 	if os.Getenv("AKEYLESS_GATEWAY") == "" {
 		os.Setenv("AKEYLESS_GATEWAY", "http://127.0.0.1:8081")
 	}
+
+	if _, _, err := testutils.GetClient(); err != nil {
+		log.Fatalf("gateway not ready: %v", err)
+	}
+
 	resource.TestMain(m)
 }
 

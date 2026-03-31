@@ -101,6 +101,7 @@ func resourceGatewayMigrationAwsRead(d *schema.ResourceData, m interface{}) erro
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
+		Name:  &path,
 		Token: &token,
 	}
 

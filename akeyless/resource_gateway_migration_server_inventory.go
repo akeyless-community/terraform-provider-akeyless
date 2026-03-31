@@ -111,6 +111,7 @@ func resourceGatewayMigrationServerInventoryCreate(d *schema.ResourceData, m int
 
 	body := akeyless_api.NewGatewayCreateMigration(hosts, name, siTargetName, siUsersPathTemplate, targetLocation)
 	body.Token = &token
+	body.Type = akeyless_api.PtrString("server_inventory")
 	common.GetAkeylessPtr(&body.SiAutoRotate, siAutoRotate)
 	if siRotationHour != 0 {
 		body.SiRotationHour = akeyless_api.PtrInt32(int32(siRotationHour))
@@ -143,6 +144,7 @@ func resourceGatewayMigrationServerInventoryRead(d *schema.ResourceData, m inter
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
+		Name:  &path,
 		Token: &token,
 	}
 

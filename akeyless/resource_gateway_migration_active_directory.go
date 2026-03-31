@@ -191,6 +191,7 @@ func resourceGatewayMigrationActiveDirectoryCreate(d *schema.ResourceData, m int
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
+	body.Type = akeyless_api.PtrString("active_directory")
 	common.GetAkeylessPtr(&body.AdDomainName, adDomainName)
 	common.GetAkeylessPtr(&body.AdTargetName, adTargetName)
 	common.GetAkeylessPtr(&body.AdUserBaseDn, adUserBaseDn)
@@ -241,6 +242,7 @@ func resourceGatewayMigrationActiveDirectoryRead(d *schema.ResourceData, m inter
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
+		Name:  &path,
 		Token: &token,
 	}
 

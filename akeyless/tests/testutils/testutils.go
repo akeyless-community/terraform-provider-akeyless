@@ -1283,13 +1283,19 @@ func EnableSRA() error {
 	if err != nil {
 		return fmt.Errorf("get service DNS: %w", err)
 	}
+	fmt.Printf("[EnableSRA] gator=%s auth=%s\n", gatorDNS, authDNS)
 
 	uamCreds, err := authenticateUAM(authDNS, accessID, accessKey)
 	if err != nil {
 		return fmt.Errorf("authenticate UAM: %w", err)
 	}
+	fmt.Printf("[EnableSRA] got UAM creds (len=%d)\n", len(uamCreds))
 
-	return sendBastionKeepAlive(gatorDNS, uamCreds)
+	if err := sendBastionKeepAlive(gatorDNS, uamCreds); err != nil {
+		return fmt.Errorf("send bastion keep-alive: %w", err)
+	}
+	fmt.Println("[EnableSRA] bastion keep-alive sent successfully")
+	return nil
 }
 
 func getServiceDNS() (gatorDNS, authDNS string, err error) {
@@ -1351,18 +1357,18 @@ func authenticateUAM(authDNS, accessID, accessKeyB64 string) (string, error) {
 	params.Set("timestamp", strconv.FormatInt(serverTime, 10))
 	params.Set("nonce", nonce)
 	params.Set("signature", sigB64)
-	params.Set("creds_expiry", "60")
+	params.Set("creds_expiry", "300")
 
 	authURL := authDNS + "/auth-uam?" + params.Encode()
 	resp, err := http.Get(authURL)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("auth-uam request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("auth-uam read body: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("auth-uam status %d: %s", resp.StatusCode, body)
@@ -1372,7 +1378,10 @@ func authenticateUAM(authDNS, accessID, accessKeyB64 string) (string, error) {
 		UAMCreds string `json:"uam_creds"`
 	}
 	if err := json.Unmarshal(body, &creds); err != nil {
-		return "", err
+		return "", fmt.Errorf("auth-uam unmarshal: %w", err)
+	}
+	if creds.UAMCreds == "" {
+		return "", fmt.Errorf("auth-uam returned empty uam_creds, body: %s", string(body[:min(len(body), 200)]))
 	}
 	return creds.UAMCreds, nil
 }

@@ -349,6 +349,7 @@ func TestDynamicSecretOpenai(t *testing.T) {
 		resource "akeyless_dynamic_secret_openai" "%v" {
 			name        = "%v"
 			target_name = "%v"
+			project_id  = "proj-dummy-123"
 			user_ttl    = "30m"
 			depends_on  = [akeyless_target_openai.%v]
 		}
@@ -363,6 +364,7 @@ func TestDynamicSecretOpenai(t *testing.T) {
 		resource "akeyless_dynamic_secret_openai" "%v" {
 			name        = "%v"
 			target_name = "%v"
+			project_id  = "proj-dummy-123"
 			user_ttl    = "60m"
 			tags        = ["test1", "test2"]
 			depends_on  = [akeyless_target_openai.%v]

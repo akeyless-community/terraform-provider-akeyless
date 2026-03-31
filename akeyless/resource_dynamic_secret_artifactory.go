@@ -3,7 +3,6 @@ package akeyless
 
 import (
 	"context"
-	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -242,9 +241,9 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 		}
 	}
 
-	deleteProtectionVal := "false"
+	deleteProtectionVal := false
 	if rOut.DeleteProtection != nil {
-		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+		deleteProtectionVal = *rOut.DeleteProtection
 	}
 	err = d.Set("delete_protection", deleteProtectionVal)
 	if err != nil {

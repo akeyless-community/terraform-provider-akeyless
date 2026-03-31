@@ -357,6 +357,8 @@ func TestK8sAuthConfig(t *testing.T) {
 
 	name := "test_k8s_auth"
 
+	rsaKeyB64 := testutils.GenerateKey(2048)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "k8s_auth_am" {
 			name = "%v"
@@ -364,14 +366,14 @@ func TestK8sAuthConfig(t *testing.T) {
 		resource "akeyless_k8s_auth_config" "%v" {
 			name                      = "%v"
 			access_id                 = akeyless_auth_method_api_key.k8s_auth_am.access_id
-			signing_key               = "dGVzdA=="
+			signing_key               = "%v"
 			k8s_host                  = "https://k8s-api.example.com:6443"
 			k8s_ca_cert               = "dGVzdA=="
 			token_reviewer_jwt        = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
 			disable_issuer_validation = "true"
 			depends_on = [akeyless_auth_method_api_key.k8s_auth_am]
 		}
-	`, testPath("k8s_auth_am"), name, testPath(name))
+	`, testPath("k8s_auth_am"), name, testPath(name), rsaKeyB64)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_api_key" "k8s_auth_am" {
@@ -380,7 +382,7 @@ func TestK8sAuthConfig(t *testing.T) {
 		resource "akeyless_k8s_auth_config" "%v" {
 			name                      = "%v"
 			access_id                 = akeyless_auth_method_api_key.k8s_auth_am.access_id
-			signing_key               = "dGVzdA=="
+			signing_key               = "%v"
 			k8s_host                  = "https://k8s-api.example.com:6443"
 			k8s_ca_cert               = "dGVzdA=="
 			token_reviewer_jwt        = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
@@ -388,7 +390,7 @@ func TestK8sAuthConfig(t *testing.T) {
 			disable_issuer_validation = "true"
 			depends_on = [akeyless_auth_method_api_key.k8s_auth_am]
 		}
-	`, testPath("k8s_auth_am"), name, testPath(name))
+	`, testPath("k8s_auth_am"), name, testPath(name), rsaKeyB64)
 
 	testutils.TestGatewayConfigResource(t, providerFactories, config, configUpdate)
 }

@@ -102,6 +102,7 @@ func resourceGatewayMigrationCertificateRead(d *schema.ResourceData, m interface
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
+		Name:  &path,
 		Token: &token,
 	}
 

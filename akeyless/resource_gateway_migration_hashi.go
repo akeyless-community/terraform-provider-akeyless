@@ -83,6 +83,7 @@ func resourceGatewayMigrationHashiCreate(d *schema.ResourceData, m interface{}) 
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
+	body.Type = akeyless_api.PtrString("hashi")
 	common.GetAkeylessPtr(&body.HashiUrl, hashiUrl)
 	common.GetAkeylessPtr(&body.HashiToken, hashiToken)
 	if len(hashiNs) > 0 {
@@ -111,6 +112,7 @@ func resourceGatewayMigrationHashiRead(d *schema.ResourceData, m interface{}) er
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
+		Name:  &path,
 		Token: &token,
 	}
 
