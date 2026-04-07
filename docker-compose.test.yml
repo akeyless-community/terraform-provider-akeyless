@@ -33,8 +33,9 @@ services:
     healthcheck:
       test: ["CMD", "vault", "status"]
       interval: 5s
-      timeout: 3s
-      retries: 10
+      timeout: 5s
+      retries: 24
+      start_period: 20s
 
   mysql:
     image: mysql:8
