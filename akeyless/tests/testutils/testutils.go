@@ -81,6 +81,9 @@ const (
 
 	VaultAddr  = "http://127.0.0.1:18200"
 	VaultToken = "test"
+
+	// DockerVaultAddr is the Vault URL reachable from inside the Docker network (gateway container).
+	DockerVaultAddr = "http://vault:8200"
 )
 
 var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 3, 4, 5, 6, 7}

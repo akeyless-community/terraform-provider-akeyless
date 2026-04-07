@@ -27,7 +27,7 @@ const GcpKey1 string = `{
 }`
 
 const (
-	HashiVaultUrl   string = testutils.VaultAddr
+	HashiVaultUrl   string = testutils.DockerVaultAddr
 	HashiVaultToken string = testutils.VaultToken
 )
 
