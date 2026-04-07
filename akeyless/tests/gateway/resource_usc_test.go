@@ -27,11 +27,13 @@ const GcpKey1 string = `{
 }`
 
 const (
-	HashiVaultUrl   string = "http://127.0.0.1:8200"
-	HashiVaultToken string = "test"
+	HashiVaultUrl   string = testutils.VaultAddr
+	HashiVaultToken string = testutils.VaultToken
 )
 
 func TestUscResourceHashi(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+	testutils.SkipIfNoVault(t)
 
 	targetName := "test-target-hashi"
 	targetPath := testPath(targetName)
@@ -69,6 +71,8 @@ func TestUscResourceHashi(t *testing.T) {
 }
 
 func TestUscSecretResourceHashi(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+	testutils.SkipIfNoVault(t)
 
 	targetName := "test-target-hashi"
 	targetPath := testPath(targetName)

@@ -154,7 +154,7 @@ func resourceGatewayMigrationServerInventoryRead(d *schema.ResourceData, m inter
 	}
 
 	if rOut.Body != nil {
-		if rOut.Body.ServerInventoryMigrations != nil && len(rOut.Body.ServerInventoryMigrations) > 0 {
+		if len(rOut.Body.ServerInventoryMigrations) > 0 {
 			for _, migration := range rOut.Body.ServerInventoryMigrations {
 				if migration.General != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {

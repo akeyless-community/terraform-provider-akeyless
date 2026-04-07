@@ -48,7 +48,7 @@ func resourceEventForwarderWebhook() *schema.Resource {
 			"gateways_event_source_locations": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Gateways event sources to forward events about,for example the relevant Gateways cluster urls,: http://localhost:8000.",
+				Description: "Gateways event sources to forward events about, for example the relevant Gateways cluster urls: http://localhost:8000.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"event_types": {

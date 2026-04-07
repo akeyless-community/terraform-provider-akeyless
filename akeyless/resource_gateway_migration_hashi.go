@@ -122,7 +122,7 @@ func resourceGatewayMigrationHashiRead(d *schema.ResourceData, m interface{}) er
 	}
 
 	if rOut.Body != nil {
-		if rOut.Body.HashiMigrations != nil && len(rOut.Body.HashiMigrations) > 0 {
+		if len(rOut.Body.HashiMigrations) > 0 {
 			for _, migration := range rOut.Body.HashiMigrations {
 				if migration.General != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {

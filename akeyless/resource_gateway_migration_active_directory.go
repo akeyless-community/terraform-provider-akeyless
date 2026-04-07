@@ -252,7 +252,7 @@ func resourceGatewayMigrationActiveDirectoryRead(d *schema.ResourceData, m inter
 	}
 
 	if rOut.Body != nil {
-		if rOut.Body.ActiveDirectoryMigrations != nil && len(rOut.Body.ActiveDirectoryMigrations) > 0 {
+		if len(rOut.Body.ActiveDirectoryMigrations) > 0 {
 			for _, migration := range rOut.Body.ActiveDirectoryMigrations {
 				if migration.General != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {

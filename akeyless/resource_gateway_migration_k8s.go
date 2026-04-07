@@ -175,7 +175,7 @@ func resourceGatewayMigrationK8sRead(d *schema.ResourceData, m interface{}) erro
 	}
 
 	if rOut.Body != nil {
-		if rOut.Body.K8sMigrations != nil && len(rOut.Body.K8sMigrations) > 0 {
+		if len(rOut.Body.K8sMigrations) > 0 {
 			for _, migration := range rOut.Body.K8sMigrations {
 				if migration.General != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {

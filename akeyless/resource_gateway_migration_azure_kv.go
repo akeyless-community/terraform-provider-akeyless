@@ -130,7 +130,7 @@ func resourceGatewayMigrationAzureKvRead(d *schema.ResourceData, m interface{}) 
 	}
 
 	if rOut.Body != nil {
-		if rOut.Body.AzureKvMigrations != nil && len(rOut.Body.AzureKvMigrations) > 0 {
+		if len(rOut.Body.AzureKvMigrations) > 0 {
 			for _, migration := range rOut.Body.AzureKvMigrations {
 				if migration.General != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {

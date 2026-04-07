@@ -112,7 +112,7 @@ func resourceGatewayMigrationCertificateRead(d *schema.ResourceData, m interface
 	}
 
 	if rOut.Body != nil {
-		if rOut.Body.CertificateMigrations != nil && len(rOut.Body.CertificateMigrations) > 0 {
+		if len(rOut.Body.CertificateMigrations) > 0 {
 			for _, migration := range rOut.Body.CertificateMigrations {
 				if migration.General != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {

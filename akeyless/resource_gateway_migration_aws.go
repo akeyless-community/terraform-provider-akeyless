@@ -111,7 +111,7 @@ func resourceGatewayMigrationAwsRead(d *schema.ResourceData, m interface{}) erro
 	}
 
 	if rOut.Body != nil {
-		if rOut.Body.AwsSecretsMigrations != nil && len(rOut.Body.AwsSecretsMigrations) > 0 {
+		if len(rOut.Body.AwsSecretsMigrations) > 0 {
 			for _, migration := range rOut.Body.AwsSecretsMigrations {
 				if migration.General != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {

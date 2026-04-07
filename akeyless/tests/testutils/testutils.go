@@ -78,6 +78,9 @@ const (
 	DockerRabbitmqURI      = "http://rabbitmq:15672"
 	DockerRabbitmqUser     = "admin"
 	DockerRabbitmqPassword = "rabbitmq_password"
+
+	VaultAddr  = "http://127.0.0.1:18200"
+	VaultToken = "test"
 )
 
 var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 3, 4, 5, 6, 7}
@@ -154,6 +157,16 @@ func SkipIfNoGateway(t *testing.T) {
 	if gw == "" || gw == PublicAPI {
 		t.Skip("skipping: requires local gateway (set AKEYLESS_GATEWAY)")
 	}
+}
+
+func SkipIfNoVault(t *testing.T) {
+	t.Helper()
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get(VaultAddr + "/v1/sys/health")
+	if err != nil {
+		t.Skip("skipping: vault not reachable at " + VaultAddr)
+	}
+	resp.Body.Close()
 }
 
 // --- Certificate helpers ---

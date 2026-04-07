@@ -97,7 +97,7 @@ func resourceGatewayMigrationGcpRead(d *schema.ResourceData, m interface{}) erro
 	}
 
 	if rOut.Body != nil {
-		if rOut.Body.GcpSecretsMigrations != nil && len(rOut.Body.GcpSecretsMigrations) > 0 {
+		if len(rOut.Body.GcpSecretsMigrations) > 0 {
 			for _, migration := range rOut.Body.GcpSecretsMigrations {
 				if migration.General != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {

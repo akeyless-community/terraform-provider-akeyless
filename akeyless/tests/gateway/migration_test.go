@@ -9,10 +9,13 @@ import (
 )
 
 func TestGatewayMigrationAws(t *testing.T) {
+
+	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
+
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_aws"
-	migrationName := testPath(name)
+	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_aws" "%v" {
@@ -38,10 +41,13 @@ func TestGatewayMigrationAws(t *testing.T) {
 }
 
 func TestGatewayMigrationAzureKv(t *testing.T) {
+
+	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
+
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_azure_kv"
-	migrationName := testPath(name)
+	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_azure_kv" "%v" {
@@ -69,10 +75,13 @@ func TestGatewayMigrationAzureKv(t *testing.T) {
 }
 
 func TestGatewayMigrationGcp(t *testing.T) {
+
+	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
+
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_gcp"
-	migrationName := testPath(name)
+	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_gcp" "%v" {
@@ -94,10 +103,13 @@ func TestGatewayMigrationGcp(t *testing.T) {
 }
 
 func TestGatewayMigrationHashi(t *testing.T) {
+
+	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
+
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_hashi"
-	migrationName := testPath(name)
+	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_hashi" "%v" {
@@ -122,10 +134,13 @@ func TestGatewayMigrationHashi(t *testing.T) {
 }
 
 func TestGatewayMigrationK8s(t *testing.T) {
+
+	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
+
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_k8s"
-	migrationName := testPath(name)
+	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_k8s" "%v" {
@@ -154,10 +169,13 @@ func TestGatewayMigrationK8s(t *testing.T) {
 }
 
 func TestGatewayMigrationCertificate(t *testing.T) {
+
+	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
+
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_cert"
-	migrationName := testPath(name)
+	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_certificate" "%v" {
@@ -181,10 +199,13 @@ func TestGatewayMigrationCertificate(t *testing.T) {
 }
 
 func TestGatewayMigrationActiveDirectory(t *testing.T) {
+
+	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
+
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_ad"
-	migrationName := testPath(name)
+	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_active_directory" "%v" {
@@ -221,10 +242,13 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 }
 
 func TestGatewayMigrationServerInventory(t *testing.T) {
+
+	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
+
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_si"
-	migrationName := testPath(name)
+	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_server_inventory" "%v" {
