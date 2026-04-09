@@ -182,6 +182,58 @@ func testRotatedSecretAzureStorageAccount(t *testing.T, targetPath string) {
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
 
+func TestRotatedSecretCassandraResource(t *testing.T) {
+
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-cassandra"
+	targetPath := testPath(targetName)
+	targetDetailsType := "db_target_details"
+
+	expect := map[string]any{
+		"db_type":   "cassandra",
+		"host":      "cassandra-db.example.com",
+		"port":      "9042",
+		"db_name":   "testdb",
+		"user_name": "admin",
+		"pwd":       "DummyPass123",
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	rsName := "test-rs-cassandra"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_cassandra" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "password"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
+			tags 						= ["t1", "t2"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_cassandra" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "password"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user2"
+			rotated_password 			= "pass2"
+			tags 						= ["t1", "t3"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+}
+
 func TestRotatedSecretCustomResource(t *testing.T) {
 
 	testutils.SkipIfNoGateway(t)
@@ -379,8 +431,10 @@ func TestRotatedSecretHanadbResource(t *testing.T) {
 		resource "akeyless_rotated_secret_hanadb" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -389,8 +443,10 @@ func TestRotatedSecretHanadbResource(t *testing.T) {
 		resource "akeyless_rotated_secret_hanadb" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user2"
+			rotated_password 			= "pass2"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -453,6 +509,110 @@ func TestRotatedSecretLdapResource(t *testing.T) {
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
 
+func TestRotatedSecretMongodbResource(t *testing.T) {
+
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-mongodb"
+	targetPath := testPath(targetName)
+	targetDetailsType := "db_target_details"
+
+	expect := map[string]any{
+		"db_type":   "mongodb",
+		"host":      "mongodb-db.example.com",
+		"port":      "27017",
+		"db_name":   "testdb",
+		"user_name": "admin",
+		"pwd":       "DummyPass123",
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	rsName := "test-rs-mongodb"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mongodb" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "password"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
+			tags 						= ["t1", "t2"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mongodb" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "password"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user2"
+			rotated_password 			= "pass2"
+			tags 						= ["t1", "t3"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+}
+
+func TestRotatedSecretMssqlResource(t *testing.T) {
+
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-mssql"
+	targetPath := testPath(targetName)
+	targetDetailsType := "db_target_details"
+
+	expect := map[string]any{
+		"db_type":   "mssql",
+		"host":      "mssql-db.example.com",
+		"port":      "1433",
+		"db_name":   "testdb",
+		"user_name": "admin",
+		"pwd":       "DummyPass123",
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	rsName := "test-rs-mssql"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mssql" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "password"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
+			tags 						= ["t1", "t2"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mssql" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "password"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user2"
+			rotated_password 			= "pass2"
+			tags 						= ["t1", "t3"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+}
+
 func TestRotatedSecretMysqlResource(t *testing.T) {
 
 	testutils.SkipIfNoGateway(t)
@@ -462,6 +622,7 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 	targetDetailsType := "db_target_details"
 
 	expect := map[string]any{
+		"db_type":   "mysql",
 		"user_name": MYSQL_USERNAME1,
 		"pwd":       MYSQL_PASSWORD1,
 		"host":      MYSQL_HOST1,
@@ -533,8 +694,10 @@ func TestRotatedSecretOracleResource(t *testing.T) {
 		resource "akeyless_rotated_secret_oracle" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -543,7 +706,9 @@ func TestRotatedSecretOracleResource(t *testing.T) {
 		resource "akeyless_rotated_secret_oracle" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
+			rotated_username 			= "user2"
+			rotated_password 			= "pass2"
 			authentication_credentials 	= "use-target-creds"
 			tags 						= ["t1", "t3"]
 		}
@@ -581,8 +746,10 @@ func TestRotatedSecretPostgresqlResource(t *testing.T) {
 		resource "akeyless_rotated_secret_postgresql" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -591,8 +758,10 @@ func TestRotatedSecretPostgresqlResource(t *testing.T) {
 		resource "akeyless_rotated_secret_postgresql" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user2"
+			rotated_password 			= "pass2"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -628,8 +797,10 @@ func TestRotatedSecretRedisResource(t *testing.T) {
 		resource "akeyless_rotated_secret_redis" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -638,8 +809,10 @@ func TestRotatedSecretRedisResource(t *testing.T) {
 		resource "akeyless_rotated_secret_redis" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user2"
+			rotated_password 			= "pass2"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -676,8 +849,10 @@ func TestRotatedSecretRedshiftResource(t *testing.T) {
 		resource "akeyless_rotated_secret_redshift" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -686,8 +861,10 @@ func TestRotatedSecretRedshiftResource(t *testing.T) {
 		resource "akeyless_rotated_secret_redshift" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user2"
+			rotated_password 			= "pass2"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -725,8 +902,10 @@ func TestRotatedSecretSnowflakeResource(t *testing.T) {
 		resource "akeyless_rotated_secret_snowflake" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -735,8 +914,10 @@ func TestRotatedSecretSnowflakeResource(t *testing.T) {
 		resource "akeyless_rotated_secret_snowflake" "%v" {
 			name 						= "%v"
 			target_name 				= "%v"
-			rotator_type 				= "target"
+			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user2"
+			rotated_password 			= "pass2"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
