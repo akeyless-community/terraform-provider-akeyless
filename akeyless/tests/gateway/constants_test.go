@@ -1,7 +1,7 @@
 package gateway
 
 const (
-	GCP_ROTATOR_KEY1       = "dGVzdA=="
+	GCP_ROTATOR_KEY1       = "eyJkdW1teSI6ICJ0ZXN0In0="
 	GCP_SA_ROTATOR_EMAIL1  = "test@test.com"
 	AWS_ACCESS_KEY_ID1     = "test"
 	AWS_SECRET_ACCESS_KEY1 = "test"

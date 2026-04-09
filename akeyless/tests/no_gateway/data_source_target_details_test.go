@@ -106,6 +106,7 @@ func TestTargetDataSourceDB(t *testing.T) {
 	targetDetailsType := "db_target_details"
 
 	expect := map[string]interface{}{
+		"db_type":                    "mysql",
 		"user_name":                  "user1",
 		"pwd":                        "1234",
 		"host":                       "127.0.0.1",
@@ -126,6 +127,9 @@ func TestTargetDataSourceDB(t *testing.T) {
 			value = data.akeyless_target_details.%v.value
 		}
 	`, targetName, targetPath, targetName)
+
+	// db_type is a helper field and not returned by the data source
+	delete(expect, "db_type")
 
 	testTargetDataSource(t, config, targetPath, targetDetailsType, expect)
 }

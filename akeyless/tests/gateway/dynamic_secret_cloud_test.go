@@ -175,6 +175,8 @@ func TestDynamicSecretGke(t *testing.T) {
 func TestDynamicSecretK8s(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 
+	cert := testutils.GenerateCert(t)
+
 	name := "ds_k8s_test"
 	itemPath := testPath(name)
 
@@ -182,26 +184,26 @@ func TestDynamicSecretK8s(t *testing.T) {
 		resource "akeyless_dynamic_secret_k8s" "%v" {
 			name                   = "%v"
 			k8s_cluster_endpoint   = "https://k8s-api.example.com:6443"
-			k8s_cluster_ca_cert    = "dGVzdA=="
+			k8s_cluster_ca_cert    = "%v"
 			k8s_cluster_token      = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
 			k8s_namespace          = "default"
 			k8s_service_account    = "test-sa"
 			user_ttl               = "30m"
 		}
-	`, name, itemPath)
+	`, name, itemPath, cert)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_k8s" "%v" {
 			name                   = "%v"
 			k8s_cluster_endpoint   = "https://k8s-api.example.com:6443"
-			k8s_cluster_ca_cert    = "dGVzdA=="
+			k8s_cluster_ca_cert    = "%v"
 			k8s_cluster_token      = "eyJhbGciOiJSUzI1NiIsImR1bW15IjoidGVzdCJ9"
 			k8s_namespace          = "production"
 			k8s_service_account    = "test-sa"
 			user_ttl               = "60m"
 			tags                   = ["test1", "test2"]
 		}
-	`, name, itemPath)
+	`, name, itemPath, cert)
 
 	testutils.TestItemResource(t, providerFactories, itemPath, config, configUpdate)
 }
