@@ -69,6 +69,7 @@ func TestGatewayAllowedAccess(t *testing.T) {
 }
 
 func TestGatewayUpdateCache(t *testing.T) {
+
 	testutils.SkipIfNoGateway(t)
 
 	name := "test-gw-cache"
@@ -85,9 +86,9 @@ func TestGatewayUpdateCache(t *testing.T) {
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_cache" "%v" {
-			enable_cache        	= "true"
+			enable_cache        	= "false"
 			stale_timeout 			= "60"
-			enable_proactive   		= "true"
+			enable_proactive   		= "false"
 			minimum_fetch_interval 	= "5"
 			backup_interval 		= "1"
 		}

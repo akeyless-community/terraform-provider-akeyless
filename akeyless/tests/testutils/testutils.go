@@ -162,6 +162,25 @@ func SkipIfNoGateway(t *testing.T) {
 	}
 }
 
+func DisableCache() error {
+	client, token, err := GetClient()
+	if err != nil {
+		return fmt.Errorf("get client: %w", err)
+	}
+
+	body := akeyless_api.GatewayUpdateCache{
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.EnableCache, "false")
+	common.GetAkeylessPtr(&body.EnableProactive, "false")
+
+	_, resp, err := client.GatewayUpdateCache(context.Background()).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't disable cache", resp, err)
+	}
+	return nil
+}
+
 func SkipIfNoVault(t *testing.T) {
 	t.Helper()
 	client := &http.Client{Timeout: 2 * time.Second}

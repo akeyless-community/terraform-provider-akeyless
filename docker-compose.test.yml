@@ -13,6 +13,29 @@ services:
       BYPASS_DRY_RUN: "true"
       VERSION: 4.48.0
       DEVELOPMENT_OR_RELEASE: "release"
+      CLUSTER_NAME: "gateway-items-tests"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "-X", "POST", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  akeyless-gateway-config:
+    image: akeyless/base:latest-akeyless
+    platform: linux/amd64
+    restart: on-failure
+    ports:
+      - "9000:8000"
+      - "9080:8080"
+      - "9081:8081"
+    environment:
+      ADMIN_ACCESS_ID: ${AKEYLESS_ACCESS_ID}
+      ADMIN_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY}
+      BYPASS_DRY_RUN: "true"
+      VERSION: 4.48.0
+      DEVELOPMENT_OR_RELEASE: "release"
+      CLUSTER_NAME: "gateway-config-tests"
     healthcheck:
       test: ["CMD", "curl", "-sf", "-X", "POST", "http://localhost:8081/health"]
       interval: 10s

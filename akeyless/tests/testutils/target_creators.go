@@ -21,6 +21,7 @@ var CreateTargetByTypeMap = map[string]CreateTargetFunc{
 	"eks_target_details":              CreateEksTarget,
 	"gcp_target_details":              CreateGcpTarget,
 	"github_target_details":           CreateGithubTarget,
+	"gitlab_target_details":           CreateGitlabTarget,
 	"gke_target_details":              CreateGkeTarget,
 	"globalsign_atlas_target_details": CreateGlobalSignAtlasTarget,
 	"globalsign_target_details":       CreateGlobalSignTarget,
@@ -176,7 +177,7 @@ func CreateGithubTarget(t *testing.T, name string, details map[string]any) {
 	client, token, err := GetClient()
 	require.NoError(t, err)
 
-	body := akeyless_api.CreateGithubTarget{
+	body := akeyless_api.TargetCreateGithub{
 		Name:  name,
 		Token: &token,
 	}
@@ -184,8 +185,23 @@ func CreateGithubTarget(t *testing.T, name string, details map[string]any) {
 	common.GetAkeylessPtr(&body.GithubAppPrivateKey, details["app_private_key"])
 	common.GetAkeylessPtr(&body.GithubBaseUrl, details["base_url"])
 
-	_, resp, err := client.CreateGithubTarget(context.Background()).Body(body).Execute()
+	_, resp, err := client.TargetCreateGithub(context.Background()).Body(body).Execute()
 	require.NoError(t, common.HandleError("can't create github target for test", resp, err))
+}
+
+func CreateGitlabTarget(t *testing.T, name string, details map[string]any) {
+	client, token, err := GetClient()
+	require.NoError(t, err)
+
+	body := akeyless_api.TargetCreateGitlab{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.GitlabAccessToken, details["access_token"])
+	common.GetAkeylessPtr(&body.GitlabUrl, details["url"])
+
+	_, resp, err := client.TargetCreateGitlab(context.Background()).Body(body).Execute()
+	require.NoError(t, common.HandleError("can't create gitlab target for test", resp, err))
 }
 
 func CreateGkeTarget(t *testing.T, name string, details map[string]any) {
