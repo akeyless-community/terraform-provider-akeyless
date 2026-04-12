@@ -218,7 +218,7 @@ func TestTargetDataSourceGithub(t *testing.T) {
 	targetPath := testPath(targetName)
 	targetDetailsType := "github_target_details"
 
-	expect := map[string]interface{}{
+	expect := map[string]any{
 		"app_id":          1234,
 		"app_private_key": "YmxhYmxh",
 		"base_url":        "http://www.test.com",
@@ -244,7 +244,7 @@ func TestTargetDataSourceGke(t *testing.T) {
 	targetPath := testPath(targetName)
 	targetDetailsType := "gke_target_details"
 
-	expect := map[string]interface{}{
+	expect := map[string]any{
 		"service_account_email": "k@k.io",
 		"cluster_endpoint":      "https://www.test.com",
 		"cluster_ca_cert":       "YmxhYmxh",
@@ -276,7 +276,7 @@ func TestTargetDataSourceGlobalSignAtlas(t *testing.T) {
 
 	privateKey := testutils.GenerateKey(1024)
 
-	expect := map[string]interface{}{
+	expect := map[string]any{
 		"timeout":         "1m",
 		"api_key":         "aaaa",
 		"api_secret":      "1234",

@@ -85,7 +85,7 @@ func WarningDiagnostics(message string) diag.Diagnostic {
 	}
 }
 
-func GetAkeylessPtr(ptr interface{}, val interface{}) {
+func GetAkeylessPtr(ptr any, val any) {
 
 	switch ptr.(type) {
 	case *string:
@@ -253,8 +253,9 @@ func GetTargetType(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string
 }
 
 func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, uscName, remoteSecretName string) (namespace, filterSecretValue string, exists bool) {
+	normalizedUscName := strings.TrimPrefix(uscName, "/")
 	for _, assoc := range associatedItems {
-		if assoc.ItemName == nil || *assoc.ItemName != uscName {
+		if assoc.ItemName == nil || strings.TrimPrefix(*assoc.ItemName, "/") != normalizedUscName {
 			continue
 		}
 

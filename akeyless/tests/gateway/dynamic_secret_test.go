@@ -16,11 +16,25 @@ func TestDynamicSecretGithubResource(t *testing.T) {
 		GITHUB_TOKEN_REPO = `["github-producer-test1", "github-producer-test2"]`
 	)
 
-	name := "github_test"
-	itemPath := testPath(name)
+	targetName := "test-target-github"
+	targetPath := testPath(targetName)
+	targetDetailsType := "github_target_details"
+	expect := map[string]any{
+		"app_id":          1234,
+		"app_private_key": "test",
+		"base_url":        "http://127.0.0.1:81",
+	}
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	dsName := "github_test"
+	dsPath := testPath(dsName)
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_github" "%v" {
 			name                      = "%v"
+			target_name               = "%v"
 			installation_id           = 1234
 			installation_organization = "test"
 			token_permissions         = %v
@@ -28,11 +42,12 @@ func TestDynamicSecretGithubResource(t *testing.T) {
 			github_app_private_key    = "test"
 			token_ttl                 = "50m"
 		}
-	`, name, itemPath, GITHUB_TOKEN_PERM)
+	`, dsName, dsPath, targetPath, GITHUB_TOKEN_PERM)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_github" "%v" {
 			name                      = "%v"
+			target_name               = "%v"
 			installation_id           = "1234"
 			installation_repository   = "test"
 			installation_organization = "test"
@@ -41,20 +56,21 @@ func TestDynamicSecretGithubResource(t *testing.T) {
 			github_app_private_key    = "test"
 			token_ttl                 = "40m"
 		}
-	`, name, itemPath, GITHUB_TOKEN_REPO)
+	`, dsName, dsPath, targetPath, GITHUB_TOKEN_REPO)
 
 	configUpdate2 := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_github" "%v" {
 			name                    = "%v"
+			target_name             = "%v"
 			installation_repository = "test"
 			token_repositories      = %v
 			github_app_id           = 1234
 			github_app_private_key  = "test"
 			token_ttl               = "40m"
 		}
-	`, name, itemPath, GITHUB_TOKEN_REPO)
+	`, dsName, dsPath, targetPath, GITHUB_TOKEN_REPO)
 
-	testutils.TestItemResource(t, providerFactories, itemPath, config, configUpdate, configUpdate2)
+	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate, configUpdate2)
 }
 
 func TestDynamicSecretGitlabResource(t *testing.T) {

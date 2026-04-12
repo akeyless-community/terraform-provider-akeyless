@@ -181,7 +181,7 @@ func CreateGithubTarget(t *testing.T, name string, details map[string]any) {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.GithubAppId, details["app_id"].(int))
+	common.GetAkeylessPtr(&body.GithubAppId, details["app_id"])
 	common.GetAkeylessPtr(&body.GithubAppPrivateKey, details["app_private_key"])
 	common.GetAkeylessPtr(&body.GithubBaseUrl, details["base_url"])
 
