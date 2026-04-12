@@ -69,7 +69,7 @@ func TestEventForwarderWebhook(t *testing.T) {
 			items_event_source_locations = ["/items/*"]
 			targets_event_source_locations = ["/targets/*"]
 			auth_methods_event_source_locations = ["/auth-methods/*"]
-			gateways_event_source_locations = ["http://localhost:8081"]
+			gateways_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			url = "https://example.com"
 			auth_type = "user-pass"
@@ -87,7 +87,7 @@ func TestEventForwarderWebhook(t *testing.T) {
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			auth_methods_event_source_locations = ["/auth/"]
-			gateways_event_source_locations = ["http://localhost:8081"]
+			gateways_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
 			url = "https://example2.com"
 			auth_type = "user-pass"
@@ -114,7 +114,7 @@ func TestEventForwarderServicenow(t *testing.T) {
 			items_event_source_locations = ["/items/*"]
 			targets_event_source_locations = ["/targets/*"]
 			auth_methods_event_source_locations = ["/auth-methods/*"]
-			gateways_event_source_locations = ["http://localhost:8081"]
+			gateways_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			host = "https://example.com"
 			admin_name = "myusername"
@@ -140,7 +140,7 @@ func TestEventForwarderServicenow(t *testing.T) {
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			auth_methods_event_source_locations = ["/auth/"]
-			gateways_event_source_locations = ["http://localhost:8081"]
+			gateways_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
 			host = "https://example2.com"
 			auth_type = "jwt"
@@ -167,7 +167,7 @@ func TestEventForwarderSlack(t *testing.T) {
 			items_event_source_locations = ["/items/*"]
 			targets_event_source_locations = ["/targets/*"]
 			auth_methods_event_source_locations = ["/auth-methods/*"]
-			gateways_event_source_locations = ["http://localhost:8081"]
+			gateways_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			url = "https://example.com"
 			runner_type = "immediate"
@@ -181,7 +181,7 @@ func TestEventForwarderSlack(t *testing.T) {
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			auth_methods_event_source_locations = ["/auth/"]
-			gateways_event_source_locations = ["http://localhost:8081"]
+			gateways_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
 			url = "https://example2.com"
 			runner_type = "immediate"
@@ -204,7 +204,7 @@ func TestEventForwarderTeams(t *testing.T) {
 			items_event_source_locations = ["/items/*"]
 			targets_event_source_locations = ["/targets/*"]
 			auth_methods_event_source_locations = ["/auth-methods/*"]
-			gateway_event_source_locations = ["http://localhost:8081"]
+			gateway_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			url = "https://example.webhook.office.com"
 			runner_type = "immediate"
@@ -218,7 +218,7 @@ func TestEventForwarderTeams(t *testing.T) {
 			items_event_source_locations = ["items/*", "items2"]
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			auth_methods_event_source_locations = ["/auth/"]
-			gateway_event_source_locations = ["http://localhost:8081"]
+			gateway_event_source_locations = ["http://localhost:8000"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "usage-report"]
 			url = "https://example2.webhook.office.com"
 			runner_type = "immediate"
