@@ -66,10 +66,10 @@ services:
     image: mysql:8
     platform: linux/amd64
     ports:
-      - "13306:3306"
+      - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: testdb
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s

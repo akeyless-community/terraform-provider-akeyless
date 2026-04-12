@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestDynamicSecretArtifactory(t *testing.T) {
@@ -1374,4 +1375,53 @@ func TestDynamicSecretVenafi(t *testing.T) {
 	`, dsName, dsPath)
 
 	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
+}
+
+func TestDynamicSecretDataSource(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-db"
+	targetPath := testPath(targetName)
+	targetDetailsType := "db_target_details"
+
+	expect := map[string]any{
+		"db_type":   "mysql",
+		"user_name": testutils.DockerMysqlUser,
+		"pwd":       testutils.DockerMysqlPassword,
+		"host":      testutils.DockerMysqlHost,
+		"port":      testutils.DockerMysqlPort,
+		"db_name":   testutils.DockerMysqlDB,
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	dsName := "ds_mysql_test"
+	dsPath := testPath(dsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_mysql" "%v" {
+			name            = "%v"
+			target_name     = "%v"
+			user_ttl        = "5m"
+		}
+		data "akeyless_dynamic_secret" "ds" {
+			path       = "%v"
+			depends_on = [akeyless_dynamic_secret_mysql.%v]
+		}
+	`, dsName, dsPath, targetPath, dsPath, dsName)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.akeyless_dynamic_secret.ds", "value"),
+				),
+			},
+		},
+	})
 }

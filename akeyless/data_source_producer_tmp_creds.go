@@ -11,13 +11,14 @@ import (
 
 func dataSourceGatewayGetProducerTmpCreds() *schema.Resource {
 	return &schema.Resource{
-		Description: "Get producer temporary credentials list data source",
-		Read:        dataSourceGatewayGetProducerTmpCredsRead,
+		Description:        "Get producer temporary credentials list data source",
+		DeprecationMessage: "Use akeyless_dynamic_secret_tmp_creds instead",
+		Read:               dataSourceGatewayGetDynamicSecretTmpCredsRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Producer Name",
+				Description: "Dynamic Secret Name",
 				ForceNew:    true,
 			},
 			"value": {
@@ -30,7 +31,27 @@ func dataSourceGatewayGetProducerTmpCreds() *schema.Resource {
 	}
 }
 
-func dataSourceGatewayGetProducerTmpCredsRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceGatewayGetDynamicSecretTmpCreds() *schema.Resource {
+	return &schema.Resource{
+		Description: "Get dynamic secret temporary credentials list data source",
+		Read:        dataSourceGatewayGetDynamicSecretTmpCredsRead,
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Dynamic Secret Name",
+				ForceNew:    true,
+			},
+			"value": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "JSON-encoded list of temporary credentials data",
+			},
+		},
+	}
+}
+
+func dataSourceGatewayGetDynamicSecretTmpCredsRead(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -38,12 +59,12 @@ func dataSourceGatewayGetProducerTmpCredsRead(d *schema.ResourceData, m interfac
 	ctx := context.Background()
 	name := d.Get("name").(string)
 
-	body := akeyless_api.GatewayGetTmpUsers{
+	body := akeyless_api.DynamicSecretTmpCredsGet{
 		Name:  name,
 		Token: &token,
 	}
 
-	rOut, res, err := client.GatewayGetTmpUsers(ctx).Body(body).Execute()
+	rOut, res, err := client.DynamicSecretTmpCredsGet(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleReadError(d, "can't get value", res, err)
 	}

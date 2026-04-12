@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestRotatedSecretAwsResource(t *testing.T) {
@@ -1013,4 +1014,54 @@ func TestRotatedSecretWindowsResource(t *testing.T) {
 	`, rsName, rsPath, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+}
+
+func TestRotatedSecretDataSource(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-db"
+	targetPath := testPath(targetName)
+	targetDetailsType := "db_target_details"
+
+	expect := map[string]any{
+		"db_type":   "mysql",
+		"user_name": testutils.DockerMysqlUser,
+		"pwd":       testutils.DockerMysqlPassword,
+		"host":      testutils.DockerMysqlHost,
+		"port":      testutils.DockerMysqlPort,
+		"db_name":   testutils.DockerMysqlDB,
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	rsName := "test-rs-for-ds"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mysql" "%v" {
+			name            = "%v"
+			target_name     = "%v"
+			rotator_type    = "target"
+			authentication_credentials 	= "use-target-creds"
+		}
+		data "akeyless_rotated_secret" "rsv" {
+			name       = "%v"
+			depends_on = [akeyless_rotated_secret_mysql.%v]
+		}
+	`, rsName, rsPath, targetPath, rsPath, rsName)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.akeyless_rotated_secret.rsv", "value"),
+				),
+			},
+		},
+	})
 }
