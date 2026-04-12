@@ -16,8 +16,8 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 	targetDetailsType := "aws_target_details"
 
 	expect := map[string]any{
-		"access_key_id": AWS_ACCESS_KEY_ID1,
-		"access_key":    AWS_SECRET_ACCESS_KEY1,
+		"access_key_id": "test",
+		"access_key":    "test",
 		"region":        "us-east-2",
 	}
 
@@ -35,12 +35,12 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			target_name 				= "%v"
 			rotator_type 				= "api-key"
 			authentication_credentials 	= "use-target-creds"
-			api_id 						= "%v"
-			api_key 					= "%v"
+			api_id 						= "test"
+			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "aaaa"
 		}
-	`, rsName, rsPath, targetPath, AWS_ACCESS_KEY_ID1, AWS_SECRET_ACCESS_KEY1)
+	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_aws" "%v" {
@@ -48,12 +48,12 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			target_name 				= "%v"
 			rotator_type 				= "api-key"
 			authentication_credentials 	= "use-target-creds"
-			api_id 						= "%v"
-			api_key 					= "%v"
+			api_id 						= "test"
+			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "bbbb"
 		}
-	`, rsName, rsPath, targetPath, AWS_ACCESS_KEY_ID1, AWS_SECRET_ACCESS_KEY1)
+	`, rsName, rsPath, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -67,9 +67,9 @@ func TestRotatedSecretAzureResource(t *testing.T) {
 	targetDetailsType := "azure_target_details"
 
 	expect := map[string]any{
-		"client_id":     AZURE_CLIENT_ID1,
-		"tenant_id":     AZURE_TENANT_ID1,
-		"client_secret": AZURE_CLIENT_SECRET1,
+		"client_id":     "test",
+		"tenant_id":     "test",
+		"client_secret": "test",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -100,10 +100,10 @@ func testRotatedSecretAzurePassword(t *testing.T, targetPath string) {
 			target_name 				= "%v"
 			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
-			username 					= "%v"
+			username 					= "test"
 			description 				= "aaaa"
 		}
-	`, rsName, rsPath, targetPath, AZURE_USERNAME1)
+	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_azure" "%v" {
@@ -111,10 +111,10 @@ func testRotatedSecretAzurePassword(t *testing.T, targetPath string) {
 			target_name 				= "%v"
 			rotator_type 				= "password"
 			authentication_credentials 	= "use-target-creds"
-			username 					= "%v"
+			username 					= "test"
 			description 				= "bbbb"
 		}
-	`, rsName, rsPath, targetPath, AZURE_USERNAME1)
+	`, rsName, rsPath, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -130,12 +130,12 @@ func testRotatedSecretAzureApiKey(t *testing.T, targetPath string) {
 			target_name 				= "%v"
 			rotator_type 				= "api-key"
 			authentication_credentials 	= "use-target-creds"
-			api_id 						= "%v"
-			api_key 					= "%v"
-			app_id 						= "%v"
+			api_id 						= "test"
+			api_key 					= "test"
+			app_id 						= "test"
 			description 				= "aaaa"
 		}
-	`, rsName, rsPath, targetPath, AZURE_CLIENT_ID1, AZURE_CLIENT_SECRET1, AZURE_APP_ID1)
+	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_azure" "%v" {
@@ -143,12 +143,12 @@ func testRotatedSecretAzureApiKey(t *testing.T, targetPath string) {
 			target_name 				= "%v"
 			rotator_type 				= "api-key"
 			authentication_credentials 	= "use-target-creds"
-			api_id 						= "%v"
-			api_key 					= "%v"
-			app_id 						= "%v"
+			api_id 						= "test"
+			api_key 					= "test"
+			app_id 						= "test"
 			description 				= "bbbb"
 		}
-	`, rsName, rsPath, targetPath, AZURE_CLIENT_ID1, AZURE_CLIENT_SECRET1, AZURE_APP_ID1)
+	`, rsName, rsPath, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -326,7 +326,7 @@ func TestRotatedSecretGcpResource(t *testing.T) {
 	targetDetailsType := "gcp_target_details"
 
 	expect := map[string]any{
-		"gcp_service_account_key": GCP_ROTATOR_KEY1,
+		"gcp_service_account_key": testutils.GCP_KEY,
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -355,9 +355,9 @@ func testRotatedSecretGcpServiceAccount(t *testing.T, targetPath string) {
 			rotator_type 				= "service-account-rotator"
 			authentication_credentials 	= "use-target-creds"
 			gcp_key 					= "%v"
-			gcp_service_account_email 	= "%v"
+			gcp_service_account_email 	= "test@test.com"
 		}
-	`, rsName, rsPath, targetPath, GCP_ROTATOR_KEY1, GCP_SA_ROTATOR_EMAIL1)
+	`, rsName, rsPath, targetPath, testutils.GCP_KEY)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_gcp" "%v" {
@@ -366,8 +366,9 @@ func testRotatedSecretGcpServiceAccount(t *testing.T, targetPath string) {
 			rotator_type 				= "service-account-rotator"
 			authentication_credentials 	= "use-target-creds"
 			gcp_key 					= "%v"
+			gcp_service_account_email 	= "test@test.com"
 		}
-	`, rsName, rsPath, targetPath, GCP_ROTATOR_KEY1)
+	`, rsName, rsPath, targetPath, testutils.GCP_KEY)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -383,10 +384,10 @@ func testRotatedSecretGcpTarget(t *testing.T, targetPath string) {
 			target_name 				= "%v"
 			rotator_type 				= "target"
 			authentication_credentials 	= "use-target-creds"
-			gcp_service_account_email 	= "%v"
+			gcp_service_account_email 	= "test@test.com"
 			tags 						= ["t1", "t2"]
 		}
-	`, rsName, rsPath, targetPath, GCP_SA_ROTATOR_EMAIL1)
+	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_gcp" "%v" {
@@ -394,10 +395,10 @@ func testRotatedSecretGcpTarget(t *testing.T, targetPath string) {
 			target_name 				= "%v"
 			rotator_type 				= "target"
 			authentication_credentials 	= "use-target-creds"
-			gcp_service_account_email 	= "%v"
+			gcp_service_account_email 	= "test@test.com"
 			tags 						= ["t1", "t3"]
 		}
-	`, rsName, rsPath, targetPath, GCP_SA_ROTATOR_EMAIL1)
+	`, rsName, rsPath, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
@@ -466,7 +467,7 @@ func TestRotatedSecretLdapResource(t *testing.T) {
 		"url":                 "ldap://planetexpress.com:10389",
 		"certificate":         "aaaa",
 		"bind_dn":             "cn=admin,dc=planetexpress,dc=com",
-		"bind_password":       LDAP_PASS,
+		"bind_password":       "test",
 		"implementation_type": "OpenLDAP",
 	}
 
@@ -623,11 +624,11 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 
 	expect := map[string]any{
 		"db_type":   "mysql",
-		"user_name": MYSQL_USERNAME1,
-		"pwd":       MYSQL_PASSWORD1,
-		"host":      MYSQL_HOST1,
-		"port":      MYSQL_PORT1,
-		"db_name":   MYSQL_DBNAME1,
+		"user_name": "test",
+		"pwd":       "test",
+		"host":      "127.0.0.1",
+		"port":      "3306",
+		"db_name":   "test",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -642,12 +643,12 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			target_name 				= "%v"
 			rotator_type 				= "target"
 			authentication_credentials 	= "use-target-creds"
-			rotated_username 			= "%v"
-  			rotated_password 			= "%v"
+			rotated_username 			= "test"
+  			rotated_password 			= "test"
 			password_length 			= "9"
 			tags 						= ["t1", "t2"]
 		}
-	`, rsName, rsPath, targetPath, MYSQL_USERNAME1, MYSQL_PASSWORD1)
+	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_mysql" "%v" {
@@ -655,12 +656,12 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			target_name 				= "%v"
 			rotator_type 				= "target"
 			authentication_credentials 	= "use-target-creds"
-			rotated_username 			= "%v"
-  			rotated_password 			= "%v"
+			rotated_username 			= "test"
+  			rotated_password 			= "test"
 			password_length 			= "9"
 			tags 						= ["t1","t3"]
 		}
-	`, rsName, rsPath, targetPath, MYSQL_USERNAME1, MYSQL_PASSWORD1)
+	`, rsName, rsPath, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }

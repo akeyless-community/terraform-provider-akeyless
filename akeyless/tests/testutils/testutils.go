@@ -84,6 +84,9 @@ const (
 
 	// DockerVaultAddr is the Vault URL reachable from inside the Docker network (gateway container).
 	DockerVaultAddr = "http://vault:8200"
+
+	// decoded value: {"dummy": "test"}
+	GCP_KEY = "eyJkdW1teSI6ICJ0ZXN0In0="
 )
 
 var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 3, 4, 5, 6, 7}

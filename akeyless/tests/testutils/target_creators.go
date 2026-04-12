@@ -30,6 +30,7 @@ var CreateTargetByTypeMap = map[string]CreateTargetFunc{
 	"linked_target_details":           CreateLinkedTarget,
 	"mongo_db_target_details":         CreateMongoDbTarget,
 	"native_k8s_target_details":       CreateK8sTarget,
+	"openai_target_details":           CreateOpenaiTarget,
 	"ping_target_details":             CreatePingTarget,
 	"rabbit_mq_target_details":        CreateRabbitMqTarget,
 	"salesforce_target_details":       CreateSalesforceTarget,
@@ -350,6 +351,23 @@ func CreateMongoDbTarget(t *testing.T, name string, details map[string]any) {
 
 	_, resp, err := client.CreateDBTarget(context.Background()).Body(body).Execute()
 	require.NoError(t, common.HandleError("can't create mongodb target for test", resp, err))
+}
+
+func CreateOpenaiTarget(t *testing.T, name string, details map[string]any) {
+	client, token, err := GetClient()
+	require.NoError(t, err)
+
+	body := akeyless_api.TargetCreateOpenAI{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.OpenaiUrl, details["openai_url"])
+	common.GetAkeylessPtr(&body.ApiKey, details["api_key"])
+	common.GetAkeylessPtr(&body.OrganizationId, details["organization_id"])
+	common.GetAkeylessPtr(&body.Model, details["model"])
+
+	_, resp, err := client.TargetCreateOpenAI(context.Background()).Body(body).Execute()
+	require.NoError(t, common.HandleError("can't create openai target for test", resp, err))
 }
 
 func CreatePingTarget(t *testing.T, name string, details map[string]any) {
