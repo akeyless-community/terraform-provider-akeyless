@@ -13,7 +13,6 @@ services:
       BYPASS_DRY_RUN: "true"
       VERSION: 4.48.0
       DEVELOPMENT_OR_RELEASE: "release"
-      CLUSTER_NAME: "gateway-items-tests"
     healthcheck:
       test: ["CMD", "curl", "-sf", "-X", "POST", "http://localhost:8081/health"]
       interval: 10s
