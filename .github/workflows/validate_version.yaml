@@ -77,7 +77,7 @@ jobs:
         env:
           AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
           AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
-        run: docker compose -f docker-compose.test.yml --profile gateway up -d --wait
+        run: docker compose -f docker-compose.test.yml up -d --wait
 
       - name: Run Gateway Item Tests
         env:
@@ -89,11 +89,11 @@ jobs:
 
       - name: Dump gateway logs
         if: failure()
-        run: docker compose -f docker-compose.test.yml --profile gateway logs akeyless-gateway --tail 200
+        run: docker compose -f docker-compose.test.yml logs akeyless-gateway --tail 200
 
       - name: Tear down test infrastructure
         if: always()
-        run: docker compose -f docker-compose.test.yml --profile gateway down -v
+        run: docker compose -f docker-compose.test.yml down -v
 
   test-gateway-config:
     runs-on: ubuntu-22.04

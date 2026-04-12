@@ -3,20 +3,16 @@ services:
     image: akeyless/base:latest-akeyless
     platform: linux/amd64
     restart: on-failure
-    profiles: ["gateway"]
     ports:
       - "8000:8000"
       - "8080:8080"
       - "8081:8081"
-      - "18888:18888"
     environment:
       ADMIN_ACCESS_ID: ${AKEYLESS_ACCESS_ID}
       ADMIN_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY}
       BYPASS_DRY_RUN: "true"
       VERSION: 4.48.0
       DEVELOPMENT_OR_RELEASE: "release"
-      CACHE_ENABLE: "false"
-      PRO_ACTIVE_CACHE_ENABLE: "false"
     healthcheck:
       test: ["CMD", "curl", "-sf", "-X", "POST", "http://localhost:8081/health"]
       interval: 10s
