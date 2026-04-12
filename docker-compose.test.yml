@@ -7,6 +7,7 @@ services:
       - "8000:8000"
       - "8080:8080"
       - "8081:8081"
+      - "18888:18888"
     environment:
       ADMIN_ACCESS_ID: ${AKEYLESS_ACCESS_ID}
       ADMIN_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY}
@@ -27,9 +28,10 @@ services:
     platform: linux/amd64
     restart: on-failure
     ports:
-      - "9000:8000"
-      - "9080:8080"
-      - "9081:8081"
+      - "8000:8000"
+      - "8080:8080"
+      - "8081:8081"
+      - "18888:18888"
     environment:
       ADMIN_ACCESS_ID: ${AKEYLESS_ACCESS_ID}
       ADMIN_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY}
