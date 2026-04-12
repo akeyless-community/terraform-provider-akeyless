@@ -32,11 +32,6 @@ func TestMain(m *testing.M) {
 		log.Fatalf("gateway not ready: %v", err)
 	}
 
-	// Disable cache for gateway tests to avoid using cached data
-	if err := testutils.DisableCache(); err != nil {
-		log.Fatalf("failed to disable cache: %v", err)
-	}
-
 	resource.TestMain(m)
 }
 
