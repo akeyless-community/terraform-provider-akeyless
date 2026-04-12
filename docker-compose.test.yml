@@ -13,8 +13,8 @@ services:
       BYPASS_DRY_RUN: "true"
       VERSION: 4.48.0
       DEVELOPMENT_OR_RELEASE: "release"
-      ENABLE_CACHE: "false"
-      ENABLE_PROACTIVE: "false"
+      CACHE_ENABLE: "false"
+      PRO_ACTIVE_CACHE_ENABLE: "false"
     healthcheck:
       test: ["CMD", "curl", "-sf", "-X", "POST", "http://localhost:8081/health"]
       interval: 10s
