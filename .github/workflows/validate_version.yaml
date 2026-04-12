@@ -126,6 +126,7 @@ jobs:
           AKEYLESS_ACCESS_ID: ${{ secrets.AKEYLESS_ACCESS_ID }}
           AKEYLESS_ACCESS_KEY: ${{ secrets.AKEYLESS_ACCESS_KEY }}
           AKEYLESS_GATEWAY: http://localhost:9081
+          CLUSTER_NAME: gateway-config-tests
         run: |
           TF_ACC=1 go test ./akeyless/tests/gateway_config/ -v -count 1 -parallel 1 -timeout 120m
 

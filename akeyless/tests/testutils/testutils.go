@@ -1308,6 +1308,11 @@ func GenerateSelfSignedCertBase64(t *testing.T) (certB64, keyB64 string) {
 // config update that touches SshBastion/Global/WebBastion fields is rejected
 // with "sra is not activate for cluster ...".
 func EnableSRA() error {
+	clusterName := os.Getenv("CLUSTER_NAME")
+	if clusterName == "" {
+		clusterName = "defaultCluster"
+	}
+
 	accessID := os.Getenv("AKEYLESS_ACCESS_ID")
 	accessKey := os.Getenv("AKEYLESS_ACCESS_KEY")
 	if accessID == "" || accessKey == "" {
@@ -1318,7 +1323,7 @@ func EnableSRA() error {
 	if err != nil {
 		return fmt.Errorf("get service DNS: %w", err)
 	}
-	fmt.Printf("[EnableSRA] gator=%s auth=%s\n", gatorDNS, authDNS)
+	fmt.Printf("[EnableSRA] gator=%s auth=%s cluster=%s\n", gatorDNS, authDNS, clusterName)
 
 	uamCreds, err := authenticateUAM(authDNS, accessID, accessKey)
 	if err != nil {
@@ -1326,7 +1331,7 @@ func EnableSRA() error {
 	}
 	fmt.Printf("[EnableSRA] got UAM creds (len=%d)\n", len(uamCreds))
 
-	if err := sendBastionKeepAlive(gatorDNS, uamCreds); err != nil {
+	if err := sendBastionKeepAlive(gatorDNS, uamCreds, clusterName); err != nil {
 		return fmt.Errorf("send bastion keep-alive: %w", err)
 	}
 	fmt.Println("[EnableSRA] bastion keep-alive sent successfully")
@@ -1454,9 +1459,9 @@ func getAuthTime(authDNS string) (int64, error) {
 	return t.Time, nil
 }
 
-func sendBastionKeepAlive(gatorDNS, uamCreds string) error {
+func sendBastionKeepAlive(gatorDNS, uamCreds, clusterName string) error {
 	bastionInfo := map[string]interface{}{
-		"cluster_name":         "defaultCluster",
+		"cluster_name":         clusterName,
 		"instance_id":          "terraform-test",
 		"version":              "1.0.0",
 		"bastion_type":         "ztb",
