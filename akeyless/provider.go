@@ -55,6 +55,7 @@ func Provider() *schema.Provider {
 			"akeyless_auth_method_aws_iam":                     resourceAuthMethodAwsIam(),
 			"akeyless_auth_method_azure_ad":                    resourceAuthMethodAzureAd(),
 			"akeyless_auth_method_cert":                        resourceAuthMethodCert(),
+			"akeyless_auth_method_email":                       resourceAuthMethodEmail(),
 			"akeyless_auth_method_gcp":                         resourceAuthMethodGcp(),
 			"akeyless_auth_method_k8s":                         resourceAuthMethodK8s(),
 			"akeyless_auth_method_ldap":                        resourceAuthMethodLdap(),

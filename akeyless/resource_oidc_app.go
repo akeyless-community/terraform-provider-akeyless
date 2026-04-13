@@ -13,13 +13,13 @@ import (
 )
 
 func normalizePermissionAssignmentJSON(jsonStr string) string {
-	var data []map[string]interface{}
+	var data []map[string]any
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		return jsonStr
 	}
 	for _, entry := range data {
 		if sc, ok := entry["sub_claims"]; ok {
-			if m, ok := sc.(map[string]interface{}); ok && len(m) == 0 {
+			if m, ok := sc.(map[string]any); ok && len(m) == 0 {
 				delete(entry, "sub_claims")
 			}
 		}
@@ -86,7 +86,7 @@ func resourceOidcApp() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "A json array string defining the access permission assignment for this OIDC app. Supports two formats: 1) Auth method: [{\"assignment_type\":\"AUTH_METHOD\",\"access_id\":\"p-abc123\",\"sub_claims\":{\"email\":[\"user@example.com\"]}}] 2) Group: [{\"assignment_type\":\"GROUP\",\"group_id\":\"grp-xyz789\"}]",
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					jsonStr := v.(string)
 					normalized := normalizePermissionAssignmentJSON(jsonStr)
 					return normalized
@@ -122,7 +122,7 @@ func resourceOidcApp() *schema.Resource {
 	}
 }
 
-func resourceOidcAppCreate(d *schema.ResourceData, m interface{}) error {
+func resourceOidcAppCreate(d *schema.ResourceData, m any) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -133,7 +133,7 @@ func resourceOidcAppCreate(d *schema.ResourceData, m interface{}) error {
 	audience := d.Get("audience").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	description := d.Get("description").(string)
-	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := d.Get("item_custom_fields").(map[string]any)
 	key := d.Get("key").(string)
 	permissionAssignment := d.Get("permission_assignment").(string)
 	public := d.Get("public").(bool)
@@ -178,7 +178,7 @@ func resourceOidcAppCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceOidcAppRead(d, m)
 }
 
-func resourceOidcAppRead(d *schema.ResourceData, m interface{}) error {
+func resourceOidcAppRead(d *schema.ResourceData, m any) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -292,9 +292,9 @@ func resourceOidcAppRead(d *schema.ResourceData, m interface{}) error {
 		// Read permission_assignment from access_permission_assignment
 		// Normalize to match input format (assignment_type, access_id, sub_claims)
 		if oidcInfo.AccessPermissionAssignment != nil && len(oidcInfo.AccessPermissionAssignment) > 0 {
-			var normalizedAssignments []map[string]interface{}
+			var normalizedAssignments []map[string]any
 			for _, pa := range oidcInfo.AccessPermissionAssignment {
-				assignment := make(map[string]interface{})
+				assignment := make(map[string]any)
 				if pa.AssignmentType != nil {
 					assignment["assignment_type"] = *pa.AssignmentType
 				}
@@ -303,7 +303,7 @@ func resourceOidcAppRead(d *schema.ResourceData, m interface{}) error {
 				}
 				if pa.AssignmentType != nil && *pa.AssignmentType == "AUTH_METHOD" {
 					if pa.SubClaims != nil && len(*pa.SubClaims) > 0 {
-						subClaims := make(map[string]interface{})
+						subClaims := make(map[string]any)
 						for k, v := range *pa.SubClaims {
 							subClaims[k] = v
 						}
@@ -334,7 +334,7 @@ func resourceOidcAppRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceOidcAppUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceOidcAppUpdate(d *schema.ResourceData, m any) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -345,7 +345,7 @@ func resourceOidcAppUpdate(d *schema.ResourceData, m interface{}) error {
 	audience := d.Get("audience").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	description := d.Get("description").(string)
-	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := d.Get("item_custom_fields").(map[string]any)
 	key := d.Get("key").(string)
 	permissionAssignment := d.Get("permission_assignment").(string)
 	public := d.Get("public").(bool)
@@ -414,7 +414,7 @@ func resourceOidcAppUpdate(d *schema.ResourceData, m interface{}) error {
 	return resourceOidcAppRead(d, m)
 }
 
-func resourceOidcAppDelete(d *schema.ResourceData, m interface{}) error {
+func resourceOidcAppDelete(d *schema.ResourceData, m any) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -435,7 +435,7 @@ func resourceOidcAppDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceOidcAppImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceOidcAppImport(d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
 
 	id := d.Id()
 

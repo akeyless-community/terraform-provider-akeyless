@@ -855,6 +855,73 @@ func TestAuthMethodUIDResource(t *testing.T) {
 	})
 }
 
+func TestAuthMethodEmailResource(t *testing.T) {
+	name := "test_auth_method_email"
+	path := testPath(name)
+	testutils.DeleteAuthMethod(path, "email")
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_email" "%v" {
+			name 				= "%v"
+			email 				= "test-tf@akeyless.io"
+			access_expires 		= 10000
+			bound_ips 			= ["1.1.1.0/32"]
+			force_sub_claims 	= true
+			jwt_ttl 			= 42
+			description 		= "test email auth method"
+			expiration_event_in = ["2","6"]
+			audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "true"
+			gw_bound_ips 		= ["2.2.2.0/32"]
+			product_type 		= ["sm","sra"]
+		}
+	`, name, path)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_email" "%v" {
+			name 				= "%v"
+			email 				= "test-tf@akeyless.io"
+			access_expires 		= 10001
+			bound_ips 			= ["1.1.4.0/32"]
+			description 		= "updated email auth method"
+			audit_logs_claims 	= ["eee","kk"]
+			delete_protection 	= "false"
+			gw_bound_ips 		= ["3.3.3.0/32"]
+			product_type 		= ["sm"]
+		}
+	`, name, path)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testutils.CheckAuthMethodDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckMethodExistsRemotely(path),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "email", "test-tf@akeyless.io"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "delete_protection", "true"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "description", "test email auth method"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "gw_bound_ips.0", "2.2.2.0/32"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "product_type.#", "2"),
+					resource.TestCheckResourceAttrSet("akeyless_auth_method_email."+name, "access_id"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckMethodExistsRemotely(path),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "email", "test-tf@akeyless.io"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "delete_protection", "false"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "description", "updated email auth method"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "gw_bound_ips.0", "3.3.3.0/32"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_email."+name, "product_type.#", "1"),
+					resource.TestCheckResourceAttrSet("akeyless_auth_method_email."+name, "access_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAuthMethodOCIResource(t *testing.T) {
 	name := "test_auth_method_oci"
 	path := testPath("auth_method_oci")
