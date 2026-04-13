@@ -41,7 +41,7 @@ const PublicAPI = "https://api.akeyless.io"
 
 // Docker test infrastructure constants
 const (
-	DockerMysqlHost     = "127.0.0.1"
+	DockerMysqlHost     = "mysql"
 	DockerMysqlPort     = "3306"
 	DockerMysqlUser     = "root"
 	DockerMysqlPassword = "password"

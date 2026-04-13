@@ -3,12 +3,9 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
-	"time"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -65,7 +62,6 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	gsvBody := akeyless_api.GetDynamicSecretValue{
 		Name:  path,
@@ -73,7 +69,7 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if v, ok := d.GetOk("args"); ok {
-		args := v.([]interface{})
+		args := v.([]any)
 		argsStr := make([]string, len(args))
 		for i, arg := range args {
 			argsStr[i] = arg.(string)
@@ -102,32 +98,10 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	var gsvOutIntr map[string]any
-	var gsvOut map[string]any
-	var resp *http.Response
-	var err error
 
-	const maxRetries = 3
-	for attempt := 0; ; attempt++ {
-		gsvOut, resp, err = client.GetDynamicSecretValue(ctx).Body(gsvBody).Execute()
-		if err == nil || attempt >= maxRetries {
-			break
-		}
-		if resp != nil && resp.StatusCode < 500 {
-			break
-		}
-		time.Sleep(time.Duration(attempt+1) * 5 * time.Second)
-	}
-
+	gsvOut, resp, err := client.GetDynamicSecretValue(ctx).Body(gsvBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			bo := apiErr.Body()
-			err = json.Unmarshal(bo, &gsvOutIntr)
-			if err != nil {
-				return fmt.Errorf("can't get Dynamic Secret value: %v", string(bo))
-			}
-		} else {
-			return fmt.Errorf("can't get Dynamic Secret value: %v", err)
-		}
+		return common.HandleReadError(d, "can't get dynamic secret value", resp, err)
 	}
 	var marshal []byte
 
