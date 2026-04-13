@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -99,9 +101,20 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 		gsvBody.Timeout = &timeout
 	}
 
-	var gsvOutIntr map[string]interface{}
+	var gsvOutIntr map[string]any
+	var gsvOut map[string]any
+	var resp *http.Response
+	var err error
 
-	gsvOut, _, err := client.GetDynamicSecretValue(ctx).Body(gsvBody).Execute()
+	const maxRetries = 3
+	for attempt := 0; ; attempt++ {
+		gsvOut, resp, err = client.GetDynamicSecretValue(ctx).Body(gsvBody).Execute()
+		if err == nil || attempt >= maxRetries || resp == nil || resp.StatusCode < 500 {
+			break
+		}
+		time.Sleep(time.Duration(attempt+1) * 5 * time.Second)
+	}
+
 	if err != nil {
 		if errors.As(err, &apiErr) {
 			bo := apiErr.Body()
