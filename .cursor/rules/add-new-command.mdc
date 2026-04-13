@@ -56,7 +56,7 @@ When defining schema fields, follow these conventions:
 - **`Sensitive: true`** — for secrets, passwords, private keys, API keys, tokens, and client secrets
 - **`Computed: true`** — when the field has server-side defaults (e.g. protection keys)
 - **`Default`** — must match the field's `Type` (e.g. `Default: 0` for `TypeInt`, `Default: false` for `TypeBool`; never use string `"0"` or `"false"`)
-- **`Required` / `Optional`** — according to the SDK command requirements
+- **`Required` / `Optional`** — according to the SDK command requirements. If `Optional` is true, `Required` can be omitted.
 - **`ForceNew: true`** — for identifier fields of the item (e.g. `name`)
 - **`id`** — reserved by Terraform; do not use as a custom schema field
 - All `d.Set()` calls in read functions **must** check for errors
