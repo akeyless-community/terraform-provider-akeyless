@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -39,51 +40,75 @@ import (
 
 const PublicAPI = "https://api.akeyless.io"
 
-// Docker test infrastructure constants
-const (
-	DockerMysqlHost     = "mysql"
-	DockerMysqlPort     = "3306"
-	DockerMysqlUser     = "root"
-	DockerMysqlPassword = "password"
-	DockerMysqlDB       = "mysql"
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
 
-	DockerPostgresHost     = "postgres"
-	DockerPostgresPort     = "5432"
-	DockerPostgresUser     = "postgres"
-	DockerPostgresPassword = "postgres_password"
-	DockerPostgresDB       = "testdb"
+// dockerHost returns the host to use for reaching a Docker service from the
+// gateway container. On macOS (Docker Desktop) standalone containers don't
+// share a docker-compose network, so host.docker.internal is used. On Linux
+// (CI) the docker-compose service name is used directly.
+func dockerHost(serviceName string) string {
+	if v := os.Getenv("DOCKER_" + strings.ToUpper(serviceName) + "_HOST"); v != "" {
+		return v
+	}
+	if runtime.GOOS == "darwin" {
+		return "host.docker.internal"
+	}
+	return serviceName
+}
 
-	DockerMongoHost     = "mongo"
-	DockerMongoPort     = "27017"
-	DockerMongoUser     = "admin"
-	DockerMongoPassword = "mongo_password"
-	DockerMongoDB       = "testdb"
+// Docker test infrastructure defaults.
+// On macOS hosts default to host.docker.internal (works with standalone containers).
+// On Linux (CI) they default to docker-compose service names.
+// Override any value via env var (e.g. DOCKER_MYSQL_HOST).
+var (
+	DockerMysqlHost     = dockerHost("mysql")
+	DockerMysqlPort     = envOr("DOCKER_MYSQL_PORT", "3306")
+	DockerMysqlUser     = envOr("DOCKER_MYSQL_USER", "root")
+	DockerMysqlPassword = envOr("DOCKER_MYSQL_PASSWORD", "password")
+	DockerMysqlDB       = envOr("DOCKER_MYSQL_DB", "mysql")
 
-	DockerMssqlHost     = "mssql"
-	DockerMssqlPort     = "1433"
-	DockerMssqlUser     = "sa"
-	DockerMssqlPassword = "MssqlPass123!"
-	DockerMssqlDB       = "master"
+	DockerPostgresHost     = dockerHost("postgres")
+	DockerPostgresPort     = envOr("DOCKER_POSTGRES_PORT", "5432")
+	DockerPostgresUser     = envOr("DOCKER_POSTGRES_USER", "postgres")
+	DockerPostgresPassword = envOr("DOCKER_POSTGRES_PASSWORD", "postgres_password")
+	DockerPostgresDB       = envOr("DOCKER_POSTGRES_DB", "testdb")
 
-	DockerRedisHost     = "redis"
-	DockerRedisPort     = "6379"
-	DockerRedisUser     = "default"
-	DockerRedisPassword = "redis_password"
+	DockerMongoHost     = dockerHost("mongo")
+	DockerMongoPort     = envOr("DOCKER_MONGO_PORT", "27017")
+	DockerMongoUser     = envOr("DOCKER_MONGO_USER", "admin")
+	DockerMongoPassword = envOr("DOCKER_MONGO_PASSWORD", "mongo_password")
+	DockerMongoDB       = envOr("DOCKER_MONGO_DB", "testdb")
 
-	DockerCassandraHost     = "cassandra"
-	DockerCassandraPort     = "9042"
-	DockerCassandraUser     = "cassandra"
-	DockerCassandraPassword = "cassandra"
+	DockerMssqlHost     = dockerHost("mssql")
+	DockerMssqlPort     = envOr("DOCKER_MSSQL_PORT", "1433")
+	DockerMssqlUser     = envOr("DOCKER_MSSQL_USER", "sa")
+	DockerMssqlPassword = envOr("DOCKER_MSSQL_PASSWORD", "MssqlPass123!")
+	DockerMssqlDB       = envOr("DOCKER_MSSQL_DB", "master")
 
-	DockerRabbitmqURI      = "http://rabbitmq:15672"
-	DockerRabbitmqUser     = "admin"
-	DockerRabbitmqPassword = "rabbitmq_password"
+	DockerRedisHost     = dockerHost("redis")
+	DockerRedisPort     = envOr("DOCKER_REDIS_PORT", "6379")
+	DockerRedisUser     = envOr("DOCKER_REDIS_USER", "default")
+	DockerRedisPassword = envOr("DOCKER_REDIS_PASSWORD", "redis_password")
+
+	DockerCassandraHost     = dockerHost("cassandra")
+	DockerCassandraPort     = envOr("DOCKER_CASSANDRA_PORT", "9042")
+	DockerCassandraUser     = envOr("DOCKER_CASSANDRA_USER", "cassandra")
+	DockerCassandraPassword = envOr("DOCKER_CASSANDRA_PASSWORD", "cassandra")
+
+	DockerRabbitmqURI      = envOr("DOCKER_RABBITMQ_URI", "http://"+dockerHost("rabbitmq")+":15672")
+	DockerRabbitmqUser     = envOr("DOCKER_RABBITMQ_USER", "admin")
+	DockerRabbitmqPassword = envOr("DOCKER_RABBITMQ_PASSWORD", "rabbitmq_password")
 
 	VaultAddr  = "http://127.0.0.1:18200"
 	VaultToken = "test"
 
 	// DockerVaultAddr is the Vault URL reachable from inside the Docker network (gateway container).
-	DockerVaultAddr = "http://vault:8200"
+	DockerVaultAddr = "http://" + dockerHost("vault") + ":8200"
 
 	// decoded value: {"dummy": "test"}
 	GCP_KEY = "eyJkdW1teSI6ICJ0ZXN0In0="

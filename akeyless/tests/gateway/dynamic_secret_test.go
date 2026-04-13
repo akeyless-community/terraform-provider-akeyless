@@ -1,11 +1,15 @@
 package gateway
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDynamicSecretArtifactory(t *testing.T) {
@@ -1470,6 +1474,116 @@ func TestDynamicSecretDataSource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.akeyless_dynamic_secret.ds", "value"),
+				),
+			},
+		},
+	})
+}
+
+func TestDynamicSecretTmpCreds(t *testing.T) {
+
+	t.Skip("TODO: SDK is broken, skipping")
+
+	testutils.SkipIfNoGateway(t)
+
+	client, token := testutils.PrepareClient(t)
+	ctx := context.Background()
+
+	// Create a MySQL target via API
+	targetName := "test-target-tmp-creds"
+	targetPath := testPath(targetName)
+	testutils.CreateTargetByType(t, targetPath, "db_target_details", map[string]any{
+		"db_type":   "mysql",
+		"user_name": testutils.DockerMysqlUser,
+		"pwd":       testutils.DockerMysqlPassword,
+		"host":      testutils.DockerMysqlHost,
+		"port":      testutils.DockerMysqlPort,
+		"db_name":   testutils.DockerMysqlDB,
+	})
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	// Create a MySQL dynamic secret via API
+	dsPath := testPath("ds_tmp_creds_test")
+	createBody := akeyless_api.DynamicSecretCreateMySql{
+		Name:       dsPath,
+		Token:      &token,
+		TargetName: akeyless_api.PtrString(targetPath),
+	}
+	_, _, err := client.DynamicSecretCreateMySql(ctx).Body(createBody).Execute()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		testutils.DeleteItem(t, dsPath)
+	})
+
+	// Get value to produce a temporary user
+	getValBody := akeyless_api.DynamicSecretGetValue{
+		Name:  dsPath,
+		Token: &token,
+	}
+	_, _, err = client.DynamicSecretGetValue(ctx).Body(getValBody).Execute()
+	require.NoError(t, err)
+
+	// Fetch tmp creds list and extract the ID
+	getTmpBody := akeyless_api.DynamicSecretTmpCredsGet{
+		Name:  dsPath,
+		Token: &token,
+	}
+	tmpCreds, _, err := client.DynamicSecretTmpCredsGet(ctx).Body(getTmpBody).Execute()
+	require.NoError(t, err)
+	require.Len(t, tmpCreds, 1, "expected exactly one tmp creds entry after get-value")
+	require.NotNil(t, tmpCreds[0].Id)
+
+	tmpCredsId := *tmpCreds[0].Id
+
+	resourceName := "akeyless_dynamic_secret_tmp_creds.test"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_tmp_creds" "test" {
+			name         = "%v"
+			tmp_creds_id = "%v"
+			new_ttl_min  = 30
+		}
+	`, dsPath, tmpCredsId)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_tmp_creds" "test" {
+			name         = "%v"
+			tmp_creds_id = "%v"
+			new_ttl_min  = 60
+		}
+	`, dsPath, tmpCredsId)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			getTmp := akeyless_api.DynamicSecretTmpCredsGet{
+				Name:  dsPath,
+				Token: &token,
+			}
+			creds, _, err := client.DynamicSecretTmpCredsGet(ctx).Body(getTmp).Execute()
+			if err != nil {
+				return nil
+			}
+			for _, c := range creds {
+				if c.Id != nil && *c.Id == tmpCredsId {
+					return fmt.Errorf("tmp creds %s still exists", tmpCredsId)
+				}
+			}
+			return nil
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tmp_creds_id", tmpCredsId),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tmp_creds_id", tmpCredsId),
 				),
 			},
 		},

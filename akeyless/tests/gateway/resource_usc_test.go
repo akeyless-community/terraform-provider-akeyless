@@ -26,7 +26,7 @@ const GcpKey1 string = `{
   "universe_domain": "googleapis.com"
 }`
 
-const (
+var (
 	HashiVaultUrl   string = testutils.DockerVaultAddr
 	HashiVaultToken string = testutils.VaultToken
 )
