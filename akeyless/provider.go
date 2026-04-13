@@ -47,6 +47,7 @@ func Provider() *schema.Provider {
 		ConfigureContextFunc: configureProvider,
 		ResourcesMap: map[string]*schema.Resource{
 			"akeyless_account_custom_field":                    resourceAccountCustomField(),
+			"akeyless_account_settings":                        resourceAccountSettings(),
 			"akeyless_classic_key":                             resourceClassicKey(),
 			"akeyless_dfc_key":                                 resourceDfcKey(),
 			"akeyless_static_secret":                           resourceStaticSecret(),

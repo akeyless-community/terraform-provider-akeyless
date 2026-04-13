@@ -13,7 +13,6 @@ import (
 )
 
 func TestAccountCustomFieldResource(t *testing.T) {
-	t.Parallel()
 
 	fieldName := fmt.Sprintf("test_custom_field_%s", testRunID)
 
@@ -66,6 +65,150 @@ func TestAccountCustomFieldResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: config},
 			{Config: configUpdate},
+		},
+	})
+}
+
+func TestAccountSettingsResource(t *testing.T) {
+
+	config := `
+		resource "akeyless_account_settings" "test" {
+			jwt_ttl_default                        = 120
+			jwt_ttl_min                            = 10
+			jwt_ttl_max                            = 360
+			password_length                        = 12
+			use_capital_letters                    = "true"
+			use_lower_letters                      = "true"
+			use_numbers                            = "true"
+			use_special_characters                 = "true"
+			dynamic_secret_max_ttl                 = 1440
+			dynamic_secret_max_ttl_enable          = "true"
+			items_deletion_protection              = "true"
+			hide_static_password                   = "true"
+			invalid_characters                     = "<>"
+			item_locking_enabled                   = "true"
+			enable_password_expiration             = "true"
+			password_expiration_days               = "90"
+			password_expiration_notification_days  = "14"
+			default_share_link_ttl_minutes         = "60"
+			enable_item_sharing                    = "true"
+			company_name                           = "TestCompanyAcc"
+		}
+	`
+
+	configUpdate := `
+		resource "akeyless_account_settings" "test" {
+			jwt_ttl_default                        = 60
+			jwt_ttl_min                            = 5
+			jwt_ttl_max                            = 720
+			password_length                        = 8
+			use_capital_letters                    = "false"
+			use_lower_letters                      = "false"
+			use_numbers                            = "false"
+			use_special_characters                 = "false"
+			dynamic_secret_max_ttl                 = 720
+			dynamic_secret_max_ttl_enable          = "true"
+			items_deletion_protection              = "false"
+			hide_static_password                   = "false"
+			invalid_characters                     = ""
+			item_locking_enabled                   = "false"
+			enable_password_expiration             = "false"
+			password_expiration_days               = ""
+			password_expiration_notification_days  = ""
+			default_share_link_ttl_minutes         = ""
+			enable_item_sharing                    = "false"
+			company_name                           = "TestCompanyAccUpd"
+		}
+	`
+
+	configUpdate2 := `
+		resource "akeyless_account_settings" "test" {
+			jwt_ttl_default                        = 60
+			jwt_ttl_min                            = 5
+			jwt_ttl_max                            = 720
+			dynamic_secret_max_ttl_enable          = "false"
+			password_length                        = 12
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "jwt_ttl_default", "120"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "jwt_ttl_min", "10"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "jwt_ttl_max", "360"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_length", "12"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_numbers", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_special_characters", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "dynamic_secret_max_ttl", "1440"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "dynamic_secret_max_ttl_enable", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "items_deletion_protection", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "hide_static_password", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "invalid_characters", "<>"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "item_locking_enabled", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_password_expiration", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_expiration_days", "90"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_expiration_notification_days", "14"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "default_share_link_ttl_minutes", "60"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_item_sharing", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "company_name", "TestCompanyAcc"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "jwt_ttl_default", "60"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "jwt_ttl_min", "5"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "jwt_ttl_max", "720"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_length", "8"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_capital_letters", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_lower_letters", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_numbers", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_special_characters", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "dynamic_secret_max_ttl", "720"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "dynamic_secret_max_ttl_enable", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "items_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "hide_static_password", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "invalid_characters", ""),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "item_locking_enabled", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_password_expiration", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_expiration_days", ""),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_expiration_notification_days", ""),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "default_share_link_ttl_minutes", ""),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_item_sharing", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "company_name", "TestCompanyAccUpd"),
+				),
+			},
+			{
+				Config: configUpdate2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "jwt_ttl_default", "60"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "jwt_ttl_min", "5"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "jwt_ttl_max", "720"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_length", "12"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_capital_letters", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_lower_letters", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_numbers", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_special_characters", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "dynamic_secret_max_ttl", "720"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "dynamic_secret_max_ttl_enable", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "items_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "hide_static_password", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "invalid_characters", ""),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "item_locking_enabled", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_password_expiration", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_expiration_days", ""),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_expiration_notification_days", ""),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "default_share_link_ttl_minutes", ""),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_item_sharing", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "company_name", "TestCompanyAccUpd"),
+				),
+			},
 		},
 	})
 }
