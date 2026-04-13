@@ -67,6 +67,7 @@ When defining schema fields, follow these conventions:
 - All `d.Set()` calls in read functions **must** check for errors
 - Read functions must set **every writable field** that the API response exposes (skip Sensitive fields the API won't return)
 - When a resource replaces a legacy one, add `DeprecationMessage` to the old resource pointing to the new one
+- The Update handler must use an "override" approach -- always set all fields, not just the ones that are explicitly configured. Set all fields that the SDK support to update.
 
 ## 3. Register the New Command
 

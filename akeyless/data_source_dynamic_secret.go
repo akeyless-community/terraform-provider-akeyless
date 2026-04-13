@@ -3,9 +3,10 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
-	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -99,14 +100,23 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 
 	var gsvOutIntr map[string]any
 
-	gsvOut, resp, err := client.GetDynamicSecretValue(ctx).Body(gsvBody).Execute()
+	gsvOut, _, err := client.GetDynamicSecretValue(ctx).Body(gsvBody).Execute()
 	if err != nil {
-		return common.HandleReadError(d, "can't get dynamic secret value", resp, err)
+		var apiErr akeyless_api.GenericOpenAPIError
+		if errors.As(err, &apiErr) {
+			bo := apiErr.Body()
+			err = json.Unmarshal(bo, &gsvOutIntr)
+			if err != nil {
+				return fmt.Errorf("can't get Dynamic Secret value: %v", string(bo))
+			}
+		} else {
+			return fmt.Errorf("can't get Dynamic Secret value: %v", err)
+		}
 	}
 	var marshal []byte
 
 	if gsvOutIntr != nil {
-		gsvOut = make(map[string]interface{})
+		gsvOut = make(map[string]any)
 		for k, val := range gsvOutIntr {
 			if v, ok := val.(string); ok {
 				gsvOut[k] = v

@@ -136,7 +136,7 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Marshal UserAssignments array to JSON string
-	if rOut.UserAssignments != nil && len(rOut.UserAssignments) > 0 {
+	if len(rOut.UserAssignments) > 0 {
 		// Normalize the user assignments to ensure sub_claims is always present
 		var normalizedAssignments []map[string]interface{}
 		for _, ua := range rOut.UserAssignments {

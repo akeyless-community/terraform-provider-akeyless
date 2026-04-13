@@ -293,7 +293,7 @@ func resourceDfcKeyRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.ItemCustomFieldsDetails != nil && len(rOut.ItemCustomFieldsDetails) > 0 {
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
 		customFieldsMap := make(map[string]string)
 		for _, field := range rOut.ItemCustomFieldsDetails {
 			if field.Name != nil && field.Value != nil {

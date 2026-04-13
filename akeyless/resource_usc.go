@@ -239,7 +239,7 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 		}
 	}
 
-	if rOut.ItemCustomFieldsDetails != nil && len(rOut.ItemCustomFieldsDetails) > 0 {
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
 		itemCustomFields := make(map[string]string)
 		for _, field := range rOut.ItemCustomFieldsDetails {
 			if field.Name != nil && field.Value != nil {
