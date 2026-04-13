@@ -63,10 +63,11 @@ func resourceGlobalsignTarget() *schema.Resource {
 				Description: "Email of the GlobalSign GCC account contact",
 			},
 			"timeout": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Timeout waiting for certificate validation in Duration format (1h - 1 Hour, 20m - 20 Minutes, 33m3s - 33 Minutes and 3 Seconds), maximum 1h.",
-				Default:     "5m",
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: common.DiffSuppressDuration,
+				Description:      "Timeout waiting for certificate validation in Duration format (1h - 1 Hour, 20m - 20 Minutes, 33m3s - 33 Minutes and 3 Seconds), maximum 1h.",
+				Default:          "5m",
 			},
 			"key": {
 				Type:        schema.TypeString,

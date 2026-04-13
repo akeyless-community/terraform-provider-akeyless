@@ -2,7 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"time"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -49,19 +48,11 @@ func resourceGlobalsignAtlasTarget() *schema.Resource {
 				Description: "Mutual TLS Key contents of the GlobalSign Atlas account encoded in base64",
 			},
 			"timeout": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Timeout waiting for certificate validation in Duration format (1h - 1 Hour, 20m - 20 Minutes, 33m3s - 33 Minutes and 3 Seconds), maximum 1h",
-				Default:     "5m",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Normalize duration strings to compare them
-					oldDur, oldErr := time.ParseDuration(old)
-					newDur, newErr := time.ParseDuration(new)
-					if oldErr != nil || newErr != nil {
-						return false
-					}
-					return oldDur == newDur
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Timeout waiting for certificate validation in Duration format (1h - 1 Hour, 20m - 20 Minutes, 33m3s - 33 Minutes and 3 Seconds), maximum 1h",
+				Default:          "5m",
+				DiffSuppressFunc: common.DiffSuppressDuration,
 			},
 			"key": {
 				Type:        schema.TypeString,

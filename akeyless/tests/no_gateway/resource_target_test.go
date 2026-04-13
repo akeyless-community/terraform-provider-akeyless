@@ -2,6 +2,7 @@ package no_gateway
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
@@ -473,6 +474,62 @@ func TestTargetGodaddyResource(t *testing.T) {
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
 
+func TestTargetGoogleTrustResource(t *testing.T) {
+	eabKeyId := os.Getenv("AKEYLESS_EAB_KEY_ID")
+	eabHmacKey := os.Getenv("AKEYLESS_EAB_HMAC_KEY")
+	if eabKeyId == "" || eabHmacKey == "" {
+		t.Skip("skipping: AKEYLESS_EAB_KEY_ID and AKEYLESS_EAB_HMAC_KEY must be set for Google Trust target tests")
+	}
+
+	dnsTargetName := "dns_target"
+	dnsTargetPath := testPath(dnsTargetName)
+	dnsTargetDetailsType := "aws_target_details"
+
+	expect := map[string]any{
+		"access_key_id": "test",
+		"access_key":    "test",
+		"region":        "us-east-1",
+	}
+
+	testutils.CreateTargetByType(t, dnsTargetPath, dnsTargetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, dnsTargetPath)
+	})
+
+	targetName := "google_trust_target"
+	targetPath := testPath(targetName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_google_trust" "%v" {
+			name 				= "%v"
+			email 				= "test@example.com"
+			eab_key_id 			= "%v"
+			eab_hmac_key 		= "%v"
+			dns_target_creds 	= "%v"
+			hosted_zone 		= "Z1234567890"
+			google_trust_url 	= "staging"
+			timeout 			= "5m"
+			description 		= "Test Google Trust target"
+		}
+	`, targetName, targetPath, eabKeyId, eabHmacKey, dnsTargetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_google_trust" "%v" {
+			name 				= "%v"
+			email 				= "updated@example.com"
+			eab_key_id 			= "%v"
+			eab_hmac_key 		= "%v"
+			dns_target_creds 	= "%v"
+			hosted_zone 		= "Z0987654321"
+			google_trust_url 	= "production"
+			timeout 			= "10m"
+			description 		= "Updated Google Trust target"
+		}
+	`, targetName, targetPath, eabKeyId, eabHmacKey, dnsTargetPath)
+
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
 func TestTargetK8sResource(t *testing.T) {
 	secretName := "k8s-target"
 	secretPath := testPath(secretName)
@@ -522,6 +579,51 @@ func TestTargetLdapResource(t *testing.T) {
 			description 		= "Updated LDAP target"
 		}
 	`, targetName, targetPath)
+
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
+func TestTargetLetsEncryptResource(t *testing.T) {
+
+	dnsTargetName := "dns_target"
+	dnsTargetPath := testPath(dnsTargetName)
+	dnsTargetDetailsType := "aws_target_details"
+
+	expect := map[string]any{
+		"access_key_id": "test",
+		"access_key":    "test",
+		"region":        "us-east-1",
+	}
+
+	testutils.CreateTargetByType(t, dnsTargetPath, dnsTargetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, dnsTargetPath)
+	})
+
+	targetName := "lets_encrypt_target"
+	targetPath := testPath(targetName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_lets_encrypt" "%v" {
+			name 				= "%v"
+			email 				= "test@example.com"
+			dns_target_creds 	= "%v"
+			lets_encrypt_url 	= "staging"
+			timeout 			= "5m"
+			description 		= "Test Lets Encrypt target"
+		}
+	`, targetName, targetPath, dnsTargetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_lets_encrypt" "%v" {
+			name 				= "%v"
+			email 				= "updated@example.com"
+			dns_target_creds 	= "%v"
+			lets_encrypt_url 	= "production"
+			timeout 			= "10m"
+			description 		= "Updated Lets Encrypt target"
+		}
+	`, targetName, targetPath, dnsTargetPath)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
@@ -733,6 +835,39 @@ func TestTargetSectigoResource(t *testing.T) {
 			organization_id 	= 101112
 			external_requester 	= "test2@example.com"
 			description 		= "Updated Sectigo target"
+		}
+	`, targetName, targetPath)
+
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
+func TestTargetSplunkResource(t *testing.T) {
+	t.Skip("skipping: Splunk target is not supported yet by the API")
+
+	targetName := "splunk_target"
+	targetPath := testPath(targetName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_splunk" "%v" {
+			name 				= "%v"
+			url 				= "https://splunk.example.com:8089"
+			username 			= "user1"
+			password 			= "test-password"
+			audience 			= "splunk-audience"
+			use_tls 			= true
+			description 		= "Test Splunk target"
+		}
+	`, targetName, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_splunk" "%v" {
+			name 				= "%v"
+			url 				= "https://splunk.example.com:8089"
+			username 			= "user2"
+			splunk_token 		= "test-token"
+			token_owner 		= "user2"
+			audience 			= "splunk-audience"
+			description 		= "Updated Splunk target"
 		}
 	`, targetName, targetPath)
 

@@ -157,9 +157,11 @@ func Provider() *schema.Provider {
 			"akeyless_target_globalsign":                       resourceGlobalsignTarget(),
 			"akeyless_target_globalsign_atlas":                 resourceGlobalsignAtlasTarget(),
 			"akeyless_target_godaddy":                          resourceGodaddyTarget(),
+			"akeyless_target_google_trust":                     resourceGoogleTrustTarget(),
 			"akeyless_target_hashivault":                       resourceHashiVaultTarget(),
 			"akeyless_target_k8s":                              resourceK8sTarget(),
 			"akeyless_target_ldap":                             resourceLdapTarget(),
+			"akeyless_target_lets_encrypt":                     resourceLetsEncryptTarget(),
 			"akeyless_target_linked":                           resourceLinkedTarget(),
 			"akeyless_target_openai":                           resourceOpenAITarget(),
 			"akeyless_target_ping":                             resourcePingTarget(),
@@ -178,6 +180,7 @@ func Provider() *schema.Provider {
 			"akeyless_tokenizer":                               resourceTokenizer(),
 			"akeyless_usc":                                     resourceUsc(),
 			"akeyless_usc_secret":                              resourceUscSecret(),
+			// "akeyless_target_splunk":                           resourceSplunkTarget(), // TODO: add back when the API is ready
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"akeyless_auth":                     dataSourceAuth(),

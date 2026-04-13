@@ -8,13 +8,18 @@ alwaysApply: false
 
 When adding a new resource or data source to the Terraform provider, follow these steps:
 
-## 1. Naming and File Creation
+## 1. Update the Akeyless SDK
+
+1.  Run `go get -u github.com/akeylesslabs/akeyless-go/v5`
+2.  Run `go mod tidy`
+
+## 2. Naming and File Creation
 
 *   Create a new Go file in the `akeyless/` directory.
     *   For resources: `resource_<name>.go` (e.g., `resource_my_new_feature.go`)
     *   For data sources: `data_source_<name>.go` (e.g., `data_source_my_new_feature.go`)
 
-## 2. Implementation Structure
+## 3. Implementation Structure
 
 Use the standard SDK v2 pattern:
 
@@ -57,7 +62,7 @@ When defining schema fields, follow these conventions:
 - **`Computed: true`** — when the field has server-side defaults (e.g. protection keys)
 - **`Default`** — must match the field's `Type` (e.g. `Default: 0` for `TypeInt`, `Default: false` for `TypeBool`; never use string `"0"` or `"false"`)
 - **`Required` / `Optional`** — according to the SDK command requirements. If `Optional` is true, `Required` can be omitted.
-- **`ForceNew: true`** — for identifier fields of the item (e.g. `name`)
+- **`ForceNew: true`** — for the field (or few fields, in special cases) that identify the item (e.g. `name`)
 - **`id`** — reserved by Terraform; do not use as a custom schema field
 - All `d.Set()` calls in read functions **must** check for errors
 - Read functions must set **every writable field** that the API response exposes (skip Sensitive fields the API won't return)
@@ -82,7 +87,9 @@ Documentation is auto-generated.
 
 1.  Add tests to an existing or new test file (not required to create a separate file per resource).
 2.  Implement acceptance tests using `resource.TestCase`.
-3.  Run tests: `make testacc TEST=./akeyless/resource_<name>_test.go` (or similar).
+3.  Try to cover as much as input arguments, especially the arguments that are unique to the resource.
+4.  For arguments with default value, ensure the updateConfig (step 2) set them to empty. This will add coverage for the defaulting mechanism.
+5.  Run tests: `make testacc TEST=./akeyless/resource_<name>_test.go` (or similar).
 
 ## 6. Format
 
