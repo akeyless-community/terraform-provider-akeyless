@@ -200,7 +200,7 @@ func resourceRotatedSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.SecureAccessDbName, secureAccessDbName)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
-	if itemCustomFields != nil && len(itemCustomFields) > 0 {
+	if len(itemCustomFields) > 0 {
 		fields := make(map[string]string)
 		for k, v := range itemCustomFields {
 			fields[k] = v.(string)
@@ -312,6 +312,21 @@ func resourceRotatedSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 		}
 	}
 
+	if itemOut.ItemCustomFieldsDetails != nil {
+		customFields := make(map[string]string)
+		for _, field := range itemOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err := d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleReadError(d, "can't get rotated secret value", res, err)
@@ -416,7 +431,7 @@ func resourceRotatedSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
-	if itemCustomFields != nil && len(itemCustomFields) > 0 {
+	if len(itemCustomFields) > 0 {
 		fields := make(map[string]string)
 		for k, v := range itemCustomFields {
 			fields[k] = v.(string)

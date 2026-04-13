@@ -1,8 +1,8 @@
+// generated file
 package akeyless
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -10,15 +10,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceRotatedSecretWindows() *schema.Resource {
+func resourceRotatedSecretSplunk() *schema.Resource {
 	return &schema.Resource{
-		Description: "Windows rotated secret resource",
-		Create:      resourceRotatedSecretWindowsCreate,
-		Read:        resourceRotatedSecretWindowsRead,
-		Update:      resourceRotatedSecretWindowsUpdate,
-		Delete:      resourceRotatedSecretWindowsDelete,
+		Description: "Splunk rotated secret resource",
+		Create:      resourceRotatedSecretSplunkCreate,
+		Read:        resourceRotatedSecretSplunkRead,
+		Update:      resourceRotatedSecretSplunkUpdate,
+		Delete:      resourceRotatedSecretSplunkDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRotatedSecretWindowsImport,
+			State: resourceRotatedSecretSplunkImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -32,43 +32,31 @@ func resourceRotatedSecretWindows() *schema.Resource {
 				Required:    true,
 				Description: "The target name to associate",
 			},
+			"rotator_type": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The rotator type. options: [target/password/token/hec-token]",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the object",
 			},
-			"rotator_type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The rotator type [target/password]",
-			},
 			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The credentials to connect with use-self-creds/use-target-creds",
-				Default:     "use-self-creds",
-			},
-			"rotated_username": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password)",
-			},
-			"rotated_password": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "rotated-username password (relevant only for rotator-type=password)",
+				Description: "The credentials to connect with use-user-creds/use-target-creds",
+				Default:     "use-user-creds",
 			},
 			"auto_rotate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation",
+				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]",
 			},
 			"rotation_interval": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes",
+				Description: "The number of days to wait between every automatic key rotation (1-365)",
 			},
 			"rotation_hour": {
 				Type:        schema.TypeInt,
@@ -92,6 +80,49 @@ func resourceRotatedSecretWindows() *schema.Resource {
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"rotated_username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Username to be rotated (relevant only for rotator-type=password)",
+			},
+			"rotated_password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Rotated-username password (relevant only for rotator-type=password)",
+			},
+			"hec_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Current Splunk HEC token value to store (relevant only for rotator-type=hec-token)",
+			},
+			"hec_token_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Splunk HEC input name to manage (required for rotator-type=hec-token)",
+			},
+			"splunk_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Current Splunk authentication token to store (relevant only for rotator-type=token)",
+			},
+			"token_owner": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Splunk token owner username (relevant only for rotator-type=token)",
+			},
+			"audience": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Token audience for Splunk token creation (required for rotator-type=token)",
+			},
+			"expiration_date": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Token expiration date in YYYY-MM-DD format (relevant only for rotator-type=token when manual rotation is selected)",
+			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -108,54 +139,13 @@ func resourceRotatedSecretWindows() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Set the maximum number of versions, limited by the account settings defaults",
-			},
-			"rotate_after_disconnect": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Rotate the value of the secret after SRA session ends [true/false]",
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
 			},
 			"rotation_event_in": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "How many days before the rotation of the item would you like to be notified",
 				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"same_password": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Rotate same password for each host from the Linked Target (relevant only for Linked Target)",
-			},
-			"secure_access_allow_external_user": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Allow providing external user for a domain users",
-			},
-			"secure_access_certificate_issuer": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
-			},
-			"secure_access_enable": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Enable/Disable secure remote access [true/false]",
-			},
-			"secure_access_host": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"secure_access_rdp_domain": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Default domain name server. i.e. microsoft.com",
-			},
-			"secure_access_rdp_user": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Override the RDP Domain username",
 			},
 			"keep_prev_version": {
 				Type:        schema.TypeString,
@@ -166,7 +156,7 @@ func resourceRotatedSecretWindows() *schema.Resource {
 	}
 }
 
-func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) error {
+func resourceRotatedSecretSplunkCreate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -174,6 +164,7 @@ func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) e
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
+	rotatorType := d.Get("rotator_type").(string)
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -182,61 +173,55 @@ func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) e
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
-	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
 	rotatedPassword := d.Get("rotated_password").(string)
+	hecToken := d.Get("hec_token").(string)
+	hecTokenName := d.Get("hec_token_name").(string)
+	splunkToken := d.Get("splunk_token").(string)
+	tokenOwner := d.Get("token_owner").(string)
+	audience := d.Get("audience").(string)
+	expirationDate := d.Get("expiration_date").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	maxVersions := d.Get("max_versions").(string)
-	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
 	rotationEventInList := d.Get("rotation_event_in").([]interface{})
 	rotationEventIn := common.ExpandStringList(rotationEventInList)
-	samePassword := d.Get("same_password").(string)
-	secureAccessAllowExternalUser := d.Get("secure_access_allow_external_user").(bool)
-	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
-	secureAccessEnable := d.Get("secure_access_enable").(string)
-	secureAccessHostList := d.Get("secure_access_host").([]interface{})
-	secureAccessHost := common.ExpandStringList(secureAccessHostList)
-	secureAccessRdpDomain := d.Get("secure_access_rdp_domain").(string)
-	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
 
-	body := akeyless_api.RotatedSecretCreateWindows{
+	body := akeyless_api.RotatedSecretCreateSplunk{
 		Name:        name,
 		TargetName:  targetName,
 		RotatorType: rotatorType,
 		Token:       &token,
 	}
-	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
-	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.HecToken, hecToken)
+	common.GetAkeylessPtr(&body.HecTokenName, hecTokenName)
+	common.GetAkeylessPtr(&body.SplunkToken, splunkToken)
+	common.GetAkeylessPtr(&body.TokenOwner, tokenOwner)
+	common.GetAkeylessPtr(&body.Audience, audience)
+	common.GetAkeylessPtr(&body.ExpirationDate, expirationDate)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
-	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
-	common.GetAkeylessPtr(&body.SamePassword, samePassword)
-	common.GetAkeylessPtr(&body.SecureAccessAllowExternalUser, secureAccessAllowExternalUser)
-	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
-	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
-	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
-	common.GetAkeylessPtr(&body.SecureAccessRdpDomain, secureAccessRdpDomain)
-	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
 	if len(itemCustomFields) > 0 {
-		customFields := make(map[string]string)
+		fields := make(map[string]string)
 		for k, v := range itemCustomFields {
-			customFields[k] = v.(string)
+			fields[k] = v.(string)
 		}
-		body.ItemCustomFields = &customFields
+		body.ItemCustomFields = &fields
 	}
 
-	_, resp, err := client.RotatedSecretCreateWindows(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretCreateSplunk(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create rotated secret", resp, err)
 	}
@@ -246,7 +231,7 @@ func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) e
 	return nil
 }
 
-func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) error {
+func resourceRotatedSecretSplunkRead(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -313,7 +298,30 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 		}
 	}
 
-	var rotatorType = ""
+	deleteProtectionVal := "false"
+	if itemOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if len(itemOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range itemOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err = d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	var rotatorType string
 
 	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.RotatedSecretDetails != nil {
 		rsd := itemOut.ItemGeneralInfo.RotatedSecretDetails
@@ -323,7 +331,6 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 				return err
 			}
 		}
-
 		if rsd.RotatorType != nil {
 			rotatorType = *rsd.RotatorType
 			err = setRotatorType(d, *rsd.RotatorType)
@@ -331,27 +338,24 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 				return err
 			}
 		}
-
 		if rsd.RotatorCredsType != nil {
 			err = d.Set("authentication_credentials", *rsd.RotatorCredsType)
 			if err != nil {
 				return err
 			}
 		}
-	}
-
-	if itemOut.ItemCustomFieldsDetails != nil {
-		customFields := make(map[string]string)
-		for _, field := range itemOut.ItemCustomFieldsDetails {
-			if field.Name != nil && field.Value != nil {
-				customFields[*field.Name] = *field.Value
-			}
-		}
-		if len(customFields) > 0 {
-			err := d.Set("item_custom_fields", customFields)
+		if rsd.MaxVersions != nil {
+			err = d.Set("max_versions", strconv.Itoa(int(*rsd.MaxVersions)))
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.NextRotationEvents != nil {
+		err = d.Set("rotation_event_in", common.ReadRotationEventInParam(itemOut.ItemGeneralInfo.NextRotationEvents))
+		if err != nil {
+			return err
 		}
 	}
 
@@ -367,28 +371,55 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 			switch rotatorType {
 			case common.UserPassRotator:
 				if username, ok := value["username"]; ok {
-					err := d.Set("rotated_username", username.(string))
+					err = d.Set("rotated_username", username.(string))
 					if err != nil {
 						return err
 					}
 				}
 				if password, ok := value["password"]; ok {
-					err := d.Set("rotated_password", password.(string))
+					err = d.Set("rotated_password", password.(string))
 					if err != nil {
 						return err
 					}
 				}
 			}
+			if v, ok := value["splunk_token"]; ok {
+				err = d.Set("splunk_token", v.(string))
+				if err != nil {
+					return err
+				}
+			}
+			if v, ok := value["hec_token"]; ok {
+				err = d.Set("hec_token", v.(string))
+				if err != nil {
+					return err
+				}
+			}
+			if v, ok := value["hec_token_name"]; ok {
+				err = d.Set("hec_token_name", v.(string))
+				if err != nil {
+					return err
+				}
+			}
+			if v, ok := value["token_owner"]; ok {
+				err = d.Set("token_owner", v.(string))
+				if err != nil {
+					return err
+				}
+			}
+			if v, ok := value["audience"]; ok {
+				err = d.Set("audience", v.(string))
+				if err != nil {
+					return err
+				}
+			}
+			if v, ok := value["expiration_date"]; ok {
+				err = d.Set("expiration_date", v.(string))
+				if err != nil {
+					return err
+				}
+			}
 		}
-	}
-
-	deleteProtectionVal := "false"
-	if itemOut.DeleteProtection != nil {
-		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
-	}
-	err = d.Set("delete_protection", deleteProtectionVal)
-	if err != nil {
-		return err
 	}
 
 	d.SetId(path)
@@ -396,8 +427,7 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 	return nil
 }
 
-func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) error {
-
+func resourceRotatedSecretSplunkUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -411,32 +441,25 @@ func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) e
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
-	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword := d.Get("rotated_password").(string)
+	hecToken := d.Get("hec_token").(string)
+	splunkToken := d.Get("splunk_token").(string)
+	tokenOwner := d.Get("token_owner").(string)
+	audience := d.Get("audience").(string)
+	expirationDate := d.Get("expiration_date").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	maxVersions := d.Get("max_versions").(string)
-	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
 	rotationEventInList := d.Get("rotation_event_in").([]interface{})
 	rotationEventIn := common.ExpandStringList(rotationEventInList)
-	samePassword := d.Get("same_password").(string)
-	secureAccessAllowExternalUser := d.Get("secure_access_allow_external_user").(bool)
-	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
-	secureAccessEnable := d.Get("secure_access_enable").(string)
-	secureAccessHostList := d.Get("secure_access_host").([]interface{})
-	secureAccessHost := common.ExpandStringList(secureAccessHostList)
-	secureAccessRdpDomain := d.Get("secure_access_rdp_domain").(string)
-	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
 	keepPrevVersion := d.Get("keep_prev_version").(string)
 
-	body := akeyless_api.RotatedSecretUpdateWindows{
+	body := akeyless_api.RotatedSecretUpdateSplunk{
 		Name:    name,
 		NewName: akeyless_api.PtrString(name),
 		Token:   &token,
 	}
-	var resp *http.Response
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
 	if err == nil {
 		if len(add) > 0 {
@@ -452,31 +475,26 @@ func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
-	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
-	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.HecToken, hecToken)
+	common.GetAkeylessPtr(&body.SplunkToken, splunkToken)
+	common.GetAkeylessPtr(&body.TokenOwner, tokenOwner)
+	common.GetAkeylessPtr(&body.Audience, audience)
+	common.GetAkeylessPtr(&body.ExpirationDate, expirationDate)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
-	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
-	common.GetAkeylessPtr(&body.SamePassword, samePassword)
-	common.GetAkeylessPtr(&body.SecureAccessAllowExternalUser, secureAccessAllowExternalUser)
-	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
-	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
-	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
-	common.GetAkeylessPtr(&body.SecureAccessRdpDomain, secureAccessRdpDomain)
-	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 	if len(itemCustomFields) > 0 {
-		customFields := make(map[string]string)
+		fields := make(map[string]string)
 		for k, v := range itemCustomFields {
-			customFields[k] = v.(string)
+			fields[k] = v.(string)
 		}
-		body.ItemCustomFields = &customFields
+		body.ItemCustomFields = &fields
 	}
 
-	_, resp, err = client.RotatedSecretUpdateWindows(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretUpdateSplunk(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update rotated secret", resp, err)
 	}
@@ -486,15 +504,14 @@ func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) e
 	return nil
 }
 
-func resourceRotatedSecretWindowsDelete(d *schema.ResourceData, m interface{}) error {
+func resourceRotatedSecretSplunkDelete(d *schema.ResourceData, m interface{}) error {
 	return resourceRotatedSecretCommonDelete(d, m)
 }
 
-func resourceRotatedSecretWindowsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-
+func resourceRotatedSecretSplunkImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	id := d.Id()
 
-	err := resourceRotatedSecretWindowsRead(d, m)
+	err := resourceRotatedSecretSplunkRead(d, m)
 	if err != nil {
 		return nil, err
 	}

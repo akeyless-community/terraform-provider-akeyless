@@ -314,7 +314,7 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 	if err != nil {
 		return err
 	}
-	if itemOut.ItemCustomFieldsDetails != nil && len(itemOut.ItemCustomFieldsDetails) > 0 {
+	if len(itemOut.ItemCustomFieldsDetails) > 0 {
 		customFields := make(map[string]string)
 		for _, field := range itemOut.ItemCustomFieldsDetails {
 			if field.Name != nil && field.Value != nil {
@@ -382,7 +382,7 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 				return err
 			}
 		}
-		if sra.Host != nil && len(sra.Host) > 0 {
+		if len(sra.Host) > 0 {
 			err = d.Set("secure_access_host", sra.Host)
 			if err != nil {
 				return err

@@ -1016,6 +1016,195 @@ func TestRotatedSecretWindowsResource(t *testing.T) {
 	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
 
+func TestRotatedSecretOpenAIResource(t *testing.T) {
+
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-openai"
+	targetPath := testPath(targetName)
+	targetDetailsType := "openai_target_details"
+
+	expect := map[string]any{
+		"api_key": "sk-test-key-12345",
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	rsName := "test-rs-openai"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_openai" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "api-key"
+			authentication_credentials 	= "use-target-creds"
+			api_key 					= "sk-test-key-12345"
+			api_key_id 					= "key-id-1"
+			description 				= "aaaa"
+			tags 						= ["t1", "t2"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_openai" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "api-key"
+			authentication_credentials 	= "use-target-creds"
+			api_key 					= "sk-test-key-12345"
+			api_key_id 					= "key-id-2"
+			description 				= "bbbb"
+			tags 						= ["t1", "t3"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+}
+
+func TestRotatedSecretSplunkResource(t *testing.T) {
+
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-splunk"
+	targetPath := testPath(targetName)
+	targetDetailsType := "splunk_target_details"
+
+	expect := map[string]any{
+		"url":      "https://splunk.example.com:8089",
+		"username": "admin",
+		"password": "DummyPass123",
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	t.Run("password", func(t *testing.T) {
+		testRotatedSecretSplunkPassword(t, targetPath)
+	})
+
+	t.Run("token", func(t *testing.T) {
+		testRotatedSecretSplunkToken(t, targetPath)
+	})
+
+	t.Run("hec_token", func(t *testing.T) {
+		testRotatedSecretSplunkHecToken(t, targetPath)
+	})
+}
+
+func testRotatedSecretSplunkPassword(t *testing.T, targetPath string) {
+
+	t.Skip("TODO: GW is broken, skipping. Need to add user/pass arguments to update command")
+
+	rsName := "test-rs-splunk-password"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_splunk" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "password"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
+			splunk_token 				= "dummy-splunk-token-1"
+			token_owner 				= "admin"
+			audience 					= "test-audience"
+			description 				= "aaaa"
+			tags 						= ["t1", "t2"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_splunk" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "password"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "user1"
+			rotated_password 			= "pass1"
+			splunk_token 				= "dummy-token-2"
+			token_owner 				= "admin"
+			audience 					= "test-audience"
+			description 				= "bbbb"
+			tags 						= ["t1", "t3"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+}
+
+func testRotatedSecretSplunkToken(t *testing.T, targetPath string) {
+	rsName := "test-rs-splunk-token"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_splunk" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "token-rotator"
+			authentication_credentials 	= "use-target-creds"
+			splunk_token 				= "dummy-splunk-token-1"
+			token_owner 				= "admin"
+			audience 					= "test-audience"
+			expiration_date 			= "2027-01-01"
+			description 				= "aaaa"
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_splunk" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "token-rotator"
+			authentication_credentials 	= "use-target-creds"
+			splunk_token 				= "dummy-splunk-token-2"
+			token_owner 				= "admin"
+			audience 					= "test-audience-2"
+			expiration_date 			= "2027-06-01"
+			description 				= "bbbb"
+		}
+	`, rsName, rsPath, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+}
+
+func testRotatedSecretSplunkHecToken(t *testing.T, targetPath string) {
+	rsName := "test-rs-splunk-hec"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_splunk" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "hec-token-rotator"
+			authentication_credentials 	= "use-target-creds"
+			hec_token 					= "dummy-hec-token-1"
+			hec_token_name 				= "my-hec-input"
+			description 				= "aaaa"
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_splunk" "%v" {
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "hec-token-rotator"
+			authentication_credentials 	= "use-target-creds"
+			hec_token 					= "dummy-hec-token-2"
+			hec_token_name 				= "my-hec-input"
+			description 				= "bbbb"
+		}
+	`, rsName, rsPath, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+}
+
 func TestRotatedSecretDataSource(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 

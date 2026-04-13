@@ -34,6 +34,7 @@ var CreateTargetByTypeMap = map[string]CreateTargetFunc{
 	"ping_target_details":             CreatePingTarget,
 	"rabbit_mq_target_details":        CreateRabbitMqTarget,
 	"salesforce_target_details":       CreateSalesforceTarget,
+	"splunk_target_details":           CreateSplunkTarget,
 	"ssh_target_details":              CreateSshTarget,
 	"venafi_target_details":           nil,
 	"web_target_details":              CreateWebTarget,
@@ -422,6 +423,25 @@ func CreateSalesforceTarget(t *testing.T, name string, details map[string]any) {
 
 	_, resp, err := client.CreateSalesforceTarget(context.Background()).Body(body).Execute()
 	require.NoError(t, common.HandleError("can't create salesforce target for test", resp, err))
+}
+
+func CreateSplunkTarget(t *testing.T, name string, details map[string]any) {
+	client, token, err := GetClient()
+	require.NoError(t, err)
+
+	body := akeyless_api.TargetCreateSplunk{
+		Name:  name,
+		Token: &token,
+		Url:   details["url"].(string),
+	}
+	common.GetAkeylessPtr(&body.Username, details["username"])
+	common.GetAkeylessPtr(&body.Password, details["password"])
+	common.GetAkeylessPtr(&body.SplunkToken, details["splunk_token"])
+	common.GetAkeylessPtr(&body.TokenOwner, details["token_owner"])
+	common.GetAkeylessPtr(&body.Audience, details["audience"])
+
+	_, resp, err := client.TargetCreateSplunk(context.Background()).Body(body).Execute()
+	require.NoError(t, common.HandleError("can't create splunk target for test", resp, err))
 }
 
 func CreateSshTarget(t *testing.T, name string, details map[string]any) {

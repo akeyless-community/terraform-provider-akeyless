@@ -312,6 +312,21 @@ func resourceRotatedSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if itemOut.ItemCustomFieldsDetails != nil {
+		customFields := make(map[string]string)
+		for _, field := range itemOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err := d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleReadError(d, "can't get rotated secret value", res, err)

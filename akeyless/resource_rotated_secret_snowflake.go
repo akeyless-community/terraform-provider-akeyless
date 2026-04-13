@@ -258,7 +258,7 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 	if err != nil {
 		return err
 	}
-	if itemOut.ItemCustomFieldsDetails != nil && len(itemOut.ItemCustomFieldsDetails) > 0 {
+	if len(itemOut.ItemCustomFieldsDetails) > 0 {
 		customFields := make(map[string]string)
 		for _, field := range itemOut.ItemCustomFieldsDetails {
 			if field.Name != nil && field.Value != nil {
