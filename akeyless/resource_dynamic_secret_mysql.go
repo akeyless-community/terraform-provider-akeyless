@@ -394,6 +394,21 @@ func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err = d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
 	d.SetId(path)

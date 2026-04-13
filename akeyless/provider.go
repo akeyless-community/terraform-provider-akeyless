@@ -115,6 +115,7 @@ func Provider() *schema.Provider {
 			"akeyless_dynamic_secret_snowflake":                resourceDynamicSecretSnowflake(),
 			"akeyless_dynamic_secret_venafi":                   resourceDynamicSecretVenafi(),
 			"akeyless_dynamic_secret_gke":                      resourceDynamicSecretGke(),
+			"akeyless_dynamic_secret_google_workspace":         resourceDynamicSecretGoogleWorkspace(),
 			"akeyless_dynamic_secret_k8s":                      resourceDynamicSecretK8s(),
 			"akeyless_dynamic_secret_mongodb":                  resourceDynamicSecretMongo(),
 			"akeyless_dynamic_secret_mssql":                    resourceDynamicSecretMssql(),

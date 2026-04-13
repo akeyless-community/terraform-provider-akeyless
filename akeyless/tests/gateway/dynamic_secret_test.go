@@ -385,6 +385,56 @@ func TestDynamicSecretGcp(t *testing.T) {
 	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
 }
 
+func TestDynamicSecretGoogleWorkspace(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-gws"
+	targetPath := testPath(targetName)
+	targetDetailsType := "gcp_target_details"
+
+	expect := map[string]any{
+		"gcp_service_account_key": testutils.GCP_KEY,
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	dsName := "ds_google_workspace_test"
+	dsPath := testPath(dsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_google_workspace" "%v" {
+			name        = "%v"
+			target_name = "%v"
+			access_mode = "role"
+			admin_email = "admin@example.com"
+			role_name   = "_SEED_ADMIN_ROLE"
+			role_scope  = "ORG_UNIT"
+			gcp_key     = "eyJkdW1teSI6ICJ0ZXN0In0="
+			user_ttl    = "30m"
+			tags        = ["t1", "t2"]
+		}
+	`, dsName, dsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_google_workspace" "%v" {
+			name        = "%v"
+			target_name = "%v"
+			access_mode = "group"
+			admin_email = "admin@example.com"
+			group_email = "group@example.com"
+			group_role  = "MEMBER"
+			gcp_key     = "eyJkdW1teSI6ICJ0ZXN0In0="
+			user_ttl    = "60m"
+			tags        = ["t1", "t3"]
+		}
+	`, dsName, dsPath, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
+}
+
 func TestDynamicSecretGithubResource(t *testing.T) {
 
 	testutils.SkipIfNoGateway(t)

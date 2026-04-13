@@ -265,7 +265,7 @@ func resourceDynamicSecretRabbitmqRead(d *schema.ResourceData, m interface{}) er
 		}
 	}
 
-	if rOut.ItemCustomFieldsDetails != nil && len(rOut.ItemCustomFieldsDetails) > 0 {
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
 		customFields := make(map[string]string)
 		for _, field := range rOut.ItemCustomFieldsDetails {
 			if field.Name != nil && field.Value != nil {

@@ -233,7 +233,7 @@ func resourceOidcAppRead(d *schema.ResourceData, m any) error {
 	if rOut.ItemGeneralInfo != nil && rOut.ItemGeneralInfo.OidcClientInfo != nil {
 		oidcInfo := rOut.ItemGeneralInfo.OidcClientInfo
 
-		if oidcInfo.RedirectUris != nil && len(oidcInfo.RedirectUris) > 0 {
+		if len(oidcInfo.RedirectUris) > 0 {
 			// Filter out empty strings
 			var validUris []string
 			for _, uri := range oidcInfo.RedirectUris {
@@ -249,7 +249,7 @@ func resourceOidcAppRead(d *schema.ResourceData, m any) error {
 			}
 		}
 
-		if oidcInfo.Scopes != nil && len(oidcInfo.Scopes) > 0 {
+		if len(oidcInfo.Scopes) > 0 {
 			// Filter out empty strings
 			var validScopes []string
 			for _, scope := range oidcInfo.Scopes {
@@ -265,7 +265,7 @@ func resourceOidcAppRead(d *schema.ResourceData, m any) error {
 			}
 		}
 
-		if oidcInfo.Audience != nil && len(oidcInfo.Audience) > 0 {
+		if len(oidcInfo.Audience) > 0 {
 			// Join audience array into comma-separated string, filter empty
 			var validAudience []string
 			for _, aud := range oidcInfo.Audience {
@@ -291,7 +291,7 @@ func resourceOidcAppRead(d *schema.ResourceData, m any) error {
 
 		// Read permission_assignment from access_permission_assignment
 		// Normalize to match input format (assignment_type, access_id, sub_claims)
-		if oidcInfo.AccessPermissionAssignment != nil && len(oidcInfo.AccessPermissionAssignment) > 0 {
+		if len(oidcInfo.AccessPermissionAssignment) > 0 {
 			var normalizedAssignments []map[string]any
 			for _, pa := range oidcInfo.AccessPermissionAssignment {
 				assignment := make(map[string]any)
