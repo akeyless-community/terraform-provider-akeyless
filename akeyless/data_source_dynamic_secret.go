@@ -109,7 +109,10 @@ func dataSourceDynamicSecretRead(d *schema.ResourceData, m interface{}) error {
 	const maxRetries = 3
 	for attempt := 0; ; attempt++ {
 		gsvOut, resp, err = client.GetDynamicSecretValue(ctx).Body(gsvBody).Execute()
-		if err == nil || attempt >= maxRetries || resp == nil || resp.StatusCode < 500 {
+		if err == nil || attempt >= maxRetries {
+			break
+		}
+		if resp != nil && resp.StatusCode < 500 {
 			break
 		}
 		time.Sleep(time.Duration(attempt+1) * 5 * time.Second)
