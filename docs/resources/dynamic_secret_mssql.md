@@ -30,7 +30,7 @@ Microsoft SQL Server dynamic secret resource
 - `mssql_create_statements` (String) MSSQL Creation statements
 - `mssql_dbname` (String) MSSQL Name
 - `mssql_host` (String) MSSQL Host
-- `mssql_password` (String) MSSQL Password
+- `mssql_password` (String, Sensitive) MSSQL Password
 - `mssql_port` (String) MSSQL Port
 - `mssql_revocation_statements` (String) MSSQL Revocation statements
 - `mssql_username` (String) MSSQL Username

@@ -31,8 +31,8 @@ Get target details data source
 - `access_request_status` (String) Access request status
 - `attributes` (Map of String) Target attributes
 - `client_permissions` (List of String) Client permissions
-- `comment` (String) Comment about the target
 - `creation_date` (String) Creation date
+- `description` (String) Description of the target
 - `id` (String) The ID of this resource.
 - `is_access_request_enabled` (Boolean) Whether access request is enabled for this target
 - `last_version` (Number) Last version of the target

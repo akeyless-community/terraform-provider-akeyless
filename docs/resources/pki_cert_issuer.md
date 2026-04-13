@@ -50,7 +50,7 @@ PKI Cert Issuer  resource
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `key_usage` (String) A comma-separated string or list of key usages
 - `locality` (String) A comma-separated list of localities that will be set in the issued certificate
-- `max_path_len` (Number) The maximum path length for the generated certificate. -1, means unlimited
+- `max_path_len` (Number) The maximum path length for the generated certificate. -1 means unlimited
 - `not_enforce_hostnames` (Boolean) If set, any names are allowed for CN and SANs in the certificate and not only a valid host name
 - `not_require_cn` (Boolean) If set, clients can request certificates without a CN
 - `ocsp_ttl` (String) OCSP NextUpdate window for OCSP responses (min 10m). Supports s,m,h,d suffix.

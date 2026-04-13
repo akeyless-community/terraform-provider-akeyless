@@ -30,7 +30,7 @@ PostgreSQL dynamic secret resource
 - `password_length` (String) The length of the password to be generated
 - `postgresql_db_name` (String) PostgreSQL DB Name
 - `postgresql_host` (String) PostgreSQL Host
-- `postgresql_password` (String) PostgreSQL Password
+- `postgresql_password` (String, Sensitive) PostgreSQL Password
 - `postgresql_port` (String) PostgreSQL Port
 - `postgresql_username` (String) PostgreSQL Username
 - `revocation_statements` (String) PostgreSQL Revocation statements

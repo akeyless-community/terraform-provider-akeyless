@@ -26,14 +26,14 @@ Mongo DB dynamic secret resource
 - `description` (String) Description of the object
 - `encryption_key_name` (String) Encrypt producer with following key
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
-- `mongodb_atlas_api_private_key` (String) MongoDB Atlas private key
+- `mongodb_atlas_api_private_key` (String, Sensitive) MongoDB Atlas private key
 - `mongodb_atlas_api_public_key` (String) MongoDB Atlas public key
 - `mongodb_atlas_project_id` (String) MongoDB Atlas project ID
 - `mongodb_custom_data` (String) MongoDB custom data
 - `mongodb_default_auth_db` (String) MongoDB server default authentication database
 - `mongodb_host_port` (String) MongoDB server host and port
 - `mongodb_name` (String) MongoDB Name
-- `mongodb_password` (String) MongoDB server password. You will prompted to provide a password if it will not appear in CLI parameters
+- `mongodb_password` (String, Sensitive) MongoDB server password. You will prompted to provide a password if it will not appear in CLI parameters
 - `mongodb_roles` (String) MongoDB Roles
 - `mongodb_scopes` (String) MongoDB Scopes (Atlas only)
 - `mongodb_server_uri` (String) MongoDB server URI
