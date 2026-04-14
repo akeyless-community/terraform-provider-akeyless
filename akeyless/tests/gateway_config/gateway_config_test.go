@@ -396,3 +396,47 @@ func TestK8sAuthConfig(t *testing.T) {
 
 	testutils.TestGatewayConfigResource(t, providerFactories, config, configUpdate)
 }
+
+func TestGatewayLdapAuthConfig(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	key, cert := testutils.GenerateCertForTest(t, 2048)
+
+	name := "test-gw-ldap-auth"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_gateway_ldap_auth_config" "%v" {
+			ldap_enable      = "true"
+			access_id        = "p-123412341234"
+			ldap_url         = "ldap://ldap.example.com:389"
+			signing_key_data = "%v"
+			ldap_ca_cert     = "%v"
+			bind_dn          = "cn=admin,dc=example,dc=com"
+			bind_dn_password = "password1"
+			user_dn          = "ou=users,dc=example,dc=com"
+			user_attribute   = "uid"
+			group_dn         = "ou=groups,dc=example,dc=com"
+			group_attr       = "cn"
+			group_filter     = "(member={{.UserDN}})"
+		}
+	`, name, key, cert)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_gateway_ldap_auth_config" "%v" {
+			ldap_enable      = "false"
+			access_id        = "p-567856785678"
+			ldap_url         = "ldap://ldap2.example.com:389"
+			signing_key_data = "%v"
+			ldap_ca_cert     = "%v"
+			bind_dn          = "cn=admin,dc=example2,dc=com"
+			bind_dn_password = "password2"
+			user_dn          = "ou=users,dc=example2,dc=com"
+			user_attribute   = "sAMAccountName"
+			group_dn         = "ou=groups,dc=example2,dc=com"
+			group_attr       = "memberOf"
+			group_filter     = "(uniqueMember={{.UserDN}})"
+		}
+	`, name, key, cert)
+
+	testutils.TestGatewayConfigResource(t, providerFactories, config, configUpdate)
+}
