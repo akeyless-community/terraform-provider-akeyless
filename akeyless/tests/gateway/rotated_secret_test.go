@@ -92,6 +92,7 @@ func TestRotatedSecretAzureResource(t *testing.T) {
 }
 
 func testRotatedSecretAzurePassword(t *testing.T, targetPath string) {
+
 	rsName := "test-rs-azure-password"
 	rsPath := testPath(rsName)
 
@@ -131,9 +132,9 @@ func testRotatedSecretAzureApiKey(t *testing.T, targetPath string) {
 			target_name 				= "%v"
 			rotator_type 				= "api-key"
 			authentication_credentials 	= "use-target-creds"
-			api_id 						= "test"
-			api_key 					= "test"
-			app_id 						= "test"
+			api_id 						= "test1"
+			api_key 					= "test1"
+			app_id 						= "test1"
 			description 				= "aaaa"
 		}
 	`, rsName, rsPath, targetPath)
@@ -144,9 +145,9 @@ func testRotatedSecretAzureApiKey(t *testing.T, targetPath string) {
 			target_name 				= "%v"
 			rotator_type 				= "api-key"
 			authentication_credentials 	= "use-target-creds"
-			api_id 						= "test"
-			api_key 					= "test"
-			app_id 						= "test"
+			api_id 						= "test2"
+			api_key 					= "test2"
+			app_id 						= "test2"
 			description 				= "bbbb"
 		}
 	`, rsName, rsPath, targetPath)
@@ -155,6 +156,7 @@ func testRotatedSecretAzureApiKey(t *testing.T, targetPath string) {
 }
 
 func testRotatedSecretAzureStorageAccount(t *testing.T, targetPath string) {
+
 	rsName := "test-rs-azure-storage-account"
 	rsPath := testPath(rsName)
 
@@ -1018,6 +1020,8 @@ func TestRotatedSecretWindowsResource(t *testing.T) {
 
 func TestRotatedSecretOpenAIResource(t *testing.T) {
 
+	// TODO: add tags to test after saas deployed.
+
 	testutils.SkipIfNoGateway(t)
 
 	targetName := "test-target-openai"
@@ -1045,7 +1049,6 @@ func TestRotatedSecretOpenAIResource(t *testing.T) {
 			api_key 					= "sk-test-key-12345"
 			api_key_id 					= "key-id-1"
 			description 				= "aaaa"
-			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -1058,7 +1061,6 @@ func TestRotatedSecretOpenAIResource(t *testing.T) {
 			api_key 					= "sk-test-key-12345"
 			api_key_id 					= "key-id-2"
 			description 				= "bbbb"
-			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -1116,7 +1118,6 @@ func testRotatedSecretSplunkPassword(t *testing.T, targetPath string) {
 			token_owner 				= "admin"
 			audience 					= "test-audience"
 			description 				= "aaaa"
-			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -1132,7 +1133,6 @@ func testRotatedSecretSplunkPassword(t *testing.T, targetPath string) {
 			token_owner 				= "admin"
 			audience 					= "test-audience"
 			description 				= "bbbb"
-			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -1140,6 +1140,7 @@ func testRotatedSecretSplunkPassword(t *testing.T, targetPath string) {
 }
 
 func testRotatedSecretSplunkToken(t *testing.T, targetPath string) {
+
 	rsName := "test-rs-splunk-token"
 	rsPath := testPath(rsName)
 
@@ -1175,6 +1176,7 @@ func testRotatedSecretSplunkToken(t *testing.T, targetPath string) {
 }
 
 func testRotatedSecretSplunkHecToken(t *testing.T, targetPath string) {
+
 	rsName := "test-rs-splunk-hec"
 	rsPath := testPath(rsName)
 

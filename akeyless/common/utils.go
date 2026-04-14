@@ -37,6 +37,10 @@ func DiffSuppressOnLeadingSlash(_, old, new string, _ *schema.ResourceData) bool
 	return EnsureLeadingSlash(old) == EnsureLeadingSlash(new)
 }
 
+func DiffSuppressOnSlashes(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.Trim(old, "/") == strings.Trim(new, "/")
+}
+
 var allLetters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 var lowerLetters = []rune("abcdefghijklmnopqrstuvwxyz")
 

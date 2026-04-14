@@ -184,6 +184,7 @@ func Provider() *schema.Provider {
 			"akeyless_associate_role_auth_method":              resourceAssocRoleAm(),
 			"akeyless_oidc_app":                                resourceOidcApp(),
 			"akeyless_passkey":                                 resourcePasskey(),
+			"akeyless_policy_keys":                             resourcePolicyKeys(),
 			"akeyless_tokenizer":                               resourceTokenizer(),
 			"akeyless_usc":                                     resourceUsc(),
 			"akeyless_usc_secret":                              resourceUscSecret(),
