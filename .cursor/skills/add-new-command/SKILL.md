@@ -1,12 +1,9 @@
 ---
-description: Rules for adding a new command (resource/data source) to the Terraform provider
-globs: akeyless/*.go
-alwaysApply: false
+name: add-new-command
+description: Guides adding a new Terraform resource or data source end-to-end — SDK update, schema, CRUD, provider registration, tests, and formatting. Use when creating a new resource_*.go or data_source_*.go file, or when the user asks to add a new Terraform resource.
 ---
 
 # Adding a New Command (Resource or Data Source)
-
-When adding a new resource or data source to the Terraform provider, follow these steps:
 
 ## 1. Update the Akeyless SDK
 
@@ -57,26 +54,26 @@ func resourceMyNewFeatureCreate(ctx context.Context, d *schema.ResourceData, m i
 
 ### Schema Field Rules
 
-When defining schema fields, follow these conventions:
 - **`Sensitive: true`** — for secrets, passwords, private keys, API keys, tokens, and client secrets
 - **`Computed: true`** — when the field has server-side defaults (e.g. protection keys)
 - **`Default`** — must match the field's `Type` (e.g. `Default: 0` for `TypeInt`, `Default: false` for `TypeBool`; never use string `"0"` or `"false"`)
 - **`Required` / `Optional`** — according to the SDK command requirements. If `Optional` is true, `Required` can be omitted.
 - **`ForceNew: true`** — for the field (or few fields, in special cases) that identify the item (e.g. `name`)
+- **`DiffSuppressFunc: common.DiffSuppressOnLeadingSlash`** — for any field that holds an Akeyless item path (e.g. `name`, issuer, signer, target path, folder). The API returns paths with a leading `/`; without the suppressor the plan is never empty.
 - **`id`** — reserved by Terraform; do not use as a custom schema field
 - All `d.Set()` calls in read functions **must** check for errors
 - Read functions must set **every writable field** that the API response exposes (skip Sensitive fields the API won't return)
 - When a resource replaces a legacy one, add `DeprecationMessage` to the old resource pointing to the new one
 - The Update handler must use an "override" approach -- always set all fields, not just the ones that are explicitly configured. Set all fields that the SDK support to update.
 
-## 3. Register the New Command
+## 4. Register the New Command
 
 1.  Open `akeyless/provider.go`.
 2.  Add the new resource to `ResourcesMap` or data source to `DataSourcesMap` in the `Provider()` function.
     *   Key: `akeyless_<name>` (e.g., `akeyless_my_new_feature`)
     *   Value: Function call (e.g., `resourceMyNewFeature()`)
 
-## 4. Documentation
+## 5. Documentation
 
 Documentation is auto-generated.
 
@@ -84,7 +81,7 @@ Documentation is auto-generated.
 2.  Run `go generate` in the root directory.
 3.  This will create the documentation file in `docs/resources/` or `docs/data-sources/`.
 
-## 5. Testing
+## 6. Testing
 
 1.  Add tests to an existing or new test file (not required to create a separate file per resource).
 2.  Implement acceptance tests using `resource.TestCase`.
@@ -92,6 +89,6 @@ Documentation is auto-generated.
 4.  For arguments with default value, ensure the updateConfig (step 2) set them to empty. This will add coverage for the defaulting mechanism.
 5.  Run tests: `make testacc TEST=./akeyless/resource_<name>_test.go` (or similar).
 
-## 6. Format
+## 7. Format
 
 Run `gofmt -w .` to ensure code style compliance.

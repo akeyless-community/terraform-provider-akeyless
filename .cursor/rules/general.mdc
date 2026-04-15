@@ -53,6 +53,7 @@ The old `resource_gateway_producer_*` resources are the legacy format of dynamic
 - **`Sensitive: true`** — secrets, passwords, private keys, API keys, tokens, client secrets
 - **`Default` type must match `Type`** — e.g. `Default: 0` for `TypeInt`, `Default: false` for `TypeBool` (never use string `"0"` or `"false"`)
 - **`ForceNew: true`** — for the item's identifier field (e.g. `name`)
+- **`DiffSuppressFunc: common.DiffSuppressOnLeadingSlash`** — for any field that holds an **Akeyless item path** (e.g. `name`, issuer name, cert issuer, signer, target path, folder path). The API returns these paths with a leading `/`; without the suppressor the plan is never empty.
 - **`id`** is a reserved field in Terraform — do not use it as a custom schema field name; use a prefixed name like `migration_id` instead
 - All `d.Set()` calls in read functions **must** check for errors
 - When updating tags, use `common.GetTagsForUpdate` to handle both add and remove

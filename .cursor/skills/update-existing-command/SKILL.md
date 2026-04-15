@@ -1,18 +1,14 @@
 ---
-description: Rules for updating an existing command/resource in the Terraform provider
-globs: akeyless/*.go
-alwaysApply: false
+name: update-existing-command
+description: Guides updating an existing Terraform resource or data source with new fields or functionality — schema changes, CRUD updates, backward compatibility, and docs regeneration. Use when adding fields to an existing resource_*.go or data_source_*.go file.
 ---
 
 # Updating an Existing Command/Resource
-
-When updating an existing command (resource or data source) to support new fields or functionality, follow these steps:
 
 ## 1. Update the Akeyless SDK
 
 1.  Run `go get -u github.com/akeylesslabs/akeyless-go/v5`
 2.  Run `go mod tidy`
-
 
 ## 2. Update the Resource/Data Source Implementation
 
