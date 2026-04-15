@@ -421,6 +421,8 @@ func TestGatewayLdapAuthConfig(t *testing.T) {
 		}
 	`, name, key, cert)
 
+	key2, cert2 := testutils.GenerateCertForTest(t, 2048)
+
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_ldap_auth_config" "%v" {
 			ldap_enable      = "false"
@@ -436,7 +438,35 @@ func TestGatewayLdapAuthConfig(t *testing.T) {
 			group_attr       = "memberOf"
 			group_filter     = "(uniqueMember={{.UserDN}})"
 		}
-	`, name, key, cert)
+	`, name, key2, cert2)
+
+	testutils.TestGatewayConfigResource(t, providerFactories, config, configUpdate)
+}
+
+func TestGatewayTlsCert(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	key, cert := testutils.GenerateCertForTest(t, 2048)
+
+	name := "test-gw-tls-cert"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_gateway_tls_cert" "%v" {
+			cert_data           = "%v"
+			key_data            = "%v"
+			expiration_event_in = ["30", "10"]
+		}
+	`, name, cert, key)
+
+	key2, cert2 := testutils.GenerateCertForTest(t, 2048)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_gateway_tls_cert" "%v" {
+			cert_data           = "%v"
+			key_data            = "%v"
+			expiration_event_in = ["60", "30", "10"]
+		}
+	`, name, cert2, key2)
 
 	testutils.TestGatewayConfigResource(t, providerFactories, config, configUpdate)
 }
