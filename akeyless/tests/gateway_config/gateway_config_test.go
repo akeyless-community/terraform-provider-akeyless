@@ -184,6 +184,42 @@ func TestGatewayUpdateRemoteAccess(t *testing.T) {
 	})
 }
 
+func TestGatewayUpdateRemoteAccessDesktopApp(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	keyPath := testPath("desktop_app_key")
+	testutils.CreateDfcKey(t, keyPath)
+	t.Cleanup(func() {
+		testutils.DeleteItem(t, keyPath)
+	})
+
+	issuerPath := testPath("desktop_app_issuer")
+	testutils.CreateSshCertIssuer(t, keyPath, issuerPath, "test")
+	t.Cleanup(func() {
+		testutils.DeleteItem(t, issuerPath)
+	})
+
+	name := "test-gw-ra-desktop-app"
+
+	config := fmt.Sprintf(`
+		resource "akeyless_gateway_remote_access_desktop_app" "%v" {
+			desktop_app_ssh_cert_issuer       = "%v"
+			desktop_app_secure_web_access_url = "https://web.example.com"
+			desktop_app_secure_web_proxy      = "https://proxy.example.com"
+		}
+	`, name, issuerPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_gateway_remote_access_desktop_app" "%v" {
+			desktop_app_ssh_cert_issuer       = "%v"
+			desktop_app_secure_web_access_url = "https://web2.example.com"
+			desktop_app_secure_web_proxy      = "https://proxy2.example.com"
+		}
+	`, name, issuerPath)
+
+	testutils.TestGatewayConfigResource(t, providerFactories, config, configUpdate)
+}
+
 func TestGatewayUpdateRemoteAccessRdpRecording(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 

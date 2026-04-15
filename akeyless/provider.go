@@ -85,6 +85,7 @@ func Provider() *schema.Provider {
 			"akeyless_gateway_log_forwarding_syslog":           resourceGatewayUpdateLogForwardingSyslog(),
 			"akeyless_gateway_remote_access":                   resourceGatewayUpdateRemoteAccess(),
 			"akeyless_gateway_remote_access_rdp_recording":     resourceGatewayUpdateRemoteAccessRdpRecording(),
+			"akeyless_gateway_remote_access_desktop_app":       resourceGatewayUpdateRemoteAccessDesktopApp(),
 			"akeyless_gateway_ldap_auth_config":                resourceGatewayUpdateLdapAuthConfig(),
 			"akeyless_gateway_tls_cert":                        resourceGatewayUpdateTlsCert(),
 			"akeyless_gateway_migration_active_directory":      resourceGatewayMigrationActiveDirectory(),

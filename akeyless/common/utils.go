@@ -908,3 +908,20 @@ func GetOriginalProductTypeConvention(d *schema.ResourceData, productTypes []str
 	}
 	return productTypes
 }
+
+func GetItemNameByID(client akeyless_api.V2ApiService, token string, itemID int64) (string, error) {
+	body := akeyless_api.DescribeItem{
+		ItemId: &itemID,
+		Token:  &token,
+	}
+
+	rOut, resp, err := client.DescribeItem(context.Background()).Body(body).Execute()
+	if err != nil {
+		return "", HandleError("can't resolve item name from id", resp, err)
+	}
+
+	if rOut.ItemName != nil {
+		return *rOut.ItemName, nil
+	}
+	return "", nil
+}
