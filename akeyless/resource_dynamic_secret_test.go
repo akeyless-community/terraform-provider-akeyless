@@ -105,3 +105,33 @@ func TestGithubDynamicSecretResource(t *testing.T) {
 
 	testItemResource(t, itemPath, config, configUpdate, configUpdate2, configUpdate3, configUpdate4, configUpdate5, configUpdate6, configUpdate7)
 }
+
+func TestAwsDynamicSecretSessionTags(t *testing.T) {
+
+	t.Skip("requires real AWS credentials")
+
+	name := "aws_session_tags_test"
+	itemPath := testPath(name)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_aws" "%v" {
+			name                = "%v"
+			access_mode         = "assume_role"
+			aws_role_arns       = "arn:aws:iam::123456789012:role/TestRole"
+			session_tags        = "Key=Team,Value=Platform Key=Environment,Value=Dev"
+			transitive_tag_keys = "Team"
+		}
+	`, name, itemPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_aws" "%v" {
+			name                = "%v"
+			access_mode         = "assume_role"
+			aws_role_arns       = "arn:aws:iam::123456789012:role/TestRole"
+			session_tags        = "Key=Team,Value=Platform Key=Environment,Value=Staging Key=CostCenter,Value=12345"
+			transitive_tag_keys = "Team CostCenter"
+		}
+	`, name, itemPath)
+
+	testItemResource(t, itemPath, config, configUpdate)
+}

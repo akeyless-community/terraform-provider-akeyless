@@ -152,6 +152,16 @@ func resourceDynamicSecretAws() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"session_tags": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Key-value pairs of session tags, space separated, relevant only for Assumed Role. Format: Key=name,Value=val Key=name2,Value=val2",
+			},
+			"transitive_tag_keys": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Transitive tag keys, space separated, relevant only for Assumed Role",
+			},
 		},
 	}
 }
@@ -186,6 +196,8 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
+	sessionTags := d.Get("session_tags").(string)
+	transitiveTagKeys := d.Get("transitive_tag_keys").(string)
 
 	body := akeyless_api.DynamicSecretCreateAws{
 		Name:  name,
@@ -212,6 +224,8 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
+	common.GetAkeylessPtr(&body.SessionTags, sessionTags)
+	common.GetAkeylessPtr(&body.TransitiveTagKeys, transitiveTagKeys)
 
 	_, _, err := client.DynamicSecretCreateAws(ctx).Body(body).Execute()
 	if err != nil {
@@ -345,6 +359,19 @@ func resourceDynamicSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.AwsSessionTags != nil {
+		err = d.Set("session_tags", *rOut.AwsSessionTags)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AwsTransitiveTagKeys != nil {
+		err = d.Set("transitive_tag_keys", *rOut.AwsTransitiveTagKeys)
+		if err != nil {
+			return err
+		}
+	}
+
 	if rOut.ItemTargetsAssoc != nil {
 		targetName := common.GetTargetName(rOut.ItemTargetsAssoc)
 		err = common.SetDataByPrefixSlash(d, "target_name", targetName, d.Get("target_name").(string))
@@ -389,6 +416,8 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
+	sessionTags := d.Get("session_tags").(string)
+	transitiveTagKeys := d.Get("transitive_tag_keys").(string)
 
 	body := akeyless_api.DynamicSecretUpdateAws{
 		Name:  name,
@@ -415,6 +444,8 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
 	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
+	common.GetAkeylessPtr(&body.SessionTags, sessionTags)
+	common.GetAkeylessPtr(&body.TransitiveTagKeys, transitiveTagKeys)
 
 	_, _, err := client.DynamicSecretUpdateAws(ctx).Body(body).Execute()
 	if err != nil {
