@@ -21,6 +21,7 @@ Get rotated secret value data source
 
 ### Optional
 
+- `host` (String) Get rotated secret value of specific Host (relevant only for Linked Target)
 - `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `version` (Number) Secret version
 

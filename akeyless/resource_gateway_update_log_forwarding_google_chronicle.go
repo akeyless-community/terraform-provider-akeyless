@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -96,25 +94,25 @@ func resourceGatewayUpdateLogForwardingGoogleChronicleRead(d *schema.ResourceDat
 
 	config := rOut.GoogleChronicleConfig
 	if config != nil {
-		if config.ServiceAccountKey != nil && d.Get("gcp_key").(string) != "" {
+		if config.ServiceAccountKey != nil {
 			err := d.Set("gcp_key", *config.ServiceAccountKey)
 			if err != nil {
 				return err
 			}
 		}
-		if config.CustomerId != nil && d.Get("customer_id").(string) != "" {
+		if config.CustomerId != nil {
 			err := d.Set("customer_id", *config.CustomerId)
 			if err != nil {
 				return err
 			}
 		}
-		if config.Region != nil && d.Get("region").(string) != "" {
+		if config.Region != nil {
 			err := d.Set("region", *config.Region)
 			if err != nil {
 				return err
 			}
 		}
-		if config.LogType != nil && d.Get("log_type").(string) != "" {
+		if config.LogType != nil {
 			err := d.Set("log_type", *config.LogType)
 			if err != nil {
 				return err
@@ -130,7 +128,6 @@ func resourceGatewayUpdateLogForwardingGoogleChronicleUpdate(d *schema.ResourceD
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
@@ -151,12 +148,9 @@ func resourceGatewayUpdateLogForwardingGoogleChronicleUpdate(d *schema.ResourceD
 	common.GetAkeylessPtr(&body.Region, region)
 	common.GetAkeylessPtr(&body.LogType, logType)
 
-	_, _, err := client.GatewayUpdateLogForwardingGoogleChronicle(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingGoogleChronicle(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {

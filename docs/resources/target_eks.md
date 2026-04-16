@@ -17,18 +17,20 @@ EKS Target resource
 
 ### Required
 
-- `eks_access_key_id` (String) EKS access key ID
-- `eks_cluster_ca_cert` (String, Sensitive) EKS cluster base-64 encoded certificate
-- `eks_cluster_endpoint` (String) EKS cluster endpoint (i.e., https://<IP> of the cluster)
+- `eks_access_key_id` (String) Access Key ID
+- `eks_cluster_ca_cert` (String, Sensitive) EKS cluster CA certificate
+- `eks_cluster_endpoint` (String) EKS cluster URL endpoint
 - `eks_cluster_name` (String) EKS cluster name
-- `eks_secret_access_key` (String, Sensitive) EKS secret access key
+- `eks_secret_access_key` (String, Sensitive) Secret Access Key
 - `name` (String) Target name
 
 ### Optional
 
 - `description` (String) Description of the object
-- `eks_region` (String) EKS region
-- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
+- `eks_region` (String) Region
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
+- `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
 
 ### Read-Only

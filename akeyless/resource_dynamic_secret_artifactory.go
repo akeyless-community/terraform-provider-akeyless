@@ -1,13 +1,10 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -68,6 +65,7 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Encrypt dynamic secret details with following key",
 			},
 			"custom_username_template": {
@@ -81,6 +79,23 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this item",
+				Default:     false,
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -90,7 +105,6 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
@@ -104,6 +118,13 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	deleteProtection := d.Get("delete_protection").(bool)
+	description := d.Get("description").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
 
 	body := akeyless_api.DynamicSecretCreateArtifactory{
 		Name:                     name,
@@ -119,13 +140,17 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)
+	if deleteProtection {
+		common.GetAkeylessPtr(&body.DeleteProtection, "true")
+	}
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
 
-	_, _, err := client.DynamicSecretCreateArtifactory(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create dynamic secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create dynamic secret: %v", err)
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -138,7 +163,6 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -150,15 +174,7 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 
 	rOut, res, err := client.DynamicSecretGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get dynamic secret value", res, err)
 	}
 	if rOut.ArtifactoryTokenScope != nil {
 		err = d.Set("artifactory_token_scope", *rOut.ArtifactoryTokenScope)
@@ -225,6 +241,37 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 		}
 	}
 
+	deleteProtectionVal := false
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = *rOut.DeleteProtection
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+
+	if rOut.Metadata != nil {
+		err = d.Set("description", *rOut.Metadata)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err = d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -235,7 +282,6 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	artifactoryTokenScope := d.Get("artifactory_token_scope").(string)
@@ -249,6 +295,13 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	deleteProtection := d.Get("delete_protection").(bool)
+	description := d.Get("description").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
 
 	body := akeyless_api.DynamicSecretUpdateArtifactory{
 		Name:                     name,
@@ -264,13 +317,17 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)
+	if deleteProtection {
+		common.GetAkeylessPtr(&body.DeleteProtection, "true")
+	}
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
 
-	_, _, err := client.DynamicSecretUpdateArtifactory(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateArtifactory(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

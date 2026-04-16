@@ -17,11 +17,11 @@ Get producer temporary credentials list data source
 
 ### Required
 
-- `name` (String) Producer Name
+- `name` (String) Dynamic Secret Name
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `value` (String)
+- `value` (String) JSON-encoded list of temporary credentials data
 
 

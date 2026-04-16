@@ -18,24 +18,29 @@ Cert Auth Method Resource
 ### Required
 
 - `name` (String) Auth Method name
-- `unique_identifier` (String) A unique identifier (ID) value should be configured for OIDC, OAuth2, LDAP and SAML authentication method types and is usually a value such as the email, username, or upn for example. Whenever a user logs in with a token, these authentication types issue a sub claim that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.
+- `unique_identifier` (String) A unique identifier (ID) value should be configured, such as common_name or organizational_unit Whenever a user logs in with a token, these authentication types issue a "sub claim" that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.
 
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
+- `allowed_client_type` (Set of String) limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]
+- `allowed_cors` (String) Comma separated list of allowed CORS domains to be validated as part of the authentication flow.
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs, e.g "--audit-logs-claims email --audit-logs-claims username"
 - `bound_common_names` (Set of String) A list of names. At least one must exist in the Common Name. Supports globbing.
 - `bound_dns_sans` (Set of String) A list of DNS names. At least one must exist in the SANs. Supports globbing.
 - `bound_email_sans` (Set of String) A list of Email Addresses. At least one must exist in the SANs. Supports globbing.
 - `bound_extensions` (Set of String) A list of extensions formatted as 'oid:value'. Expects the extension value to be some type of ASN1 encoded string. All values much match. Supports globbing on 'value'.
-- `bound_ips` (Set of String) A comma-separated CIDR block list to allow client access
+- `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `bound_organizational_units` (Set of String) A list of Organizational Units names. At least one must exist in the OU field.
 - `bound_uri_sans` (Set of String) A list of URIs. At least one must exist in the SANs. Supports globbing.
-- `certificate_data` (String) The certificate data in base64, if no file was provided.
-- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
-- `force_sub_claims` (Boolean) enforce role-association must include sub claims
-- `gw_bound_ips` (Set of String) A comma-separated CIDR block list as a trusted Gateway entity
-- `jwt_ttl` (Number) Creds expiration time in minutes
+- `certificate_data` (String) The certificate data in base64, if no file was provided
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Auth Method description
+- `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified.
+- `force_sub_claims` (Boolean) if true: enforce role-association must include sub claims
+- `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
+- `jwt_ttl` (Number) Jwt TTL
+- `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
 - `revoked_cert_ids` (Set of String) A list of revoked cert ids
 
 ### Read-Only

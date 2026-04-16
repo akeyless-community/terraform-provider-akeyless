@@ -18,23 +18,29 @@ GCE Auth Method Resource
 ### Required
 
 - `name` (String) Auth Method name
-- `type` (String) The type of the GCP Auth Method (iam/gce)
+- `type` (String) Type of the GCP Access Rules
 
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
+- `allowed_client_type` (Set of String) limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]
 - `audience` (String) The audience to verify in the JWT received by the client
-- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs, e.g "--audit-logs-claims email --audit-logs-claims username"
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
-- `bound_labels` (Set of String) GCE only. A list of GCP labels formatted as key:value pairs that must be set on instances in order to authenticate. For multiple values repeat this flag.
-- `bound_projects` (Set of String) A list of GCP project IDs. Clients must belong to any of the provided projects in order to authenticate. For multiple values repeat this flag.
-- `bound_regions` (Set of String) GCE only. A list of regions. GCE instances must belong to any of the provided regions in order to authenticate. For multiple values repeat this flag.
-- `bound_service_accounts` (Set of String) A list of Service Accounts. Clients must belong to any of the provided service accounts in order to authenticate. For multiple values repeat this flag.
-- `bound_zones` (Set of String) GCE only. A list of zones. GCE instances must belong to any of the provided zones in order to authenticate. For multiple values repeat this flag.
-- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
-- `force_sub_claims` (Boolean) enforce role-association must include sub claims
-- `jwt_ttl` (Number) Creds expiration time in minutes
-- `service_account_creds_data` (String) Service Account creds data, base64 encoded
+- `bound_labels` (Set of String) A comma-separated list of GCP labels formatted as "key:value" strings that must be set on authorized GCE instances. TODO: Because GCP labels are not currently ACL'd ....
+- `bound_projects` (Set of String) === Human and Machine authentication section === Array of GCP project IDs. Only entities belonging to any of the provided projects can authenticate.
+- `bound_regions` (Set of String) List of regions that a GCE instance must belong to in order to be authenticated. TODO: If bound_instance_groups is provided, it is assumed to be a regional group and the group must belong to this region. If bound_zones are provided, this attribute is ignored.
+- `bound_service_accounts` (Set of String) List of service accounts the service account must be part of in order to be authenticated.
+- `bound_zones` (Set of String) === Machine authentication section === List of zones that a GCE instance must belong to in order to be authenticated. TODO: If bound_instance_groups is provided, it is assumed to be a zonal group and the group must belong to this zone.
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Auth Method description
+- `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified.
+- `force_sub_claims` (Boolean) if true: enforce role-association must include sub claims
+- `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
+- `jwt_ttl` (Number) Jwt TTL
+- `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
+- `service_account_creds_data` (String) ServiceAccount credentials data instead of giving a file path, base64 encoded
+- `unique_identifier` (String) A unique identifier (ID) value which is a "sub claim" name that contains details uniquely identifying that resource. This "sub claim" is used to distinguish between different identities.
 
 ### Read-Only
 

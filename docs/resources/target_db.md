@@ -22,24 +22,37 @@ DB Target resource
 
 ### Optional
 
+- `azure_client_id` (String) (Optional) Client id (relevant for "cloud-service-provider" only)
+- `azure_client_secret` (String, Sensitive) (Optional) Client secret (relevant for "cloud-service-provider" only)
+- `azure_tenant_id` (String) (Optional) Tenant id (relevant for "cloud-service-provider" only)
+- `cloud_service_provider` (String) (Optional) Cloud service provider (currently only supports Azure)
+- `cluster_mode` (Boolean) Cluster Mode
+- `connection_type` (String) Type of connection to mssql database [credentials/cloud-identity/wallet/parent-target]
 - `db_name` (String) Database name
-- `db_server_certificates` (String) Set of root certificate authorities in base64 encoding used by clients to verify server certificates
-- `db_server_name` (String) Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is provided. It is also included in the client's handshake to support virtual hosting unless it is an IP address
+- `db_server_certificates` (String) (Optional) DB server certificates
+- `db_server_name` (String) (Optional) Server name for certificate verification
 - `description` (String) Description of the object
 - `host` (String) Database host
-- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `mongodb_atlas` (Boolean) Flag, set database type to mongodb and the flag to true to create Mongo Atlas target
-- `mongodb_atlas_api_private_key` (String) MongoDB Atlas private key
+- `mongodb_atlas_api_private_key` (String, Sensitive) MongoDB Atlas private key
 - `mongodb_atlas_api_public_key` (String) MongoDB Atlas public key
 - `mongodb_atlas_project_id` (String) MongoDB Atlas project ID
 - `mongodb_default_auth_db` (String) MongoDB server default authentication database
 - `mongodb_uri_options` (String) MongoDB server URI options (e.g. replicaSet=mySet&authSource=authDB)
-- `oracle_service_name` (String) oracle db service name
+- `oracle_service_name` (String) Oracle db service name
+- `oracle_wallet_login_type` (String) Oracle Wallet login type (password/mtls)
+- `oracle_wallet_p12_file_data` (String, Sensitive) Oracle wallet p12 file data in base64
+- `oracle_wallet_sso_file_data` (String) Oracle wallet sso file data in base64
+- `parent_target_name` (String) Name of the parent target, relevant only when connection-type is parent-target
 - `port` (String) Database port
-- `pwd` (String) Database password
+- `pwd` (String, Sensitive) Database password
 - `snowflake_account` (String) Snowflake account name
+- `snowflake_api_private_key` (String, Sensitive) RSA Private key (base64 encoded)
+- `snowflake_api_private_key_password` (String, Sensitive) The Private key passphrase
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
-- `ssl_certificate` (String) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
+- `ssl_certificate` (String) SSL connection certificate
 - `user_name` (String) Database user name
 
 ### Read-Only

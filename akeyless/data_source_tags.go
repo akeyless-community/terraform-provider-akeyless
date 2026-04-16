@@ -2,30 +2,28 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceGetTags() *schema.Resource {
 	return &schema.Resource{
-		Description: "Get Auth Method details data source",
+		Description: "Get tags data source",
 		Read:        dataSourceGetTagsRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The item name",
+				Description: "Item name",
 				ForceNew:    true,
 			},
 			"tags": {
 				Type:        schema.TypeSet,
 				Computed:    true,
 				Required:    false,
-				Description: "",
+				Description: "List of item tags",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -37,7 +35,6 @@ func dataSourceGetTagsRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 
@@ -48,15 +45,7 @@ func dataSourceGetTagsRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.GetTags(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get value", res, err)
 	}
 	err = d.Set("tags", rOut)
 	if err != nil {

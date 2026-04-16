@@ -3,13 +3,11 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -34,38 +32,38 @@ func resourceEventForwarderEmail() *schema.Resource {
 			"items_event_source_locations": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Items event sources to forward events about, for example: /abc/*",
+				Description: "Items Event sources",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"targets_event_source_locations": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Targets event sources to forward events about, for example: /abc/*",
+				Description: "Targets Event sources",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"auth_methods_event_source_locations": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Auth Methods event sources to forward events about, for example: /abc/*",
+				Description: "Auth Method Event sources",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"gateways_event_source_locations": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Gateways event sources to forward events about,for example the relevant Gateways cluster urls,: http://localhost:8000.",
+				Description: "Event sources",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"event_types": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "A comma-separated list of types of events to notify about",
+				Description: "List of event types to notify about [request-access, certificate-pending-expiration, certificate-expired, certificate-provisioning-success, certificate-provisioning-failure, auth-method-pending-expiration, auth-method-expired, next-automatic-rotation, rotated-secret-success, rotated-secret-failure, dynamic-secret-failure, multi-auth-failure, uid-rotation-failure, apply-justification, email-auth-method-approved, usage, rotation-usage, gateway-inactive, static-secret-updated, rate-limiting, usage-report, secret-sync]",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Key name. The key will be used to encrypt the Event Forwarder secret value. If key name is not specified, the account default protection key is used",
+				Description: "The name of a key that used to encrypt the EventForwarder secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"email_to": {
 				Type:        schema.TypeString,
@@ -97,6 +95,17 @@ func resourceEventForwarderEmail() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the object",
+			},
+			"enable": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Enable/Disable Event Forwarder [true/false]",
+				Default:     "true",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
 		},
 	}
@@ -159,7 +168,6 @@ func resourceEventForwarderEmailRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	name := d.Id()
@@ -171,15 +179,7 @@ func resourceEventForwarderEmailRead(d *schema.ResourceData, m interface{}) erro
 
 	readOut, res, err := client.EventForwarderGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get value", res, err)
 	}
 
 	rOut := readOut.EventForwarder
@@ -220,6 +220,12 @@ func resourceEventForwarderEmailRead(d *schema.ResourceData, m interface{}) erro
 			return err
 		}
 	}
+	if rOut.IsEnabled != nil {
+		err = d.Set("enable", strconv.FormatBool(*rOut.IsEnabled))
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(name)
 
@@ -254,6 +260,8 @@ func resourceEventForwarderEmailUpdate(d *schema.ResourceData, m interface{}) er
 	overrideUrl := d.Get("override_url").(string)
 	includeError := d.Get("include_error").(string)
 	description := d.Get("description").(string)
+	enable := d.Get("enable").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.EventForwarderUpdateEmail{
 		Name:  name,
@@ -269,6 +277,8 @@ func resourceEventForwarderEmailUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.OverrideUrl, overrideUrl)
 	common.GetAkeylessPtr(&body.IncludeError, includeError)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.Enable, enable)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
 	_, resp, err := client.EventForwarderUpdateEmail(ctx).Body(body).Execute()
 	if err != nil {

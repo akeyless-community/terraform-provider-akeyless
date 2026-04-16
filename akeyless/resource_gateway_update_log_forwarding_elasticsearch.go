@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -51,7 +49,7 @@ func resourceGatewayUpdateLogForwardingElasticsearch() *schema.Resource {
 			"server_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Elasticsearch server type [nodes/cloud]",
+				Description: "Elasticsearch server type [cloud/nodes]",
 			},
 			"nodes": {
 				Type:        schema.TypeString,
@@ -129,49 +127,49 @@ func resourceGatewayUpdateLogForwardingElasticsearchRead(d *schema.ResourceData,
 
 	config := rOut.ElasticsearchConfig
 	if config != nil {
-		if config.ElasticsearchIndex != nil && d.Get("index").(string) != "" {
+		if config.ElasticsearchIndex != nil {
 			err := d.Set("index", *config.ElasticsearchIndex)
 			if err != nil {
 				return err
 			}
 		}
-		if config.ElasticsearchServerType != nil && d.Get("server_type").(string) != "" {
+		if config.ElasticsearchServerType != nil {
 			err := d.Set("server_type", adjustElasticsearchServerType(*config.ElasticsearchServerType))
 			if err != nil {
 				return err
 			}
 		}
-		if config.ElasticsearchNodes != nil && d.Get("nodes").(string) != "" {
+		if config.ElasticsearchNodes != nil {
 			err := d.Set("nodes", *config.ElasticsearchNodes)
 			if err != nil {
 				return err
 			}
 		}
-		if config.ElasticsearchCloudId != nil && d.Get("cloud_id").(string) != "" {
+		if config.ElasticsearchCloudId != nil {
 			err := d.Set("cloud_id", *config.ElasticsearchCloudId)
 			if err != nil {
 				return err
 			}
 		}
-		if config.ElasticsearchAuthType != nil && d.Get("auth_type").(string) != "" {
+		if config.ElasticsearchAuthType != nil {
 			err := d.Set("auth_type", adjustElasticsearchAuthType(*config.ElasticsearchAuthType))
 			if err != nil {
 				return err
 			}
 		}
-		if config.ElasticsearchApiKey != nil && d.Get("api_key").(string) != "" {
+		if config.ElasticsearchApiKey != nil {
 			err := d.Set("api_key", *config.ElasticsearchApiKey)
 			if err != nil {
 				return err
 			}
 		}
-		if config.ElasticsearchUserName != nil && d.Get("user_name").(string) != "" {
+		if config.ElasticsearchUserName != nil {
 			err := d.Set("user_name", *config.ElasticsearchUserName)
 			if err != nil {
 				return err
 			}
 		}
-		if config.ElasticsearchPassword != nil && d.Get("password").(string) != "" {
+		if config.ElasticsearchPassword != nil {
 			err := d.Set("password", *config.ElasticsearchPassword)
 			if err != nil {
 				return err
@@ -183,7 +181,7 @@ func resourceGatewayUpdateLogForwardingElasticsearchRead(d *schema.ResourceData,
 				return err
 			}
 		}
-		if config.ElasticsearchTlsCertificate != nil && d.Get("tls_certificate").(string) != common.UseExisting {
+		if config.ElasticsearchTlsCertificate != nil {
 			err := d.Set("tls_certificate", common.Base64Encode(*config.ElasticsearchTlsCertificate))
 			if err != nil {
 				return err
@@ -199,7 +197,6 @@ func resourceGatewayUpdateLogForwardingElasticsearchUpdate(d *schema.ResourceDat
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
@@ -232,12 +229,9 @@ func resourceGatewayUpdateLogForwardingElasticsearchUpdate(d *schema.ResourceDat
 	common.GetAkeylessPtr(&body.EnableTls, enableTls)
 	common.GetAkeylessPtr(&body.TlsCertificate, tlsCertificate)
 
-	_, _, err := client.GatewayUpdateLogForwardingElasticsearch(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingElasticsearch(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {

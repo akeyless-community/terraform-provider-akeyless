@@ -25,6 +25,14 @@ data "akeyless_dynamic_secret" "secret" {
 
 - `path` (String) The path where the secret is stored. Defaults to the latest version.
 
+### Optional
+
+- `args` (List of String) Optional arguments as key=value pairs or JSON strings, e.g - "--args=csr=base64_encoded_csr --args=common_name=bar" or args='{"csr":"base64_encoded_csr"}. It is possible to combine both formats.'
+- `dbname` (String) DBName: Optional override DB name (works only if DS allows it. only relevant for MSSQL)
+- `host` (String) Host
+- `target` (String) Target Name
+- `timeout` (Number) Timeout in seconds
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.

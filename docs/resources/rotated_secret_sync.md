@@ -23,6 +23,8 @@ Sync Rotated Secret with Universal Secrets Connector resource
 
 ### Optional
 
+- `delete_from_usc` (Boolean) Delete the secret from the remote target USC as well
+- `delete_remote` (Boolean) Delete the secret from remote secret manager (for association create/update)
 - `filter_secret_value` (String) JQ expression to filter or transform the secret value
 - `namespace` (String) Vault namespace, releavnt only for Hashicorp Vault Target
 

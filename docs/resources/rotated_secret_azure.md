@@ -17,22 +17,40 @@ Azure rotated secret resource
 
 ### Required
 
-- `name` (String) Secret name
-- `rotator_type` (String) The rotator type [target/password/api-key/azure-storage-account]
-- `target_name` (String) The target name to associate
+- `name` (String) Rotated secret name
+- `rotator_type` (String) The rotator type. options: [target/password/api-key/azure-storage-account]
+- `target_name` (String) Target name
 
 ### Optional
 
 - `api_id` (String) API ID to rotate (relevant only for rotator-type=api-key)
 - `api_key` (String) API key to rotate (relevant only for rotator-type=api-key)
 - `app_id` (String) Id of the azure app that hold the serect to be rotated (relevant only for rotator-type=api-key & authentication-credentials=use-target-creds)
-- `authentication_credentials` (String) The credentials to connect with [use-self-creds/use-target-creds]
+- `authentication_credentials` (String) The credentials to connect with use-self-creds/use-target-creds
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
+- `explicitly_set_sa` (String) If set, explicitly provide the storage account details [true/false]
+- `grace_rotation` (String) Create a new access key without deleting the old key from AWS/Azure/GCP for backup (relevant only for AWS/Azure/GCP) [true/false]
+- `grace_rotation_hour` (Number) The Hour of the grace rotation in UTC
+- `grace_rotation_interval` (String) The number of days to wait before deleting the old key (must be bigger than rotation-interval)
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `password_length` (String) The length of the password to be generated
+- `resource_group_name` (String) The resource group name (only relevant when explicitly-set-sa=true)
+- `resource_name` (String) The name of the storage account (only relevant when explicitly-set-sa=true)
+- `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]
+- `rotation_event_in` (List of String) How many days before the rotation of the item would you like to be notified
 - `rotation_hour` (Number) The Hour of the rotation in UTC
-- `rotation_interval` (String) The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes
+- `rotation_interval` (String) The number of days to wait between every automatic key rotation (1-365)
+- `secure_access_disable_concurrent_connections` (Boolean) Enable this flag to prevent simultaneous use of the same secret
+- `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
+- `secure_access_url` (String) Destination URL to inject secrets
+- `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
+- `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `storage_account_key_name` (String) The name of the storage account key to rotate [key1/key2/kerb1/kerb2] (relevat to azure-storage-account)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `username` (String) The user principal name to rotate his password (relevant only for rotator-type=password)

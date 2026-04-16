@@ -25,7 +25,9 @@ Gitlab Target resource
 - `gitlab_access_token` (String, Sensitive) Gitlab access token
 - `gitlab_certificate` (String, Sensitive) Gitlab tls certificate (base64 encoded)
 - `gitlab_url` (String) Gitlab base url
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 
 ### Read-Only
 

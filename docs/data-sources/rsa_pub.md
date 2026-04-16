@@ -22,7 +22,8 @@ Obtain the public key from a specific RSA private key data source
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `raw` (String)
-- `ssh` (String)
+- `pem` (String) PEM formatted public key
+- `raw` (String) Raw format of the public key
+- `ssh` (String) SSH format of the public key
 
 

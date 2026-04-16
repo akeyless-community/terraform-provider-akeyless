@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -42,6 +40,12 @@ func resourceGatewayUpdateLogForwardingSplunk() *schema.Resource {
 				Optional:    true,
 				Description: "Pull interval in seconds",
 				Default:     "10",
+			},
+			"enable_batch": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Enable batch forwarding [true/false]",
+				Default:     "true",
 			},
 			"splunk_url": {
 				Type:        schema.TypeString,
@@ -115,32 +119,38 @@ func resourceGatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m inte
 
 	config := rOut.SplunkConfig
 	if config != nil {
-		if config.SplunkUrl != nil && d.Get("splunk_url").(string) != "" {
+		if config.SplunkUrl != nil {
 			err := d.Set("splunk_url", *config.SplunkUrl)
 			if err != nil {
 				return err
 			}
 		}
-		if config.SplunkToken != nil && d.Get("splunk_token").(string) != "" {
+		if config.SplunkToken != nil {
 			err := d.Set("splunk_token", *config.SplunkToken)
 			if err != nil {
 				return err
 			}
 		}
-		if config.SplunkSource != nil && d.Get("source").(string) != common.UseExisting {
+		if config.SplunkSource != nil {
 			err := d.Set("source", *config.SplunkSource)
 			if err != nil {
 				return err
 			}
 		}
-		if config.SplunkSourcetype != nil && d.Get("source_type").(string) != common.UseExisting {
+		if config.SplunkSourcetype != nil {
 			err := d.Set("source_type", *config.SplunkSourcetype)
 			if err != nil {
 				return err
 			}
 		}
-		if config.SplunkIndex != nil && d.Get("index").(string) != "" {
+		if config.SplunkIndex != nil {
 			err := d.Set("index", *config.SplunkIndex)
+			if err != nil {
+				return err
+			}
+		}
+		if config.SplunkEnableBatch != nil {
+			err := d.Set("enable_batch", *config.SplunkEnableBatch)
 			if err != nil {
 				return err
 			}
@@ -151,7 +161,7 @@ func resourceGatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m inte
 				return err
 			}
 		}
-		if config.SplunkTlsCertificate != nil && d.Get("tls_certificate").(string) != common.UseExisting {
+		if config.SplunkTlsCertificate != nil {
 			err := d.Set("tls_certificate", common.Base64Encode(*config.SplunkTlsCertificate))
 			if err != nil {
 				return err
@@ -167,11 +177,11 @@ func resourceGatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m in
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
+	enableBatch := d.Get("enable_batch").(string)
 	splunkUrl := d.Get("splunk_url").(string)
 	splunkToken := d.Get("splunk_token").(string)
 	source := d.Get("source").(string)
@@ -186,6 +196,7 @@ func resourceGatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m in
 	common.GetAkeylessPtr(&body.Enable, enable)
 	common.GetAkeylessPtr(&body.OutputFormat, outputFormat)
 	common.GetAkeylessPtr(&body.PullInterval, pullInterval)
+	common.GetAkeylessPtr(&body.EnableBatch, enableBatch)
 	common.GetAkeylessPtr(&body.SplunkUrl, splunkUrl)
 	common.GetAkeylessPtr(&body.SplunkToken, splunkToken)
 	common.GetAkeylessPtr(&body.Source, source)
@@ -194,12 +205,9 @@ func resourceGatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m in
 	common.GetAkeylessPtr(&body.EnableTls, enableTls)
 	common.GetAkeylessPtr(&body.TlsCertificate, tlsCertificate)
 
-	_, _, err := client.GatewayUpdateLogForwardingSplunk(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingSplunk(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {
@@ -269,6 +277,12 @@ func resourceGatewayUpdateLogForwardingSplunkImport(d *schema.ResourceData, m in
 		}
 		if config.SplunkIndex != nil {
 			err := d.Set("index", *config.SplunkIndex)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if config.SplunkEnableBatch != nil {
+			err := d.Set("enable_batch", *config.SplunkEnableBatch)
 			if err != nil {
 				return nil, err
 			}

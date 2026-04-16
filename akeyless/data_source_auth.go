@@ -25,6 +25,16 @@ func dataSourceAuth() *schema.Resource {
 				Sensitive:   true,
 				Description: "The token",
 			},
+			"complete_auth_link": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Complete authentication link",
+			},
+			"expiration": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Token expiration time",
+			},
 		},
 	}
 }
@@ -36,14 +46,34 @@ func dataSourceAuthRead(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 
-	token, err := getTokenByAuth(ctx, d, &client)
+	authBody, err := getAuthInfo(d)
 	if err != nil {
 		return err
 	}
 
+	authOut, _, err := client.Auth(ctx).Body(*authBody).Execute()
+	if err != nil {
+		return err
+	}
+
+	token := authOut.GetToken()
 	err = d.Set("token", token)
 	if err != nil {
 		return err
+	}
+
+	if authOut.CompleteAuthLink != nil {
+		err = d.Set("complete_auth_link", authOut.GetCompleteAuthLink())
+		if err != nil {
+			return err
+		}
+	}
+
+	if authOut.Expiration != nil {
+		err = d.Set("expiration", authOut.GetExpiration())
+		if err != nil {
+			return err
+		}
 	}
 
 	provider.token = &token

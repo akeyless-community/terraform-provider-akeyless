@@ -3,15 +3,12 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -41,7 +38,7 @@ func resourcePKICertIssuer() *schema.Resource {
 			"ttl": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The maximum requested Time To Live for issued certificate by default in seconds, supported formats are s,m,h,d. In case of Public CA, this is based on the CA target's supported maximum TTLs",
+				Description: "The maximum requested Time To Live for issued certificates, in seconds. In case of Public CA, this is based on the CA target's supported maximum TTLs",
 			},
 			"allowed_domains": {
 				Type:        schema.TypeString,
@@ -56,7 +53,7 @@ func resourcePKICertIssuer() *schema.Resource {
 			"allowed_ip_sans": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A list of the allowed CIDRs for IPs that clients can request to be included in the certificate as part of the IP Subject Alternative Names (in a comma-delimited list)",
+				Description: "A list of the allowed CIDRs for ips that clients can request to be included in the certificate as part of the IP Subject Alternative Names (in a comma-delimited list)",
 			},
 			"allow_subdomains": {
 				Type:        schema.TypeBool,
@@ -159,12 +156,12 @@ func resourcePKICertIssuer() *schema.Resource {
 			"gw_cluster_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The GW cluster URL to issue the certificate from, required in Public CA mode",
+				Description: "The GW cluster URL to issue the certificate from. Required in Public CA mode, to allow CRLs on private CA, or to enable ACME",
 			},
 			"destination_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A path in Akeyless which to save generated certificates",
+				Description: "A path in which to save generated certificates",
 			},
 			"protect_certificates": {
 				Type:        schema.TypeBool,
@@ -184,13 +181,13 @@ func resourcePKICertIssuer() *schema.Resource {
 			"expiration_event_in": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "How many days before the expiration of the certificate would you like to be notified",
+				Description: "How many days before the expiration of the certificate would you like to be notified.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"allowed_extra_extensions": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A json string that defines the allowed extra extensions for the pki cert issuer",
+				Description: "A json string containing the allowed extra extensions for the pki cert issuer",
 			},
 			"allow_copy_ext_from_csr": {
 				Type:        schema.TypeBool,
@@ -220,7 +217,39 @@ func resourcePKICertIssuer() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Protection from accidental deletion of this item, [true/false]",
+				Description: "Protection from accidental deletion of this object [true/false]",
+			},
+			"disable_wildcards": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set, generation of wildcard certificates will be disabled.",
+			},
+			"create_private_ocsp": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Set this to enable an OCSP endpoint in the Gateway and include its URL in AIA",
+			},
+			"create_public_ocsp": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Set this to enable a public OCSP endpoint and include its URL in AIA (served by UAM and includes account id)",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"max_path_len": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The maximum path length for the generated certificate. -1 means unlimited",
+				Default:     0,
+			},
+			"ocsp_ttl": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OCSP NextUpdate window for OCSP responses (min 10m). Supports s,m,h,d suffix.",
 			},
 		},
 	}
@@ -272,6 +301,12 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	scheduledRenew := d.Get("scheduled_renew").(int)
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
+	disableWildcards := d.Get("disable_wildcards").(bool)
+	createPrivateOcsp := d.Get("create_private_ocsp").(bool)
+	createPublicOcsp := d.Get("create_public_ocsp").(bool)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	maxPathLen := int64(d.Get("max_path_len").(int))
+	ocspTtl := d.Get("ocsp_ttl").(string)
 
 	body := akeyless_api.CreatePKICertIssuer{
 		Name:  name,
@@ -314,6 +349,18 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ScheduledRenew, scheduledRenew)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
+	common.GetAkeylessPtr(&body.DisableWildcards, disableWildcards)
+	common.GetAkeylessPtr(&body.CreatePrivateOcsp, createPrivateOcsp)
+	common.GetAkeylessPtr(&body.CreatePublicOcsp, createPublicOcsp)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
+		}
+		common.GetAkeylessPtr(&body.ItemCustomFields, customFieldsMap)
+	}
+	common.GetAkeylessPtr(&body.MaxPathLen, maxPathLen)
+	common.GetAkeylessPtr(&body.OcspTtl, ocspTtl)
 
 	_, resp, err := client.CreatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {
@@ -330,7 +377,6 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -342,15 +388,7 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.DescribeItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get item: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get item: %w", err)
+		return common.HandleReadError(d, "failed to get item", res, err)
 	}
 
 	if rOut.CertIssuerSignerKeyName != nil {
@@ -371,11 +409,13 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := false
 	if rOut.DeleteProtection != nil {
-		err := d.Set("delete_protection", *rOut.DeleteProtection)
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = *rOut.DeleteProtection
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 	if rOut.ItemTargetsAssoc != nil {
 		assocs := rOut.ItemTargetsAssoc
@@ -394,16 +434,21 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 		certDetails := rOut.CertificateIssueDetails
 
 		if certDetails.MaxTtl != nil {
-			// if ttl represents seconds, it can contain or not contain - "s" at the end.
-			outTtl := common.SecondsToTimeString(int(*certDetails.MaxTtl))
+			apiSeconds := int(*certDetails.MaxTtl)
 			ttlInState := d.Get("ttl").(string)
-			if ttlInState != "" && !strings.HasSuffix(ttlInState, "s") {
-				outTtl = strings.TrimSuffix(outTtl, "s")
-			}
 
-			err := d.Set("ttl", outTtl)
-			if err != nil {
-				return err
+			// Preserve the user's original format when it represents the same duration.
+			if ttlInState != "" && common.TimeStringToSeconds(ttlInState) == apiSeconds {
+				// no change needed
+			} else {
+				outTtl := common.SecondsToTimeString(apiSeconds)
+				if ttlInState != "" && !strings.HasSuffix(ttlInState, "s") {
+					outTtl = strings.TrimSuffix(outTtl, "s")
+				}
+				err := d.Set("ttl", outTtl)
+				if err != nil {
+					return err
+				}
 			}
 		}
 
@@ -600,6 +645,52 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
+			if pki.DisableWildcards != nil {
+				err := d.Set("disable_wildcards", *pki.DisableWildcards)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.CreatePrivateOcsp != nil {
+				err := d.Set("create_private_ocsp", *pki.CreatePrivateOcsp)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.CreatePublicOcsp != nil {
+				err := d.Set("create_public_ocsp", *pki.CreatePublicOcsp)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.MaxPathLen != nil {
+				err := d.Set("max_path_len", *pki.MaxPathLen)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.OcspNextUpdate != nil {
+				// Convert seconds to time string format
+				ocspTtlStr := common.SecondsToTimeString(int(*pki.OcspNextUpdate))
+				err := d.Set("ocsp_ttl", ocspTtlStr)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFieldsMap := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFieldsMap[*field.Name] = *field.Value
+			}
+		}
+		if len(customFieldsMap) > 0 {
+			err := d.Set("item_custom_fields", customFieldsMap)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -706,6 +797,12 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	scheduledRenew := d.Get("scheduled_renew").(int)
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(bool)
+	disableWildcards := d.Get("disable_wildcards").(bool)
+	createPrivateOcsp := d.Get("create_private_ocsp").(bool)
+	createPublicOcsp := d.Get("create_public_ocsp").(bool)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	maxPathLen := int64(d.Get("max_path_len").(int))
+	ocspTtl := d.Get("ocsp_ttl").(string)
 
 	body := akeyless_api.UpdatePKICertIssuer{
 		Name:  name,
@@ -758,6 +855,18 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ScheduledRenew, scheduledRenew)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.DeleteProtection, strconv.FormatBool(deleteProtection))
+	common.GetAkeylessPtr(&body.DisableWildcards, disableWildcards)
+	common.GetAkeylessPtr(&body.CreatePrivateOcsp, createPrivateOcsp)
+	common.GetAkeylessPtr(&body.CreatePublicOcsp, createPublicOcsp)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
+		}
+		common.GetAkeylessPtr(&body.ItemCustomFields, customFieldsMap)
+	}
+	common.GetAkeylessPtr(&body.MaxPathLen, maxPathLen)
+	common.GetAkeylessPtr(&body.OcspTtl, ocspTtl)
 
 	_, resp, err := client.UpdatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {

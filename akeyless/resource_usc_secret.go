@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,7 +35,7 @@ func resourceUscSecret() *schema.Resource {
 			"version_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Version ID of the secret (if not specified, will retrieve the last version)",
+				Description: "The version id (if not specified, will retrieve the last version)",
 			},
 			"value": {
 				Type:        schema.TypeString,
@@ -47,7 +47,7 @@ func resourceUscSecret() *schema.Resource {
 			"binary_value": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Use this option if the universal secrets value is a base64 encoded binary. (relevant for aws/azure/gcp/k8s targets)",
+				Description: "Use this option if the universal secrets value is a base64 encoded binary",
 			},
 			"namespace": {
 				Type:        schema.TypeString,
@@ -57,7 +57,7 @@ func resourceUscSecret() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Description of the universal secret (relevant for aws/hashi target)",
+				Description: "Description of the universal secrets",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -70,6 +70,27 @@ func resourceUscSecret() *schema.Resource {
 				Optional:    true,
 				Description: "Either secret or certificate (Relevant only for Azure KV targets)",
 				Default:     "secret",
+			},
+			"pfx_password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Optional, the passphrase that protects the private key within the pfx certificate (Relevant only for Azure KV certificates)",
+			},
+			"region": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Optional, create secret in a specific region (GCP only). If empty, a global secret will be created (provider default).",
+			},
+			"usc_encryption_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Optional, The name of the remote key that used to encrypt the secret value (if empty, the default key will be used)",
+			},
+			"force_delete": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Force delete objects that are soft deleted by default (relevant only for Azure target)",
 			},
 			"secret_id": {
 				Type:        schema.TypeString,
@@ -96,6 +117,9 @@ func resourceUscSecretCreate(d *schema.ResourceData, m any) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	objectType := d.Get("object_type").(string)
+	pfxPassword := d.Get("pfx_password").(string)
+	region := d.Get("region").(string)
+	uscEncryptionKey := d.Get("usc_encryption_key").(string)
 
 	body := akeyless_api.UscCreate{
 		UscName:    uscName,
@@ -108,6 +132,9 @@ func resourceUscSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ObjectType, objectType)
+	common.GetAkeylessPtr(&body.PfxPassword, pfxPassword)
+	common.GetAkeylessPtr(&body.Region, region)
+	common.GetAkeylessPtr(&body.UscEncryptionKey, uscEncryptionKey)
 
 	out, resp, err := client.UscCreate(ctx).Body(body).Execute()
 	if err != nil {
@@ -221,6 +248,8 @@ func resourceUscSecretUpdate(d *schema.ResourceData, m any) error {
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	pfxPassword := d.Get("pfx_password").(string)
+	uscEncryptionKey := d.Get("usc_encryption_key").(string)
 
 	body := akeyless_api.UscUpdate{
 		UscName:  uscName,
@@ -232,6 +261,8 @@ func resourceUscSecretUpdate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tags, tags)
+	common.GetAkeylessPtr(&body.PfxPassword, pfxPassword)
+	common.GetAkeylessPtr(&body.UscEncryptionKey, uscEncryptionKey)
 
 	_, resp, err := client.UscUpdate(ctx).Body(body).Execute()
 	if err != nil {
@@ -259,11 +290,14 @@ func resourceUscSecretDelete(d *schema.ResourceData, m any) error {
 		return err
 	}
 
+	forceDelete := d.Get("force_delete").(bool)
+
 	deleteItem := akeyless_api.UscDelete{
 		Token:    &token,
 		UscName:  uscName,
 		SecretId: secretId,
 	}
+	common.GetAkeylessPtr(&deleteItem.ForceDelete, forceDelete)
 
 	ctx := context.Background()
 	_, _, err = client.UscDelete(ctx).Body(deleteItem).Execute()
@@ -417,6 +451,7 @@ func validateUscSecretUpdateParams(d *schema.ResourceData) error {
 		"usc_name",
 		"secret_name",
 		"namespace",
+		"region",
 	}
 	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }

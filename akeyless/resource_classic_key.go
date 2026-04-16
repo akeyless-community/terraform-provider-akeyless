@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -34,7 +34,7 @@ func resourceClassicKey() *schema.Resource {
 			"alg": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Key type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, AES128CBC, AES256CBC, RSA1024, RSA2048, RSA3072, RSA4096, EC256, EC384, GPG]",
+				Description: "Classic Key type; options: [AES128GCM, AES256GCM, AES128SIV, AES256SIV, AES128CBC, AES256CBC, RSA1024, RSA2048, RSA3072, RSA4096, EC256, EC384, GPG]",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -44,20 +44,20 @@ func resourceClassicKey() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this key",
+				Description: "Add tags attached to this object",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"key_data": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				Description: "Base64-encoded classic key value provided by user",
+				Description: "Base64-encoded classic key value",
 			},
 			"cert_file_data": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "PEM Certificate in a Base64 format.",
+				Description: "Certificate in a PEM format.",
 			},
 			"gpg_alg": {
 				Type:        schema.TypeString,
@@ -68,13 +68,13 @@ func resourceClassicKey() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Optional:    true,
-				Description: "The name of the key that protects the classic key value (if empty, the account default key will be used)",
+				Description: "The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"generate_self_signed_certificate": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Whether to generate a self signed certificate with the key. If set, certificate_ttl must be provided.",
-				Default:     "false",
+				Description: "Whether to generate a self signed certificate with the key. If set, --certificate-ttl must be provided.",
+				Default:     false,
 			},
 			"certificate_ttl": {
 				Type:        schema.TypeInt,
@@ -117,6 +117,23 @@ func resourceClassicKey() *schema.Resource {
 				Description: "The format of the returned certificate [pem/der]",
 				Default:     "pem",
 			},
+			"certificate_digest_algo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Digest algorithm to be used for the certificate key signing.",
+			},
+			"hash_algorithm": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specifies the hash algorithm used for the encryption key's operations, available options: [SHA256, SHA384, SHA512]",
+				Default:     "SHA256",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"expiration_event_in": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -126,7 +143,7 @@ func resourceClassicKey() *schema.Resource {
 			"auto_rotate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]",
+				Description: "Whether to automatically rotate every rotation_interval days, or disable existing automatic rotation [true/false]",
 				Default:     "false",
 			},
 			"rotation_interval": {
@@ -138,14 +155,14 @@ func resourceClassicKey() *schema.Resource {
 			"rotation_event_in": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "How many days before the rotation of the item would you like to be notified.",
+				Description: "How many days before the rotation of the item would you like to be notified",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"delete_protection": {
 				Type:        schema.TypeString,
-				Computed:    true,
 				Optional:    true,
-				Description: "Protection from accidental deletion of this object, [true/false]",
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
 			},
 		},
 	}
@@ -172,6 +189,9 @@ func resourceClassicKeyCreate(d *schema.ResourceData, m interface{}) error {
 	certificateProvince := d.Get("certificate_province").(string)
 	confFileData := d.Get("conf_file_data").(string)
 	certificateFormat := d.Get("certificate_format").(string)
+	certificateDigestAlgo := d.Get("certificate_digest_algo").(string)
+	hashAlgorithm := d.Get("hash_algorithm").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	autoRotate := d.Get("auto_rotate").(string)
@@ -203,6 +223,15 @@ func resourceClassicKeyCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.CertificateProvince, certificateProvince)
 	common.GetAkeylessPtr(&body.ConfFileData, confFileData)
 	common.GetAkeylessPtr(&body.CertificateFormat, certificateFormat)
+	common.GetAkeylessPtr(&body.CertificateDigestAlgo, certificateDigestAlgo)
+	common.GetAkeylessPtr(&body.HashAlgorithm, hashAlgorithm)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
+		}
+		common.GetAkeylessPtr(&body.ItemCustomFields, customFieldsMap)
+	}
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.AutoRotate, autoRotate)
 	common.GetAkeylessPtr(&body.RotationInterval, rotationInterval)
@@ -256,11 +285,13 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 	if rOut.AutoRotate != nil {
 		err = d.Set("auto_rotate", strconv.FormatBool(*rOut.AutoRotate))
@@ -272,6 +303,20 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 		err = d.Set("rotation_interval", strconv.FormatInt(*rOut.RotationInterval, 10))
 		if err != nil {
 			return err
+		}
+	}
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFieldsMap := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFieldsMap[*field.Name] = *field.Value
+			}
+		}
+		if len(customFieldsMap) > 0 {
+			err = d.Set("item_custom_fields", customFieldsMap)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if rOut.ItemGeneralInfo != nil {
@@ -287,6 +332,21 @@ func resourceClassicKeyRead(d *schema.ResourceData, m interface{}) error {
 				err = d.Set("gpg_alg", gpgAlg)
 				if err != nil {
 					return err
+				}
+			}
+			if classicKeyDetails.ClassicKeyAttributes != nil {
+				attrs := *classicKeyDetails.ClassicKeyAttributes
+				if hashAlgList, ok := attrs["hash_algorithm"]; ok && len(hashAlgList) > 0 {
+					err := d.Set("hash_algorithm", hashAlgList[0])
+					if err != nil {
+						return err
+					}
+				}
+				if certDigestList, ok := attrs["certificate_digest_algo"]; ok && len(certDigestList) > 0 {
+					err := d.Set("certificate_digest_algo", certDigestList[0])
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -533,6 +593,7 @@ func validateClassicKeyUpdateParams(d *schema.ResourceData) error {
 		"generate_self_signed_certificate", "certificate_ttl",
 		"certificate_common_name", "certificate_organization",
 		"certificate_country", "certificate_locality", "certificate_province",
-		"conf_file_data", "protection_key_name", "key_data"}
+		"conf_file_data", "protection_key_name", "key_data",
+		"certificate_digest_algo", "hash_algorithm", "item_custom_fields"}
 	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }

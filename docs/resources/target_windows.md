@@ -25,9 +25,13 @@ windows Target resource
 ### Optional
 
 - `certificate` (String, Sensitive) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
+- `connection_type` (String) Type of connection to Windows Server [credentials/parent-target]
 - `description` (String) Description of the object
 - `domain` (String) User domain name
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) Key name. The key is used to encrypt the target secret value. If the key name is not specified, the account default protection key is used
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
+- `parent_target_name` (String) Name of the parent target, relevant only when connection-type is parent-target
 - `port` (String) Server WinRM port
 - `use_tls` (String) Enable/Disable TLS for WinRM over HTTPS [true/false]
 

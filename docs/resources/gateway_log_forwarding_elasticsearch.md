@@ -27,7 +27,7 @@ Log Forwarding config for elasticsearch
 - `output_format` (String) Logs format [text/json]
 - `password` (String, Sensitive) Elasticsearch password relevant only for password auth-type
 - `pull_interval` (String) Pull interval in seconds
-- `server_type` (String) Elasticsearch server type [nodes/cloud]
+- `server_type` (String) Elasticsearch server type [cloud/nodes]
 - `tls_certificate` (String, Sensitive) Elasticsearch tls certificate (PEM format) in a Base64 format
 - `user_name` (String) Elasticsearch user name relevant only for password auth-type
 

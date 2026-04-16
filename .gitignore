@@ -11,3 +11,9 @@ akeyless/resource_item1_test.go
 akeyless/resource_target1_test.go
 akeyless/resource_rotated_secret_test.go
 akeyless/resource_usc_test.go
+missing_resources.txt
+build.log
+terraform-provider-akeyless
+.github/scripts/update_ai.sh
+sdk_diff.log
+.env.test

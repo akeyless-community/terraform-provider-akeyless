@@ -25,10 +25,12 @@ Certificate Resource
 - `delete_protection` (String) Protection from accidental deletion of this object, [true/false]
 - `description` (String) Description of the object
 - `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified.
-- `format` (String) CertificateFormat of the certificate and private key, possible values: cer,crt,pem,pfx,p12.
+- `format` (String) CertificateFormat of the certificate and private key, possible values: cer,crt,pem,pfx,p12. Required when passing inline certificate content with --certificate-data or --key-data, otherwise format is derived from the file extension.
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key to use to encrypt the certificate's key (if empty, the account default protectionKey key will be used)
 - `key_data` (String, Sensitive) Content of the certificate's private key in a Base64 format.
-- `tags` (Set of String) Add tags attached to this object. To specify multiple tags use argument multiple times: --tag Tag1 -t Tag2
+- `tags` (Set of String) Add tags attached to this object
 
 ### Read-Only
 

@@ -2,10 +2,10 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -69,7 +69,6 @@ func dataSourceItemsRead(d *schema.ResourceData, m interface{}) error {
 
 	path := d.Get("path").(string)
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.ListItems{
@@ -77,12 +76,9 @@ func dataSourceItemsRead(d *schema.ResourceData, m interface{}) error {
 		Path:  &path,
 	}
 
-	nliOut, _, err := client.ListItems(ctx).Body(body).Execute()
+	nliOut, res, err := client.ListItems(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't list items: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't list items: %v", err)
+		return common.HandleReadError(d, "can't list items", res, err)
 	}
 
 	items := make([]map[string]interface{}, 0)

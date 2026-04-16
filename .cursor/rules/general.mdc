@@ -1,0 +1,77 @@
+---
+alwaysApply: true
+---
+
+## Sensitive Fields
+Mark all password, key, secret, and credential fields as **`Sensitive: true`** in the Terraform schema definition.
+
+## Fields to Ignore in SDK
+When working with SDK files, **exclude** the following fields:
+1. **`new_name`** - Name changes are not permitted in the provider
+2. **`uid_token`,`token`** - Not relevant to Terraform implementation
+3. **`json`** - Fields with description "Set output format to JSON" are internal and should be excluded
+
+## Test Infrastructure
+Gateway-dependent resources (dynamic secrets, rotated secrets, log forwarding, migrations, etc.) are tested using a local Docker gateway via `docker-compose.test.yml`. Tests use `skipIfNoGateway(t)` to skip when no local gateway is available.
+- **Log forwarding tests** that target external services (AWS S3, Azure Analytics, Elasticsearch, etc.) should use `enable = "false"` so the gateway stores config without connecting
+- **Migration tests** use dummy values since migrations store config without connecting to the source
+- **Event forwarder tests** are skipped because the gateway rejects unregistered cluster URLs
+- **Read functions** must always set fields from the API response — do **not** guard `d.Set()` with `d.Get()` checks (causes plan-not-empty bugs)
+
+## Dynamic Secret Field Locations
+For all dynamic secret resources:
+- **`ItemCustomFields`** is located in `ItemCustomFieldsDetails`, **NOT** in `ItemGeneralInfo`
+When reading dynamic secret data, ensure you retrieve custom fields from the correct response structure.
+and the correct field names:
+- Use **`field.Name`** (NOT `field.FieldName`)
+- Use **`field.Value`** (NOT `field.FieldValue`)
+
+
+## Deprecated Fields
+**Exclude all fields marked as deprecated** in their SDK description. Do not implement, update, or maintain deprecated fields in the Terraform provider.
+ 
+## Additional Exclusions
+- **Huawei-related commands** - Ignore all commands related to Huawei
+- **ESM terminology** - ESM was renamed to USC; use USC in all implementations
+- **CreateSecret operation** - This operation is handled in the static secret resource
+
+Never use the term "Producer" - always use "Dynamic Secret" instead.
+The old `resource_gateway_producer_*` resources are the legacy format of dynamic secrets — do not add new ones.
+
+- **DescribeItem response** → Use `ItemMetadata`
+- **Specific Get endpoints** → Use the direct `Description` field from the response structure
+
+## Deprecated / Legacy Resources
+- Resources with `DeprecationMessage` set should **not** be modified or maintained
+- **Old target format** (`resource_*_target.go`) is deprecated — new targets use `resource_target_*.go`
+- **Old auth method APIs** (`GetAuthMethod`, `DeleteAuthMethod`, etc.) are deprecated — use `AuthMethodGet`, `AuthMethodDelete`, etc. The old and new structs are field-identical (safe drop-in replacement); also update test files when switching.
+- **Old migration API** (`GatewayCreateMigration`) is deprecated — use type-specific APIs (`GatewayCreateMigrationAWS`, etc.) when available in the SDK
+- Do **not** remove existing fields from resources — it breaks backward compatibility
+- Before switching to a newer API, verify the method actually exists in the current SDK version — not all documented APIs are available yet
+
+## Schema Field Conventions
+- **`Sensitive: true`** — secrets, passwords, private keys, API keys, tokens, client secrets
+- **`Default` type must match `Type`** — e.g. `Default: 0` for `TypeInt`, `Default: false` for `TypeBool` (never use string `"0"` or `"false"`)
+- **`ForceNew: true`** — for the item's identifier field (e.g. `name`)
+- **`DiffSuppressFunc: common.DiffSuppressOnLeadingSlash`** — for any field that holds an **Akeyless item path** (e.g. `name`, issuer name, cert issuer, signer, target path, folder path). The API returns these paths with a leading `/`; without the suppressor the plan is never empty.
+- **`id`** is a reserved field in Terraform — do not use it as a custom schema field name; use a prefixed name like `migration_id` instead
+- All `d.Set()` calls in read functions **must** check for errors
+- When updating tags, use `common.GetTagsForUpdate` to handle both add and remove
+- Read functions must read back **all writable params** that are available from the API response
+- Sensitive fields **should** be read back and set with `d.Set()` — Terraform handles them via `Sensitive: true` in the schema
+- Descriptions in schema fields must be consistent with their `Default` values
+- Never duplicate a `d.Set()` call for the same field in a read function
+- File header comment should be `// generated file` (watch for typos like `fule` or `ffile`)
+
+## SDK Import Convention
+Always import as `akeyless_api "github.com/akeylesslabs/akeyless-go/v5"` — the version mapping is in `go.mod`. Never change imports to `v6`, `v7`, etc.
+
+## Role Resource — PathRules
+The `GetRole` response contains `Rules.PathRules` — a slice of `PathRule` with `Path`, `Type`, and `Capabilities`.
+- `Type == "event-forwarder-rule"` → `Path` is the event forwarder name → collect into `event_forwarders_name` (TypeSet)
+- `Type == "reverse-rbac-rule"` → `Path` is the access scope (e.g. `/scoped`) → strip leading `/` and set as `reverse_rbac_access`
+- Other access rule types (`search-rule`, `reports-rule`, etc.) are handled by `setAccessRuleField` using `convertPathName`
+
+## Auth Method Additional Data
+Auth method responses include `AuthMethodAdditionalData` with type-specific nested structs (e.g. `KerberosData` of type `KerberosAuthMethodInfo`). Use these to read back LDAP/Kerberos fields like `bind_dn`, `ldap_url`, `krb5_conf_data`, etc. — including sensitive ones like `bind_dn_password` and `keytab_file_data`.
+

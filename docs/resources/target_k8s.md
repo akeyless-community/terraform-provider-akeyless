@@ -17,15 +17,22 @@ K8S Target resource
 
 ### Required
 
-- `k8s_cluster_ca_cert` (String, Sensitive) K8S Cluster certificate. Base 64 encoded certificate.
-- `k8s_cluster_endpoint` (String) K8S Cluster endpoint. https:// , <DNS / IP> of the cluster.
-- `k8s_cluster_token` (String) K8S Cluster authentication token.
+- `k8s_cluster_ca_cert` (String, Sensitive) K8S cluster CA certificate
+- `k8s_cluster_endpoint` (String) K8S cluster URL endpoint
+- `k8s_cluster_token` (String) K8S cluster Bearer token
 - `name` (String) Target name
 
 ### Optional
 
 - `description` (String) Description of the object
-- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.
+- `k8s_auth_type` (String) K8S auth type [token/certificate]
+- `k8s_client_certificate` (String, Sensitive) Content of the k8 client certificate (PEM format) in a Base64 format
+- `k8s_client_key` (String, Sensitive) Content of the k8 client private key (PEM format) in a Base64 format
+- `k8s_cluster_name` (String) K8S cluster name
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
+- `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
+- `use_gw_service_account` (Boolean) Use the GW's service account
 
 ### Read-Only
 

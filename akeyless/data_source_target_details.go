@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -32,12 +31,104 @@ func dataSourceGetTargetDetails() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Include all target versions in reply",
-				Default:     "false",
+				Default:     false,
 			},
 			"value": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"target_id": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Target ID",
+			},
+			"target_type": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Target type",
+			},
+			"target_sub_type": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Target sub type",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Description of the target",
+			},
+			"protection_key_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Protection key name",
+			},
+			"last_version": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Last version of the target",
+			},
+			"with_customer_fragment": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether the target has customer fragment",
+			},
+			"is_access_request_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether access request is enabled for this target",
+			},
+			"access_request_status": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Access request status",
+			},
+			"access_date": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Access date",
+			},
+			"access_date_display": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Access date display",
+			},
+			"attributes": {
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Description: "Target attributes",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"client_permissions": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Client permissions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"creation_date": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Creation date",
+			},
+			"modification_date": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Modification date",
+			},
+			"parent_target_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Parent target name",
+			},
+			"target_details": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Target details",
+			},
+			"target_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Target name",
 			},
 		},
 	}
@@ -48,7 +139,6 @@ func dataSourceGetTargetDetailsRead(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetVersion := d.Get("target_version").(int)
@@ -63,15 +153,7 @@ func dataSourceGetTargetDetailsRead(d *schema.ResourceData, m interface{}) error
 
 	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get target details: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get target details: %v", err)
+		return common.HandleReadError(d, "can't get target details", res, err)
 	}
 	if rOut.Value == nil {
 		return fmt.Errorf("can't get target details: empty details")
@@ -85,6 +167,103 @@ func dataSourceGetTargetDetailsRead(d *schema.ResourceData, m interface{}) error
 	err = setTargetDetailsByType(d, rOut.Value, targetType)
 	if err != nil {
 		return err
+	}
+
+	if rOut.Target != nil {
+		if rOut.Target.TargetId != nil {
+			if err := d.Set("target_id", *rOut.Target.TargetId); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.TargetType != nil {
+			if err := d.Set("target_type", *rOut.Target.TargetType); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.TargetSubType != nil {
+			if err := d.Set("target_sub_type", *rOut.Target.TargetSubType); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.Comment != nil {
+			if err := d.Set("description", *rOut.Target.Comment); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.ProtectionKeyName != nil {
+			if err := d.Set("protection_key_name", *rOut.Target.ProtectionKeyName); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.LastVersion != nil {
+			if err := d.Set("last_version", *rOut.Target.LastVersion); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.WithCustomerFragment != nil {
+			if err := d.Set("with_customer_fragment", *rOut.Target.WithCustomerFragment); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.IsAccessRequestEnabled != nil {
+			if err := d.Set("is_access_request_enabled", *rOut.Target.IsAccessRequestEnabled); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.AccessRequestStatus != nil {
+			if err := d.Set("access_request_status", *rOut.Target.AccessRequestStatus); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.AccessDate != nil {
+			if err := d.Set("access_date", rOut.Target.AccessDate.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.AccessDateDisplay != nil {
+			if err := d.Set("access_date_display", *rOut.Target.AccessDateDisplay); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.Attributes != nil {
+			attributesMap := make(map[string]string)
+			for k, v := range rOut.Target.Attributes {
+				attributesMap[k] = fmt.Sprintf("%v", v)
+			}
+			if err := d.Set("attributes", attributesMap); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.ClientPermissions != nil {
+			if err := d.Set("client_permissions", rOut.Target.ClientPermissions); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.CreationDate != nil {
+			if err := d.Set("creation_date", rOut.Target.CreationDate.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.ModificationDate != nil {
+			if err := d.Set("modification_date", rOut.Target.ModificationDate.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.ParentTargetName != nil {
+			if err := d.Set("parent_target_name", *rOut.Target.ParentTargetName); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.TargetDetails != nil {
+			if err := d.Set("target_details", *rOut.Target.TargetDetails); err != nil {
+				return err
+			}
+		}
+		if rOut.Target.TargetName != nil {
+			if err := d.Set("target_name", *rOut.Target.TargetName); err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(name)
@@ -137,14 +316,20 @@ func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, ta
 		return extractEksTargetDetails(details.EksTargetDetails)
 	case details.GcpTargetDetails != nil:
 		return extractGcpTargetDetails(details.GcpTargetDetails)
+	case details.GeminiTargetDetails != nil:
+		return extractGeminiTargetDetails(details.GeminiTargetDetails)
 	case details.GithubTargetDetails != nil:
 		return extractGithubTargetDetails(details.GithubTargetDetails)
+	case details.GitlabTargetDetails != nil:
+		return extractGitlabTargetDetails(details.GitlabTargetDetails)
 	case details.GkeTargetDetails != nil:
 		return extractGkeTargetDetails(details.GkeTargetDetails)
 	case details.GlobalsignAtlasTargetDetails != nil:
 		return extractGlobalsignAtlasTargetDetails(details.GlobalsignAtlasTargetDetails)
 	case details.GlobalsignTargetDetails != nil:
 		return extractGlobalsignTargetDetails(details.GlobalsignTargetDetails)
+	case details.GodaddyTargetDetails != nil:
+		return extractGodaddyTargetDetails(details.GodaddyTargetDetails)
 	case details.HashiVaultTargetDetails != nil:
 		return extractHashiTargetDetails(details.HashiVaultTargetDetails)
 	case details.LdapTargetDetails != nil:
@@ -155,12 +340,16 @@ func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, ta
 		return extractMongoDbTargetDetails(details.MongoDbTargetDetails)
 	case details.NativeK8sTargetDetails != nil:
 		return extractNativeK8sTargetDetails(details.NativeK8sTargetDetails)
+	case details.OpenaiTargetDetails != nil:
+		return extractOpenaiTargetDetails(details.OpenaiTargetDetails)
 	case details.PingTargetDetails != nil:
 		return extractPingTargetDetails(details.PingTargetDetails)
 	case details.RabbitMqTargetDetails != nil:
 		return extractRabbitMqTargetDetails(details.RabbitMqTargetDetails)
 	case details.SalesforceTargetDetails != nil:
 		return extractSalesforceTargetDetails(details.SalesforceTargetDetails)
+	case details.SectigoTargetDetails != nil:
+		return extractSectigoTargetDetails(details.SectigoTargetDetails)
 	case details.SshTargetDetails != nil:
 		return extractSshTargetDetails(details.SshTargetDetails)
 	case details.VenafiTargetDetails != nil:
@@ -902,6 +1091,144 @@ func extractZerosslTargetDetails(details *akeyless_api.ZeroSSLTargetDetails) (ma
 	}
 
 	value, err := buildTargetDetailsVal(m, "zerossl_target_details")
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func extractGeminiTargetDetails(details *akeyless_api.GeminiTargetDetails) (map[string]string, error) {
+
+	m := make(map[string]interface{})
+
+	if details.ApiKey != nil {
+		m["api_key"] = *details.ApiKey
+	}
+	if details.GeminiUrl != nil {
+		m["gemini_url"] = *details.GeminiUrl
+	}
+
+	value, err := buildTargetDetailsVal(m, "gemini_target_details")
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func extractOpenaiTargetDetails(details *akeyless_api.OpenAITargetDetails) (map[string]string, error) {
+
+	m := make(map[string]interface{})
+
+	if details.ApiKey != nil {
+		m["api_key"] = *details.ApiKey
+	}
+	if details.ApiKeyId != nil {
+		m["api_key_id"] = *details.ApiKeyId
+	}
+	if details.OpenaiUrl != nil {
+		m["openai_url"] = *details.OpenaiUrl
+	}
+	if details.OrganizationId != nil {
+		m["organization_id"] = *details.OrganizationId
+	}
+	if details.ProjectId != nil {
+		m["project_id"] = *details.ProjectId
+	}
+
+	value, err := buildTargetDetailsVal(m, "openai_target_details")
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func extractGodaddyTargetDetails(details *akeyless_api.GodaddyTargetDetails) (map[string]string, error) {
+
+	m := make(map[string]interface{})
+
+	if details.Key != nil {
+		m["key"] = *details.Key
+	}
+	if details.Secret != nil {
+		m["secret"] = *details.Secret
+	}
+	if details.ImapUser != nil {
+		m["imap_username"] = *details.ImapUser
+	}
+	if details.ImapPassword != nil {
+		m["imap_password"] = *details.ImapPassword
+	}
+	if details.ImapFqdn != nil {
+		m["imap_fqdn"] = *details.ImapFqdn
+	}
+	if details.ImapPort != nil {
+		m["imap_port"] = *details.ImapPort
+	}
+	if details.ValidationEmail != nil {
+		m["validation_email"] = *details.ValidationEmail
+	}
+	if details.ShopperId != nil {
+		m["shopper_id"] = *details.ShopperId
+	}
+	if details.Timeout != nil {
+		m["timeout"] = *details.Timeout
+	}
+
+	value, err := buildTargetDetailsVal(m, "godaddy_target_details")
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func extractGitlabTargetDetails(details *akeyless_api.GitlabTargetDetails) (map[string]string, error) {
+
+	m := make(map[string]interface{})
+
+	if details.GitlabAccessToken != nil {
+		m["access_token"] = *details.GitlabAccessToken
+	}
+	if details.GitlabCertificate != nil {
+		m["certificate"] = *details.GitlabCertificate
+	}
+	if details.GitlabUrl != nil {
+		m["url"] = *details.GitlabUrl
+	}
+
+	value, err := buildTargetDetailsVal(m, "gitlab_target_details")
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func extractSectigoTargetDetails(details *akeyless_api.SectigoTargetDetails) (map[string]string, error) {
+
+	m := make(map[string]interface{})
+
+	if details.Username != nil {
+		m["username"] = *details.Username
+	}
+	if details.Password != nil {
+		m["password"] = *details.Password
+	}
+	if details.CustomerUri != nil {
+		m["customer_uri"] = *details.CustomerUri
+	}
+	if details.OrgId != nil {
+		m["org_id"] = *details.OrgId
+	}
+	if details.CertificateProfileId != nil {
+		m["certificate_profile_id"] = *details.CertificateProfileId
+	}
+	if details.ExternalRequester != nil {
+		m["external_requester"] = *details.ExternalRequester
+	}
+	if details.Timeout != nil {
+		m["timeout"] = *details.Timeout
+	}
+
+	value, err := buildTargetDetailsVal(m, "sectigo_target_details")
 	if err != nil {
 		return nil, err
 	}

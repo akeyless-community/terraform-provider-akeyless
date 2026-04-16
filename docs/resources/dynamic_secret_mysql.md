@@ -22,26 +22,31 @@ MySQL dynamic secret resource
 ### Optional
 
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
-- `db_server_certificates` (String) the set of root certificate authorities in base64 encoding that clients use when verifying server certificates
-- `db_server_name` (String) Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is given. It is also included in the client's handshake to support virtual hosting unless it is an IP address
-- `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `db_server_certificates` (String) (Optional) DB server certificates
+- `db_server_name` (String) (Optional) Server name for certificate verification
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
+- `encryption_key_name` (String) Dynamic producer encryption key
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `mysql_creation_statements` (String) MySQL Creation Statements
 - `mysql_dbname` (String) MySQL DB name
-- `mysql_host` (String) MySQL host name
+- `mysql_host` (String) MySQL Host
 - `mysql_password` (String, Sensitive) MySQL password
 - `mysql_port` (String) MySQL port
 - `mysql_revocation_statements` (String) MySQL Revocation Statements
-- `mysql_username` (String) MySQL user
+- `mysql_username` (String) MySQL Username
 - `password_length` (String) The length of the password to be generated
-- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
-- `secure_access_db_name` (String) Enable Web Secure Remote Access
+- `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
+- `secure_access_db_name` (String) The DB name (relevant only for DB Dynamic-Secret)
+- `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
-- `secure_access_host` (Set of String) Target DB servers for connections., For multiple values repeat this flag.
+- `secure_access_host` (Set of String) Target DB servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
-- `ssl_certificate` (String) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
-- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in dynamic secret creation
+- `ssl_certificate` (String) SSL connection certificate
+- `tags` (Set of String) Add tags attached to this object
+- `target_name` (String) Target name
 - `user_ttl` (String) User TTL
 
 ### Read-Only

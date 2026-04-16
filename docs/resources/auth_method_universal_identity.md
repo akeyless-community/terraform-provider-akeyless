@@ -22,13 +22,18 @@ Akeyless Universal Identity Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
+- `allowed_client_type` (Set of String) limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs, e.g "--audit-logs-claims email --audit-logs-claims username"
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `deny_inheritance` (Boolean) Deny from root to create children
 - `deny_rotate` (Boolean) Deny from the token to rotate
-- `force_sub_claims` (Boolean) enforce role-association must include sub claims
+- `description` (String) Auth Method description
+- `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified.
+- `force_sub_claims` (Boolean) if true: enforce role-association must include sub claims
+- `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
 - `jwt_ttl` (Number) Creds expiration time in minutes
+- `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
 - `ttl` (Number) Token ttl (in minutes)
 
 ### Read-Only

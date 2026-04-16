@@ -18,8 +18,8 @@ Generates SSH certificate data source
 ### Required
 
 - `cert_issuer_name` (String) The name of the SSH certificate issuer
-- `cert_username` (String) The username to sign in the SSH certificate (use a comma-separated list for more than one username)
-- `public_key_data` (String) SSH public key file contents
+- `cert_username` (String) The username to sign in the SSH certificate
+- `public_key_data` (String) SSH public key file contents. If this option is used, the certificate will be printed to stdout
 
 ### Optional
 
@@ -30,5 +30,6 @@ Generates SSH certificate data source
 
 - `data` (String, Sensitive)
 - `id` (String) The ID of this resource.
+- `path` (String) The path of the SSH certificate
 
 

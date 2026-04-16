@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -51,14 +51,10 @@ func dataSourceSecretRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	ctx := context.Background()
-	var apiErr akeyless_api.GenericOpenAPIError
 
-	itemOut, _, err := client.DescribeItem(ctx).Body(itemBody).Execute()
+	itemOut, res, err := client.DescribeItem(ctx).Body(itemBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't get Secret item: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get Secret item: %v", err)
+		return common.HandleReadError(d, "can't get secret item", res, err)
 	}
 
 	switch *itemOut.ItemType {

@@ -18,6 +18,7 @@ Log Forwarding config for splunk
 ### Optional
 
 - `enable` (String) Enable Log Forwarding [true/false]
+- `enable_batch` (String) Enable batch forwarding [true/false]
 - `enable_tls` (Boolean) Enable tls
 - `index` (String) Splunk index
 - `output_format` (String) Logs format [text/json]

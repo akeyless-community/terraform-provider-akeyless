@@ -22,12 +22,14 @@ GKE Target resource
 ### Optional
 
 - `description` (String) Description of the object
-- `gke_account_key` (String) GKE service account key
-- `gke_cluster_cert` (String) GKE Base-64 encoded cluster certificate
-- `gke_cluster_endpoint` (String) GKE cluster endpoint, i.e., cluster URI https://<DNS/IP>.
+- `gke_account_key` (String) GKE Service Account key file path
+- `gke_cluster_cert` (String) GKE cluster CA certificate
+- `gke_cluster_endpoint` (String) GKE cluster URL endpoint
 - `gke_cluster_name` (String) GKE cluster name
 - `gke_service_account_email` (String) GKE service account email
-- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
+- `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
 
 ### Read-Only

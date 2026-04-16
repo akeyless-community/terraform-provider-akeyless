@@ -24,19 +24,21 @@ Event Forwarder Service Now resource
 - `admin_name` (String) Workstation Admin Name
 - `admin_pwd` (String, Sensitive) Workstation Admin Password
 - `app_private_key_base64` (String, Sensitive) The RSA Private Key to use when connecting with jwt authentication
-- `auth_methods_event_source_locations` (Set of String) Auth Methods event sources to forward events about, for example: /abc/*
+- `auth_methods_event_source_locations` (Set of String) Auth Method Event sources
 - `auth_type` (String) The authentication type to use [user-pass/jwt]
 - `client_id` (String) The client ID to use when connecting with jwt authentication
 - `client_secret` (String, Sensitive) The client secret to use when connecting with jwt authentication
 - `description` (String) Description of the object
-- `event_types` (Set of String) A comma-separated list of types of events to notify about
+- `enable` (String) Enable/Disable Event Forwarder [true/false]
+- `event_types` (Set of String) List of event types to notify about [request-access, certificate-pending-expiration, certificate-expired, certificate-provisioning-success, certificate-provisioning-failure, auth-method-pending-expiration, auth-method-expired, next-automatic-rotation, rotated-secret-success, rotated-secret-failure, dynamic-secret-failure, multi-auth-failure, uid-rotation-failure, apply-justification, email-auth-method-approved, usage, rotation-usage, gateway-inactive, static-secret-updated, rate-limiting, usage-report, secret-sync]
 - `every` (String) Rate of periodic runner repetition in hours
-- `gateways_event_source_locations` (Set of String) Gateways event sources to forward events about,for example the relevant Gateways cluster urls,: http://localhost:8000.
+- `gateways_event_source_locations` (Set of String) Event sources
 - `host` (String) Workstation Host
-- `items_event_source_locations` (Set of String) Items event sources to forward events about, for example: /abc/*
-- `key` (String) Key name. The key will be used to encrypt the Event Forwarder secret value. If key name is not specified, the account default protection key is used
+- `items_event_source_locations` (Set of String) Items Event sources
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
+- `key` (String) The name of a key that used to encrypt the EventForwarder secret value (if empty, the account default protectionKey key will be used)
 - `runner_type` (String) Event Forwarder runner type [immediate/periodic]
-- `targets_event_source_locations` (Set of String) Targets event sources to forward events about, for example: /abc/*
+- `targets_event_source_locations` (Set of String) Targets Event sources
 - `user_email` (String) The user email to identify with when connecting with jwt authentication
 
 ### Read-Only

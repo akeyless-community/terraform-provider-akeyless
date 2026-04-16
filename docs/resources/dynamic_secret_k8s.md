@@ -23,26 +23,34 @@ Native Kubernetes Service dynamic secret resource
 
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this item [true/false]
-- `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `description` (String) Description of the object
+- `encryption_key_name` (String) Dynamic producer encryption key
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `k8s_allowed_namespaces` (String) Comma-separated list of allowed K8S namespaces for the generated ServiceAccount (relevant only for k8s-service-account-type=dynamic).
-- `k8s_cluster_ca_cert` (String, Sensitive) K8S Cluster certificate. Base 64 encoded certificate.
-- `k8s_cluster_endpoint` (String) K8S Cluster endpoint. https:// , <DNS / IP> of the cluster.
-- `k8s_cluster_token` (String, Sensitive) K8S Cluster authentication token.
+- `k8s_cluster_ca_cert` (String, Sensitive) K8S cluster CA certificate
+- `k8s_cluster_endpoint` (String) K8S cluster URL endpoint
+- `k8s_cluster_name` (String) K8S cluster name
+- `k8s_cluster_token` (String, Sensitive) K8S cluster Bearer token
 - `k8s_namespace` (String) K8S Namespace where the ServiceAccount exists.
 - `k8s_predefined_role_name` (String) The pre-existing Role or ClusterRole name to bind the generated ServiceAccount to (relevant only for k8s-service-account-type=dynamic).
 - `k8s_predefined_role_type` (String) Specifies the type of the pre-existing K8S role [Role, ClusterRole] (relevant only for k8s-service-account-type=dynamic).
+- `k8s_rolebinding_yaml_data` (String) Content of the yaml in a Base64 format.
+- `k8s_rolebinding_yaml_def` (String) Path to yaml file that contains definitions of K8S role and role binding (relevant only for k8s-service-account-type=dynamic)
 - `k8s_service_account` (String) K8S ServiceAccount to extract token from.
 - `k8s_service_account_type` (String) K8S ServiceAccount type [fixed, dynamic].
-- `secure_access_allow_port_forwading` (Boolean) Enable Port forwarding while using CLI access.
-- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
-- `secure_access_cluster_endpoint` (String) The K8s cluster endpoint
+- `secure_access_allow_port_forwading` (Boolean) Enable Port forwarding while using CLI access
+- `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
+- `secure_access_cluster_endpoint` (String) The K8s cluster endpoint URL
 - `secure_access_dashboard_url` (String) The K8s dashboard url
+- `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
-- `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
-- `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless Web Access Bastion
-- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
-- `target_name` (String) Name of existing target to use in dynamic secret creation
+- `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
+- `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
+- `tags` (Set of String) Add tags attached to this object
+- `target_name` (String) Target name
+- `use_gw_service_account` (Boolean) Use the GW's service account
 - `user_ttl` (String) User TTL
 
 ### Read-Only

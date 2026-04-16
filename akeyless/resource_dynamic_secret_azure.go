@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
+	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -32,7 +30,7 @@ func resourceDynamicSecretAzure() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in dynamic secret creation",
+				Description: "Target name",
 			},
 			"azure_tenant_id": {
 				Type:        schema.TypeString,
@@ -42,45 +40,45 @@ func resourceDynamicSecretAzure() *schema.Resource {
 			"azure_client_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Azure Client ID (Application ID)",
+				Description: "Azure Client ID",
 			},
 			"azure_client_secret": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				Description: "Azure AD Client Secret",
+				Description: "Azure Client Secret",
 			},
 			"user_portal_access": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Enable Azure AD user portal access",
-				Default:     "false",
+				Description: "Azure User portal access",
+				Default:     false,
 			},
 			"user_programmatic_access": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Enable Azure AD user programmatic access",
+				Description: "Azure User programmatic access",
 				Default:     "true",
 			},
 			"app_obj_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Azure App Object ID (required if selected programmatic access)",
+				Description: "Azure App Object Id",
 			},
 			"user_principal_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Azure AD User Principal Name (required if selected Portal access)",
+				Description: "User Principal Name",
 			},
 			"user_group_obj_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Azure AD User Group Object ID (required if selected Portal access)",
+				Description: "User Group Object Id",
 			},
 			"user_role_template_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Azure AD User Role Template ID (required if selected Portal access)",
+				Description: "User Role Template Id",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
@@ -96,7 +94,8 @@ func resourceDynamicSecretAzure() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Encrypt dynamic secret details with following key",
+				Computed:    true,
+				Description: "Dynamic secret encryption key",
 			},
 			"custom_username_template": {
 				Type:        schema.TypeString,
@@ -106,18 +105,18 @@ func resourceDynamicSecretAzure() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2",
+				Description: "Add tags attached to this object",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_enable": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Enable/Disable secure remote access, [true/false]",
+				Description: "Enable/Disable secure remote access [true/false]",
 			},
 			"secure_access_web_browsing": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Secure browser via Akeyless Web Access Bastion",
+				Description: "Secure browser via Akeyless's Secure Remote Access (SRA)",
 			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
@@ -130,6 +129,43 @@ func resourceDynamicSecretAzure() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"azure_administrative_unit": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Azure AD administrative unit (relevant only when azure-user-portal-access=true)",
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"fixed_user_claim_keyname": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "FixedUserClaimKeyname",
+			},
+			"fixed_user_only": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Fixed user",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_web_proxy": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Web-Proxy via Akeyless's Secure Remote Access (SRA)",
+			},
 		},
 	}
 }
@@ -139,7 +175,6 @@ func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -161,6 +196,13 @@ func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
+	azureAdministrativeUnit := d.Get("azure_administrative_unit").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
+	fixedUserOnly := d.Get("fixed_user_only").(bool)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
 
 	body := akeyless_api.DynamicSecretCreateAzure{
 		Name:  name,
@@ -184,13 +226,23 @@ func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
-
-	_, _, err := client.DynamicSecretCreateAzure(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.AzureAdministrativeUnit, azureAdministrativeUnit)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
+	common.GetAkeylessPtr(&body.FixedUserOnly, fixedUserOnly)
+	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		body.ItemCustomFields = &customFieldsMap
+	}
+
+	_, resp, err := client.DynamicSecretCreateAzure(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -203,7 +255,6 @@ func resourceDynamicSecretAzureRead(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -215,15 +266,7 @@ func resourceDynamicSecretAzureRead(d *schema.ResourceData, m interface{}) error
 
 	rOut, res, err := client.DynamicSecretGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get dynamic secret value", res, err)
 	}
 	if rOut.AzureTenantId != nil {
 		err = d.Set("azure_tenant_id", *rOut.AzureTenantId)
@@ -314,6 +357,53 @@ func resourceDynamicSecretAzureRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 
+	if rOut.AzureAdministrativeUnit != nil {
+		err = d.Set("azure_administrative_unit", *rOut.AzureAdministrativeUnit)
+		if err != nil {
+			return err
+		}
+	}
+	deleteProtectionVal := "false"
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if rOut.Metadata != nil {
+		err = d.Set("description", *rOut.Metadata)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AzureFixedUserNameSubClaimKey != nil {
+		err = d.Set("fixed_user_claim_keyname", *rOut.AzureFixedUserNameSubClaimKey)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AzureFixedUserOnly != nil {
+		err = d.Set("fixed_user_only", *rOut.AzureFixedUserOnly)
+		if err != nil {
+			return err
+		}
+	}
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err = d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
 	d.SetId(path)
@@ -326,7 +416,6 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -348,6 +437,13 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	secureAccessEnable := d.Get("secure_access_enable").(string)
 	secureAccessWebBrowsing := d.Get("secure_access_web_browsing").(bool)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
+	azureAdministrativeUnit := d.Get("azure_administrative_unit").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
+	fixedUserOnly := d.Get("fixed_user_only").(bool)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
 
 	body := akeyless_api.DynamicSecretUpdateAzure{
 		Name:  name,
@@ -371,13 +467,23 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, secureAccessWebBrowsing)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
-
-	_, _, err := client.DynamicSecretUpdateAzure(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.AzureAdministrativeUnit, azureAdministrativeUnit)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)
+	common.GetAkeylessPtr(&body.FixedUserOnly, fixedUserOnly)
+	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
+	if len(itemCustomFields) > 0 {
+		customFieldsMap := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFieldsMap[k] = v.(string)
 		}
-		return fmt.Errorf("can't update : %v", err)
+		body.ItemCustomFields = &customFieldsMap
+	}
+
+	_, resp, err := client.DynamicSecretUpdateAzure(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

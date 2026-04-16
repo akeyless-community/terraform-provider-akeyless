@@ -1,14 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -60,13 +57,13 @@ func resourceK8sAuthConfig() *schema.Resource {
 			"token_reviewer_jwt": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A Kubernetes service account JWT used to access the TokenReview API to validate other JWTs. If not set, the JWT submitted in the authentication process will be used to access the Kubernetes TokenReview API.",
+				Description: "A Kubernetes service account JWT used to access the TokenReview API to validate other JWTs (relevant for \"native_k8s\" only). If not set, the JWT submitted in the authentication process will be used to access the Kubernetes TokenReview API.",
 				Sensitive:   true,
 			},
 			"k8s_issuer": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The Kubernetes JWT issuer name. If not set, this <kubernetes/serviceaccount> will be used by default.",
+				Description: "The Kubernetes JWT issuer name. K8SIssuer is the claim that specifies who issued the Kubernetes token",
 				Default:     "kubernetes/serviceaccount",
 			},
 			"disable_issuer_validation": {
@@ -84,12 +81,12 @@ func resourceK8sAuthConfig() *schema.Resource {
 			"rancher_api_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The api key used to access the TokenReview API to validate other JWTs (relevant for rancher only)",
+				Description: "The api key used to access the TokenReview API to validate other JWTs (relevant for \"rancher\" only)",
 			},
 			"rancher_cluster_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The cluster id as define in rancher (relevant for rancher only)",
+				Description: "The cluster id as define in rancher (relevant for \"rancher\" only)",
 			},
 			"use_local_ca_jwt": {
 				Type:        schema.TypeBool,
@@ -99,18 +96,18 @@ func resourceK8sAuthConfig() *schema.Resource {
 			"k8s_auth_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Native K8S auth type, [token/certificate]. (relevant for native_k8s only)",
+				Description: "K8S auth type [token/certificate]. (relevant for \"native_k8s\" only)",
 				Default:     "token",
 			},
 			"k8s_client_certificate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Content of the k8 client certificate (PEM format) in a Base64 format (relevant for native_k8s only)",
+				Description: "Content of the k8 client certificate (PEM format) in a Base64 format (relevant for \"native_k8s\" only)",
 			},
 			"k8s_client_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Content of the k8 client private key (PEM format) in a Base64 format (relevant for native_k8s only)",
+				Description: "Content of the k8 client private key (PEM format) in a Base64 format (relevant for \"native_k8s\" only)",
 				Sensitive:   true,
 			},
 		},
@@ -177,7 +174,6 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -189,15 +185,7 @@ func resourceK8sAuthConfigRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.GatewayGetK8SAuthConfig(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get value", res, err)
 	}
 	if rOut.Name != nil {
 		err = d.Set("name", *rOut.Name)

@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
+	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -37,41 +35,47 @@ func resourceDynamicSecretMssql() *schema.Resource {
 			"mssql_dbname": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "MSSQL Server DB Name",
+				Description: "MSSQL Name",
 			},
 			"mssql_username": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "MS SQL Server user",
+				Description: "MSSQL Username",
 			},
 			"mssql_password": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "MS SQL Server password",
+				Sensitive:   true,
+				Description: "MSSQL Password",
 			},
 			"mssql_host": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "MS SQL Server host name",
+				Description: "MSSQL Host",
 				Default:     "127.0.0.1",
 			},
 			"mssql_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "MS SQL Server port",
+				Description: "MSSQL Port",
 				Default:     "1433",
 			},
 			"mssql_create_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "MSSQL Server Creation Statements",
+				Description: "MSSQL Creation statements",
 				Default:     `CREATE LOGIN [{{name}}] WITH PASSWORD = '{{password}}';`,
 			},
 			"mssql_revocation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "MSSQL Server Revocation Statements",
+				Description: "MSSQL Revocation statements",
 				Default:     `DROP LOGIN [{{name}}];`,
+			},
+			"mssql_allowed_db_names": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "CSV of allowed DB names for runtime selection when getting the secret value. Empty => use target DB only; \"*\" => any DB allowed; One or more names => user must choose from this list",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
@@ -87,12 +91,30 @@ func resourceDynamicSecretMssql() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Encrypt dynamic secret details with following key",
 			},
 			"custom_username_template": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Customize how temporary usernames are generated using go template",
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": {
 				Type:        schema.TypeSet,
@@ -105,15 +127,21 @@ func resourceDynamicSecretMssql() *schema.Resource {
 				Optional:    true,
 				Description: "Enable/Disable secure remote access, [true/false]",
 			},
+			"secure_access_certificate_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
+			},
 			"secure_access_bastion_issuer": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Path to the SSH Certificate Issuer for your Akeyless Bastion",
+				Deprecated:  "use secure_access_certificate_issuer instead",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Target DB servers for connections., For multiple values repeat this flag.",
+				Description: "Target DB servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts)",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"secure_access_db_schema": {
@@ -121,10 +149,15 @@ func resourceDynamicSecretMssql() *schema.Resource {
 				Optional:    true,
 				Description: "The db schema",
 			},
+			"secure_access_delay": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds",
+			},
 			"secure_access_web": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     "false",
+				Default:     false,
 				Description: "Enable Web Secure Remote Access",
 			},
 			"secure_access_db_name": {
@@ -142,7 +175,6 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -153,17 +185,29 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	mssqlPort := d.Get("mssql_port").(string)
 	mssqlCreateStatements := d.Get("mssql_create_statements").(string)
 	mssqlRevocationStatements := d.Get("mssql_revocation_statements").(string)
+	mssqlAllowedDbNames := d.Get("mssql_allowed_db_names").(string)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
-	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	if secureAccessCertificateIssuer == "" {
+		secureAccessCertificateIssuer = d.Get("secure_access_bastion_issuer").(string)
+	}
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessDbSchema := d.Get("secure_access_db_schema").(string)
+	secureAccessDelay := d.Get("secure_access_delay").(int)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
 	body := akeyless_api.DynamicSecretCreateMsSql{
@@ -178,23 +222,27 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MssqlPort, mssqlPort)
 	common.GetAkeylessPtr(&body.MssqlCreateStatements, mssqlCreateStatements)
 	common.GetAkeylessPtr(&body.MssqlRevocationStatements, mssqlRevocationStatements)
+	common.GetAkeylessPtr(&body.MssqlAllowedDbNames, mssqlAllowedDbNames)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
-	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)
+	common.GetAkeylessPtr(&body.SecureAccessDelay, secureAccessDelay)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretCreateMsSql(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretCreateMsSql(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -207,7 +255,6 @@ func resourceDynamicSecretMssqlRead(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -219,15 +266,7 @@ func resourceDynamicSecretMssqlRead(d *schema.ResourceData, m interface{}) error
 
 	rOut, res, err := client.DynamicSecretGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get dynamic secret value", res, err)
 	}
 	if rOut.MssqlRevocationStatements != nil {
 		err = d.Set("mssql_revocation_statements", *rOut.MssqlRevocationStatements)
@@ -304,6 +343,40 @@ func resourceDynamicSecretMssqlRead(d *schema.ResourceData, m interface{}) error
 			return err
 		}
 	}
+	if rOut.MssqlAllowedDbNames != nil {
+		err = d.Set("mssql_allowed_db_names", *rOut.MssqlAllowedDbNames)
+		if err != nil {
+			return err
+		}
+	}
+	deleteProtectionVal := "false"
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if rOut.Metadata != nil {
+		err = d.Set("description", *rOut.Metadata)
+		if err != nil {
+			return err
+		}
+	}
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err = d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
 
 	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
@@ -317,7 +390,6 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -328,17 +400,29 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	mssqlPort := d.Get("mssql_port").(string)
 	mssqlCreateStatements := d.Get("mssql_create_statements").(string)
 	mssqlRevocationStatements := d.Get("mssql_revocation_statements").(string)
+	mssqlAllowedDbNames := d.Get("mssql_allowed_db_names").(string)
 	passwordLength := d.Get("password_length").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	secureAccessEnable := d.Get("secure_access_enable").(string)
-	secureAccessBastionIssuer := d.Get("secure_access_bastion_issuer").(string)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	if secureAccessCertificateIssuer == "" {
+		secureAccessCertificateIssuer = d.Get("secure_access_bastion_issuer").(string)
+	}
 	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
 	secureAccessDbSchema := d.Get("secure_access_db_schema").(string)
+	secureAccessDelay := d.Get("secure_access_delay").(int)
 	secureAccessWeb := d.Get("secure_access_web").(bool)
 
 	body := akeyless_api.DynamicSecretUpdateMsSql{
@@ -353,23 +437,27 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MssqlPort, mssqlPort)
 	common.GetAkeylessPtr(&body.MssqlCreateStatements, mssqlCreateStatements)
 	common.GetAkeylessPtr(&body.MssqlRevocationStatements, mssqlRevocationStatements)
+	common.GetAkeylessPtr(&body.MssqlAllowedDbNames, mssqlAllowedDbNames)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
-	common.GetAkeylessPtr(&body.SecureAccessBastionIssuer, secureAccessBastionIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)
+	common.GetAkeylessPtr(&body.SecureAccessDelay, secureAccessDelay)
 	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
 
-	_, _, err := client.DynamicSecretUpdateMsSql(ctx).Body(body).Execute()
+	_, resp, err := client.DynamicSecretUpdateMsSql(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

@@ -1,14 +1,12 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -39,11 +37,12 @@ func resourceTokenizer() *schema.Resource {
 			"template_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Which template type this tokenizer is used for [SSN,CreditCard,USPhoneNumber,Custom]",
+				Description: "Which template type this tokenizer is used for [SSN,CreditCard,USPhoneNumber,Email,Regexp]",
 			},
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "AES key name to use in vaultless tokenization",
 			},
 			"tweak_type": {
@@ -54,22 +53,22 @@ func resourceTokenizer() *schema.Resource {
 			"alphabet": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Alphabet to use in custom vaultless tokenization, such as '0123456789' for credit cards.",
+				Description: "Alphabet to use in regexp vaultless tokenization",
 			},
 			"pattern": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Pattern to use in custom vaultless tokenization",
+				Description: "Pattern to use in regexp vaultless tokenization",
 			},
 			"encoding_template": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The Encoding output template to use in custom vaultless tokenization",
+				Description: "The Encoding output template to use in regexp vaultless tokenization",
 			},
 			"decoding_template": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The Decoding output template to use in custom vaultless tokenization",
+				Description: "The Decoding output template to use in regexp vaultless tokenization",
 			},
 			"tweak": {
 				Type:        schema.TypeString,
@@ -93,6 +92,12 @@ func resourceTokenizer() *schema.Resource {
 				Default:     "false",
 				Description: "Protection from accidental deletion of this item, [true/false]",
 			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -102,7 +107,6 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	tokenizerType := d.Get("tokenizer_type").(string)
@@ -117,6 +121,11 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	tagSet := d.Get("tag").(*schema.Set)
 	tag := common.ExpandStringList(tagSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
 
 	body := akeyless_api.CreateTokenizer{
 		Name:          name,
@@ -133,13 +142,13 @@ func resourceTokenizerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tag, tag)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
 
-	_, _, err := client.CreateTokenizer(ctx).Body(body).Execute()
+	_, resp, err := client.CreateTokenizer(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create tokenizer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create tokenizer: %v", err)
+		return common.HandleError("can't create tokenizer", resp, err)
 	}
 
 	d.SetId(name)
@@ -152,7 +161,6 @@ func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -164,15 +172,7 @@ func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.DescribeItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get tokenizer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get tokenizer: %v", err)
+		return common.HandleReadError(d, "can't get tokenizer", res, err)
 	}
 
 	if rOut.ItemType != nil && *rOut.ItemType == "VAULTLESS_TOK" {
@@ -260,10 +260,26 @@ func resourceTokenizerRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
-		if err != nil {
-			return err
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFieldsMap := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFieldsMap[*field.Name] = *field.Value
+			}
+		}
+		if len(customFieldsMap) > 0 {
+			err = d.Set("item_custom_fields", customFieldsMap)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -283,7 +299,6 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -308,12 +323,9 @@ func resourceTokenizerUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, _, err = client.UpdateItem(ctx).Body(body).Execute()
+	_, resp, err := client.UpdateItem(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update tokenizer: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update tokenizer: %v", err)
+		return common.HandleError("can't update tokenizer", resp, err)
 	}
 
 	d.SetId(name)
@@ -362,6 +374,6 @@ func resourceTokenizerImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 func validateTokenizerUpdateParams(d *schema.ResourceData) error {
 	paramsMustNotUpdate := []string{"tokenizer_type", "template_type",
 		"encryption_key_name", "tweak_type", "alphabet", "pattern",
-		"encoding_template", "decoding_template"}
+		"encoding_template", "decoding_template", "item_custom_fields"}
 	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }

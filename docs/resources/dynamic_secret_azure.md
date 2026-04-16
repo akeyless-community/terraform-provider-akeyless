@@ -21,24 +21,31 @@ Azure AD dynamic secret resource
 
 ### Optional
 
-- `app_obj_id` (String) Azure App Object ID (required if selected programmatic access)
-- `azure_client_id` (String) Azure Client ID (Application ID)
-- `azure_client_secret` (String, Sensitive) Azure AD Client Secret
+- `app_obj_id` (String) Azure App Object Id
+- `azure_administrative_unit` (String) Azure AD administrative unit (relevant only when azure-user-portal-access=true)
+- `azure_client_id` (String) Azure Client ID
+- `azure_client_secret` (String, Sensitive) Azure Client Secret
 - `azure_tenant_id` (String) Azure Tenant ID
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
-- `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
+- `encryption_key_name` (String) Dynamic secret encryption key
+- `fixed_user_claim_keyname` (String) FixedUserClaimKeyname
+- `fixed_user_only` (Boolean) Fixed user
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
-- `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `secure_access_url` (String)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
-- `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
-- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
-- `target_name` (String) Name of existing target to use in dynamic secret creation
-- `user_group_obj_id` (String) Azure AD User Group Object ID (required if selected Portal access)
-- `user_portal_access` (Boolean) Enable Azure AD user portal access
-- `user_principal_name` (String) Azure AD User Principal Name (required if selected Portal access)
-- `user_programmatic_access` (Boolean) Enable Azure AD user programmatic access
-- `user_role_template_id` (String) Azure AD User Role Template ID (required if selected Portal access)
+- `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
+- `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
+- `tags` (Set of String) Add tags attached to this object
+- `target_name` (String) Target name
+- `user_group_obj_id` (String) User Group Object Id
+- `user_portal_access` (Boolean) Azure User portal access
+- `user_principal_name` (String) User Principal Name
+- `user_programmatic_access` (Boolean) Azure User programmatic access
+- `user_role_template_id` (String) User Role Template Id
 - `user_ttl` (String) User TTL
 
 ### Read-Only

@@ -40,7 +40,7 @@ Generate a new CSR data source
 
 ### Read-Only
 
-- `data` (String)
+- `data` (String) The generated CSR data
 - `id` (String) The ID of this resource.
 
 

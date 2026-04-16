@@ -2,13 +2,10 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -57,7 +54,7 @@ func resourceAuthMethodK8s() *schema.Resource {
 			"gen_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "If this flag is set to true, there is no need to manually provide a public key for the Kubernetes Auth Method, and instead, a key pair, will be generated as part of the command and the private part of the key will be returned (the private key is required for the K8S Auth Config in the Akeyless Gateway)",
+				Description: "Automatically generate key-pair for K8S configuration. If set to false, a public key needs to be provided [true/false]",
 				Default:     "true",
 			},
 			"audience": {
@@ -92,7 +89,36 @@ func resourceAuthMethodK8s() *schema.Resource {
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Subclaims to include in audit logs",
+				Description: "Subclaims to include in audit logs, e.g \"--audit-logs-claims email --audit-logs-claims username\"",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"allowed_client_type": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Auth Method description",
+			},
+			"expiration_event_in": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "How many days before the expiration of the auth method would you like to be notified.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"gw_bound_ips": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "A CIDR whitelist with the GW IPs that the access is restricted to",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"product_type": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"delete_protection": {
@@ -120,7 +146,6 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -139,6 +164,15 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	allowedClientTypeSet := d.Get("allowed_client_type").(*schema.Set)
+	allowedClientType := common.ExpandStringList(allowedClientTypeSet.List())
+	description := d.Get("description").(string)
+	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
+	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
+	gwBoundIpsSet := d.Get("gw_bound_ips").(*schema.Set)
+	gwBoundIps := common.ExpandStringList(gwBoundIpsSet.List())
+	productTypeSet := d.Get("product_type").(*schema.Set)
+	productType := common.ExpandStringList(productTypeSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodCreateK8s{
@@ -157,14 +191,16 @@ func resourceAuthMethodK8sCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PublicKey, publicKey)
 	common.GetAkeylessPtr(&body.GenKey, genKey)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.AllowedClientType, allowedClientType)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
+	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
+	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	rOut, _, err := client.AuthMethodCreateK8s(ctx).Body(body).Execute()
+	rOut, resp, err := client.AuthMethodCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Auth Method: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Auth Method: %v", err)
+		return common.HandleError("can't create Auth Method", resp, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -206,7 +242,6 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -218,15 +253,7 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get value", res, err)
 	}
 	if rOut.AuthMethodAccessId != nil {
 		err = d.Set("access_id", *rOut.AuthMethodAccessId)
@@ -310,11 +337,51 @@ func resourceAuthMethodK8sRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+	if len(rOut.AccessInfo.AllowedClientType) > 0 {
+		// Only set allowed_client_type if it was explicitly configured by the user
+		if _, ok := d.GetOk("allowed_client_type"); ok {
+			err = d.Set("allowed_client_type", rOut.AccessInfo.AllowedClientType)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if rOut.Description != nil {
+		err = d.Set("description", *rOut.Description)
 		if err != nil {
 			return err
 		}
+	}
+
+	if rOut.ExpirationEvents != nil {
+		err := d.Set("expiration_event_in", common.ReadAuthExpirationEventInParam(rOut.ExpirationEvents))
+		if err != nil {
+			return err
+		}
+	}
+
+	if rOut.AccessInfo.GwCidrWhitelist != nil && *rOut.AccessInfo.GwCidrWhitelist != "" {
+		err = d.Set("gw_bound_ips", strings.Split(*rOut.AccessInfo.GwCidrWhitelist, ","))
+		if err != nil {
+			return err
+		}
+	}
+
+	if rOut.AccessInfo.ProductTypes != nil {
+		err = d.Set("product_type", rOut.AccessInfo.ProductTypes)
+		if err != nil {
+			return err
+		}
+	}
+
+	deleteProtectionVal := "false"
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 
 	d.SetId(path)
@@ -327,7 +394,6 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessExpires := d.Get("access_expires").(int)
@@ -345,6 +411,15 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	boundNamespaces := common.ExpandStringList(boundNamespacesSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
+	allowedClientTypeSet := d.Get("allowed_client_type").(*schema.Set)
+	allowedClientType := common.ExpandStringList(allowedClientTypeSet.List())
+	description := d.Get("description").(string)
+	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
+	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
+	gwBoundIpsSet := d.Get("gw_bound_ips").(*schema.Set)
+	gwBoundIps := common.ExpandStringList(gwBoundIpsSet.List())
+	productTypeSet := d.Get("product_type").(*schema.Set)
+	productType := common.ExpandStringList(productTypeSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.AuthMethodUpdateK8s{
@@ -362,15 +437,17 @@ func resourceAuthMethodK8sUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PublicKey, publicKey)
 	common.GetAkeylessPtr(&body.GenKey, "false")
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
+	common.GetAkeylessPtr(&body.AllowedClientType, allowedClientType)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
+	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
+	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.AuthMethodUpdateK8s(ctx).Body(body).Execute()
+	_, resp, err := client.AuthMethodUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update : %v", err)
+		return common.HandleError("can't update auth method", resp, err)
 	}
 
 	d.SetId(name)

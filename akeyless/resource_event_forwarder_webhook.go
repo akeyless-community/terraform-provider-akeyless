@@ -3,12 +3,11 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
 )
 
 func resourceEventForwarderWebhook() *schema.Resource {
@@ -49,20 +48,20 @@ func resourceEventForwarderWebhook() *schema.Resource {
 			"gateways_event_source_locations": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Gateways event sources to forward events about,for example the relevant Gateways cluster urls,: http://localhost:8000.",
+				Description: "Gateways event sources to forward events about, for example the relevant Gateways cluster urls: http://localhost:8000.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"event_types": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "A comma-separated list of types of events to notify about",
+				Description: "List of event types to notify about [request-access, certificate-pending-expiration, certificate-expired, certificate-provisioning-success, certificate-provisioning-failure, auth-method-pending-expiration, auth-method-expired, next-automatic-rotation, rotated-secret-success, rotated-secret-failure, dynamic-secret-failure, multi-auth-failure, uid-rotation-failure, apply-justification, email-auth-method-approved, usage, rotation-usage, gateway-inactive, static-secret-updated, rate-limiting, usage-report, secret-sync]",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Key name. The key will be used to encrypt the Event Forwarder secret value. If key name is not specified, the account default protection key is used",
+				Description: "The name of a key that used to encrypt the EventForwarder secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"runner_type": {
 				Type:        schema.TypeString,
@@ -107,7 +106,7 @@ func resourceEventForwarderWebhook() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				Description: "Base64 encoded Token string relevant for token auth-type",
+				Description: "Base64 encoded Token string for authentication type Token",
 			},
 			"client_cert_data": {
 				Type:        schema.TypeString,
@@ -125,6 +124,17 @@ func resourceEventForwarderWebhook() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the object",
+			},
+			"enable": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Enable/Disable Event Forwarder [true/false]",
+				Default:     "true",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
 		},
 	}
@@ -197,7 +207,6 @@ func resourceEventForwarderWebhookRead(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	name := d.Id()
@@ -209,15 +218,7 @@ func resourceEventForwarderWebhookRead(d *schema.ResourceData, m interface{}) er
 
 	readOut, res, err := client.EventForwarderGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get value", res, err)
 	}
 
 	rOut := readOut.EventForwarder
@@ -292,6 +293,8 @@ func resourceEventForwarderWebhookUpdate(d *schema.ResourceData, m interface{}) 
 	clientCertData := d.Get("client_cert_data").(string)
 	privateKeyData := d.Get("private_key_data").(string)
 	description := d.Get("description").(string)
+	enable := d.Get("enable").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.EventForwarderUpdateWebhook{
 		Name:  name,
@@ -312,6 +315,8 @@ func resourceEventForwarderWebhookUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.ClientCertData, clientCertData)
 	common.GetAkeylessPtr(&body.PrivateKeyData, privateKeyData)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.Enable, enable)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
 	_, resp, err := client.EventForwarderUpdateWebhook(ctx).Body(body).Execute()
 	if err != nil {

@@ -1,0 +1,94 @@
+---
+name: add-new-command
+description: Guides adding a new Terraform resource or data source end-to-end — SDK update, schema, CRUD, provider registration, tests, and formatting. Use when creating a new resource_*.go or data_source_*.go file, or when the user asks to add a new Terraform resource.
+---
+
+# Adding a New Command (Resource or Data Source)
+
+## 1. Update the Akeyless SDK
+
+1.  Run `go get -u github.com/akeylesslabs/akeyless-go/v5`
+2.  Run `go mod tidy`
+
+## 2. Naming and File Creation
+
+*   Create a new Go file in the `akeyless/` directory.
+    *   For resources: `resource_<name>.go` (e.g., `resource_my_new_feature.go`)
+    *   For data sources: `data_source_<name>.go` (e.g., `data_source_my_new_feature.go`)
+
+## 3. Implementation Structure
+
+Use the standard SDK v2 pattern:
+
+```go
+package akeyless
+
+import (
+    "context"
+    "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+    "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+    "github.com/akeylesslabs/akeyless-go/v5"
+)
+
+func resourceMyNewFeature() *schema.Resource {
+    return &schema.Resource{
+        CreateContext: resourceMyNewFeatureCreate,
+        ReadContext:   resourceMyNewFeatureRead,
+        UpdateContext: resourceMyNewFeatureUpdate,
+        DeleteContext: resourceMyNewFeatureDelete,
+        Importer: &schema.ResourceImporter{
+            StateContext: schema.ImportStatePassthroughContext,
+        },
+        Schema: map[string]*schema.Schema{
+            // Define schema fields here
+        },
+    }
+}
+
+func resourceMyNewFeatureCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+    // Implement Create logic using Akeyless SDK
+}
+
+// Implement Read, Update, Delete functions...
+```
+
+### Schema Field Rules
+
+- **`Sensitive: true`** — for secrets, passwords, private keys, API keys, tokens, and client secrets
+- **`Computed: true`** — when the field has server-side defaults (e.g. protection keys)
+- **`Default`** — must match the field's `Type` (e.g. `Default: 0` for `TypeInt`, `Default: false` for `TypeBool`; never use string `"0"` or `"false"`)
+- **`Required` / `Optional`** — according to the SDK command requirements. If `Optional` is true, `Required` can be omitted.
+- **`ForceNew: true`** — for the field (or few fields, in special cases) that identify the item (e.g. `name`)
+- **`DiffSuppressFunc: common.DiffSuppressOnLeadingSlash`** — for any field that holds an Akeyless item path (e.g. `name`, issuer, signer, target path, folder). The API returns paths with a leading `/`; without the suppressor the plan is never empty.
+- **`id`** — reserved by Terraform; do not use as a custom schema field
+- All `d.Set()` calls in read functions **must** check for errors
+- Read functions must set **every writable field** that the API response exposes (skip Sensitive fields the API won't return)
+- When a resource replaces a legacy one, add `DeprecationMessage` to the old resource pointing to the new one
+- The Update handler must use an "override" approach -- always set all fields, not just the ones that are explicitly configured. Set all fields that the SDK support to update.
+
+## 4. Register the New Command
+
+1.  Open `akeyless/provider.go`.
+2.  Add the new resource to `ResourcesMap` or data source to `DataSourcesMap` in the `Provider()` function.
+    *   Key: `akeyless_<name>` (e.g., `akeyless_my_new_feature`)
+    *   Value: Function call (e.g., `resourceMyNewFeature()`)
+
+## 5. Documentation
+
+Documentation is auto-generated.
+
+1.  Ensure all schema fields have clear `Description`s.
+2.  Run `go generate` in the root directory.
+3.  This will create the documentation file in `docs/resources/` or `docs/data-sources/`.
+
+## 6. Testing
+
+1.  Add tests to an existing or new test file (not required to create a separate file per resource).
+2.  Implement acceptance tests using `resource.TestCase`.
+3.  Try to cover as much as input arguments, especially the arguments that are unique to the resource.
+4.  For arguments with default value, ensure the updateConfig (step 2) set them to empty. This will add coverage for the defaulting mechanism.
+5.  Run tests: `make testacc TEST=./akeyless/resource_<name>_test.go` (or similar).
+
+## 7. Format
+
+Run `gofmt -w .` to ensure code style compliance.

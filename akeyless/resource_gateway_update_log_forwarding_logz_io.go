@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -52,7 +50,7 @@ func resourceGatewayUpdateLogForwardingLogzIo() *schema.Resource {
 			"protocol": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Logz-io protocol [tcp/https]",
+				Description: "LogzIo protocol [tcp/https]",
 			},
 		},
 	}
@@ -86,13 +84,13 @@ func resourceGatewayUpdateLogForwardingLogzIoRead(d *schema.ResourceData, m inte
 
 	config := rOut.LogzIoConfig
 	if config != nil {
-		if config.TargetLogzIoToken != nil && d.Get("logz_io_token").(string) != "" {
+		if config.TargetLogzIoToken != nil {
 			err := d.Set("logz_io_token", *config.TargetLogzIoToken)
 			if err != nil {
 				return err
 			}
 		}
-		if config.TargetLogzIoProtocol != nil && d.Get("protocol").(string) != "" {
+		if config.TargetLogzIoProtocol != nil {
 			err := d.Set("protocol", *config.TargetLogzIoProtocol)
 			if err != nil {
 				return err
@@ -108,7 +106,6 @@ func resourceGatewayUpdateLogForwardingLogzIoUpdate(d *schema.ResourceData, m in
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
@@ -125,12 +122,9 @@ func resourceGatewayUpdateLogForwardingLogzIoUpdate(d *schema.ResourceData, m in
 	common.GetAkeylessPtr(&body.LogzIoToken, logzIoToken)
 	common.GetAkeylessPtr(&body.Protocol, protocol)
 
-	_, _, err := client.GatewayUpdateLogForwardingLogzIo(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingLogzIo(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {

@@ -23,7 +23,8 @@ AWS IAM Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
+- `allowed_client_type` (Set of String) limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs, e.g "--audit-logs-claims email --audit-logs-claims username"
 - `bound_arn` (Set of String) A list of full arns that the access is restricted to
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `bound_resource_id` (Set of String) A list of full resource ids that the access is restricted to
@@ -32,9 +33,14 @@ AWS IAM Auth Method Resource
 - `bound_user_id` (Set of String) A list of full user ids that the access is restricted to
 - `bound_user_name` (Set of String) A list of full user-name that the access is restricted to
 - `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
-- `force_sub_claims` (Boolean) enforce role-association must include sub claims
-- `jwt_ttl` (Number) Creds expiration time in minutes
+- `description` (String) Auth Method description
+- `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified.
+- `force_sub_claims` (Boolean) if true: enforce role-association must include sub claims
+- `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
+- `jwt_ttl` (Number) Jwt TTL
+- `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
 - `sts_url` (String) sts URL
+- `unique_identifier` (String) A unique identifier (ID) value which is a "sub claim" name that contains details uniquely identifying that resource. This "sub claim" is used to distinguish between different identities.
 
 ### Read-Only
 

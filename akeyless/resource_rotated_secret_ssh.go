@@ -2,12 +2,9 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -42,12 +39,12 @@ func resourceRotatedSecretSsh() *schema.Resource {
 			"rotator_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The rotator type [target/password]",
+				Description: "The rotator type. options: [target/password/key]",
 			},
 			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The credentials to connect with [use-self-creds/use-target-creds]",
+				Description: "The credentials to connect with use-self-creds/use-target-creds",
 				Default:     "use-self-creds",
 			},
 			"rotated_username": {
@@ -75,7 +72,7 @@ func resourceRotatedSecretSsh() *schema.Resource {
 			"rotation_interval": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes",
+				Description: "The number of days to wait between every automatic key rotation (1-365)",
 			},
 			"rotation_hour": {
 				Type:        schema.TypeInt,
@@ -99,6 +96,96 @@ func resourceRotatedSecretSsh() *schema.Resource {
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"key_data_base64": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Private key file contents encoded using base64",
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults",
+			},
+			"public_key_remote_path": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The path to the public key that will be rotated on the server",
+			},
+			"rotate_after_disconnect": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Rotate the value of the secret after SRA session ends [true/false]",
+			},
+			"rotation_event_in": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "How many days before the rotation of the item would you like to be notified",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"same_password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Rotate same password for each host from the Linked Target (relevant only for Linked Target)",
+			},
+			"secure_access_allow_external_user": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Allow providing external user for a domain users",
+			},
+			"secure_access_certificate_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
+			},
+			"secure_access_enable": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Enable/Disable secure remote access [true/false]",
+			},
+			"secure_access_host": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_rdp_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Default domain name server. i.e. microsoft.com",
+			},
+			"secure_access_rdp_user": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Override the RDP Domain username",
+			},
+			"secure_access_ssh_user": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Override the SSH username as indicated in SSH Certificate Issuer",
+			},
+			"secure_access_target_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specify target type. Options are ssh or rdp",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
 		},
 	}
 }
@@ -108,7 +195,6 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -125,6 +211,34 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	rotatedUsername := d.Get("rotated_username").(string)
 	rotatedPassword := d.Get("rotated_password").(string)
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
+	keyDataBase64 := d.Get("key_data_base64").(string)
+	maxVersions := d.Get("max_versions").(string)
+	publicKeyRemotePath := d.Get("public_key_remote_path").(string)
+	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
+	rotationEventInList := d.Get("rotation_event_in").([]interface{})
+	rotationEventIn := make([]string, len(rotationEventInList))
+	for i, v := range rotationEventInList {
+		rotationEventIn[i] = v.(string)
+	}
+	samePassword := d.Get("same_password").(string)
+	secureAccessAllowExternalUser := d.Get("secure_access_allow_external_user").(bool)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
+	secureAccessHostList := d.Get("secure_access_host").([]interface{})
+	secureAccessHost := make([]string, len(secureAccessHostList))
+	for i, v := range secureAccessHostList {
+		secureAccessHost[i] = v.(string)
+	}
+	secureAccessRdpDomain := d.Get("secure_access_rdp_domain").(string)
+	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
+	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
+	secureAccessTargetType := d.Get("secure_access_target_type").(string)
 
 	body := akeyless_api.RotatedSecretCreateSsh{
 		Name:        name,
@@ -143,13 +257,32 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
+	common.GetAkeylessPtr(&body.KeyDataBase64, keyDataBase64)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.PublicKeyRemotePath, publicKeyRemotePath)
+	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
+	if len(rotationEventIn) > 0 {
+		body.RotationEventIn = rotationEventIn
+	}
+	common.GetAkeylessPtr(&body.SamePassword, samePassword)
+	body.SecureAccessAllowExternalUser = &secureAccessAllowExternalUser
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	if len(secureAccessHost) > 0 {
+		body.SecureAccessHost = secureAccessHost
+	}
+	common.GetAkeylessPtr(&body.SecureAccessRdpDomain, secureAccessRdpDomain)
+	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
+	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
+	common.GetAkeylessPtr(&body.SecureAccessTargetType, secureAccessTargetType)
 
-	_, _, err := client.RotatedSecretCreateSsh(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretCreateSsh(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -162,7 +295,6 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -258,16 +390,24 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if itemOut.ItemCustomFieldsDetails != nil {
+		customFields := make(map[string]string)
+		for _, field := range itemOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err := d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get rotated secret value: %v", err)
-		}
+		return common.HandleReadError(d, "can't get rotated secret value", res, err)
 	}
 
 	val, ok := rOut["value"]
@@ -292,6 +432,15 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	deleteProtectionVal := "false"
+	if itemOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -303,7 +452,6 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -318,11 +466,42 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
+	keyDataBase64 := d.Get("key_data_base64").(string)
+	maxVersions := d.Get("max_versions").(string)
+	publicKeyRemotePath := d.Get("public_key_remote_path").(string)
+	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
+	rotationEventInList := d.Get("rotation_event_in").([]interface{})
+	rotationEventIn := make([]string, len(rotationEventInList))
+	for i, v := range rotationEventInList {
+		rotationEventIn[i] = v.(string)
+	}
+	samePassword := d.Get("same_password").(string)
+	secureAccessAllowExternalUser := d.Get("secure_access_allow_external_user").(bool)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
+	secureAccessHostList := d.Get("secure_access_host").([]interface{})
+	secureAccessHost := make([]string, len(secureAccessHostList))
+	for i, v := range secureAccessHostList {
+		secureAccessHost[i] = v.(string)
+	}
+	secureAccessRdpDomain := d.Get("secure_access_rdp_domain").(string)
+	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
+	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
+	secureAccessTargetType := d.Get("secure_access_target_type").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
+	rotatorType := d.Get("rotator_type").(string)
 
 	body := akeyless_api.RotatedSecretUpdateSsh{
-		Name:    name,
-		NewName: akeyless_api.PtrString(name),
-		Token:   &token,
+		Name:        name,
+		NewName:     akeyless_api.PtrString(name),
+		RotatorType: rotatorType,
+		Token:       &token,
 	}
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
 	if err == nil {
@@ -344,13 +523,33 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	if len(itemCustomFields) > 0 {
+		body.ItemCustomFields = &itemCustomFields
+	}
+	common.GetAkeylessPtr(&body.KeyDataBase64, keyDataBase64)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.PublicKeyRemotePath, publicKeyRemotePath)
+	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
+	if len(rotationEventIn) > 0 {
+		body.RotationEventIn = rotationEventIn
+	}
+	common.GetAkeylessPtr(&body.SamePassword, samePassword)
+	body.SecureAccessAllowExternalUser = &secureAccessAllowExternalUser
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	if len(secureAccessHost) > 0 {
+		body.SecureAccessHost = secureAccessHost
+	}
+	common.GetAkeylessPtr(&body.SecureAccessRdpDomain, secureAccessRdpDomain)
+	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
+	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
+	common.GetAkeylessPtr(&body.SecureAccessTargetType, secureAccessTargetType)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err = client.RotatedSecretUpdateSsh(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretUpdateSsh(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

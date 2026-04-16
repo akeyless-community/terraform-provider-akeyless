@@ -2,12 +2,9 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,13 +23,13 @@ func resourceRotatedSecretAws() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Secret name",
+				Description: "Rotated secret name",
 				ForceNew:    true,
 			},
 			"target_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The target name to associate",
+				Description: "Target name",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -42,12 +39,12 @@ func resourceRotatedSecretAws() *schema.Resource {
 			"rotator_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The rotator type [target/api-key]",
+				Description: "The rotator type. options: [target/api-key]",
 			},
 			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The credentials to connect with [use-self-creds/use-target-creds]",
+				Description: "The credentials to connect with use-self-creds/use-target-creds",
 				Default:     "use-self-creds",
 			},
 			"api_id": {
@@ -65,17 +62,17 @@ func resourceRotatedSecretAws() *schema.Resource {
 			"grace_rotation": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Create a new access key without deleting the old key from AWS for backup (relevant only for AWS) [true/false]",
+				Description: "Create a new access key without deleting the old key from AWS/Azure/GCP for backup (relevant only for AWS/Azure/GCP) [true/false]",
 			},
 			"auto_rotate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation",
+				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]",
 			},
 			"rotation_interval": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes",
+				Description: "The number of days to wait between every automatic key rotation (1-365)",
 			},
 			"rotation_hour": {
 				Type:        schema.TypeInt,
@@ -96,8 +93,77 @@ func resourceRotatedSecretAws() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Description: "Add tags attached to this object",
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"aws_region": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Aws Region",
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"grace_rotation_hour": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The Hour of the grace rotation in UTC",
+			},
+			"grace_rotation_interval": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The number of days to wait before deleting the old key (must be bigger than rotation-interval)",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"rotate_after_disconnect": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Rotate the value of the secret after SRA session ends [true/false]",
+			},
+			"rotation_event_in": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "How many days before the rotation of the item would you like to be notified",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_aws_account_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The AWS account id",
+			},
+			"secure_access_aws_native_cli": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "The AWS native cli",
+			},
+			"secure_access_certificate_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
+			},
+			"secure_access_enable": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Enable/Disable secure remote access [true/false]",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
 		},
 	}
@@ -108,7 +174,6 @@ func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -125,6 +190,19 @@ func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	apiId := d.Get("api_id").(string)
 	apiKey := d.Get("api_key").(string)
 	graceRotation := d.Get("grace_rotation").(string)
+	awsRegion := d.Get("aws_region").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	graceRotationHour := d.Get("grace_rotation_hour").(int)
+	graceRotationInterval := d.Get("grace_rotation_interval").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	maxVersions := d.Get("max_versions").(string)
+	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
+	rotationEventInSet := d.Get("rotation_event_in").(*schema.Set)
+	rotationEventIn := common.ExpandStringList(rotationEventInSet.List())
+	secureAccessAwsAccountId := d.Get("secure_access_aws_account_id").(string)
+	secureAccessAwsNativeCli := d.Get("secure_access_aws_native_cli").(bool)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
 
 	body := akeyless_api.RotatedSecretCreateAws{
 		Name:        name,
@@ -143,13 +221,28 @@ func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.GraceRotation, graceRotation)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
-
-	_, _, err := client.RotatedSecretCreateAws(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.AwsRegion, awsRegion)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.GraceRotationHour, graceRotationHour)
+	common.GetAkeylessPtr(&body.GraceRotationInterval, graceRotationInterval)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
+	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
+	common.GetAkeylessPtr(&body.SecureAccessAwsAccountId, secureAccessAwsAccountId)
+	common.GetAkeylessPtr(&body.SecureAccessAwsNativeCli, secureAccessAwsNativeCli)
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	if len(itemCustomFields) > 0 {
+		fields := make(map[string]string)
+		for k, v := range itemCustomFields {
+			fields[k] = v.(string)
 		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		body.ItemCustomFields = &fields
+	}
+
+	_, resp, err := client.RotatedSecretCreateAws(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -162,7 +255,6 @@ func resourceRotatedSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -250,12 +342,6 @@ func resourceRotatedSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
-		if rsd.RotationStatement != nil {
-			err := d.Set("rotator_custom_cmd", *rsd.RotationStatement)
-			if err != nil {
-				return err
-			}
-		}
 		if rsd.GraceRotation != nil {
 			if *rsd.GraceRotation || d.Get("grace_rotation").(string) != "" {
 				err := d.Set("grace_rotation", strconv.FormatBool(*rsd.GraceRotation))
@@ -264,18 +350,66 @@ func resourceRotatedSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 		}
+		if rsd.GraceRotationHour != nil {
+			err := d.Set("grace_rotation_hour", *rsd.GraceRotationHour)
+			if err != nil {
+				return err
+			}
+		}
+		if rsd.GraceRotationInterval != nil {
+			if *rsd.GraceRotationInterval != 0 || d.Get("grace_rotation_interval").(string) != "" {
+				err := d.Set("grace_rotation_interval", strconv.Itoa(int(*rsd.GraceRotationInterval)))
+				if err != nil {
+					return err
+				}
+			}
+		}
+		if rsd.MaxVersions != nil {
+			err := d.Set("max_versions", strconv.Itoa(int(*rsd.MaxVersions)))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.SecureRemoteAccessDetails != nil {
+		sra := itemOut.ItemGeneralInfo.SecureRemoteAccessDetails
+		if sra.RotateAfterDisconnect != nil {
+			if *sra.RotateAfterDisconnect || d.Get("rotate_after_disconnect").(string) != "" {
+				err := d.Set("rotate_after_disconnect", strconv.FormatBool(*sra.RotateAfterDisconnect))
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	deleteProtectionVal := "false"
+	if itemOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if itemOut.ItemCustomFieldsDetails != nil {
+		customFields := make(map[string]string)
+		for _, field := range itemOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err := d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get rotated secret value: %v", err)
-		}
+		return common.HandleReadError(d, "can't get rotated secret value", res, err)
 	}
 
 	val, ok := rOut["value"]
@@ -311,7 +445,6 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -326,6 +459,20 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	graceRotation := d.Get("grace_rotation").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	awsRegion := d.Get("aws_region").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	graceRotationHour := d.Get("grace_rotation_hour").(int)
+	graceRotationInterval := d.Get("grace_rotation_interval").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	maxVersions := d.Get("max_versions").(string)
+	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
+	rotationEventInSet := d.Get("rotation_event_in").(*schema.Set)
+	rotationEventIn := common.ExpandStringList(rotationEventInSet.List())
+	secureAccessAwsAccountId := d.Get("secure_access_aws_account_id").(string)
+	secureAccessAwsNativeCli := d.Get("secure_access_aws_native_cli").(bool)
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.RotatedSecretUpdateAws{
 		Name:    name,
@@ -352,13 +499,29 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GraceRotation, graceRotation)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
-
-	_, _, err = client.RotatedSecretUpdateAws(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.AwsRegion, awsRegion)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.GraceRotationHour, graceRotationHour)
+	common.GetAkeylessPtr(&body.GraceRotationInterval, graceRotationInterval)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
+	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
+	common.GetAkeylessPtr(&body.SecureAccessAwsAccountId, secureAccessAwsAccountId)
+	common.GetAkeylessPtr(&body.SecureAccessAwsNativeCli, secureAccessAwsNativeCli)
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+	if len(itemCustomFields) > 0 {
+		fields := make(map[string]string)
+		for k, v := range itemCustomFields {
+			fields[k] = v.(string)
 		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		body.ItemCustomFields = &fields
+	}
+
+	_, resp, err := client.RotatedSecretUpdateAws(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

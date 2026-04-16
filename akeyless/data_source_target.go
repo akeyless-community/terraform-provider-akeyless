@@ -3,11 +3,9 @@ package akeyless
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,7 +26,7 @@ func dataSourceGetTarget() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "Include all target versions in reply",
-				Default:     "false",
+				Default:     false,
 			},
 			"target_name": {
 				Type:        schema.TypeString,
@@ -90,6 +88,57 @@ func dataSourceGetTarget() *schema.Resource {
 				Required:    false,
 				Description: "",
 			},
+			"access_date": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Access date of the target",
+			},
+			"access_date_display": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Access date display of the target",
+			},
+			"access_request_status": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Access request status of the target",
+			},
+			"attributes": {
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Description: "Target attributes",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"creation_date": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Creation date of the target",
+			},
+			"is_access_request_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether access request is enabled for the target",
+			},
+			"modification_date": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Modification date of the target",
+			},
+			"parent_target_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Parent target name",
+			},
+			"target_details": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Target details",
+			},
+			"target_sub_type": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Target sub type",
+			},
 		},
 	}
 }
@@ -99,7 +148,6 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	showVersions := d.Get("show_versions").(bool)
@@ -112,15 +160,7 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.TargetGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get target", res, err)
 	}
 	if rOut.TargetName != nil {
 		err := d.Set("target_name", *rOut.TargetName)
@@ -186,6 +226,73 @@ func dataSourceGetTargetRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		err = d.Set("target_items_assoc", string(marshalTargetItemsAssoc))
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AccessDate != nil {
+		err := d.Set("access_date", rOut.AccessDate.String())
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AccessDateDisplay != nil {
+		err := d.Set("access_date_display", *rOut.AccessDateDisplay)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.AccessRequestStatus != nil {
+		err := d.Set("access_request_status", *rOut.AccessRequestStatus)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Attributes != nil {
+		// Convert map[string]interface{} to map[string]string for Terraform
+		attrs := make(map[string]string)
+		for k, v := range rOut.Attributes {
+			if v != nil {
+				attrs[k] = fmt.Sprintf("%v", v)
+			}
+		}
+		err := d.Set("attributes", attrs)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.CreationDate != nil {
+		err := d.Set("creation_date", rOut.CreationDate.String())
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.IsAccessRequestEnabled != nil {
+		err := d.Set("is_access_request_enabled", *rOut.IsAccessRequestEnabled)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.ModificationDate != nil {
+		err := d.Set("modification_date", rOut.ModificationDate.String())
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.ParentTargetName != nil {
+		err := d.Set("parent_target_name", *rOut.ParentTargetName)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.TargetDetails != nil {
+		err := d.Set("target_details", *rOut.TargetDetails)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.TargetSubType != nil {
+		err := d.Set("target_sub_type", *rOut.TargetSubType)
 		if err != nil {
 			return err
 		}

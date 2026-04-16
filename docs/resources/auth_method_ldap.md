@@ -22,18 +22,19 @@ LDAP Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
-- `bound_ips` (Set of String) A comma-separated CIDR block list to allow client access
+- `allowed_client_type` (Set of String) Limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs, e.g "--audit-logs-claims email --audit-logs-claims username"
+- `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `delete_protection` (String) Protection from accidental deletion of this object, [true/false]
 - `description` (String) Auth Method description
 - `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
 - `gen_key` (String) Automatically generate key-pair for LDAP configuration. If set to false, a public key needs to be provided
-- `gw_bound_ips` (Set of String) A comma-separated CIDR block list as a trusted Gateway entity
+- `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
 - `jwt_ttl` (Number) creds expiration time in minutes. If not set, use default according to account settings (see get-account-settings)
 - `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
-- `public_key_data` (String) A public key generated for LDAP authentication method on Akeyless [RSA2048] in Base64 or PEM format
-- `unique_identifier` (String) A unique identifier (ID) value should be configured for LDAP, OAuth2 and SAML authentication method types and is usually a value such as the email, username, or upn for example. Whenever a user logs in with a token, these authentication types issue a sub claim that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.
+- `public_key_data` (String) A public key generated for LDAP authentication method on Akeyless in base64 or PEM format [RSA2048]
+- `unique_identifier` (String) A unique identifier (ID) value should be configured for OAuth2, LDAP and SAML authentication method types and is usually a value such as the email, username, or upn for example. Whenever a user logs in with a token, these authentication types issue a "sub claim" that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.
 
 ### Read-Only
 

@@ -21,24 +21,33 @@ RDP dynamic secret resource
 
 ### Optional
 
+- `allow_user_extend_session` (Number) Allow user to extend session
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
-- `encryption_key_name` (String) Encrypt dynamic secret details with following key
-- `fixed_user_only` (String) Enable fixed user only
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
+- `encryption_key_name` (String) Dynamic producer encryption key
+- `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from (relevant only for fixed-user-only=true)
+- `fixed_user_only` (String) Allow access using externally (IdP) provided username [true/false]
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
-- `rdp_admin_name` (String) RDP Admin name
-- `rdp_admin_pwd` (String) RDP Admin Password
-- `rdp_host_name` (String) RDP Host name
-- `rdp_host_port` (String) RDP Host port
-- `rdp_user_groups` (String) RDP UserGroup name(s). Multiple values should be separated by comma
+- `rdp_admin_name` (String) RDP Admin Name
+- `rdp_admin_pwd` (String) RDP Admin password
+- `rdp_host_name` (String) Hostname
+- `rdp_host_port` (String) Port
+- `rdp_user_groups` (String) Groups
 - `secure_access_allow_external_user` (Boolean) Allow providing external user for a domain users
+- `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
+- `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
-- `secure_access_host` (Set of String) Target servers for connections., For multiple values repeat this flag.
+- `secure_access_host` (Set of String) Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)
+- `secure_access_rd_gateway_server` (String) RD Gateway server
 - `secure_access_rdp_domain` (String) Required when the Dynamic Secret is used for a domain user
 - `secure_access_rdp_user` (String) Override the RDP Domain username
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in dynamic secret creation
+- `target_name` (String) Target name
 - `user_ttl` (String) User TTL
+- `warn_user_before_expiration` (Number) Warn user before expiration in minutes
 
 ### Read-Only
 

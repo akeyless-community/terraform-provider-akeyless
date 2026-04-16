@@ -22,16 +22,21 @@ Kubernetes Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
+- `allowed_client_type` (Set of String) Limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]
 - `audience` (String) The audience in the Kubernetes JWT that the access is restricted to
-- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs, e.g "--audit-logs-claims email --audit-logs-claims username"
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `bound_namespaces` (Set of String) A list of namespaces that the access is restricted to
 - `bound_pod_names` (Set of String) A list of pod names that the access is restricted to
 - `bound_sa_names` (Set of String) A list of service account names that the access is restricted to
 - `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
+- `description` (String) Auth Method description
+- `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified.
 - `force_sub_claims` (Boolean) enforce role-association must include sub claims
-- `gen_key` (String) If this flag is set to true, there is no need to manually provide a public key for the Kubernetes Auth Method, and instead, a key pair, will be generated as part of the command and the private part of the key will be returned (the private key is required for the K8S Auth Config in the Akeyless Gateway)
+- `gen_key` (String) Automatically generate key-pair for K8S configuration. If set to false, a public key needs to be provided [true/false]
+- `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
 - `jwt_ttl` (Number) Creds expiration time in minutes
+- `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
 - `public_key` (String) The generated public key
 
 ### Read-Only

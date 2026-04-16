@@ -3,14 +3,12 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -27,10 +25,22 @@ func resourceGatewayUpdateRemoteAccess() *schema.Resource {
 			State: resourceGatewayUpdateRemoteAccessImport,
 		},
 		Schema: map[string]*schema.Schema{
+			"allowed_ssh_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specify a valid SSH-URL to tunnel to SSH session",
+				Default:     "use-existing",
+			},
 			"allowed_urls": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "List of valid URLs to redirect from the Portal back to the remote access server (in a comma-delimited list)",
+				Default:     "use-existing",
+			},
+			"default_session_ttl_minutes": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Default session TTL in minutes",
 				Default:     "use-existing",
 			},
 			"legacy_ssh_algorithm": {
@@ -79,8 +89,20 @@ func resourceGatewayUpdateRemoteAccessRead(d *schema.ResourceData, m interface{}
 
 	globalConfig := rOut.Global
 	if globalConfig != nil {
+		if globalConfig.AllowedSshUrl != nil && d.Get("allowed_ssh_url").(string) != common.UseExisting {
+			err = d.Set("allowed_ssh_url", *globalConfig.AllowedSshUrl)
+			if err != nil {
+				return err
+			}
+		}
 		if globalConfig.AllowedBastionUrls != nil && d.Get("allowed_urls").(string) != common.UseExisting {
 			err = d.Set("allowed_urls", strings.Join(globalConfig.AllowedBastionUrls, ","))
+			if err != nil {
+				return err
+			}
+		}
+		if globalConfig.DefaultSessionTtlMinutes != nil && d.Get("default_session_ttl_minutes").(string) != common.UseExisting {
+			err = d.Set("default_session_ttl_minutes", strconv.FormatInt(*globalConfig.DefaultSessionTtlMinutes, 10))
 			if err != nil {
 				return err
 			}
@@ -144,9 +166,10 @@ func resourceGatewayUpdateRemoteAccessUpdate(d *schema.ResourceData, m interface
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
+	allowedSshUrl := d.Get("allowed_ssh_url").(string)
 	allowedUrls := d.Get("allowed_urls").(string)
+	defaultSessionTtlMinutes := d.Get("default_session_ttl_minutes").(string)
 	legacySshAlgorithm := d.Get("legacy_ssh_algorithm").(string)
 	rdpTargetConfiguration := d.Get("rdp_target_configuration").(string)
 	sshTargetConfiguration := d.Get("ssh_target_configuration").(string)
@@ -157,7 +180,9 @@ func resourceGatewayUpdateRemoteAccessUpdate(d *schema.ResourceData, m interface
 	body := akeyless_api.GatewayUpdateRemoteAccess{
 		Token: &token,
 	}
+	common.GetAkeylessPtr(&body.AllowedSshUrl, allowedSshUrl)
 	common.GetAkeylessPtr(&body.AllowedUrls, allowedUrls)
+	common.GetAkeylessPtr(&body.DefaultSessionTtlMinutes, defaultSessionTtlMinutes)
 	common.GetAkeylessPtr(&body.LegacySshAlgorithm, legacySshAlgorithm)
 	common.GetAkeylessPtr(&body.RdpTargetConfiguration, rdpTargetConfiguration)
 	common.GetAkeylessPtr(&body.SshTargetConfiguration, sshTargetConfiguration)
@@ -165,12 +190,9 @@ func resourceGatewayUpdateRemoteAccessUpdate(d *schema.ResourceData, m interface
 	common.GetAkeylessPtr(&body.HideSessionRecording, hideSessionRecording)
 	common.GetAkeylessPtr(&body.KeyboardLayout, keyboardLayout)
 
-	_, _, err := client.GatewayUpdateRemoteAccess(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateRemoteAccess(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update remote access config: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update remote access config: %v", err)
+		return common.HandleError("can't update remote access config", resp, err)
 	}
 
 	if d.Id() == "" {
@@ -196,8 +218,20 @@ func resourceGatewayUpdateRemoteAccessImport(d *schema.ResourceData, m interface
 
 	globalConfig := rOut.Global
 	if globalConfig != nil {
+		if globalConfig.AllowedSshUrl != nil {
+			err = d.Set("allowed_ssh_url", *globalConfig.AllowedSshUrl)
+			if err != nil {
+				return nil, err
+			}
+		}
 		if globalConfig.AllowedBastionUrls != nil {
 			err = d.Set("allowed_urls", strings.Join(globalConfig.AllowedBastionUrls, ","))
+			if err != nil {
+				return nil, err
+			}
+		}
+		if globalConfig.DefaultSessionTtlMinutes != nil {
+			err = d.Set("default_session_ttl_minutes", strconv.FormatInt(*globalConfig.DefaultSessionTtlMinutes, 10))
 			if err != nil {
 				return nil, err
 			}
@@ -267,13 +301,9 @@ func getGwRemoteAccessConfig(m interface{}) (*akeyless_api.BastionConfigReplyObj
 		Token: &token,
 	}
 
-	rOut, _, err := client.GatewayGetRemoteAccess(ctx).Body(body).Execute()
+	rOut, resp, err := client.GatewayGetRemoteAccess(ctx).Body(body).Execute()
 	if err != nil {
-		var apiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &apiErr) {
-			return &akeyless_api.BastionConfigReplyObj{}, fmt.Errorf("can't get remote access config: %v", string(apiErr.Body()))
-		}
-		return &akeyless_api.BastionConfigReplyObj{}, fmt.Errorf("can't get remote access config: %v", err)
+		return nil, common.HandleError("can't get remote access config", resp, err)
 	}
 	return rOut, nil
 }

@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -110,25 +108,25 @@ func resourceGatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m inte
 
 	config := rOut.SyslogConfig
 	if config != nil {
-		if config.SyslogNetwork != nil && d.Get("network") != "" {
+		if config.SyslogNetwork != nil {
 			err := d.Set("network", *config.SyslogNetwork)
 			if err != nil {
 				return err
 			}
 		}
-		if config.SyslogHost != nil && d.Get("host") != "" {
+		if config.SyslogHost != nil {
 			err := d.Set("host", *config.SyslogHost)
 			if err != nil {
 				return err
 			}
 		}
-		if config.SyslogTargetTag != nil && d.Get("target_tag").(string) != common.UseExisting {
+		if config.SyslogTargetTag != nil {
 			err := d.Set("target_tag", *config.SyslogTargetTag)
 			if err != nil {
 				return err
 			}
 		}
-		if config.SyslogFormatter != nil && d.Get("formatter") != "" {
+		if config.SyslogFormatter != nil {
 			err := d.Set("formatter", *config.SyslogFormatter)
 			if err != nil {
 				return err
@@ -140,10 +138,13 @@ func resourceGatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m inte
 				return err
 			}
 		}
-		if config.SyslogTlsCertificate != nil && d.Get("tls_certificate").(string) != common.UseExisting {
-			err := d.Set("tls_certificate", common.Base64Encode(*config.SyslogTlsCertificate))
-			if err != nil {
-				return err
+		if config.SyslogTlsCertificate != nil {
+			currentVal := d.Get("tls_certificate").(string)
+			if currentVal != "use-existing" {
+				err := d.Set("tls_certificate", common.Base64Encode(*config.SyslogTlsCertificate))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -157,7 +158,6 @@ func resourceGatewayUpdateLogForwardingSyslogUpdate(d *schema.ResourceData, m in
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
@@ -182,12 +182,9 @@ func resourceGatewayUpdateLogForwardingSyslogUpdate(d *schema.ResourceData, m in
 	common.GetAkeylessPtr(&body.EnableTls, enableTls)
 	common.GetAkeylessPtr(&body.TlsCertificate, tlsCertificate)
 
-	_, _, err := client.GatewayUpdateLogForwardingSyslog(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingSyslog(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {
@@ -284,13 +281,9 @@ func getGwLogForwardingConfig(m interface{}) (*akeyless_api.LogForwardingConfigP
 		Token: &token,
 	}
 
-	rOut, _, err := client.GatewayGetLogForwarding(ctx).Body(body).Execute()
+	rOut, resp, err := client.GatewayGetLogForwarding(ctx).Body(body).Execute()
 	if err != nil {
-		var apiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &apiErr) {
-			return &akeyless_api.LogForwardingConfigPart{}, fmt.Errorf("can't get log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return &akeyless_api.LogForwardingConfigPart{}, fmt.Errorf("can't get log forwarding settings: %w", err)
+		return nil, common.HandleError("can't get log forwarding settings", resp, err)
 	}
 
 	return rOut, nil

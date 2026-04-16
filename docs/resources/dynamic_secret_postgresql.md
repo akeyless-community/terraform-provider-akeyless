@@ -21,25 +21,30 @@ PostgreSQL dynamic secret resource
 
 ### Optional
 
-- `creation_statements` (String) PostgreSQL Creation Statements
+- `creation_statements` (String) PostgreSQL Creation statements
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
-- `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Description of the object
+- `encryption_key_name` (String) Dynamic producer encryption key
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
-- `postgresql_db_name` (String) PostgreSQL DB name
-- `postgresql_host` (String) PostgreSQL host name
-- `postgresql_password` (String) PostgreSQL password
-- `postgresql_port` (String) PostgreSQL port
-- `postgresql_username` (String) PostgreSQL user
-- `revocation_statements` (String) PostgreSQL Revocation Statement
-- `secure_access_bastion_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `postgresql_db_name` (String) PostgreSQL DB Name
+- `postgresql_host` (String) PostgreSQL Host
+- `postgresql_password` (String, Sensitive) PostgreSQL Password
+- `postgresql_port` (String) PostgreSQL Port
+- `postgresql_username` (String) PostgreSQL Username
+- `revocation_statements` (String) PostgreSQL Revocation statements
+- `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
+- `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_db_name` (String) The DB Name
 - `secure_access_db_schema` (String) The db schema
+- `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
-- `secure_access_host` (Set of String) Target DB servers for connections., For multiple values repeat this flag.
+- `secure_access_host` (Set of String) Target DB servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
-- `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `target_name` (String) Name of existing target to use in dynamic secret creation
+- `tags` (Set of String) Add tags attached to this object
+- `target_name` (String) Target name
 - `user_ttl` (String) User TTL
 
 ### Read-Only

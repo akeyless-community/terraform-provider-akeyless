@@ -3,14 +3,12 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
-	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
 	"strconv"
 	"strings"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAuthMethodLdap() *schema.Resource {
@@ -40,18 +38,24 @@ func resourceAuthMethodLdap() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
-				Default:     "0",
+				Default:     0,
+			},
+			"allowed_client_type": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "A comma-separated CIDR block list to allow client access",
+				Description: "A CIDR whitelist with the IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"gw_bound_ips": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "A comma-separated CIDR block list as a trusted Gateway entity",
+				Description: "A CIDR whitelist with the GW IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"force_sub_claims": {
@@ -74,7 +78,7 @@ func resourceAuthMethodLdap() *schema.Resource {
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Subclaims to include in audit logs",
+				Description: "Subclaims to include in audit logs, e.g \"--audit-logs-claims email --audit-logs-claims username\"",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"expiration_event_in": {
@@ -93,12 +97,12 @@ func resourceAuthMethodLdap() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "A public key generated for LDAP authentication method on Akeyless [RSA2048] in Base64 or PEM format",
+				Description: "A public key generated for LDAP authentication method on Akeyless in base64 or PEM format [RSA2048]",
 			},
 			"unique_identifier": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A unique identifier (ID) value should be configured for LDAP, OAuth2 and SAML authentication method types and is usually a value such as the email, username, or upn for example. Whenever a user logs in with a token, these authentication types issue a sub claim that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.",
+				Description: "A unique identifier (ID) value should be configured for OAuth2, LDAP and SAML authentication method types and is usually a value such as the email, username, or upn for example. Whenever a user logs in with a token, these authentication types issue a \"sub claim\" that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.",
 				Default:     "users",
 			},
 			"gen_key": {
@@ -131,6 +135,8 @@ func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	accessExpires := d.Get("access_expires").(int)
+	allowedClientTypeSet := d.Get("allowed_client_type").(*schema.Set)
+	allowedClientType := common.ExpandStringList(allowedClientTypeSet.List())
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	gwBoundIpsSet := d.Get("gw_bound_ips").(*schema.Set)
@@ -154,6 +160,7 @@ func resourceAuthMethodLdapCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
+	common.GetAkeylessPtr(&body.AllowedClientType, allowedClientType)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
@@ -195,7 +202,6 @@ func resourceAuthMethodLdapRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	name := d.Id()
@@ -207,15 +213,7 @@ func resourceAuthMethodLdapRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get value: %v", err)
+		return common.HandleReadError(d, "failed to get value", res, err)
 	}
 
 	if rOut.Description != nil {
@@ -229,6 +227,15 @@ func resourceAuthMethodLdapRead(d *schema.ResourceData, m interface{}) error {
 			err = d.Set("access_expires", *rOut.AccessInfo.AccessExpires)
 			if err != nil {
 				return err
+			}
+		}
+		if len(rOut.AccessInfo.AllowedClientType) > 0 {
+			// Only set allowed_client_type if it was explicitly configured by the user
+			if _, ok := d.GetOk("allowed_client_type"); ok {
+				err = d.Set("allowed_client_type", rOut.AccessInfo.AllowedClientType)
+				if err != nil {
+					return err
+				}
 			}
 		}
 		if rOut.AccessInfo.CidrWhitelist != nil && *rOut.AccessInfo.CidrWhitelist != "" {
@@ -301,11 +308,13 @@ func resourceAuthMethodLdapRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	deleteProtectionVal := "false"
 	if rOut.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 	if rOut.ExpirationEvents != nil {
 		err := d.Set("expiration_event_in", common.ReadAuthExpirationEventInParam(rOut.ExpirationEvents))
@@ -328,6 +337,8 @@ func resourceAuthMethodLdapUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	accessExpires := d.Get("access_expires").(int)
+	allowedClientTypeSet := d.Get("allowed_client_type").(*schema.Set)
+	allowedClientType := common.ExpandStringList(allowedClientTypeSet.List())
 	boundIpsSet := d.Get("bound_ips").(*schema.Set)
 	boundIps := common.ExpandStringList(boundIpsSet.List())
 	gwBoundIpsSet := d.Get("gw_bound_ips").(*schema.Set)
@@ -352,6 +363,7 @@ func resourceAuthMethodLdapUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.AccessExpires, accessExpires)
+	common.GetAkeylessPtr(&body.AllowedClientType, allowedClientType)
 	common.GetAkeylessPtr(&body.BoundIps, boundIps)
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)

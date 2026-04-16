@@ -18,12 +18,14 @@ Web Target resource
 ### Required
 
 - `name` (String) Target name
-- `url` (String) Web target URL
+- `url` (String) The url
 
 ### Optional
 
 - `description` (String) Description of the object
-- `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
+- `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
+- `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 
 ### Read-Only
 

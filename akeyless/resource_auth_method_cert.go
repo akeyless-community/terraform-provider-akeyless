@@ -3,13 +3,10 @@ package akeyless
 import (
 	"context"
 	"encoding/base64"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,41 +32,41 @@ func resourceAuthMethodCert() *schema.Resource {
 			"unique_identifier": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "A unique identifier (ID) value should be configured for OIDC, OAuth2, LDAP and SAML authentication method types and is usually a value such as the email, username, or upn for example. Whenever a user logs in with a token, these authentication types issue a sub claim that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.",
+				Description: "A unique identifier (ID) value should be configured, such as common_name or organizational_unit Whenever a user logs in with a token, these authentication types issue a \"sub claim\" that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.",
 			},
 			"access_expires": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "Access expiration date in Unix timestamp (select 0 for access without expiry date)",
-				Default:     "0",
+				Default:     0,
 			},
 			"bound_ips": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "A comma-separated CIDR block list to allow client access",
+				Description: "A CIDR whitelist with the IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"gw_bound_ips": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "A comma-separated CIDR block list as a trusted Gateway entity",
+				Description: "A CIDR whitelist with the GW IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"force_sub_claims": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "enforce role-association must include sub claims",
+				Description: "if true: enforce role-association must include sub claims",
 			},
 			"jwt_ttl": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: "Creds expiration time in minutes",
+				Description: "Jwt TTL",
 				Default:     0,
 			},
 			"certificate_data": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The certificate data in base64, if no file was provided.",
+				Description: "The certificate data in base64, if no file was provided",
 			},
 			"bound_common_names": {
 				Type:        schema.TypeSet,
@@ -116,14 +113,42 @@ func resourceAuthMethodCert() *schema.Resource {
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Subclaims to include in audit logs",
+				Description: "Subclaims to include in audit logs, e.g \"--audit-logs-claims email --audit-logs-claims username\"",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Protection from accidental deletion of this auth method, [true/false]",
+				Description: "Protection from accidental deletion of this object [true/false]",
 				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Auth Method description",
+			},
+			"allowed_client_type": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"allowed_cors": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Comma separated list of allowed CORS domains to be validated as part of the authentication flow.",
+			},
+			"product_type": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"expiration_event_in": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "How many days before the expiration of the auth method would you like to be notified.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"access_id": {
 				Type:        schema.TypeString,
@@ -140,7 +165,6 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -169,6 +193,14 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	allowedClientTypeSet := d.Get("allowed_client_type").(*schema.Set)
+	allowedClientType := common.ExpandStringList(allowedClientTypeSet.List())
+	allowedCors := d.Get("allowed_cors").(string)
+	productTypeSet := d.Get("product_type").(*schema.Set)
+	productType := common.ExpandStringList(productTypeSet.List())
+	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
+	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 
 	certificateData = base64.StdEncoding.EncodeToString([]byte(certificateData))
 
@@ -192,18 +224,15 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.AllowedClientType, allowedClientType)
+	common.GetAkeylessPtr(&body.AllowedCors, allowedCors)
+	common.GetAkeylessPtr(&body.ProductType, productType)
+	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 
 	rOut, res, err := client.AuthMethodCreateCert(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to create auth method cert: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Auth Method cert: %v", err)
+		return common.HandleError("can't create auth method", res, err)
 	}
 
 	if rOut.AccessId != nil {
@@ -224,7 +253,6 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -236,17 +264,30 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.AuthMethodGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get value: %w", err)
+		return common.HandleReadError(d, "failed to get value", res, err)
 	}
 
+	if rOut.Description != nil {
+		err = d.Set("description", *rOut.Description)
+		if err != nil {
+			return err
+		}
+	}
+	if len(rOut.ExpirationEvents) > 0 {
+		expirationEventIn := make([]string, 0)
+		for _, event := range rOut.ExpirationEvents {
+			if event.SecondsBefore != nil {
+				days := *event.SecondsBefore / 86400
+				expirationEventIn = append(expirationEventIn, strconv.FormatInt(days, 10))
+			}
+		}
+		if len(expirationEventIn) > 0 {
+			err = d.Set("expiration_event_in", expirationEventIn)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	if rOut.AccessInfo != nil {
 		accessInfo := *rOut.AccessInfo
 		if accessInfo.AccessExpires != nil {
@@ -294,8 +335,25 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
+		deleteProtectionVal := "false"
 		if rOut.DeleteProtection != nil {
-			err = d.Set("delete_protection", strconv.FormatBool(*rOut.DeleteProtection))
+			deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+		}
+		err = d.Set("delete_protection", deleteProtectionVal)
+		if err != nil {
+			return err
+		}
+		if len(accessInfo.AllowedClientType) > 0 {
+			// Only set allowed_client_type if it was explicitly configured by the user
+			if _, ok := d.GetOk("allowed_client_type"); ok {
+				err = d.Set("allowed_client_type", accessInfo.AllowedClientType)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		if accessInfo.ProductTypes != nil {
+			err = d.Set("product_type", accessInfo.ProductTypes)
 			if err != nil {
 				return err
 			}
@@ -381,7 +439,6 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
@@ -410,6 +467,14 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	allowedClientTypeSet := d.Get("allowed_client_type").(*schema.Set)
+	allowedClientType := common.ExpandStringList(allowedClientTypeSet.List())
+	allowedCors := d.Get("allowed_cors").(string)
+	productTypeSet := d.Get("product_type").(*schema.Set)
+	productType := common.ExpandStringList(productTypeSet.List())
+	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
+	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 
 	body := akeyless_api.AuthMethodUpdateCert{
 		Name:             name,
@@ -431,13 +496,15 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.RevokedCertIds, revokedCertIds)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.AllowedClientType, allowedClientType)
+	common.GetAkeylessPtr(&body.AllowedCors, allowedCors)
+	common.GetAkeylessPtr(&body.ProductType, productType)
+	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 
-	_, _, err := client.AuthMethodUpdateCert(ctx).Body(body).Execute()
+	_, resp, err := client.AuthMethodUpdateCert(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("failed to update : %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to update : %w", err)
+		return common.HandleError("failed to update auth method", resp, err)
 	}
 
 	d.SetId(name)

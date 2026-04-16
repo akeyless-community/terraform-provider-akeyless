@@ -19,10 +19,12 @@ Sync Static Secret with Universal Secrets Connector resource
 
 - `name` (String) Static Secret name
 - `remote_secret_name` (String) Remote Secret Name that will be synced on the remote endpoint
-- `usc_name` (String) Universal Secret Connector name
+- `usc_name` (String) Universal Secret Connector name, If not provided all attached USC's will be synced
 
 ### Optional
 
+- `delete_from_usc` (Boolean) Delete the secret from the remote target USC as well
+- `delete_remote` (Boolean) Delete the secret from remote secret manager (for association create/update)
 - `filter_secret_value` (String) JQ expression to filter or transform the secret value
 - `namespace` (String) Vault namespace, releavnt only for Hashicorp Vault Target
 

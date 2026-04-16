@@ -1,0 +1,283 @@
+// generated file
+package akeyless
+
+import (
+	"context"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func resourceGkeTarget() *schema.Resource {
+	return &schema.Resource{
+		Description: "GKE Target resource",
+		Create:      resourceGkeTargetCreate,
+		Read:        resourceGkeTargetRead,
+		Update:      resourceGkeTargetUpdate,
+		Delete:      resourceGkeTargetDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceGkeTargetImport,
+		},
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Target name",
+				ForceNew:    true,
+			},
+			"gke_service_account_email": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "GKE service account email",
+			},
+			"gke_cluster_endpoint": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "GKE cluster URL endpoint",
+			},
+			"gke_cluster_cert": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "GKE cluster CA certificate",
+			},
+			"gke_account_key": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "GKE Service Account key file path",
+			},
+			"gke_cluster_name": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "GKE cluster name",
+			},
+			"key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)",
+			},
+			"use_gw_cloud_identity": {
+				Type:        schema.TypeBool,
+				Required:    false,
+				Optional:    true,
+				Description: "Use the GW's Cloud IAM",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
+		},
+	}
+}
+
+func resourceGkeTargetCreate(d *schema.ResourceData, m interface{}) error {
+	provider := m.(*providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	ctx := context.Background()
+	name := d.Get("name").(string)
+	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
+	gkeClusterEndpoint := d.Get("gke_cluster_endpoint").(string)
+	gkeClusterCert := d.Get("gke_cluster_cert").(string)
+	gkeAccountKey := d.Get("gke_account_key").(string)
+	gkeClusterName := d.Get("gke_cluster_name").(string)
+	key := d.Get("key").(string)
+	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
+	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
+
+	body := akeyless_api.TargetCreateGke{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.GkeServiceAccountEmail, gkeServiceAccountEmail)
+	common.GetAkeylessPtr(&body.GkeClusterEndpoint, gkeClusterEndpoint)
+	common.GetAkeylessPtr(&body.GkeClusterCert, gkeClusterCert)
+	common.GetAkeylessPtr(&body.GkeAccountKey, gkeAccountKey)
+	common.GetAkeylessPtr(&body.GkeClusterName, gkeClusterName)
+	common.GetAkeylessPtr(&body.Key, key)
+	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+
+	_, resp, err := client.TargetCreateGke(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create Target", resp, err)
+	}
+
+	d.SetId(name)
+
+	return nil
+}
+
+func resourceGkeTargetRead(d *schema.ResourceData, m interface{}) error {
+	provider := m.(*providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	ctx := context.Background()
+
+	path := d.Id()
+
+	body := akeyless_api.TargetGetDetails{
+		Name:  path,
+		Token: &token,
+	}
+
+	rOut, res, err := client.TargetGetDetails(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleReadError(d, "can't get target details", res, err)
+	}
+
+	if rOut.Value.GkeTargetDetails.GkeServiceAccountName != nil {
+		err = d.Set("gke_service_account_email", *rOut.Value.GkeTargetDetails.GkeServiceAccountName)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Value.GkeTargetDetails.GkeClusterEndpoint != nil {
+		err = d.Set("gke_cluster_endpoint", *rOut.Value.GkeTargetDetails.GkeClusterEndpoint)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Value.GkeTargetDetails.GkeClusterCaCertificate != nil {
+		err = d.Set("gke_cluster_cert", *rOut.Value.GkeTargetDetails.GkeClusterCaCertificate)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Value.GkeTargetDetails.GkeServiceAccountKey != nil {
+		err = d.Set("gke_account_key", *rOut.Value.GkeTargetDetails.GkeServiceAccountKey)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Value.GkeTargetDetails.GkeClusterName != nil {
+		err = d.Set("gke_cluster_name", *rOut.Value.GkeTargetDetails.GkeClusterName)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Target.ProtectionKeyName != nil {
+		err = d.Set("key", *rOut.Target.ProtectionKeyName)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Value.GkeTargetDetails.UseGwCloudIdentity != nil {
+		err = d.Set("use_gw_cloud_identity", *rOut.Value.GkeTargetDetails.UseGwCloudIdentity)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Target.Comment != nil {
+		err := d.Set("description", *rOut.Target.Comment)
+		if err != nil {
+			return err
+		}
+	}
+
+	d.SetId(path)
+
+	return nil
+}
+
+func resourceGkeTargetUpdate(d *schema.ResourceData, m interface{}) error {
+	provider := m.(*providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	ctx := context.Background()
+	name := d.Get("name").(string)
+	gkeServiceAccountEmail := d.Get("gke_service_account_email").(string)
+	gkeClusterEndpoint := d.Get("gke_cluster_endpoint").(string)
+	gkeClusterCert := d.Get("gke_cluster_cert").(string)
+	gkeAccountKey := d.Get("gke_account_key").(string)
+	gkeClusterName := d.Get("gke_cluster_name").(string)
+	key := d.Get("key").(string)
+	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
+	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
+
+	body := akeyless_api.TargetUpdateGke{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.GkeServiceAccountEmail, gkeServiceAccountEmail)
+	common.GetAkeylessPtr(&body.GkeClusterEndpoint, gkeClusterEndpoint)
+	common.GetAkeylessPtr(&body.GkeClusterCert, gkeClusterCert)
+	common.GetAkeylessPtr(&body.GkeAccountKey, gkeAccountKey)
+	common.GetAkeylessPtr(&body.GkeClusterName, gkeClusterName)
+	common.GetAkeylessPtr(&body.Key, key)
+	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
+	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+
+	_, resp, err := client.TargetUpdateGke(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update target", resp, err)
+	}
+
+	d.SetId(name)
+
+	return nil
+}
+
+func resourceGkeTargetDelete(d *schema.ResourceData, m interface{}) error {
+	provider := m.(*providerMeta)
+	client := *provider.client
+	token := *provider.token
+
+	path := d.Id()
+
+	deleteItem := akeyless_api.TargetDelete{
+		Token: &token,
+		Name:  path,
+	}
+
+	ctx := context.Background()
+	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func resourceGkeTargetImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+	id := d.Id()
+
+	err := resourceGkeTargetRead(d, m)
+	if err != nil {
+		return nil, err
+	}
+
+	err = d.Set("name", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}

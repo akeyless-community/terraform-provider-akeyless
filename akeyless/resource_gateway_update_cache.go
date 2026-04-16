@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -55,6 +53,16 @@ func resourceGatewayUpdateCache() *schema.Resource {
 				Description: "Secure backup interval in minutes. To ensure service continuity in case of power cycle and network outage secrets will be backed up periodically per backup interval",
 				Default:     "1",
 			},
+			"cache_encryption_key": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Cache encryption key",
+			},
+			"new_proactive_cache_enable": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "New proactive cache enable flag",
+			},
 		},
 	}
 }
@@ -96,6 +104,18 @@ func resourceGatewayUpdateCacheRead(d *schema.ResourceData, m interface{}) error
 			return err
 		}
 	}
+	if rOut.CacheEncryptionKey != nil {
+		err := d.Set("cache_encryption_key", *rOut.CacheEncryptionKey)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.NewProactiveCacheEnable != nil {
+		err := d.Set("new_proactive_cache_enable", *rOut.NewProactiveCacheEnable)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -105,7 +125,6 @@ func resourceGatewayUpdateCacheUpdate(d *schema.ResourceData, m interface{}) err
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enableCache := d.Get("enable_cache").(string)
 	staleTimeout := d.Get("stale_timeout").(string)
@@ -122,12 +141,9 @@ func resourceGatewayUpdateCacheUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MinimumFetchInterval, minimumFetchInterval)
 	common.GetAkeylessPtr(&body.BackupInterval, backupInterval)
 
-	_, _, err := client.GatewayUpdateCache(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateCache(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update cache settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update cache settings: %v", err)
+		return common.HandleError("can't update cache settings", resp, err)
 	}
 
 	if d.Id() == "" {
@@ -180,6 +196,18 @@ func resourceGatewayUpdateCacheImport(d *schema.ResourceData, m interface{}) ([]
 			return nil, err
 		}
 	}
+	if rOut.CacheEncryptionKey != nil {
+		err := d.Set("cache_encryption_key", *rOut.CacheEncryptionKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if rOut.NewProactiveCacheEnable != nil {
+		err := d.Set("new_proactive_cache_enable", *rOut.NewProactiveCacheEnable)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -196,13 +224,9 @@ func getGwCacheConfig(m interface{}) (*akeyless_api.CacheConfigPart, error) {
 		Token: &token,
 	}
 
-	rOut, _, err := client.GatewayGetCache(ctx).Body(body).Execute()
+	rOut, resp, err := client.GatewayGetCache(ctx).Body(body).Execute()
 	if err != nil {
-		var apiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &apiErr) {
-			return &akeyless_api.CacheConfigPart{}, fmt.Errorf("can't get cache settings: %v", string(apiErr.Body()))
-		}
-		return &akeyless_api.CacheConfigPart{}, fmt.Errorf("can't get cache settings: %w", err)
+		return nil, common.HandleError("can't get cache settings", resp, err)
 	}
 
 	return rOut, nil

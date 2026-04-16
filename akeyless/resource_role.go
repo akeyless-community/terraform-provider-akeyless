@@ -2,7 +2,6 @@ package akeyless
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -128,7 +127,7 @@ func resourceRole() *schema.Resource {
 			"audit_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view audit logs. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.",
+				Description: "Allow this role to view audit logs. Currently only 'none', 'own', 'scoped' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.",
 			},
 			"analytics_access": {
 				Type:        schema.TypeString,
@@ -138,32 +137,43 @@ func resourceRole() *schema.Resource {
 			"gw_analytics_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view gw analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
+				Description: "Allow this role to view gw analytics. Currently only 'none', 'scoped', 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.",
 			},
 			"sra_reports_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view SRA Clusters. Currently only 'none', 'own' and 'all' values are supported.",
+				Description: "Allow this role to view SRA Clusters. Currently only 'none', 'scoped', 'all' values are supported.",
 			},
 			"usage_reports_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view Usage reports. Currently only 'none' and 'all' values are supported.",
+				Description: "Allow this role to view Usage Report. Currently only 'none' and 'all' values are supported.",
 			},
 			"event_center_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Allow this role to view Event Center. Currently only 'none', 'own' and 'all' values are supported.",
+				Description: "Allow this role to view Event Center. Currently only 'none', 'scoped' and 'all' values are supported.",
 			},
 			"event_forwarders_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Allow this role to manage Event Forwarders. Currently only 'none' and 'all' values are supported.",
 			},
+			"event_forwarders_name": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Allow this role to manage the following Event Forwarders.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"reverse_rbac_access": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Allow this role to view Reverse RBAC. Supported values: 'scoped', 'all'.",
+			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Protection from accidental deletion of this role, [true/false]",
+				Description: "Protection from accidental deletion of this object [true/false]",
 				Default:     "false",
 			},
 		},
@@ -208,9 +218,11 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	usageReportsAccess := d.Get("usage_reports_access").(string)
 	eventCenterAccess := d.Get("event_center_access").(string)
 	eventForwardersAccess := d.Get("event_forwarders_access").(string)
+	eventForwardersNameSet := d.Get("event_forwarders_name").(*schema.Set)
+	eventForwardersName := common.ExpandStringList(eventForwardersNameSet.List())
+	reverseRbacAccess := d.Get("reverse_rbac_access").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	body := akeyless_api.CreateRole{
 		Name:  name,
 		Token: &token,
@@ -223,14 +235,15 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	common.GetAkeylessPtr(&body.UsageReportsAccess, usageReportsAccess)
 	common.GetAkeylessPtr(&body.EventCenterAccess, eventCenterAccess)
 	common.GetAkeylessPtr(&body.EventForwardersAccess, eventForwardersAccess)
+	if len(eventForwardersName) > 0 {
+		body.EventForwardersName = eventForwardersName
+	}
+	common.GetAkeylessPtr(&body.ReverseRbacAccess, reverseRbacAccess)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
-	_, _, err := client.CreateRole(ctx).Body(body).Execute()
+	_, resp, err := client.CreateRole(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create Role: %v", string(apiErr.Body())))}
-		}
-		return diag.Diagnostics{common.ErrorDiagnostics(fmt.Sprintf("can't create Role: %v", err))}
+		return diag.FromErr(common.HandleError("can't create role", resp, err))
 	}
 	defer func() {
 		if !ok {
@@ -345,10 +358,41 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		}
 	}
 
+	deleteProtectionVal := "false"
 	if role.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*role.DeleteProtection))
+		deleteProtectionVal = strconv.FormatBool(*role.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if role.Comment != nil {
+		err = d.Set("description", *role.Comment)
 		if err != nil {
 			return diag.FromErr(err)
+		}
+	}
+
+	if role.Rules != nil && role.Rules.PathRules != nil {
+		var eventForwarderNames []string
+		for _, rule := range role.Rules.PathRules {
+			if rule.Type == nil || rule.Path == nil {
+				continue
+			}
+			switch *rule.Type {
+			case "reverse-rbac-rule":
+				if err := d.Set("reverse_rbac_access", strings.TrimPrefix(*rule.Path, "/")); err != nil {
+					return diag.FromErr(err)
+				}
+			case "event-forwarder-rule":
+				eventForwarderNames = append(eventForwarderNames, *rule.Path)
+			}
+		}
+		if len(eventForwarderNames) > 0 {
+			if err := d.Set("event_forwarders_name", eventForwarderNames); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
@@ -430,10 +474,11 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	accessRulesOldValues := saveRoleAccessRuleOldValues(rules.PathRules)
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(string)
+	reverseRbacAccess := d.Get("reverse_rbac_access").(string)
 
-	err, ok = updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesNewValues, m)
+	err, ok = updateRoleAccessRules(ctx, name, description, deleteProtection, reverseRbacAccess, accessRulesNewValues, m)
 	if !ok {
-		errInner, okInner := updateRoleAccessRules(ctx, name, description, deleteProtection, accessRulesOldValues, m)
+		errInner, okInner := updateRoleAccessRules(ctx, name, description, deleteProtection, reverseRbacAccess, accessRulesOldValues, m)
 		if !okInner {
 			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
 		}
@@ -469,16 +514,9 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface
 		Token: &token,
 	}
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	_, res, err := client.DeleteRole(ctx).Body(deleteRole).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode != http.StatusNotFound {
-				return diag.FromErr(fmt.Errorf("can't delete role: %v", string(apiErr.Body())))
-			}
-		} else {
-			return diag.FromErr(fmt.Errorf("can't delete role: %v", err))
-		}
+		return diag.FromErr(common.HandleError("can't delete role", res, err))
 	}
 
 	return nil
@@ -521,7 +559,6 @@ func getRole(d *schema.ResourceData, name string, m interface{}) (*akeyless_api.
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.GetRole{
@@ -530,15 +567,7 @@ func getRole(d *schema.ResourceData, name string, m interface{}) (*akeyless_api.
 	}
 	role, res, err := client.GetRole(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The secret was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return &akeyless_api.Role{}, nil
-			}
-			return &akeyless_api.Role{}, fmt.Errorf("can't get Role value: %v", string(apiErr.Body()))
-		}
-		return &akeyless_api.Role{}, fmt.Errorf("can't get Role value: %v", err)
+		return &akeyless_api.Role{}, common.HandleReadError(d, "can't get role", res, err)
 	}
 	return role, nil
 }
@@ -734,20 +763,16 @@ func deleteRoleAssocs(ctx context.Context, assocs []interface{}, m interface{}) 
 	token := *provider.token
 
 	for _, v := range assocs {
-		var apiErr akeyless_api.GenericOpenAPIError
 		association := akeyless_api.DeleteRoleAssociation{
 			AssocId: v.(map[string]interface{})["assoc_id"].(string),
 			Token:   &token,
 		}
-		_, res, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
+		_, resp, err := client.DeleteRoleAssociation(ctx).Body(association).Execute()
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				if res.StatusCode != http.StatusNotFound {
-					return fmt.Errorf("can't delete Role association: %v", string(apiErr.Body())), false
-				}
-			} else {
-				return fmt.Errorf("can't delete Role association: %v", err), false
+			if resp != nil && resp.StatusCode == http.StatusNotFound {
+				continue
 			}
+			return common.HandleError("can't delete role association", resp, err), false
 		}
 	}
 
@@ -770,7 +795,6 @@ func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface
 			sc[k] = v.(string)
 		}
 
-		var apiErr akeyless_api.GenericOpenAPIError
 		asBody := akeyless_api.AssocRoleAuthMethod{
 			RoleName:      name,
 			AmName:        authMethodName,
@@ -779,17 +803,12 @@ func addRoleAssocs(ctx context.Context, name string, assocAuthMethod []interface
 			Token:         &token,
 		}
 
-		_, res, err := client.AssocRoleAuthMethod(ctx).Body(asBody).Execute()
+		_, resp, err := client.AssocRoleAuthMethod(ctx).Body(asBody).Execute()
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				if res.StatusCode != http.StatusConflict {
-					err = fmt.Errorf("can't create association: %v", string(apiErr.Body()))
-					return err, false
-				}
-			} else {
-				err = fmt.Errorf("can't create association: %v", err)
-				return err, false
+			if resp != nil && resp.StatusCode == http.StatusConflict {
+				continue
 			}
+			return common.HandleError("can't create role association", resp, err), false
 		}
 	}
 	return nil, true
@@ -811,7 +830,6 @@ func updateRoleAssocs(ctx context.Context, assocAuthMethods []interface{}, m int
 			sc[k] = v.(string)
 		}
 
-		var apiErr akeyless_api.GenericOpenAPIError
 		asBody := akeyless_api.UpdateAssoc{
 			AssocId:       assocId,
 			SubClaims:     &sc,
@@ -819,17 +837,12 @@ func updateRoleAssocs(ctx context.Context, assocAuthMethods []interface{}, m int
 			CaseSensitive: &caseSensitive,
 		}
 
-		_, res, err := client.UpdateAssoc(ctx).Body(asBody).Execute()
+		_, resp, err := client.UpdateAssoc(ctx).Body(asBody).Execute()
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				if res.StatusCode != http.StatusConflict {
-					err = fmt.Errorf("can't update association: %v", string(apiErr.Body()))
-					return err, false
-				}
-			} else {
-				err = fmt.Errorf("can't update association: %v", err)
-				return err, false
+			if resp != nil && resp.StatusCode == http.StatusConflict {
+				continue
 			}
+			return common.HandleError("can't update association", resp, err), false
 		}
 	}
 	return nil, true
@@ -860,22 +873,18 @@ func deleteRoleRules(ctx context.Context, name string, rules []interface{}, m in
 
 	for _, v := range rules {
 		ruleMap := v.(map[string]interface{})
-		var apiErr akeyless_api.GenericOpenAPIError
 		rule := akeyless_api.DeleteRoleRule{
 			RoleName: name,
 			Path:     ruleMap["path"].(string),
 			RuleType: akeyless_api.PtrString(ruleMap["rule_type"].(string)),
 			Token:    &token,
 		}
-		_, res, err := client.DeleteRoleRule(ctx).Body(rule).Execute()
+		_, resp, err := client.DeleteRoleRule(ctx).Body(rule).Execute()
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				if res.StatusCode != http.StatusNotFound {
-					return fmt.Errorf("can't delete rule: %v", string(apiErr.Body())), false
-				}
-			} else {
-				return fmt.Errorf("can't delete rule: %v", err), false
+			if resp != nil && resp.StatusCode == http.StatusNotFound {
+				continue
 			}
+			return common.HandleError("can't delete role rule", resp, err), false
 		}
 	}
 
@@ -901,7 +910,6 @@ func addRoleRules(ctx context.Context, name string, roleRules []interface{}, m i
 			return fmt.Errorf("wrong rule types"), false
 		}
 
-		var apiErr akeyless_api.GenericOpenAPIError
 		setRoleRule := akeyless_api.SetRoleRule{
 			RoleName:   name,
 			Capability: capability,
@@ -910,12 +918,9 @@ func addRoleRules(ctx context.Context, name string, roleRules []interface{}, m i
 			Token:      &token,
 		}
 
-		_, _, err := client.SetRoleRule(ctx).Body(setRoleRule).Execute()
+		_, resp, err := client.SetRoleRule(ctx).Body(setRoleRule).Execute()
 		if err != nil {
-			if errors.As(err, &apiErr) {
-				return fmt.Errorf("can't set rules: %v", string(apiErr.Body())), false
-			}
-			return fmt.Errorf("can't set rules: %v", err), false
+			return common.HandleError("can't set role rules", resp, err), false
 		}
 	}
 
@@ -977,7 +982,7 @@ func getNewAccessRules(d *schema.ResourceData) []interface{} {
 	return accessRules
 }
 
-func updateRoleAccessRules(ctx context.Context, name, description, deleteProtection string,
+func updateRoleAccessRules(ctx context.Context, name, description, deleteProtection, reverseRbacAccess string,
 	accessRules []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(*providerMeta)
@@ -1020,14 +1025,11 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 	}
 	common.GetAkeylessPtr(&updateBody.Description, description)
 	common.GetAkeylessPtr(&updateBody.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&updateBody.ReverseRbacAccess, reverseRbacAccess)
 
-	var apiErr akeyless_api.GenericOpenAPIError
-	_, _, err := client.UpdateRole(ctx).Body(updateBody).Execute()
+	_, resp, err := client.UpdateRole(ctx).Body(updateBody).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("%v", string(apiErr.Body())), false
-		}
-		return fmt.Errorf("%v", err), false
+		return common.HandleError("can't update role", resp, err), false
 	}
 
 	return nil, true

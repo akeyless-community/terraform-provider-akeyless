@@ -2,12 +2,9 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -44,8 +41,8 @@ func resourceFolder() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true, // if not provided on update - keep the existing value
 				Description: "Protection from accidental deletion of this folder [true/false]",
+				Default:     "false",
 			},
 			"folder_id": {
 				Type:        schema.TypeInt,
@@ -67,7 +64,6 @@ func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.FolderCreate{
@@ -78,12 +74,9 @@ func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tagsList)
 
-	rOut, _, err := client.FolderCreate(ctx).Body(body).Execute()
+	rOut, resp, err := client.FolderCreate(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Folder: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create Folder: %v", err)
+		return common.HandleError("can't create Folder", resp, err)
 	}
 
 	if rOut.FolderId != nil {
@@ -105,7 +98,6 @@ func resourceFolderRead(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Id()
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.FolderGet{
@@ -115,14 +107,7 @@ func resourceFolderRead(d *schema.ResourceData, m interface{}) error {
 
 	rOut, res, err := client.FolderGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res != nil && res.StatusCode == http.StatusNotFound {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get Folder: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get Folder: %v", err)
+		return common.HandleReadError(d, "can't get Folder", res, err)
 	}
 
 	if rOut.Folder == nil {
@@ -150,11 +135,13 @@ func resourceFolderRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
 	if folder.DeleteProtection != nil {
-		err := d.Set("delete_protection", strconv.FormatBool(*folder.DeleteProtection))
-		if err != nil {
-			return err
-		}
+		deleteProtectionVal = strconv.FormatBool(*folder.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
 	}
 
 	d.SetId(name)
@@ -171,7 +158,6 @@ func resourceFolderUpdate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.FolderUpdate{
@@ -196,12 +182,9 @@ func resourceFolderUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	_, _, err := client.FolderUpdate(ctx).Body(body).Execute()
+	_, resp, err := client.FolderUpdate(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update Folder: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update Folder: %v", err)
+		return common.HandleError("can't update Folder", resp, err)
 	}
 
 	d.SetId(name)
@@ -216,7 +199,6 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Id()
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	body := akeyless_api.FolderDelete{
@@ -224,15 +206,9 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 
-	_, res, err := client.FolderDelete(ctx).Body(body).Execute()
+	_, resp, err := client.FolderDelete(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res != nil && res.StatusCode == http.StatusNotFound {
-				return nil
-			}
-			return fmt.Errorf("can't delete Folder: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't delete Folder: %v", err)
+		return common.HandleError("can't delete folder", resp, err)
 	}
 
 	return nil

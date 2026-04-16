@@ -14,13 +14,31 @@ import (
 	"strings"
 	"time"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func DiffSuppressDuration(_, old, new string, _ *schema.ResourceData) bool {
+	// Parse both durations and compare them
+	oldDuration, oldErr := time.ParseDuration(old)
+	newDuration, newErr := time.ParseDuration(new)
+
+	// If both parse successfully, compare the durations
+	if oldErr == nil && newErr == nil {
+		return oldDuration == newDuration
+	}
+
+	// If parsing fails, fall back to string comparison
+	return old == new
+}
+
 func DiffSuppressOnLeadingSlash(_, old, new string, _ *schema.ResourceData) bool {
 	return EnsureLeadingSlash(old) == EnsureLeadingSlash(new)
+}
+
+func DiffSuppressOnSlashes(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.Trim(old, "/") == strings.Trim(new, "/")
 }
 
 var allLetters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -71,7 +89,7 @@ func WarningDiagnostics(message string) diag.Diagnostic {
 	}
 }
 
-func GetAkeylessPtr(ptr interface{}, val interface{}) {
+func GetAkeylessPtr(ptr any, val any) {
 
 	switch ptr.(type) {
 	case *string:
@@ -239,8 +257,9 @@ func GetTargetType(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string
 }
 
 func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, uscName, remoteSecretName string) (namespace, filterSecretValue string, exists bool) {
+	normalizedUscName := strings.TrimPrefix(uscName, "/")
 	for _, assoc := range associatedItems {
-		if assoc.ItemName == nil || *assoc.ItemName != uscName {
+		if assoc.ItemName == nil || strings.TrimPrefix(*assoc.ItemName, "/") != normalizedUscName {
 			continue
 		}
 
@@ -340,13 +359,6 @@ func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemTy
 
 	if s, ok := sra.GetUrlOk(); ok {
 		err = d.Set("secure_access_url", s)
-		if err != nil {
-			return err
-		}
-	}
-
-	if s, ok := sra.GetBastionIssuerOk(); ok {
-		err = d.Set("secure_access_bastion_issuer", s)
 		if err != nil {
 			return err
 		}
@@ -480,8 +492,9 @@ func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemTy
 			return err
 		}
 	}
-	if s, ok := sra.GetRegionOk(); ok {
-		err = d.Set("secure_access_aws_region", s)
+
+	if s, ok := sra.GetBastionIssuerOk(); ok {
+		err = d.Set("secure_access_certificate_issuer", s)
 		if err != nil {
 			return err
 		}
@@ -621,6 +634,36 @@ func SecondsToTimeString(totalSeconds int) string {
 	return result.String()
 }
 
+// TimeStringToSeconds converts a formatted time string like "365d", "8760h", "1d2h3m4s"
+// back to total seconds. Returns -1 if the string cannot be parsed.
+func TimeStringToSeconds(s string) int {
+	total := 0
+	current := 0
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			current = current*10 + int(c-'0')
+		} else {
+			switch c {
+			case 'd':
+				total += current * 86400
+			case 'h':
+				total += current * 3600
+			case 'm':
+				total += current * 60
+			case 's':
+				total += current
+			default:
+				return -1
+			}
+			current = 0
+		}
+	}
+	if current > 0 {
+		total += current
+	}
+	return total
+}
+
 func ExtractLogForwardingFormat(isJson bool) string {
 	if isJson {
 		return "json"
@@ -658,16 +701,28 @@ func ReadAuthExpirationEventInParam(expirationEvents []akeyless_api.AuthExpirati
 	return expirationEventsList
 }
 
-var gatewayURL = os.Getenv("AKEYLESS_GATEWAY")
-
-func IsLocalEnv() bool {
-	if gatewayURL == "http://localhost:8080/v2" || gatewayURL == "http://127.0.0.1:8080/v2" {
+// IsCICDEnv returns true if the test is running in Terraform CI/CD pipeline.
+// Terraform CI/CD pipeline is using a restricted user that have 1 deny rule for some items path.
+// This deny rule is reflected in the number of role rules that are returned (extra rule).
+// Note:
+// - except for this restriction, the user has an admin privileges.
+// - the account is dedicated for terraform CI/CD pipeline tests and should not contain any sensitive data.
+func IsCICDEnv() bool {
+	if strings.ToLower(os.Getenv("GITHUB_ACTIONS")) == "true" {
 		return true
 	}
 	return false
 }
 
 func HandleError(msg string, resp *http.Response, err error) error {
+	return handleError(nil, msg, resp, err, false)
+}
+
+func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, err error) error {
+	return handleError(d, msg, resp, err, true)
+}
+
+func handleError(d *schema.ResourceData, msg string, resp *http.Response, err error, cleanup bool) error {
 	if err == nil {
 		return nil
 	}
@@ -679,47 +734,21 @@ func HandleError(msg string, resp *http.Response, err error) error {
 	}
 
 	// resp is informative
-	if resp.Body != nil {
-		if errorMsg, errRead := io.ReadAll(resp.Body); errRead == nil {
-			return fmt.Errorf("%s: %s", msg, string(errorMsg))
-		}
-	}
-
-	// nothing informative
-	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("%s: not found: %w", msg, err)
-	}
-	return fmt.Errorf("%s: %w", msg, err)
-}
-
-func HandleReadError(d *schema.ResourceData, msg string, resp *http.Response, err error) error {
-	if err == nil {
-		return nil
-	}
-
-	// err is informative
-	var apiErr akeyless_api.GenericOpenAPIError
-	if errors.As(err, &apiErr) && resp != nil {
-		if resp.StatusCode == http.StatusNotFound {
-			// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-			d.SetId("")
-		}
-		return fmt.Errorf("%s: %s", msg, string(apiErr.Body()))
-	}
-
-	// resp is informative
 	if resp != nil && resp.Body != nil {
 		if errorMsg, errRead := io.ReadAll(resp.Body); errRead == nil {
 			return fmt.Errorf("%s: %s", msg, string(errorMsg))
 		}
 	}
 
-	// nothing informative
+	// not found
 	if resp != nil && resp.StatusCode == http.StatusNotFound {
-		// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-		d.SetId("")
+		if cleanup && d != nil {
+			// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
+			d.SetId("")
+		}
 		return fmt.Errorf("%s: not found: %w", msg, err)
 	}
+
 	return fmt.Errorf("%s: %w", msg, err)
 }
 
@@ -878,4 +907,21 @@ func GetOriginalProductTypeConvention(d *schema.ResourceData, productTypes []str
 		}
 	}
 	return productTypes
+}
+
+func GetItemNameByID(client akeyless_api.V2ApiService, token string, itemID int64) (string, error) {
+	body := akeyless_api.DescribeItem{
+		ItemId: &itemID,
+		Token:  &token,
+	}
+
+	rOut, resp, err := client.DescribeItem(context.Background()).Body(body).Execute()
+	if err != nil {
+		return "", HandleError("can't resolve item name from id", resp, err)
+	}
+
+	if rOut.ItemName != nil {
+		return *rOut.ItemName, nil
+	}
+	return "", nil
 }

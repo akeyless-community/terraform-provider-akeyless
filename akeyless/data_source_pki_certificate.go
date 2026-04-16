@@ -2,11 +2,8 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -55,27 +52,37 @@ func dataSourceGetPKICertificate() *schema.Resource {
 			"extended_key_usage": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: " A comma-separated list of extended key usage requests which will be used for certificate issuance. Supported values: 'clientauth', 'serverauth'.",
+				Description: "A comma-separated list of extended key usage requests which will be used for certificate issuance. Supported values: 'clientauth', 'serverauth', 'codesigning'.",
 			},
 			"data": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "The certificate data",
 			},
 			"parent_cert": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "The parent certificate",
 			},
 			"reading_token": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "The reading token",
 			},
 			"cert_display_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "The certificate display ID",
+			},
+			"cert_item_id": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The certificate item ID",
+			},
+			"path": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The path of the certificate",
 			},
 		},
 	}
@@ -86,7 +93,6 @@ func dataSourceGetPKICertificateRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	certIssuerName := d.Get("cert_issuer_name").(string)
 	keyDataBase64 := d.Get("key_data_base64").(string)
@@ -111,15 +117,7 @@ func dataSourceGetPKICertificateRead(d *schema.ResourceData, m interface{}) erro
 
 	rOut, res, err := client.GetPKICertificate(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("failed to get pki certificate: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("failed to get pki certificate: %w", err)
+		return common.HandleReadError(d, "failed to get pki certificate", res, err)
 	}
 
 	if rOut.Data != nil {
@@ -142,6 +140,18 @@ func dataSourceGetPKICertificateRead(d *schema.ResourceData, m interface{}) erro
 	}
 	if rOut.CertDisplayId != nil {
 		err = d.Set("cert_display_id", *rOut.CertDisplayId)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.CertItemId != nil {
+		err = d.Set("cert_item_id", *rOut.CertItemId)
+		if err != nil {
+			return err
+		}
+	}
+	if rOut.Path != nil {
+		err = d.Set("path", *rOut.Path)
 		if err != nil {
 			return err
 		}

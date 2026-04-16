@@ -23,17 +23,24 @@ OIDC Auth Method Resource
 ### Optional
 
 - `access_expires` (Number) Access expiration date in Unix timestamp (select 0 for access without expiry date)
-- `allowed_redirect_uri` (Set of String) Allowed redirect URIs after the authentication (default is https://console.akeyless.io/login-oidc to enable OIDC via Akeyless Console and  http://127.0.0.1:* to enable OIDC via akeyless CLI)
-- `audit_logs_claims` (Set of String) Subclaims to include in audit logs
+- `allowed_client_type` (Set of String) limit the auth method usage for specific client types [cli,ui,gateway-admin,sdk,mobile,extension]
+- `allowed_redirect_uri` (Set of String) Allowed redirect URIs after the authentication
+- `audience` (String) Audience claim to be used as part of the authentication flow. In case set, it must match the one configured on the Identity Provider's Application
+- `audit_logs_claims` (Set of String) Subclaims to include in audit logs, e.g "--audit-logs-claims email --audit-logs-claims username"
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `client_id` (String) Client ID
 - `client_secret` (String) Client Secret
-- `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
-- `force_sub_claims` (Boolean) enforce role-association must include sub claims
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `description` (String) Auth Method description
+- `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified.
+- `force_sub_claims` (Boolean) if true: enforce role-association must include sub claims
+- `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
 - `issuer` (String) Issuer URL
-- `jwt_ttl` (Number) Creds expiration time in minutes
-- `required_scopes` (Set of String) Required scopes that the oidc method will request from the oidc provider and the user must approve
-- `required_scopes_prefix` (String) A prefix to add to all required-scopes when requesting them from the oidc server (for example, azure's Application ID URI)
+- `jwt_ttl` (Number) Jwt TTL
+- `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
+- `required_scopes` (Set of String) RequiredScopes is a list of required scopes that the oidc method will request from the oidc provider and the user must approve
+- `required_scopes_prefix` (String) RequiredScopesPrefix is a a prefix to add to all required-scopes when requesting them from the oidc server (for example, azures' Application ID URI)
+- `subclaims_delimiters` (Set of String) A list of additional sub claims delimiters (relevant only for SAML, OIDC, OAuth2/JWT)
 
 ### Read-Only
 

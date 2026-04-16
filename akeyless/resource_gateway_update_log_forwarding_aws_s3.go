@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -112,44 +110,44 @@ func resourceGatewayUpdateLogForwardingAwsS3Read(d *schema.ResourceData, m inter
 
 	config := rOut.AwsS3Config
 	if config != nil {
-		if config.LogFolder != nil && d.Get("log_folder").(string) != common.UseExisting {
+		if config.LogFolder != nil {
 			err := d.Set("log_folder", *config.LogFolder)
 			if err != nil {
 				return err
 			}
 		}
-		if config.BucketName != nil && d.Get("bucket_name") != "" {
+		if config.BucketName != nil {
 			err := d.Set("bucket_name", *config.BucketName)
 			if err != nil {
 				return err
 			}
 		}
-		if config.AwsAuthType != nil && d.Get("auth_type") != "" {
+		if config.AwsAuthType != nil {
 			err := d.Set("auth_type", adjustLogForwardingAwsS3AuthType(*config.AwsAuthType))
 			if err != nil {
 				return err
 			}
 		}
-		if config.AwsAccessId != nil && d.Get("access_id") != "" {
+		if config.AwsAccessId != nil {
 			err := d.Set("access_id", *config.AwsAccessId)
 			if err != nil {
 				return err
 			}
 		}
-		if config.AwsAccessKey != nil && d.Get("access_key") != "" {
+		if config.AwsAccessKey != nil {
 			err := d.Set("access_key", *config.AwsAccessKey)
 			if err != nil {
 				return err
 			}
 		}
-		if config.AwsRegion != nil && d.Get("region") != "" {
+		if config.AwsRegion != nil {
 			err := d.Set("region", *config.AwsRegion)
 			if err != nil {
 				return err
 			}
 		}
-		if config.AwsRoleArn != nil && d.Get("role_arn") != "" {
-			err = d.Set("role_arn", *config.AwsRoleArn)
+		if config.AwsRoleArn != nil {
+			err := d.Set("role_arn", *config.AwsRoleArn)
 			if err != nil {
 				return err
 			}
@@ -164,7 +162,6 @@ func resourceGatewayUpdateLogForwardingAwsS3Update(d *schema.ResourceData, m int
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
@@ -191,12 +188,9 @@ func resourceGatewayUpdateLogForwardingAwsS3Update(d *schema.ResourceData, m int
 	common.GetAkeylessPtr(&body.Region, region)
 	common.GetAkeylessPtr(&body.RoleArn, roleArn)
 
-	_, _, err := client.GatewayUpdateLogForwardingAwsS3(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingAwsS3(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {

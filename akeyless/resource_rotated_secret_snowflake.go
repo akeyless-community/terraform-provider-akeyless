@@ -2,12 +2,9 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,13 +23,13 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Secret name",
+				Description: "Rotated secret name",
 				ForceNew:    true,
 			},
 			"target_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The target name to associate",
+				Description: "Target name",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -42,19 +39,19 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 			"rotator_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The rotator type [target/password]",
+				Description: "The rotator type. options: [target/password/key]",
 			},
 			"authentication_credentials": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The credentials to connect with [use-self-creds/use-target-creds]",
+				Description: "The credentials to connect with use-self-creds/use-target-creds",
 				Default:     "use-self-creds",
 			},
 			"rotated_username": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password)",
+				Description: "username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password or rotator-type=key)",
 			},
 			"rotated_password": {
 				Type:        schema.TypeString,
@@ -65,12 +62,12 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 			"auto_rotate": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation",
+				Description: "Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]",
 			},
 			"rotation_interval": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The number of days to wait between every automatic rotation (1-365),custom rotator interval will be set in minutes",
+				Description: "The number of days to wait between every automatic key rotation (1-365)",
 			},
 			"rotation_hour": {
 				Type:        schema.TypeInt,
@@ -94,6 +91,46 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"private_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "RSA Private key (base64 encoded) to rotate (relevant only for rotator-type=key)",
+			},
+			"private_key_file_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The path to the file containing the private key (relevant only for rotator-type=key)",
+			},
+			"rotation_event_in": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "How many days before the rotation of the item would you like to be notified",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"keep_prev_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
 		},
 	}
 }
@@ -103,7 +140,6 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -119,6 +155,17 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
 	rotatedPassword := d.Get("rotated_password").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
+	maxVersions := d.Get("max_versions").(string)
+	privateKey := d.Get("private_key").(string)
+	privateKeyFileName := d.Get("private_key_file_name").(string)
+	rotationEventInList := d.Get("rotation_event_in").([]interface{})
+	rotationEventIn := common.ExpandStringList(rotationEventInList)
 
 	body := akeyless_api.RotatedSecretCreateSnowflake{
 		Name:        name,
@@ -136,13 +183,16 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
+	common.GetAkeylessPtr(&body.PrivateKeyFileName, privateKeyFileName)
+	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 
-	_, _, err := client.RotatedSecretCreateSnowflake(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretCreateSnowflake(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't create rotated secret: %v", err)
+		return common.HandleError("can't create rotated secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -155,7 +205,6 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -197,6 +246,26 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 	}
 	if itemOut.ProtectionKeyName != nil {
 		err = d.Set("key", *itemOut.ProtectionKeyName)
+		if err != nil {
+			return err
+		}
+	}
+	deleteProtectionVal := "false"
+	if itemOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*itemOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if len(itemOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range itemOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		err = d.Set("item_custom_fields", customFields)
 		if err != nil {
 			return err
 		}
@@ -243,8 +312,8 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 				return err
 			}
 		}
-		if rsd.RotationStatement != nil {
-			err = d.Set("rotator_custom_cmd", *rsd.RotationStatement)
+		if rsd.MaxVersions != nil {
+			err = d.Set("max_versions", strconv.Itoa(int(*rsd.MaxVersions)))
 			if err != nil {
 				return err
 			}
@@ -253,14 +322,7 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't get rotated secret value: %v", err)
-		}
+		return common.HandleReadError(d, "can't get rotated secret value", res, err)
 	}
 
 	val, ok := rOut["value"]
@@ -296,7 +358,6 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -310,6 +371,18 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	rotatedPassword := d.Get("rotated_password").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
+	deleteProtection := d.Get("delete_protection").(string)
+	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
+	itemCustomFields := make(map[string]string)
+	for k, v := range itemCustomFieldsMap {
+		itemCustomFields[k] = v.(string)
+	}
+	maxVersions := d.Get("max_versions").(string)
+	privateKey := d.Get("private_key").(string)
+	privateKeyFileName := d.Get("private_key_file_name").(string)
+	rotationEventInList := d.Get("rotation_event_in").([]interface{})
+	rotationEventIn := common.ExpandStringList(rotationEventInList)
+	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.RotatedSecretUpdateSnowflake{
 		Name:    name,
@@ -335,13 +408,17 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
+	common.GetAkeylessPtr(&body.PrivateKeyFileName, privateKeyFileName)
+	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
+	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	_, _, err = client.RotatedSecretUpdateSnowflake(ctx).Body(body).Execute()
+	_, resp, err := client.RotatedSecretUpdateSnowflake(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update rotated secret: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update rotated secret: %v", err)
+		return common.HandleError("can't update rotated secret", resp, err)
 	}
 
 	d.SetId(name)

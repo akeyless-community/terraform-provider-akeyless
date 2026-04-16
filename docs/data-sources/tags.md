@@ -3,12 +3,12 @@
 page_title: "akeyless_tags Data Source - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  Get Auth Method details data source
+  Get tags data source
 ---
 
 # akeyless_tags (Data Source)
 
-Get Auth Method details data source
+Get tags data source
 
 
 
@@ -17,11 +17,11 @@ Get Auth Method details data source
 
 ### Required
 
-- `name` (String) The item name
+- `name` (String) Item name
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `tags` (Set of String)
+- `tags` (Set of String) List of item tags
 
 

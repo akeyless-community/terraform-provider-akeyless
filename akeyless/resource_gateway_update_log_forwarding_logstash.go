@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -97,13 +95,13 @@ func resourceGatewayUpdateLogForwardingLogstashRead(d *schema.ResourceData, m in
 
 	config := rOut.LogstashConfig
 	if config != nil {
-		if config.LogstashDns != nil && d.Get("dns").(string) != "" {
+		if config.LogstashDns != nil {
 			err := d.Set("dns", *config.LogstashDns)
 			if err != nil {
 				return err
 			}
 		}
-		if config.LogstashProtocol != nil && d.Get("protocol").(string) != "" {
+		if config.LogstashProtocol != nil {
 			err := d.Set("protocol", *config.LogstashProtocol)
 			if err != nil {
 				return err
@@ -115,7 +113,7 @@ func resourceGatewayUpdateLogForwardingLogstashRead(d *schema.ResourceData, m in
 				return err
 			}
 		}
-		if config.LogstashTlsCertificate != nil && d.Get("tls_certificate").(string) != common.UseExisting {
+		if config.LogstashTlsCertificate != nil {
 			err := d.Set("tls_certificate", common.Base64Encode(*config.LogstashTlsCertificate))
 			if err != nil {
 				return err
@@ -131,7 +129,6 @@ func resourceGatewayUpdateLogForwardingLogstashUpdate(d *schema.ResourceData, m 
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
@@ -152,12 +149,9 @@ func resourceGatewayUpdateLogForwardingLogstashUpdate(d *schema.ResourceData, m 
 	common.GetAkeylessPtr(&body.EnableTls, enableTls)
 	common.GetAkeylessPtr(&body.TlsCertificate, tlsCertificate)
 
-	_, _, err := client.GatewayUpdateLogForwardingLogstash(ctx).Body(body).Execute()
+	_, resp, err := client.GatewayUpdateLogForwardingLogstash(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update log forwarding settings: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't update log forwarding settings: %v", err)
+		return common.HandleError("can't update log forwarding settings", resp, err)
 	}
 
 	if d.Id() == "" {

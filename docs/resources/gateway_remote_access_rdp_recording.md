@@ -28,6 +28,9 @@ Remote access rdp recording config
 - `azure_storage_container_name` (String) Azure container name. For more information refer to https://learn.microsoft.com/en-us/rest/api/storageservices/naming-and-referencing-containers--blobs--and-metadata
 - `azure_storage_tenant_id` (String) Azure tenant id. For more information refer to https://learn.microsoft.com/en-us/entra/fundamentals/how-to-find-tenant
 - `rdp_session_recording` (String) Enable recording of rdp session [true/false]
+- `rdp_session_recording_compress` (Boolean) Whether to compress recording files before upload
+- `rdp_session_recording_encryption_key` (String, Sensitive) If provided, this key will be used to encrypt uploaded recordings.
+- `rdp_session_recording_quality` (String) RDP session recording quality [low/medium/high]
 - `rdp_session_storage` (String) Rdp session recording storage destination [local/aws/azure]
 
 ### Read-Only

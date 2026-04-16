@@ -2,11 +2,9 @@ package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
+	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -31,12 +29,12 @@ func resourceDynamicSecretCustom() *schema.Resource {
 			"create_sync_url": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "URL of an endpoint that implements /sync/create method",
+				Description: "URL of an endpoint that implements /sync/create method, for example https://webhook.example.com/sync/create",
 			},
 			"revoke_sync_url": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "URL of an endpoint that implements /sync/revoke method",
+				Description: "URL of an endpoint that implements /sync/revoke method, for example https://webhook.example.com/sync/revoke",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
@@ -47,7 +45,7 @@ func resourceDynamicSecretCustom() *schema.Resource {
 			"rotate_sync_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "URL of an endpoint that implements /sync/rotate method",
+				Description: "URL of an endpoint that implements /sync/rotate method, for example https://webhook.example.com/sync/rotate",
 			},
 			"payload": {
 				Type:        schema.TypeString,
@@ -63,23 +61,41 @@ func resourceDynamicSecretCustom() *schema.Resource {
 			"enable_admin_rotation": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Enable automatic admin credentials rotation",
-				Default:     "false",
+				Description: "Should admin credentials be rotated",
+				Default:     false,
 			},
 			"admin_rotation_interval_days": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: "Rotation period in days",
+				Description: "Define rotation interval in days",
 			},
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Encrypt dynamic secret details with following key",
+				Computed:    true,
+				Description: "Dynamic producer encryption key",
 			},
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Description: "Add tags attached to this object",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -91,7 +107,6 @@ func resourceDynamicSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
@@ -105,6 +120,9 @@ func resourceDynamicSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	timeoutSec := d.Get("timeout_sec").(int)
 	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
 	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
 	body := akeyless_api.DynamicSecretCreateCustom{
 		Name:          name,
@@ -120,13 +138,19 @@ func resourceDynamicSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.TimeoutSec, timeoutSec)
 	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
 	common.GetAkeylessPtr(&body.AdminRotationIntervalDays, adminRotationIntervalDays)
-
-	_, _, err := client.DynamicSecretCreateCustom(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		customFields := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFields[k] = v.(string)
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		body.ItemCustomFields = &customFields
+	}
+
+	_, resp, err := client.DynamicSecretCreateCustom(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -139,7 +163,6 @@ func resourceDynamicSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -151,15 +174,7 @@ func resourceDynamicSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 
 	rOut, res, err := client.DynamicSecretGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get dynamic secret value", res, err)
 	}
 	if rOut.CreateSyncUrl != nil {
 		err = d.Set("create_sync_url", *rOut.CreateSyncUrl)
@@ -221,6 +236,32 @@ func resourceDynamicSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 			return err
 		}
 	}
+	deleteProtectionVal := "false"
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+	if rOut.Metadata != nil {
+		err = d.Set("description", *rOut.Metadata)
+		if err != nil {
+			return err
+		}
+	}
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		err = d.Set("item_custom_fields", customFields)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -232,7 +273,6 @@ func resourceDynamicSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	createSyncUrl := d.Get("create_sync_url").(string)
@@ -246,6 +286,9 @@ func resourceDynamicSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	timeoutSec := d.Get("timeout_sec").(int)
 	enableAdminRotation := d.Get("enable_admin_rotation").(bool)
 	adminRotationIntervalDays := d.Get("admin_rotation_interval_days").(int)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 
 	body := akeyless_api.DynamicSecretUpdateCustom{
 		Name:          name,
@@ -261,13 +304,19 @@ func resourceDynamicSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.TimeoutSec, timeoutSec)
 	common.GetAkeylessPtr(&body.EnableAdminRotation, enableAdminRotation)
 	common.GetAkeylessPtr(&body.AdminRotationIntervalDays, adminRotationIntervalDays)
-
-	_, _, err := client.DynamicSecretUpdateCustom(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		customFields := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFields[k] = v.(string)
 		}
-		return fmt.Errorf("can't update : %v", err)
+		body.ItemCustomFields = &customFields
+	}
+
+	_, resp, err := client.DynamicSecretUpdateCustom(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

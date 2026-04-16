@@ -25,6 +25,8 @@ Cache settings
 
 ### Read-Only
 
+- `cache_encryption_key` (String) Cache encryption key
 - `id` (String) The ID of this resource.
+- `new_proactive_cache_enable` (Boolean) New proactive cache enable flag
 
 

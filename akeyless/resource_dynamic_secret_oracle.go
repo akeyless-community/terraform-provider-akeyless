@@ -1,13 +1,11 @@
-// generated fule
+// generated file
 package akeyless
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
+	"strconv"
 
-	akeyless_api "github.com/akeylesslabs/akeyless-go"
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -32,46 +30,46 @@ func resourceDynamicSecretOracle() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing target to use in dynamic secret creation",
+				Description: "Target name",
 			},
 			"oracle_service_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Oracle service name",
+				Description: "Oracle DB Name",
 			},
 			"oracle_username": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Oracle user",
+				Description: "Oracle Username",
 			},
 			"oracle_password": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Oracle password",
+				Description: "Oracle Password",
 			},
 			"oracle_host": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Oracle host name",
+				Description: "Oracle Host",
 				Default:     "127.0.0.1",
 			},
 			"oracle_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Oracle port",
+				Description: "Oracle Port",
 				Default:     "1521",
 			},
 			"oracle_creation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     `CREATE USER {{username}} IDENTIFIED BY "{{password}}"; GRANT CONNECT TO {{username}}; GRANT CREATE SESSION TO {{username}};`,
-				Description: "Oracle Creation Statements",
+				Description: "Oracle Creation statements",
 			},
 			"oracle_revocation_statements": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     `REVOKE CONNECT FROM {{name}};REVOKE CREATE SESSION FROM {{name}};DROP USER {{name}};`,
-				Description: "Oracle Revocation Statements",
+				Description: "Oracle Revocation statements",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
@@ -87,7 +85,8 @@ func resourceDynamicSecretOracle() *schema.Resource {
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Encrypt dynamic secret details with following key",
+				Computed:    true,
+				Description: "Dynamic producer encryption key",
 			},
 			"custom_username_template": {
 				Type:        schema.TypeString,
@@ -97,18 +96,56 @@ func resourceDynamicSecretOracle() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2",
+				Description: "Add tags attached to this object",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"db_server_certificates": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "the set of root certificate authorities in base64 encoding that clients use when verifying server certificates",
+				Description: "(Optional) DB server certificates",
 			},
 			"db_server_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Server name is used to verify the hostname on the returned certificates unless InsecureSkipVerify is given. It is also included in the client's handshake to support virtual hosting unless it is an IP address",
+				Description: "(Optional) Server name for certificate verification",
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Protection from accidental deletion of this object [true/false]",
+				Default:     "false",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the object",
+			},
+			"item_custom_fields": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Additional custom fields to associate with the item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_certificate_issuer": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Path to the SSH Certificate Issuer for your Akeyless Secure Access",
+			},
+			"secure_access_enable": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Enable/Disable secure remote access [true/false]",
+			},
+			"secure_access_host": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Target DB servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts)",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_web": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Web Secure Remote Access",
 			},
 		},
 	}
@@ -119,7 +156,6 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -138,6 +174,14 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	tags := common.ExpandStringList(tagsSet.List())
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
+	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
+	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
+	secureAccessWeb := d.Get("secure_access_web").(bool)
 
 	body := akeyless_api.DynamicSecretCreateOracleDb{
 		Name:  name,
@@ -158,13 +202,23 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.DbServerCertificates, dbServerCertificates)
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
-
-	_, _, err := client.DynamicSecretCreateOracleDb(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't create Secret: %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		customFields := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFields[k] = v.(string)
 		}
-		return fmt.Errorf("can't create Secret: %v", err)
+		body.ItemCustomFields = &customFields
+	}
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
+	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
+
+	_, resp, err := client.DynamicSecretCreateOracleDb(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 
 	d.SetId(name)
@@ -177,7 +231,6 @@ func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 
 	path := d.Id()
@@ -189,15 +242,7 @@ func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 
 	rOut, res, err := client.DynamicSecretGet(ctx).Body(body).Execute()
 	if err != nil {
-		if errors.As(err, &apiErr) {
-			if res.StatusCode == http.StatusNotFound {
-				// The resource was deleted outside of the current Terraform workspace, so invalidate this resource
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("can't value: %v", string(apiErr.Body()))
-		}
-		return fmt.Errorf("can't get value: %v", err)
+		return common.HandleReadError(d, "can't get dynamic secret value", res, err)
 	}
 	if rOut.UserTtl != nil {
 		err = d.Set("user_ttl", *rOut.UserTtl)
@@ -287,6 +332,40 @@ func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
+	deleteProtectionVal := "false"
+	if rOut.DeleteProtection != nil {
+		deleteProtectionVal = strconv.FormatBool(*rOut.DeleteProtection)
+	}
+	err = d.Set("delete_protection", deleteProtectionVal)
+	if err != nil {
+		return err
+	}
+
+	if rOut.Metadata != nil {
+		err = d.Set("description", *rOut.Metadata)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(rOut.ItemCustomFieldsDetails) > 0 {
+		customFields := make(map[string]string)
+		for _, field := range rOut.ItemCustomFieldsDetails {
+			if field.Name != nil && field.Value != nil {
+				customFields[*field.Name] = *field.Value
+			}
+		}
+		if len(customFields) > 0 {
+			err = d.Set("item_custom_fields", customFields)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Secure access fields are not available in DSProducerDetails in SDK v5
+	// These fields are managed through gateway configuration
+
 	d.SetId(path)
 
 	return nil
@@ -297,7 +376,6 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	client := *provider.client
 	token := *provider.token
 
-	var apiErr akeyless_api.GenericOpenAPIError
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
@@ -316,6 +394,14 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	tags := common.ExpandStringList(tagsSet.List())
 	dbServerCertificates := d.Get("db_server_certificates").(string)
 	dbServerName := d.Get("db_server_name").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
+	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
+	secureAccessEnable := d.Get("secure_access_enable").(string)
+	secureAccessHostSet := d.Get("secure_access_host").(*schema.Set)
+	secureAccessHost := common.ExpandStringList(secureAccessHostSet.List())
+	secureAccessWeb := d.Get("secure_access_web").(bool)
 
 	body := akeyless_api.DynamicSecretUpdateOracleDb{
 		Name:  name,
@@ -336,13 +422,23 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.DbServerCertificates, dbServerCertificates)
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
-
-	_, _, err := client.DynamicSecretUpdateOracleDb(ctx).Body(body).Execute()
-	if err != nil {
-		if errors.As(err, &apiErr) {
-			return fmt.Errorf("can't update : %v", string(apiErr.Body()))
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	if len(itemCustomFields) > 0 {
+		customFields := make(map[string]string)
+		for k, v := range itemCustomFields {
+			customFields[k] = v.(string)
 		}
-		return fmt.Errorf("can't update : %v", err)
+		body.ItemCustomFields = &customFields
+	}
+	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
+	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
+	common.GetAkeylessPtr(&body.SecureAccessWeb, secureAccessWeb)
+
+	_, resp, err := client.DynamicSecretUpdateOracleDb(ctx).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update dynamic secret", resp, err)
 	}
 
 	d.SetId(name)

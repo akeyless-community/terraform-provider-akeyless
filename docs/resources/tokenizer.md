@@ -18,17 +18,18 @@ Tokenizer resource
 ### Required
 
 - `name` (String) Tokenizer name
-- `template_type` (String) Which template type this tokenizer is used for [SSN,CreditCard,USPhoneNumber,Custom]
+- `template_type` (String) Which template type this tokenizer is used for [SSN,CreditCard,USPhoneNumber,Email,Regexp]
 
 ### Optional
 
-- `alphabet` (String) Alphabet to use in custom vaultless tokenization, such as '0123456789' for credit cards.
-- `decoding_template` (String) The Decoding output template to use in custom vaultless tokenization
+- `alphabet` (String) Alphabet to use in regexp vaultless tokenization
+- `decoding_template` (String) The Decoding output template to use in regexp vaultless tokenization
 - `delete_protection` (String) Protection from accidental deletion of this item, [true/false]
 - `description` (String) Description of the object
-- `encoding_template` (String) The Encoding output template to use in custom vaultless tokenization
+- `encoding_template` (String) The Encoding output template to use in regexp vaultless tokenization
 - `encryption_key_name` (String) AES key name to use in vaultless tokenization
-- `pattern` (String) Pattern to use in custom vaultless tokenization
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `pattern` (String) Pattern to use in regexp vaultless tokenization
 - `tag` (Set of String) List of the tags attached to this key. To specify multiple tags use argument multiple times: --tag Tag1 --tag Tag2
 - `tokenizer_type` (String) Tokenizer type(vaultless)
 - `tweak_type` (String) The tweak type to use in vaultless tokenization [Supplied, Generated, Internal, Masking]

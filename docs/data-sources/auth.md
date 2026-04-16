@@ -28,6 +28,8 @@ Authenticate to Akeyless and returns a token to be used by the provider
 
 ### Read-Only
 
+- `complete_auth_link` (String) Complete authentication link
+- `expiration` (String) Token expiration time
 - `id` (String) The ID of this resource.
 - `token` (String, Sensitive) The token
 
