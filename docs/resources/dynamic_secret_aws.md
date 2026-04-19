@@ -50,10 +50,10 @@ AWS dynamic secret resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
-- `session_tags` (String) String of Key value session tags comma separated, relevant only for Assumed Role
+- `session_tags` (String) Session tags, space separated, relevant only for Assumed Role. Format: Key=name,Value=val Key=name2,Value=val2
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
-- `transitive_tag_keys` (String) String of transitive tag keys space separated, relevant only for Assumed Role
+- `transitive_tag_keys` (String) Transitive tag keys, space separated, relevant only for Assumed Role
 - `user_ttl` (String) User TTL
 
 ### Read-Only

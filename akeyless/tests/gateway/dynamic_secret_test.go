@@ -86,24 +86,54 @@ func TestDynamicSecretAws(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_aws" "%v" {
-			name                 = "%v"
-			target_name          = "%v"
-			aws_access_key_id    = "test"
-			aws_access_secret_key = "test"
-			region               = "us-east-1"
-			user_ttl             = "30m"
+			name                          = "%v"
+			target_name                   = "%v"
+			aws_access_key_id             = "test"
+			aws_access_secret_key         = "test"
+			access_mode                   = "iam_user"
+			region                        = "us-east-1"
+			aws_user_policies             = "arn:aws:iam::123456789012:policy/TestPolicy"
+			aws_user_groups               = "TestGroup"
+			aws_user_console_access       = true
+			aws_user_programmatic_access  = true
+			user_ttl                      = "30m"
+			password_length               = "16"
+			delete_protection             = "false"
+			description                   = "test dynamic secret"
+			enable_admin_rotation         = false
+			admin_rotation_interval_days  = 5
+			secure_access_enable          = "false"
+			secure_access_web_proxy       = true
+			secure_access_aws_account_id  = "123456789012"
+			secure_access_aws_native_cli  = true
+			secure_access_delay           = 10
+			tags                          = ["tag1"]
 		}
 	`, dsName, dsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_aws" "%v" {
-			name                 = "%v"
-			target_name          = "%v"
-			aws_access_key_id    = "test"
-			aws_access_secret_key = "test"
-			region               = "eu-west-1"
-			user_ttl             = "60m"
-			tags                 = ["test1", "test2"]
+			name                          = "%v"
+			target_name                   = "%v"
+			aws_access_key_id             = "test"
+			aws_access_secret_key         = "test"
+			access_mode                   = "assume_role"
+			aws_user_policies             = "arn:aws:iam::123456789012:policy/UpdatedPolicy"
+			aws_user_groups               = "UpdatedGroup"
+			aws_role_arns                 = "arn:aws:iam::123456789012:role/UpdatedRole"
+			aws_external_id               = "updated-external-id"
+			password_length               = "20"
+			description                   = "updated test dynamic secret"
+			enable_admin_rotation         = false
+			admin_rotation_interval_days  = 10
+			session_tags                  = "Key=Project,Value=QA Key=Team,Value=Dev"
+			transitive_tag_keys           = "Project Team"
+			secure_access_enable          = "false"
+			secure_access_aws_account_id  = "987654321012"
+			secure_access_web_browsing    = true
+			secure_access_web             = true
+			secure_access_delay           = 20
+			tags                          = ["test1", "test2"]
 		}
 	`, dsName, dsPath, targetPath)
 
