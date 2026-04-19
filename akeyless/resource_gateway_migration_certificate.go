@@ -82,10 +82,13 @@ func resourceGatewayMigrationCertificateCreate(d *schema.ResourceData, m interfa
 	}
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
-	_, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
+	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
 		return common.HandleError("can't create Gateway Migration Certificate", resp, err)
 	}
+
+	migrationID := *out.MigrationId
+	d.Set("migration_id", migrationID)
 
 	d.SetId(name)
 
@@ -168,16 +171,6 @@ func resourceGatewayMigrationCertificateUpdate(d *schema.ResourceData, m interfa
 	}
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
-	id := d.Get("migration_id").(string)
-	if id == "" {
-		err := resourceGatewayMigrationCertificateRead(d, m)
-		if err != nil {
-			return err
-		}
-	}
-	id = d.Get("migration_id").(string)
-	body.Id = &id
-
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
 		return common.HandleError("can't update Gateway Migration Certificate", resp, err)
@@ -192,13 +185,6 @@ func resourceGatewayMigrationCertificateDelete(d *schema.ResourceData, m interfa
 	token := *provider.token
 
 	id := d.Get("migration_id").(string)
-	if id == "" {
-		err := resourceGatewayMigrationCertificateRead(d, m)
-		if err != nil {
-			return err
-		}
-	}
-	id = d.Get("migration_id").(string)
 
 	deleteItem := akeyless_api.GatewayDeleteMigration{
 		Token: &token,

@@ -100,10 +100,13 @@ func resourceGatewayMigrationAzureKvCreate(d *schema.ResourceData, m interface{}
 		body.ExpirationEventIn = expirationEventIn
 	}
 
-	_, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
+	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
 		return common.HandleError("can't create Gateway Migration Azure Key Vault", resp, err)
 	}
+
+	migrationID := *out.MigrationId
+	d.Set("migration_id", migrationID)
 
 	d.SetId(name)
 
@@ -205,16 +208,6 @@ func resourceGatewayMigrationAzureKvUpdate(d *schema.ResourceData, m interface{}
 		body.ExpirationEventIn = expirationEventIn
 	}
 
-	id := d.Get("migration_id").(string)
-	if id == "" {
-		err := resourceGatewayMigrationAzureKvRead(d, m)
-		if err != nil {
-			return err
-		}
-	}
-	id = d.Get("migration_id").(string)
-	body.Id = &id
-
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
 		return common.HandleError("can't update Gateway Migration Azure Key Vault", resp, err)
@@ -229,13 +222,6 @@ func resourceGatewayMigrationAzureKvDelete(d *schema.ResourceData, m interface{}
 	token := *provider.token
 
 	id := d.Get("migration_id").(string)
-	if id == "" {
-		err := resourceGatewayMigrationAzureKvRead(d, m)
-		if err != nil {
-			return err
-		}
-	}
-	id = d.Get("migration_id").(string)
 
 	deleteItem := akeyless_api.GatewayDeleteMigration{
 		Token: &token,

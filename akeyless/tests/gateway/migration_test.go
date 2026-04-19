@@ -10,8 +10,6 @@ import (
 
 func TestGatewayMigrationAws(t *testing.T) {
 
-	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
-
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_aws"
@@ -41,8 +39,6 @@ func TestGatewayMigrationAws(t *testing.T) {
 }
 
 func TestGatewayMigrationAzureKv(t *testing.T) {
-
-	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
 
 	testutils.SkipIfNoGateway(t)
 
@@ -76,8 +72,6 @@ func TestGatewayMigrationAzureKv(t *testing.T) {
 
 func TestGatewayMigrationGcp(t *testing.T) {
 
-	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
-
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_gcp"
@@ -103,8 +97,6 @@ func TestGatewayMigrationGcp(t *testing.T) {
 }
 
 func TestGatewayMigrationHashi(t *testing.T) {
-
-	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
 
 	testutils.SkipIfNoGateway(t)
 
@@ -135,7 +127,7 @@ func TestGatewayMigrationHashi(t *testing.T) {
 
 func TestGatewayMigrationK8s(t *testing.T) {
 
-	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
+	t.Skip("TODO: GW is broken. Next release will fix this.")
 
 	testutils.SkipIfNoGateway(t)
 
@@ -170,8 +162,6 @@ func TestGatewayMigrationK8s(t *testing.T) {
 
 func TestGatewayMigrationCertificate(t *testing.T) {
 
-	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
-
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_cert"
@@ -200,9 +190,17 @@ func TestGatewayMigrationCertificate(t *testing.T) {
 
 func TestGatewayMigrationActiveDirectory(t *testing.T) {
 
-	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
-
 	testutils.SkipIfNoGateway(t)
+
+	targetName := testPath("ad-ldap-target")
+	testutils.CreateLdapTarget(t, targetName, map[string]any{
+		"url":           "ldap://dummy-ldap:389",
+		"bind_dn":       "CN=admin,DC=example,DC=com",
+		"bind_password": "dummy-password",
+	})
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetName)
+	})
 
 	name := "migration_ad"
 	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
@@ -212,67 +210,82 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 			name                = "%v"
 			target_location     = "terraform-tests/migrations/ad"
 			ad_domain_name      = "example.com"
-			ad_target_name      = "dummy-ad-target"
+			ad_target_name      = "%v"
 			ad_user_base_dn     = "OU=Users,DC=example,DC=com"
 			ad_computer_base_dn = "OU=Computers,DC=example,DC=com"
 			ad_discovery_types  = ["domain-users", "computers", "local-users"]
+			ad_local_users_path_template = "terraform-tests/migrations/ad/Users/create/{{LOCAL_USER_NAME}}/{{USERNAME}}"
+			ad_domain_users_path_template = "terraform-tests/migrations/ad/Users/create/{{DOMAIN_USER_NAME}}/{{USERNAME}}"
+			ad_targets_path_template = "terraform-tests/migrations/ad/Targets/create/{{COMPUTER_NAME}}/{{USERNAME}}"
 			ad_targets_type     = "ssh"
 			ad_ssh_port         = "22"
 		}
-	`, name, migrationName)
+	`, name, migrationName, targetName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_active_directory" "%v" {
 			name                = "%v"
 			target_location     = "terraform-tests/migrations/ad-updated"
 			ad_domain_name      = "example.com"
-			ad_target_name      = "dummy-ad-target"
+			ad_target_name      = "%v"
 			ad_user_base_dn     = "OU=Users,DC=example,DC=com"
 			ad_computer_base_dn = "OU=Computers,DC=example,DC=com"
 			ad_discovery_types  = ["domain-users", "computers", "local-users"]
+			ad_local_users_path_template = "terraform-tests/migrations/ad/Users/update/{{LOCAL_USER_NAME}}/{{USERNAME}}"
+			ad_domain_users_path_template = "terraform-tests/migrations/ad/Users/update/{{DOMAIN_USER_NAME}}/{{USERNAME}}"
+			ad_targets_path_template = "terraform-tests/migrations/ad/Targets/update/{{COMPUTER_NAME}}/{{USERNAME}}"
 			ad_targets_type     = "windows"
 			ad_winrm_port       = "5986"
 			ad_auto_rotate      = "true"
 			ad_rotation_interval = 7
 			ad_rotation_hour     = 3
 		}
-	`, name, migrationName)
+	`, name, migrationName, targetName)
 
 	testMigrationResource(t, config, configUpdate)
 }
 
 func TestGatewayMigrationServerInventory(t *testing.T) {
 
-	t.Skip("TODO: SDK+GW are broken. Need to return migration id on create, and use it in delete.")
-
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_si"
 	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
+
+	targetName := testPath("si-ssh-target")
+	testutils.CreateSshTarget(t, targetName, map[string]any{
+		"username": "dummy",
+		"password": "dummy",
+		"host":     "127.0.0.1",
+		"port":     "22",
+	})
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetName)
+	})
 
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_server_inventory" "%v" {
 			name                   = "%v"
 			target_location        = "terraform-tests/migrations/si"
 			hosts                  = "192.168.1.0/24"
-			si_target_name         = "dummy-ssh-target"
+			si_target_name         = "%v"
 			si_users_path_template = "terraform-tests/migrations/si/Users/{{COMPUTER_NAME}}/{{USERNAME}}"
 		}
-	`, name, migrationName)
+	`, name, migrationName, targetName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_server_inventory" "%v" {
 			name                   = "%v"
 			target_location        = "terraform-tests/migrations/si-updated"
 			hosts                  = "192.168.1.0/24,10.0.0.0/16"
-			si_target_name         = "dummy-ssh-target"
+			si_target_name         = "%v"
 			si_users_path_template = "terraform-tests/migrations/si/Users/{{COMPUTER_NAME}}/{{USERNAME}}"
 			si_auto_rotate         = "true"
 			si_rotation_interval   = 30
 			si_rotation_hour       = 2
 			si_sra_enable_rdp      = "true"
 		}
-	`, name, migrationName)
+	`, name, migrationName, targetName)
 
 	testMigrationResource(t, config, configUpdate)
 }
