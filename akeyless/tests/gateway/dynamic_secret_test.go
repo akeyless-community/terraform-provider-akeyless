@@ -642,7 +642,7 @@ func TestDynamicSecretGke(t *testing.T) {
 }
 
 func TestDynamicSecretHanaDb(t *testing.T) {
-	t.Skip("TODO: SDK is broken. Need to send to hanadb, not to hana.")
+
 	testutils.SkipIfNoGateway(t)
 
 	targetName := "test-target-hana"
@@ -799,7 +799,7 @@ func TestDynamicSecretLdap(t *testing.T) {
 }
 
 func TestDynamicSecretMongo(t *testing.T) {
-	t.Skip("TODO: SDK is broken. Need to send to mongodb, not to mongo.")
+
 	testutils.SkipIfNoGateway(t)
 
 	targetName := "test-target-mongo"
@@ -1005,7 +1005,9 @@ func TestDynamicSecretOpenai(t *testing.T) {
 }
 
 func TestDynamicSecretOracle(t *testing.T) {
+
 	t.Skip("TODO: SDK is broken. Need to send to oracledb, not to oracle.")
+
 	testutils.SkipIfNoGateway(t)
 
 	targetName := "test-target-oracle"
@@ -1511,8 +1513,6 @@ func TestDynamicSecretDataSource(t *testing.T) {
 }
 
 func TestDynamicSecretTmpCreds(t *testing.T) {
-
-	t.Skip("TODO: SDK is broken, skipping")
 
 	testutils.SkipIfNoGateway(t)
 

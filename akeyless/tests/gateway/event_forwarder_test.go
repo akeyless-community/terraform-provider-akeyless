@@ -193,7 +193,7 @@ func TestEventForwarderSlack(t *testing.T) {
 }
 
 func TestEventForwarderTeams(t *testing.T) {
-	t.Skip("TODO: GW is broken. params are not set properly in update command")
+
 	testutils.SkipIfNoGateway(t)
 
 	eventForwarderName := "test-event-forwarder-teams"
