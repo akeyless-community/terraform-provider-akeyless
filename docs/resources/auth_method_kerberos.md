@@ -37,9 +37,7 @@ Kerberos Auth Method Resource
 - `gw_bound_ips` (Set of String) A comma-separated CIDR block list as a trusted Gateway entity
 - `jwt_ttl` (Number) creds expiration time in minutes. If not set, use default according to account settings (see get-account-settings)
 - `keytab_file_data` (String, Sensitive) Keytab file data (base64 encoded)
-- `keytab_file_path` (String) Keytab file path
 - `krb5_conf_data` (String) Kerberos configuration file data (base64 encoded)
-- `krb5_conf_path` (String) Kerberos configuration file path
 - `ldap_anonymous_search` (Boolean) Enable LDAP anonymous search
 - `ldap_ca_cert` (String) LDAP CA certificate
 - `ldap_url` (String) LDAP URL

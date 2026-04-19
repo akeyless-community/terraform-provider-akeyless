@@ -3,6 +3,7 @@ package akeyless
 
 import (
 	"context"
+	"encoding/base64"
 	"strconv"
 	"strings"
 
@@ -125,20 +126,10 @@ func resourceAuthMethodKerberos() *schema.Resource {
 				Sensitive:   true,
 				Description: "Keytab file data (base64 encoded)",
 			},
-			"keytab_file_path": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Keytab file path",
-			},
 			"krb5_conf_data": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Kerberos configuration file data (base64 encoded)",
-			},
-			"krb5_conf_path": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Kerberos configuration file path",
 			},
 			"ldap_anonymous_search": {
 				Type:        schema.TypeBool,
@@ -215,9 +206,7 @@ func resourceAuthMethodKerberosCreate(d *schema.ResourceData, m interface{}) err
 	groupDn := d.Get("group_dn").(string)
 	groupFilter := d.Get("group_filter").(string)
 	keytabFileData := d.Get("keytab_file_data").(string)
-	keytabFilePath := d.Get("keytab_file_path").(string)
 	krb5ConfData := d.Get("krb5_conf_data").(string)
-	krb5ConfPath := d.Get("krb5_conf_path").(string)
 	ldapAnonymousSearch := d.Get("ldap_anonymous_search").(bool)
 	ldapCaCert := d.Get("ldap_ca_cert").(string)
 	ldapUrl := d.Get("ldap_url").(string)
@@ -248,9 +237,7 @@ func resourceAuthMethodKerberosCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.GroupDn, groupDn)
 	common.GetAkeylessPtr(&body.GroupFilter, groupFilter)
 	common.GetAkeylessPtr(&body.KeytabFileData, keytabFileData)
-	common.GetAkeylessPtr(&body.KeytabFilePath, keytabFilePath)
 	common.GetAkeylessPtr(&body.Krb5ConfData, krb5ConfData)
-	common.GetAkeylessPtr(&body.Krb5ConfPath, krb5ConfPath)
 	common.GetAkeylessPtr(&body.LdapAnonymousSearch, ldapAnonymousSearch)
 	common.GetAkeylessPtr(&body.LdapCaCert, ldapCaCert)
 	common.GetAkeylessPtr(&body.LdapUrl, ldapUrl)
@@ -413,7 +400,7 @@ func resourceAuthMethodKerberosRead(d *schema.ResourceData, m interface{}) error
 			}
 		}
 		if kd.KerberosKrb5Conf != nil {
-			if err := d.Set("krb5_conf_data", *kd.KerberosKrb5Conf); err != nil {
+			if err := d.Set("krb5_conf_data", base64.StdEncoding.EncodeToString([]byte(*kd.KerberosKrb5Conf))); err != nil {
 				return err
 			}
 		}
@@ -506,9 +493,7 @@ func resourceAuthMethodKerberosUpdate(d *schema.ResourceData, m interface{}) err
 	groupDn := d.Get("group_dn").(string)
 	groupFilter := d.Get("group_filter").(string)
 	keytabFileData := d.Get("keytab_file_data").(string)
-	keytabFilePath := d.Get("keytab_file_path").(string)
 	krb5ConfData := d.Get("krb5_conf_data").(string)
-	krb5ConfPath := d.Get("krb5_conf_path").(string)
 	ldapAnonymousSearch := d.Get("ldap_anonymous_search").(bool)
 	ldapCaCert := d.Get("ldap_ca_cert").(string)
 	ldapUrl := d.Get("ldap_url").(string)
@@ -539,9 +524,7 @@ func resourceAuthMethodKerberosUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.GroupDn, groupDn)
 	common.GetAkeylessPtr(&body.GroupFilter, groupFilter)
 	common.GetAkeylessPtr(&body.KeytabFileData, keytabFileData)
-	common.GetAkeylessPtr(&body.KeytabFilePath, keytabFilePath)
 	common.GetAkeylessPtr(&body.Krb5ConfData, krb5ConfData)
-	common.GetAkeylessPtr(&body.Krb5ConfPath, krb5ConfPath)
 	common.GetAkeylessPtr(&body.LdapAnonymousSearch, ldapAnonymousSearch)
 	common.GetAkeylessPtr(&body.LdapCaCert, ldapCaCert)
 	common.GetAkeylessPtr(&body.LdapUrl, ldapUrl)
