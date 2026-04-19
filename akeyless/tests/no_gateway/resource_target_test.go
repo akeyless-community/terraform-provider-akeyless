@@ -628,6 +628,63 @@ func TestTargetLetsEncryptResource(t *testing.T) {
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
 
+func TestTargetDigiCertResource(t *testing.T) {
+	eabKeyId := os.Getenv("AKEYLESS_DIGICERT_EAB_KEY_ID")
+	eabHmacKey := os.Getenv("AKEYLESS_DIGICERT_EAB_HMAC_KEY")
+	if eabKeyId == "" || eabHmacKey == "" {
+		t.Skip("skipping: AKEYLESS_DIGICERT_EAB_KEY_ID and AKEYLESS_DIGICERT_EAB_HMAC_KEY must be set for DigiCert target tests")
+	}
+
+	dnsTargetName := "dns_target_digicert"
+	dnsTargetPath := testPath(dnsTargetName)
+	dnsTargetDetailsType := "aws_target_details"
+
+	expect := map[string]any{
+		"access_key_id": "test",
+		"access_key":    "test",
+		"region":        "us-east-1",
+	}
+
+	testutils.CreateTargetByType(t, dnsTargetPath, dnsTargetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, dnsTargetPath)
+	})
+
+	targetName := "digicert_target"
+	targetPath := testPath(targetName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_digicert" "%v" {
+			name             = "%v"
+			email            = "test@example.com"
+			acme_challenge   = "dns"
+			digicert_url     = "us-demo"
+			dns_target_creds = "%v"
+			eab_hmac_key     = "%v"
+			eab_key_id       = "%v"
+			hosted_zone      = "Z1234567890"
+			timeout          = "5m"
+			description      = "Test DigiCert target"
+		}
+	`, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_digicert" "%v" {
+			name             = "%v"
+			email            = "updated@example.com"
+			digicert_url     = "eu-demo"
+			dns_target_creds = "%v"
+			eab_hmac_key     = "%v"
+			eab_key_id       = "%v"
+			hosted_zone      = "Z0987654321"
+			timeout          = "10m"
+			description      = "Updated DigiCert target"
+		}
+	`, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId)
+
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
 func TestTargetLinkedResource(t *testing.T) {
 	secretName := "linked-target"
 	secretPath := testPath(secretName)
