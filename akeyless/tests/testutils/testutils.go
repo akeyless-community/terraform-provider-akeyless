@@ -1360,6 +1360,10 @@ func EnableSRA() error {
 	}
 	fmt.Printf("[EnableSRA] got UAM creds (len=%d)\n", len(uamCreds))
 
+	if err := waitForGatewayRemoteAccessConfig(); err != nil {
+		return fmt.Errorf("wait for gateway cluster registration: %w", err)
+	}
+
 	if err := sendBastionKeepAlive(gatorDNS, uamCreds, clusterName); err != nil {
 		return fmt.Errorf("send bastion keep-alive: %w", err)
 	}
@@ -1455,6 +1459,32 @@ func authenticateUAM(authDNS, accessID, accessKeyB64 string) (string, error) {
 	return creds.UAMCreds, nil
 }
 
+func waitForGatewayRemoteAccessConfig() error {
+	client, token, err := GetClient()
+	if err != nil {
+		return err
+	}
+
+	body := akeyless_api.GatewayGetRemoteAccess{
+		Token: &token,
+	}
+
+	var lastErr error
+	for attempt := range 10 {
+		if attempt > 0 {
+			time.Sleep(2 * time.Second)
+		}
+
+		_, resp, err := client.GatewayGetRemoteAccess(context.Background()).Body(body).Execute()
+		if err == nil {
+			return nil
+		}
+		lastErr = common.HandleError("gateway remote access config not ready", resp, err)
+	}
+
+	return lastErr
+}
+
 func restoreECDSAKey(seed []byte) *ecdsa.PrivateKey {
 	k := new(big.Int).SetBytes(seed)
 	prv := new(ecdsa.PrivateKey)
@@ -1491,7 +1521,7 @@ func getAuthTime(authDNS string) (int64, error) {
 func sendBastionKeepAlive(gatorDNS, uamCreds, clusterName string) error {
 	bastionInfo := map[string]interface{}{
 		"cluster_name":         clusterName,
-		"instance_id":          "terraform-test",
+		"instance_id":          fmt.Sprintf("terraform-test-%d", time.Now().UnixNano()),
 		"version":              "1.0.0",
 		"bastion_type":         "ztb",
 		"has_gateway_identity": true,

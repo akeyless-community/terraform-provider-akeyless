@@ -160,12 +160,12 @@ func resourceDynamicSecretAws() *schema.Resource {
 			"session_tags": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "String of Key value session tags comma separated, relevant only for Assumed Role",
+				Description: "Session tags, space separated, relevant only for Assumed Role. Format: Key=name,Value=val Key=name2,Value=val2",
 			},
 			"transitive_tag_keys": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "String of transitive tag keys space separated, relevant only for Assumed Role",
+				Description: "Transitive tag keys, space separated, relevant only for Assumed Role",
 			},
 			"tags": {
 				Type:        schema.TypeSet,

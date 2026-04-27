@@ -92,10 +92,13 @@ func resourceGatewayMigrationHashiCreate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.HashiJson, hashiJson)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
-	_, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
+	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
 		return common.HandleError("can't create Gateway Migration HashiCorp Vault", resp, err)
 	}
+
+	migrationID := *out.MigrationId
+	d.Set("migration_id", migrationID)
 
 	d.SetId(name)
 
@@ -188,16 +191,6 @@ func resourceGatewayMigrationHashiUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.HashiJson, hashiJson)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
-	id := d.Get("migration_id").(string)
-	if id == "" {
-		err := resourceGatewayMigrationHashiRead(d, m)
-		if err != nil {
-			return err
-		}
-	}
-	id = d.Get("migration_id").(string)
-	body.Id = &id
-
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
 		return common.HandleError("can't update Gateway Migration HashiCorp Vault", resp, err)
@@ -212,13 +205,6 @@ func resourceGatewayMigrationHashiDelete(d *schema.ResourceData, m interface{}) 
 	token := *provider.token
 
 	id := d.Get("migration_id").(string)
-	if id == "" {
-		err := resourceGatewayMigrationHashiRead(d, m)
-		if err != nil {
-			return err
-		}
-	}
-	id = d.Get("migration_id").(string)
 
 	deleteItem := akeyless_api.GatewayDeleteMigration{
 		Token: &token,

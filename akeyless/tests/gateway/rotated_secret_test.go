@@ -1101,7 +1101,7 @@ func TestRotatedSecretSplunkResource(t *testing.T) {
 
 func testRotatedSecretSplunkPassword(t *testing.T, targetPath string) {
 
-	t.Skip("TODO: GW is broken, skipping. Need to add user/pass arguments to update command")
+	t.Skip("TODO: SDK is broken, skipping. Need to add user/pass arguments to update command")
 
 	rsName := "test-rs-splunk-password"
 	rsPath := testPath(rsName)

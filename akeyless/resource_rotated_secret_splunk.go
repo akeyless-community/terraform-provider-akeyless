@@ -441,6 +441,8 @@ func resourceRotatedSecretSplunkUpdate(d *schema.ResourceData, m interface{}) er
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
+	// rotatedUsername := d.Get("rotated_username").(string)
+	// rotatedPassword := d.Get("rotated_password").(string)
 	hecToken := d.Get("hec_token").(string)
 	splunkToken := d.Get("splunk_token").(string)
 	tokenOwner := d.Get("token_owner").(string)
@@ -477,6 +479,8 @@ func resourceRotatedSecretSplunkUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	// common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername) // needs to be added to the API first
+	// common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword) // needs to be added to the API first
 	common.GetAkeylessPtr(&body.HecToken, hecToken)
 	common.GetAkeylessPtr(&body.SplunkToken, splunkToken)
 	common.GetAkeylessPtr(&body.TokenOwner, tokenOwner)

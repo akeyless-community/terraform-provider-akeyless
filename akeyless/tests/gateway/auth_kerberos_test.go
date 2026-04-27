@@ -10,8 +10,6 @@ import (
 
 func TestAuthMethodKerberosResource(t *testing.T) {
 
-	t.Skip("TODO: GW is broken. Need to skip dry run.")
-
 	testutils.SkipIfNoGateway(t)
 
 	name := "test_auth_method_kerberos"

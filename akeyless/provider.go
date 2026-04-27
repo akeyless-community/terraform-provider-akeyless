@@ -168,6 +168,7 @@ func Provider() *schema.Provider {
 			"akeyless_target_aws":                                                resourceAwsTarget(),
 			"akeyless_target_azure":                                              resourceAzureTarget(),
 			"akeyless_target_db":                                                 resourceDbTarget(),
+			"akeyless_target_digicert":                                           resourceDigicertTarget(),
 			"akeyless_target_dockerhub":                                          resourceDockerhubTarget(),
 			"akeyless_target_eks":                                                resourceEksTarget(),
 			"akeyless_target_gcp":                                                resourceGcpTarget(),
@@ -475,7 +476,7 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")
 }
 
-func getProviderClient(ctx context.Context, d *schema.ResourceData) *akeyless_api.V2ApiService {
+func getProviderClient(_ context.Context, d *schema.ResourceData) *akeyless_api.V2ApiService {
 	apiGwAddress := d.Get("api_gateway_address").(string)
 
 	httpClient := &http.Client{
