@@ -27,13 +27,16 @@ func TestMain(m *testing.M) {
 	if os.Getenv("AKEYLESS_GATEWAY") == "" {
 		os.Setenv("AKEYLESS_GATEWAY", "http://127.0.0.1:9081")
 	}
+	if os.Getenv("CLUSTER_NAME") == "" {
+		os.Setenv("CLUSTER_NAME", "gateway-config-tests")
+	}
 
 	if _, _, err := testutils.GetClient(); err != nil {
 		log.Fatalf("gateway not ready: %v", err)
 	}
 
 	if err := testutils.EnableSRA(); err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: failed to enable SRA: %v\n", err)
+		log.Fatalf("failed to enable SRA: %v", err)
 	}
 
 	resource.TestMain(m)
