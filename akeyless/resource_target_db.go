@@ -84,6 +84,29 @@ func resourceDbTarget() *schema.Resource {
 				Optional:    true,
 				Description: "SSL connection certificate",
 			},
+			"enable_mtls": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable mutual TLS [true/false]",
+			},
+			"client_certificate": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Content of the client certificate (PEM format) in a Base64 format",
+			},
+			"client_private_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Content of the client private key (PEM format) in a Base64 format",
+			},
+			"client_key_passphrase": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Passphrase for the client private key",
+			},
 			"snowflake_account": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -222,6 +245,10 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	dbServerName := d.Get("db_server_name").(string)
 	ssl := d.Get("ssl").(bool)
 	sslCertificate := d.Get("ssl_certificate").(string)
+	enableMTLS := d.Get("enable_mtls").(bool)
+	clientCertificate := d.Get("client_certificate").(string)
+	clientPrivateKey := d.Get("client_private_key").(string)
+	clientKeyPassphrase := d.Get("client_key_passphrase").(string)
 	snowflakeAccount := d.Get("snowflake_account").(string)
 	snowflakeApiPrivateKey := d.Get("snowflake_api_private_key").(string)
 	snowflakeApiPrivateKeyPassword := d.Get("snowflake_api_private_key_password").(string)
@@ -260,6 +287,10 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
 	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
+	common.GetAkeylessPtr(&body.EnableMtls, enableMTLS)
+	common.GetAkeylessPtr(&body.ClientCertificate, clientCertificate)
+	common.GetAkeylessPtr(&body.ClientPrivateKey, clientPrivateKey)
+	common.GetAkeylessPtr(&body.ClientKeyPassphrase, clientKeyPassphrase)
 	common.GetAkeylessPtr(&body.SnowflakeAccount, snowflakeAccount)
 	common.GetAkeylessPtr(&body.SnowflakeApiPrivateKey, snowflakeApiPrivateKey)
 	common.GetAkeylessPtr(&body.SnowflakeApiPrivateKeyPassword, snowflakeApiPrivateKeyPassword)
@@ -383,6 +414,30 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 		if dbTargetDetails.SslConnectionCertificate != nil {
 			err = d.Set("ssl_certificate", *dbTargetDetails.SslConnectionCertificate)
+			if err != nil {
+				return err
+			}
+		}
+		if dbTargetDetails.EnableMtls != nil {
+			err = d.Set("enable_mtls", *dbTargetDetails.EnableMtls)
+			if err != nil {
+				return err
+			}
+		}
+		if dbTargetDetails.ClientCertificate != nil {
+			err = d.Set("client_certificate", *dbTargetDetails.ClientCertificate)
+			if err != nil {
+				return err
+			}
+		}
+		if dbTargetDetails.ClientPrivateKey != nil {
+			err = d.Set("client_private_key", *dbTargetDetails.ClientPrivateKey)
+			if err != nil {
+				return err
+			}
+		}
+		if dbTargetDetails.ClientKeyPassphrase != nil {
+			err = d.Set("client_key_passphrase", *dbTargetDetails.ClientKeyPassphrase)
 			if err != nil {
 				return err
 			}
@@ -539,6 +594,10 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	dbServerName := d.Get("db_server_name").(string)
 	ssl := d.Get("ssl").(bool)
 	sslCertificate := d.Get("ssl_certificate").(string)
+	enableMTLS := d.Get("enable_mtls").(bool)
+	clientCertificate := d.Get("client_certificate").(string)
+	clientPrivateKey := d.Get("client_private_key").(string)
+	clientKeyPassphrase := d.Get("client_key_passphrase").(string)
 	snowflakeAccount := d.Get("snowflake_account").(string)
 	snowflakeApiPrivateKey := d.Get("snowflake_api_private_key").(string)
 	snowflakeApiPrivateKeyPassword := d.Get("snowflake_api_private_key_password").(string)
@@ -577,6 +636,10 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
 	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
+	common.GetAkeylessPtr(&body.EnableMtls, enableMTLS)
+	common.GetAkeylessPtr(&body.ClientCertificate, clientCertificate)
+	common.GetAkeylessPtr(&body.ClientPrivateKey, clientPrivateKey)
+	common.GetAkeylessPtr(&body.ClientKeyPassphrase, clientKeyPassphrase)
 	common.GetAkeylessPtr(&body.SnowflakeAccount, snowflakeAccount)
 	common.GetAkeylessPtr(&body.SnowflakeApiPrivateKey, snowflakeApiPrivateKey)
 	common.GetAkeylessPtr(&body.SnowflakeApiPrivateKeyPassword, snowflakeApiPrivateKeyPassword)

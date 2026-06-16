@@ -803,6 +803,40 @@ func CheckFolderExistsRemotely(folder string) resource.TestCheckFunc {
 	}
 }
 
+func CheckFolderSyncExistsRemotely(folder, uscName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, token, err := GetClient()
+		if err != nil {
+			return err
+		}
+
+		gsvBody := akeyless_api.FolderGet{
+			Name:  folder,
+			Token: &token,
+		}
+
+		rOut, _, err := client.FolderGet(context.Background()).Body(gsvBody).Execute()
+		if err != nil {
+			return err
+		}
+		if rOut.Folder == nil {
+			return fmt.Errorf("folder not found: %s", folder)
+		}
+
+		normalizedUscName := strings.TrimPrefix(uscName, "/")
+		for _, syncConfig := range rOut.Folder.UscSyncConfigs {
+			if syncConfig.UscItemName == nil {
+				continue
+			}
+			if strings.TrimPrefix(*syncConfig.UscItemName, "/") == normalizedUscName {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("folder sync not found for folder %s and usc %s", folder, uscName)
+	}
+}
+
 func CheckTargetExistsRemotely(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client, token, err := GetClient()

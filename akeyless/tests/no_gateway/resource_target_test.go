@@ -148,6 +148,47 @@ func TestTargetDbResource(t *testing.T) {
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, secretPath)
 }
 
+func TestTargetDbMTLSResource(t *testing.T) {
+	secretName := "db_target_mtls"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_db" "%v" {
+			name 				= "%v"
+			db_type     		= "mysql"
+			user_name 			= "user1"
+			pwd 				= "pwd1"
+			host 				= "host1"
+			port 				= "1231"
+			db_name 			= "db1"
+			ssl 				= true
+			enable_mtls 		= true
+			client_certificate 	= "client-cert-1"
+			client_private_key 	= "client-key-1"
+			client_key_passphrase = "client-pass-1"
+		}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_db" "%v" {
+			name 				= "%v"
+			db_type     		= "mysql"
+			user_name 			= "user2"
+			pwd 				= "pwd2"
+			host 				= "host2"
+			port 				= "1231"
+			db_name 			= "db2"
+			ssl 				= true
+			enable_mtls 		= true
+			client_certificate 	= "client-cert-2"
+			client_private_key 	= "client-key-2"
+			client_key_passphrase = "client-pass-2"
+		}
+	`, secretName, secretPath)
+
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, secretPath)
+}
+
 func TestTargetDbOracleResource(t *testing.T) {
 	secretName := "db_target1"
 	secretPath := testPath(secretName)
@@ -526,6 +567,31 @@ func TestTargetGoogleTrustResource(t *testing.T) {
 			description 		= "Updated Google Trust target"
 		}
 	`, targetName, targetPath, eabKeyId, eabHmacKey, dnsTargetPath)
+
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
+func TestTargetCloudflareResource(t *testing.T) {
+	targetName := "cloudflare_target"
+	targetPath := testPath(targetName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name 				= "%v"
+			account_id 			= "test-account-id"
+			api_token 			= "test-api-token"
+			description 		= "Test Cloudflare target"
+		}
+	`, targetName, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name 				= "%v"
+			account_id 			= "test-account-id-2"
+			api_token 			= "test-api-token-2"
+			description 		= "Updated Cloudflare target"
+		}
+	`, targetName, targetPath)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }

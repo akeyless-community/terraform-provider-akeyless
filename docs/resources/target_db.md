@@ -53,6 +53,10 @@ DB Target resource
 - `snowflake_api_private_key_password` (String, Sensitive) The Private key passphrase
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
 - `ssl_certificate` (String) SSL connection certificate
+- `enable_mtls` (Boolean) Enable mutual TLS [true/false]
+- `client_certificate` (String, Sensitive) Content of the client certificate (PEM format) in a Base64 format
+- `client_private_key` (String, Sensitive) Content of the client private key (PEM format) in a Base64 format
+- `client_key_passphrase` (String, Sensitive) Passphrase for the client private key
 - `user_name` (String) Database user name
 
 ### Read-Only

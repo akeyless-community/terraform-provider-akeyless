@@ -1256,3 +1256,61 @@ func TestRotatedSecretDataSource(t *testing.T) {
 		},
 	})
 }
+
+func TestRotatedSecretHashiVaultResource(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-hashi-vault-rs"
+	targetPath := testPath(targetName)
+	targetDetailsType := "hashi_target_details"
+
+	expect := map[string]any{
+		"vault_url":        "http://127.0.0.1:8200",
+		"vault_token":      "test",
+		"vault_namespaces": "",
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	rsName := "test-rs-hashi-vault"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_hashivault" "%v" {
+			name 					= "%v"
+			target_name 			= "%v"
+			description 			= "aaaa"
+			password_length 		= "12"
+			grace_rotation 			= "true"
+			grace_rotation_hour 	= 3
+			grace_rotation_interval = "9"
+			rotation_event_in 		= ["1", "7"]
+			use_capital_letters 	= "true"
+			use_lower_letters 		= "true"
+			use_numbers 			= "true"
+			use_special_characters 	= "false"
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_hashivault" "%v" {
+			name 					= "%v"
+			target_name 			= "%v"
+			description 			= "bbbb"
+			password_length 		= "14"
+			grace_rotation 			= "true"
+			grace_rotation_hour 	= 4
+			grace_rotation_interval = "10"
+			rotation_event_in 		= ["2", "8"]
+			use_capital_letters 	= "true"
+			use_lower_letters 		= "true"
+			use_numbers 			= "true"
+			use_special_characters 	= "true"
+		}
+	`, rsName, rsPath, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+}
