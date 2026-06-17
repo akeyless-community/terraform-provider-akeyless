@@ -184,8 +184,33 @@ func TestTargetDbMTLSResource(t *testing.T) {
 			client_key_passphrase = "client-pass-2"
 		}
 	`, secretName, secretPath)
-
-	testutils.TesTargetResource(t, providerFactories, config, configUpdate, secretPath)
+	resourceName := "akeyless_target_db." + secretName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testutils.CheckTargetDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr(resourceName, "enable_mtls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate", "client-cert-1"),
+					resource.TestCheckResourceAttr(resourceName, "client_private_key", "client-key-1"),
+					resource.TestCheckResourceAttr(resourceName, "client_key_passphrase", "client-pass-1"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr(resourceName, "enable_mtls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate", "client-cert-2"),
+					resource.TestCheckResourceAttr(resourceName, "client_private_key", "client-key-2"),
+					resource.TestCheckResourceAttr(resourceName, "client_key_passphrase", "client-pass-2"),
+				),
+			},
+		},
+	})
 }
 
 func TestTargetDbOracleResource(t *testing.T) {
@@ -665,8 +690,29 @@ func TestTargetCloudflareResource(t *testing.T) {
 			description 		= "Updated Cloudflare target"
 		}
 	`, targetName, targetPath)
-
-	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+	resourceName := "akeyless_target_cloudflare." + targetName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testutils.CheckTargetDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "account_id", "test-account-id"),
+					resource.TestCheckResourceAttr(resourceName, "api_token", "test-api-token"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "account_id", "test-account-id-2"),
+					resource.TestCheckResourceAttr(resourceName, "api_token", "test-api-token-2"),
+				),
+			},
+		},
+	})
 }
 
 func TestTargetK8sResource(t *testing.T) {

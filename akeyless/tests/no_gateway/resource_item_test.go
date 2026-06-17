@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestDfcKeyRsaResource(t *testing.T) {
@@ -178,6 +179,7 @@ func TestPkiResource(t *testing.T) {
 			delete_protection     	= "true"
 		}
 	`, name, itemPath, keyPath)
+	resourceName := "akeyless_pki_cert_issuer." + name
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_pki_cert_issuer" "%v" {
 			name 					= "%v"
@@ -214,7 +216,25 @@ func TestPkiResource(t *testing.T) {
 			tags     			  	= ["t1", "t3"]
 		}
 	`, name, itemPath, keyPath)
-	testutils.TestItemResource(t, providerFactories, itemPath, config, configUpdate)
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(itemPath),
+					resource.TestCheckResourceAttr(resourceName, "basic_constraints_critical", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(itemPath),
+					resource.TestCheckResourceAttr(resourceName, "basic_constraints_critical", "false"),
+				),
+			},
+		},
+	})
 }
 
 func TestPkiDataSource(t *testing.T) {

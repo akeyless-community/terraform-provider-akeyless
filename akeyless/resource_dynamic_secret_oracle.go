@@ -382,6 +382,13 @@ func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 	// Secure access fields are not available in DSProducerDetails in SDK v5
 	// These fields are managed through gateway configuration
 
+	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil

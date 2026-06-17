@@ -680,7 +680,26 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 		}
 	`, rsName, rsPath, targetPath)
 
-	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+	resourceName := "akeyless_rotated_secret_mysql." + rsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
+				),
+			},
+		},
+	})
 }
 
 func TestRotatedSecretOracleResource(t *testing.T) {
@@ -1317,18 +1336,52 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 			target_name 			= "%v"
 			description 			= "bbbb"
 			password_length 		= "14"
-			input_rule 			= ["name=in1,rule=validate input"]
+			input_rule 			= ["name=in2,rule=validate input updated"]
 			output_rule 			= ["name=out1,rule=mask output updated"]
-			grace_rotation 			= "true"
+			grace_rotation 			= "false"
 			grace_rotation_hour 	= 4
 			grace_rotation_interval = "10"
-			rotation_event_in 		= ["2", "8"]
-			use_capital_letters 	= "true"
-			use_lower_letters 		= "true"
-			use_numbers 			= "true"
+			rotation_event_in 		= ["2", "8", "14"]
+			use_capital_letters 	= "false"
+			use_lower_letters 		= "false"
+			use_numbers 			= "false"
 			use_special_characters 	= "true"
 		}
 	`, rsName, rsPath, targetPath)
-
-	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+	resourceName := "akeyless_rotated_secret_hashivault." + rsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "12"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "false"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "14"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in2,rule=validate input updated"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "true"),
+				),
+			},
+		},
+	})
 }

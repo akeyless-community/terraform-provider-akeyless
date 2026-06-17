@@ -215,12 +215,16 @@ func TestFolderSyncResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckFolderSyncExistsRemotely(folderPath, uscPath),
+					resource.TestCheckResourceAttr("akeyless_folder_sync.sync", "engine_name", "secret/data/"),
+					resource.TestCheckResourceAttr("akeyless_folder_sync.sync", "delete_remote", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckFolderSyncExistsRemotely(folderPath, uscPath),
+					resource.TestCheckResourceAttr("akeyless_folder_sync.sync", "engine_name", "secret/data/"),
+					resource.TestCheckResourceAttr("akeyless_folder_sync.sync", "delete_remote", "false"),
 				),
 			},
 		},

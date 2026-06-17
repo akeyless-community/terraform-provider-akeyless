@@ -14,6 +14,7 @@ func resourceFolderSyncAll() *schema.Resource {
 		Description: "Folder sync all resource",
 		Create:      resourceFolderSyncAllCreate,
 		Read:        resourceFolderSyncAllRead,
+		Update:      resourceFolderSyncAllUpdate,
 		Delete:      resourceFolderSyncAllDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceFolderSyncAllImport,
@@ -77,6 +78,10 @@ func resourceFolderSyncAllRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(buildFolderSyncAllID(folderName))
+	return nil
+}
+
+func resourceFolderSyncAllUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 

@@ -450,6 +450,13 @@ func resourceRotatedSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, itemOut.ItemGeneralInfo.AgenticRules); err != nil {
+		return err
+	}
+	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
