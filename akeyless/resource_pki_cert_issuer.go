@@ -168,14 +168,10 @@ func resourcePKICertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to protect generated certificates from deletion",
 			},
-			"is_ca": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "If set, the basic constraints extension will be added to certificate",
-			},
 			"basic_constraints": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Basic constraints settings to apply to the certificate issuer",
 			},
 			"basic_constraints_critical": {
@@ -299,7 +295,6 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	gwClusterUrl := d.Get("gw_cluster_url").(string)
 	destinationPath := d.Get("destination_path").(string)
 	protectCertificates := d.Get("protect_certificates").(bool)
-	isCA := d.Get("is_ca").(bool)
 	basicConstraints := d.Get("basic_constraints").(string)
 	enableACME := d.Get("enable_acme").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
@@ -349,7 +344,6 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwClusterUrl, gwClusterUrl)
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)
-	common.GetAkeylessPtr(&body.IsCa, isCA)
 	common.GetAkeylessPtr(&body.BasicConstraints, basicConstraints)
 	common.GetAkeylessPtr(&body.EnableAcme, enableACME)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
@@ -599,12 +593,6 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
-			if pki.IsCa != nil {
-				err := d.Set("is_ca", *pki.IsCa)
-				if err != nil {
-					return err
-				}
-			}
 			if pki.BasicConstraints != nil {
 				err := d.Set("basic_constraints", *pki.BasicConstraints)
 				if err != nil {
@@ -809,7 +797,6 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	gwClusterUrl := d.Get("gw_cluster_url").(string)
 	destinationPath := d.Get("destination_path").(string)
 	protectCertificates := d.Get("protect_certificates").(bool)
-	isCA := d.Get("is_ca").(bool)
 	basicConstraints := d.Get("basic_constraints").(string)
 	enableACME := d.Get("enable_acme").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
@@ -868,7 +855,6 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.PostalCode, postalCode)
 	common.GetAkeylessPtr(&body.GwClusterUrl, gwClusterUrl)
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
-	common.GetAkeylessPtr(&body.IsCa, isCA)
 	common.GetAkeylessPtr(&body.BasicConstraints, basicConstraints)
 	common.GetAkeylessPtr(&body.EnableAcme, enableACME)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)

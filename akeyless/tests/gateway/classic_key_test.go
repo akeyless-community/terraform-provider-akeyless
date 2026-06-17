@@ -165,7 +165,6 @@ func TestPkiResourceWithLocalGw(t *testing.T) {
 			street_address        	= "stre1"
 			postal_code           	= "post1"
 			protect_certificates  	= true
-			is_ca                   = true
 			enable_acme             = false
 			expiration_event_in   	= ["1"]
 			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value2\"],\"1.2.3.4.6\":[\"value3\",\"value4\"]}"
@@ -205,7 +204,6 @@ func TestPkiResourceWithLocalGw(t *testing.T) {
 			street_address        	= "stre2"
 			postal_code           	= "post2"
 			protect_certificates  	= false
-			is_ca                   = false
 			enable_acme             = false
 			expiration_event_in   	= []
 			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value5\"]}"
