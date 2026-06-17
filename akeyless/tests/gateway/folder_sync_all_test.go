@@ -47,12 +47,27 @@ func TestFolderSyncAllResource(t *testing.T) {
 	secretName := "sync_all_secret"
 	secretPath := folderPath + "/" + secretName
 
-	createFolderSyncConfig(t, folderPath, uscPath1)
-	defer deleteFolderSyncConfig(t, folderPath, uscPath1)
-	createFolderSyncConfig(t, folderPath, uscPath2)
-	defer deleteFolderSyncConfig(t, folderPath, uscPath2)
+	t.Cleanup(func() {
+		deleteFolderSyncConfig(t, folderPath, uscPath1)
+		deleteFolderSyncConfig(t, folderPath, uscPath2)
+	})
 
 	config := fmt.Sprintf(`
+		resource "akeyless_folder" "%v" {
+			name = "%v"
+		}
+
+		resource "akeyless_static_secret" "%v" {
+			path   = "%v"
+			value  = "{\"k\":\"v\"}"
+			format = "json"
+			depends_on = [akeyless_folder.%v]
+		}
+	`, folderName, folderPath,
+		secretName, secretPath, folderName,
+	)
+
+	configUpdate := fmt.Sprintf(`
 		resource "akeyless_folder" "%v" {
 			name = "%v"
 		}
@@ -78,6 +93,13 @@ func TestFolderSyncAllResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
+			},
+			{
+				PreConfig: func() {
+					createFolderSyncConfig(t, folderPath, uscPath1)
+					createFolderSyncConfig(t, folderPath, uscPath2)
+				},
+				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("akeyless_folder_sync_all.sync_all", "accessibility", "regular"),
 					checkFolderSyncExistsRemotelyEventually(t, folderPath, uscPath1, 15, 2*time.Second),
@@ -138,7 +160,7 @@ func createFolderSyncConfig(t *testing.T, folderName, uscName string) {
 
 	_, resp, err := client.FolderSync(context.Background()).Body(body).Execute()
 	if err != nil {
-		require.Fail(t, common.HandleError("can't create folder sync for test", resp, err).Error())
+		t.Fatalf("can't create folder sync for test: %v", common.HandleError("can't create folder sync for test", resp, err))
 	}
 
 	t.Logf("created folder sync for folder %s and usc %s", folderName, uscName)
