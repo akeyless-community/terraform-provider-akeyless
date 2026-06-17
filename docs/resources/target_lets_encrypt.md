@@ -24,7 +24,8 @@ Let's Encrypt Target resource
 
 - `acme_challenge` (String) ACME challenge type. Options: [http/dns]
 - `description` (String) Description of the object
-- `dns_target_creds` (String) Name of existing cloud target for DNS credentials. Required when acme-challenge=dns. Supported: AWS, Azure, GCP targets
+- `dns_target_creds` (String) Name of existing cloud target for DNS credentials. Required when acme-challenge=dns. Supported: AWS, Azure, GCP, Cloudflare targets
+- `dns_zone` (String) Cloudflare DNS zone identifier. Required when dns-target-creds points to Cloudflare target
 - `gcp_project` (String) GCP Cloud DNS: Project ID. Optional - can be derived from service account
 - `hosted_zone` (String) AWS Route53 hosted zone ID. Required when dns-target-creds points to AWS target
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings

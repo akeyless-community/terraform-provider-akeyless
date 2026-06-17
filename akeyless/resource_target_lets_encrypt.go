@@ -40,7 +40,7 @@ func resourceLetsEncryptTarget() *schema.Resource {
 			"dns_target_creds": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing cloud target for DNS credentials. Required when acme-challenge=dns. Supported: AWS, Azure, GCP targets",
+				Description: "Name of existing cloud target for DNS credentials. Required when acme-challenge=dns. Supported: AWS, Azure, GCP, Cloudflare targets",
 			},
 			"gcp_project": {
 				Type:        schema.TypeString,
@@ -51,6 +51,11 @@ func resourceLetsEncryptTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Route53 hosted zone ID. Required when dns-target-creds points to AWS target",
+			},
+			"dns_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Cloudflare DNS zone identifier. Required when dns-target-creds points to Cloudflare target",
 			},
 			"lets_encrypt_url": {
 				Type:        schema.TypeString,
@@ -105,6 +110,7 @@ func resourceLetsEncryptTargetCreate(d *schema.ResourceData, m interface{}) erro
 	dnsTargetCreds := d.Get("dns_target_creds").(string)
 	gcpProject := d.Get("gcp_project").(string)
 	hostedZone := d.Get("hosted_zone").(string)
+	dnsZone := d.Get("dns_zone").(string)
 	letsEncryptUrl := d.Get("lets_encrypt_url").(string)
 	resourceGroup := d.Get("resource_group").(string)
 	timeout := d.Get("timeout").(string)
@@ -121,6 +127,7 @@ func resourceLetsEncryptTargetCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.DnsTargetCreds, dnsTargetCreds)
 	common.GetAkeylessPtr(&body.GcpProject, gcpProject)
 	common.GetAkeylessPtr(&body.HostedZone, hostedZone)
+	common.GetAkeylessPtr(&body.DnsZone, dnsZone)
 	common.GetAkeylessPtr(&body.LetsEncryptUrl, letsEncryptUrl)
 	common.GetAkeylessPtr(&body.ResourceGroup, resourceGroup)
 	common.GetAkeylessPtr(&body.Timeout, timeout)
@@ -189,6 +196,12 @@ func resourceLetsEncryptTargetRead(d *schema.ResourceData, m interface{}) error 
 				return err
 			}
 		}
+		if details.DnsZone != nil {
+			err = d.Set("dns_zone", *details.DnsZone)
+			if err != nil {
+				return err
+			}
+		}
 		if details.AcmeEnvironment != nil {
 			err = d.Set("lets_encrypt_url", *details.AcmeEnvironment)
 			if err != nil {
@@ -243,6 +256,7 @@ func resourceLetsEncryptTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	dnsTargetCreds := d.Get("dns_target_creds").(string)
 	gcpProject := d.Get("gcp_project").(string)
 	hostedZone := d.Get("hosted_zone").(string)
+	dnsZone := d.Get("dns_zone").(string)
 	letsEncryptUrl := d.Get("lets_encrypt_url").(string)
 	resourceGroup := d.Get("resource_group").(string)
 	timeout := d.Get("timeout").(string)
@@ -261,6 +275,7 @@ func resourceLetsEncryptTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.DnsTargetCreds, dnsTargetCreds)
 	common.GetAkeylessPtr(&body.GcpProject, gcpProject)
 	common.GetAkeylessPtr(&body.HostedZone, hostedZone)
+	common.GetAkeylessPtr(&body.DnsZone, dnsZone)
 	common.GetAkeylessPtr(&body.LetsEncryptUrl, letsEncryptUrl)
 	common.GetAkeylessPtr(&body.ResourceGroup, resourceGroup)
 	common.GetAkeylessPtr(&body.Timeout, timeout)

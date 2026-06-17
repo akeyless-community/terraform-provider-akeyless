@@ -25,10 +25,11 @@ DigiCert Target resource
 - `acme_challenge` (String) ACME challenge type. Options: [dns]
 - `description` (String) Description of the object
 - `digicert_url` (String) DigiCert ACME endpoint selector. Options: [us-production/eu-production/us-demo/eu-demo]
-- `dns_target_creds` (String) Name of existing cloud target for DNS credentials. Required when challenge type is dns. Supported providers: AWS, Azure, GCP
+- `dns_target_creds` (String) Name of existing cloud target for DNS credentials. Required when challenge type is dns. Supported providers: AWS, Azure, GCP, Cloudflare
 - `eab_hmac_key` (String, Sensitive) External Account Binding HMAC key (required for ACME account bootstrap on create)
 - `eab_key_id` (String) External Account Binding key identifier (required for ACME account bootstrap on create)
 - `gcp_project` (String) GCP Cloud DNS project ID. Optional and can be derived from service account
+- `dns_zone` (String) Cloudflare DNS zone identifier. Required when DNS credentials target is Cloudflare
 - `hosted_zone` (String) AWS Route53 hosted zone ID. Required when DNS credentials target is AWS
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
