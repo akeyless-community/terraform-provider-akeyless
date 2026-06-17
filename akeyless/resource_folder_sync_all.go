@@ -25,6 +25,12 @@ func resourceFolderSyncAll() *schema.Resource {
 				ForceNew:    true,
 				Description: "Folder name",
 			},
+			"accessibility": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "regular",
+				Description: "For personal password manager",
+			},
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -41,9 +47,11 @@ func resourceFolderSyncAllCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	folderName := d.Get("name").(string)
+	accessibility := d.Get("accessibility").(string)
 
 	body := akeyless_api.NewFolderSyncAll(folderName)
 	body.Token = &token
+	common.GetAkeylessPtr(&body.Accessibility, accessibility)
 
 	_, resp, err := client.FolderSyncAll(ctx).Body(*body).Execute()
 	if err != nil {
@@ -51,7 +59,7 @@ func resourceFolderSyncAllCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(buildFolderSyncAllID(folderName))
-	return resourceFolderSyncAllRead(d, m)
+	return nil
 }
 
 func resourceFolderSyncAllRead(d *schema.ResourceData, m interface{}) error {
@@ -76,6 +84,13 @@ func resourceFolderSyncAllRead(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 
+	accessibility := "regular"
+	if rOut.Folder.Accessibility != nil && *rOut.Folder.Accessibility == 1 {
+		accessibility = "personal"
+	}
+	if err := d.Set("accessibility", accessibility); err != nil {
+		return err
+	}
 	d.SetId(buildFolderSyncAllID(folderName))
 	return nil
 }
@@ -87,9 +102,11 @@ func resourceFolderSyncAllDelete(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	folderName := d.Id()
+	accessibility := d.Get("accessibility").(string)
 
 	body := akeyless_api.NewFolderDeleteSync(folderName, "")
 	body.Token = &token
+	common.GetAkeylessPtr(&body.Accessibility, accessibility)
 
 	_, _, err := client.FolderDeleteSync(ctx).Body(*body).Execute()
 	if err != nil {

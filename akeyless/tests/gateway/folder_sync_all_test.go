@@ -53,7 +53,8 @@ func TestFolderSyncAllResource(t *testing.T) {
 		}
 
 		resource "akeyless_folder_sync_all" "sync_all" {
-			name       = akeyless_folder.%v.name
+			name          = akeyless_folder.%v.name
+			accessibility = "regular"
 			depends_on = [akeyless_static_secret.%v]
 		}
 	`, folderName, folderPath,
@@ -66,6 +67,7 @@ func TestFolderSyncAllResource(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_folder_sync_all.sync_all", "accessibility", "regular"),
 					testutils.CheckFolderSyncExistsRemotely(folderPath, uscPath1),
 					testutils.CheckFolderSyncExistsRemotely(folderPath, uscPath2),
 				),
