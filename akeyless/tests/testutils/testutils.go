@@ -1464,7 +1464,7 @@ func authenticateUAM(authDNS, accessID, accessKeyB64 string) (string, error) {
 	params.Set("timestamp", strconv.FormatInt(serverTime, 10))
 	params.Set("nonce", nonce)
 	params.Set("signature", sigB64)
-	params.Set("creds_expiry", "300")
+	params.Set("creds_expiry", "1800") // 30 minutes
 
 	authURL := authDNS + "/auth-uam?" + params.Encode()
 	resp, err := http.Get(authURL)
