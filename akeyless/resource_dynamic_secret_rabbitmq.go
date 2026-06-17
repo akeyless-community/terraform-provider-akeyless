@@ -296,6 +296,13 @@ func resourceDynamicSecretRabbitmqRead(d *schema.ResourceData, m interface{}) er
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil

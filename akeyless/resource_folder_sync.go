@@ -148,7 +148,7 @@ func resourceFolderSyncRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceFolderSyncUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceFolderSyncCreate(d, m)
+	return nil
 }
 
 func resourceFolderSyncDelete(d *schema.ResourceData, m interface{}) error {
