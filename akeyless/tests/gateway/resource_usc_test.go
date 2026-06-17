@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
 )
 
@@ -138,7 +141,7 @@ func TestUscSecretResourceHashi(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(uscPath+"/"+secretName),
+					checkItemExistsRemotelyEventually(uscPath+"/"+secretName, 15, 2*time.Second),
 					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate),
 					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires),
 				),
@@ -146,13 +149,34 @@ func TestUscSecretResourceHashi(t *testing.T) {
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(uscPath+"/"+secretName),
+					checkItemExistsRemotelyEventually(uscPath+"/"+secretName, 15, 2*time.Second),
 					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate),
 					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires),
 				),
 			},
 		},
 	})
+}
+
+func checkItemExistsRemotelyEventually(path string, attempts int, delay time.Duration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var lastErr error
+		for attempt := 0; attempt < attempts; attempt++ {
+			err := testutils.CheckItemExistsRemotely(path)(s)
+			if err == nil {
+				return nil
+			}
+
+			if !strings.Contains(err.Error(), "404 Not Found") && !strings.Contains(err.Error(), "NotFound") {
+				return err
+			}
+
+			lastErr = err
+			time.Sleep(delay)
+		}
+
+		return lastErr
+	}
 }
 
 type uscOptions struct {
