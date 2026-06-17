@@ -1,14 +1,18 @@
 package gateway
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
 
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFolderSyncAllResource(t *testing.T) {
@@ -30,63 +34,42 @@ func TestFolderSyncAllResource(t *testing.T) {
 
 	uscName1 := "usc_for_folder_sync_all_1"
 	uscPath1 := testPath(uscName1)
+	createUsc(t, uscPath1, targetPath, uscOptions{})
+	defer testutils.DeleteItem(t, uscPath1)
 
 	uscName2 := "usc_for_folder_sync_all_2"
 	uscPath2 := testPath(uscName2)
+	createUsc(t, uscPath2, targetPath, uscOptions{})
+	defer testutils.DeleteItem(t, uscPath2)
 
 	folderName := "folder_for_sync_all"
 	folderPath := testPath(folderName)
 	secretName := "sync_all_secret"
 	secretPath := folderPath + "/" + secretName
 
+	createFolderSyncConfig(t, folderPath, uscPath1)
+	defer deleteFolderSyncConfig(t, folderPath, uscPath1)
+	createFolderSyncConfig(t, folderPath, uscPath2)
+	defer deleteFolderSyncConfig(t, folderPath, uscPath2)
+
 	config := fmt.Sprintf(`
-		resource "akeyless_usc" "%v" {
-			name                = "%v"
-			target_to_associate = "%v"
-		}
-
-		resource "akeyless_usc" "%v" {
-			name                = "%v"
-			target_to_associate = "%v"
-		}
-
 		resource "akeyless_folder" "%v" {
 			name = "%v"
-		}
-
-		resource "akeyless_folder_sync" "sync_1" {
-			name          = akeyless_folder.%v.name
-			usc_name      = akeyless_usc.%v.name
-			engine_name   = "secret/data/"
-			delete_remote = true
-			depends_on    = [akeyless_folder.%v, akeyless_usc.%v]
-		}
-
-		resource "akeyless_folder_sync" "sync_2" {
-			name          = akeyless_folder.%v.name
-			usc_name      = akeyless_usc.%v.name
-			engine_name   = "secret/data/"
-			delete_remote = true
-			depends_on    = [akeyless_folder.%v, akeyless_usc.%v]
 		}
 
 		resource "akeyless_static_secret" "%v" {
 			path   = "%v"
 			value  = "{\"k\":\"v\"}"
 			format = "json"
-			depends_on = [akeyless_folder.%v, akeyless_folder_sync.sync_1, akeyless_folder_sync.sync_2]
+			depends_on = [akeyless_folder.%v]
 		}
 
 		resource "akeyless_folder_sync_all" "sync_all" {
 			name          = akeyless_folder.%v.name
 			accessibility = "regular"
-			depends_on = [akeyless_static_secret.%v, akeyless_folder_sync.sync_1, akeyless_folder_sync.sync_2]
+			depends_on = [akeyless_static_secret.%v]
 		}
-	`, uscName1, uscPath1, targetPath,
-		uscName2, uscPath2, targetPath,
-		folderName, folderPath,
-		folderName, uscName1, folderName, uscName1,
-		folderName, uscName2, folderName, uscName2,
+	`, folderName, folderPath,
 		secretName, secretPath, folderName,
 		folderName, secretName)
 
@@ -135,4 +118,60 @@ func checkFolderSyncExistsRemotelyEventually(t *testing.T, folder, uscName strin
 		t.Logf("folder sync check exhausted retries for folder %s and usc %s: %v", folder, uscName, lastErr)
 		return lastErr
 	}
+}
+
+func createFolderSyncConfig(t *testing.T, folderName, uscName string) {
+	t.Helper()
+
+	client, token, err := testutils.GetClient()
+	require.NoError(t, err)
+
+	body := akeyless_api.FolderSync{
+		Name:          folderName,
+		Token:         &token,
+		Accessibility: akeyless_api.PtrString("regular"),
+		Json:          akeyless_api.PtrBool(false),
+		DeleteRemote:  akeyless_api.PtrBool(true),
+		EngineName:    akeyless_api.PtrString("secret/data/"),
+		UscName:       akeyless_api.PtrString(uscName),
+	}
+
+	_, resp, err := client.FolderSync(context.Background()).Body(body).Execute()
+	if err != nil {
+		require.Fail(t, common.HandleError("can't create folder sync for test", resp, err).Error())
+	}
+
+	t.Logf("created folder sync for folder %s and usc %s", folderName, uscName)
+}
+
+func deleteFolderSyncConfig(t *testing.T, folderName, uscName string) {
+	t.Helper()
+
+	client, token, err := testutils.GetClient()
+	if err != nil {
+		t.Logf("skip folder sync cleanup for folder %s and usc %s: %v", folderName, uscName, err)
+		return
+	}
+
+	body := akeyless_api.FolderDeleteSync{
+		Name:          folderName,
+		UscName:       uscName,
+		Token:         &token,
+		Accessibility: akeyless_api.PtrString("regular"),
+		Json:          akeyless_api.PtrBool(false),
+	}
+
+	_, resp, err := client.FolderDeleteSync(context.Background()).Body(body).Execute()
+	if err != nil {
+		errStr := err.Error()
+		if strings.Contains(errStr, "404 Not Found") ||
+			strings.Contains(errStr, "NotFound") ||
+			strings.Contains(errStr, "400 Bad Request") {
+			t.Logf("folder sync cleanup skipped for folder %s and usc %s: %v", folderName, uscName, err)
+			return
+		}
+		require.Fail(t, common.HandleError("can't delete folder sync for test", resp, err).Error())
+	}
+
+	t.Logf("deleted folder sync for folder %s and usc %s", folderName, uscName)
 }
