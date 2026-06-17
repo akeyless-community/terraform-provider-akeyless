@@ -94,9 +94,6 @@ func TestUscSecretResourceHashi(t *testing.T) {
 	uscName := "test-usc-hashi"
 	uscPath := testPath(uscName)
 
-	createUsc(t, uscPath, targetPath, uscOptions{})
-	defer testutils.DeleteItem(t, uscPath)
-
 	secretName := "secret/test-"
 	remoteSecretActivationDate := "2026-01-01T00:00:00Z"
 	remoteSecretExpires := "2026-12-31T00:00:00Z"
@@ -112,6 +109,11 @@ func TestUscSecretResourceHashi(t *testing.T) {
 	val2 := common.Base64Encode(string(marshalled2))
 
 	config := fmt.Sprintf(`
+	resource "akeyless_usc" "%v" {
+		name                = "%v"
+		target_to_associate = "%v"
+	}
+
 	resource "akeyless_usc_secret" "%v" {
 		usc_name 		= "%v"
 		secret_name 	= "%v"
@@ -120,10 +122,16 @@ func TestUscSecretResourceHashi(t *testing.T) {
 		remote_secret_expires         = "%v"
 		description 	= "aaaa"
 		tags			= ["tag1", "tag2"]
+		depends_on      = [akeyless_usc.%v]
 	}
-`, uscName, uscPath, secretName, val1, remoteSecretActivationDate, remoteSecretExpires)
+`, uscName, uscPath, targetPath, uscName, uscPath, secretName, val1, remoteSecretActivationDate, remoteSecretExpires, uscName)
 
 	configUpdate := fmt.Sprintf(`
+	resource "akeyless_usc" "%v" {
+		name                = "%v"
+		target_to_associate = "%v"
+	}
+
 	resource "akeyless_usc_secret" "%v" {
 		usc_name 		= "%v"
 		secret_name 	= "%v"
@@ -132,8 +140,9 @@ func TestUscSecretResourceHashi(t *testing.T) {
 		remote_secret_expires         = "%v"
 		description 	= "bbbb"
 		tags			= ["tag1", "tag3"]
+		depends_on      = [akeyless_usc.%v]
 	}
-`, uscName, uscPath, secretName, val2, remoteSecretActivationDate, remoteSecretExpires)
+`, uscName, uscPath, targetPath, uscName, uscPath, secretName, val2, remoteSecretActivationDate, remoteSecretExpires, uscName)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
@@ -185,7 +194,6 @@ type uscOptions struct {
 }
 
 func createUsc(t *testing.T, uscName, targetName string, opts uscOptions) {
-
 	client, token, err := testutils.GetClient()
 	require.NoError(t, err)
 

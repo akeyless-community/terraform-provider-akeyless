@@ -2,10 +2,13 @@ package gateway
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestFolderSyncAllResource(t *testing.T) {
@@ -68,10 +71,34 @@ func TestFolderSyncAllResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("akeyless_folder_sync_all.sync_all", "accessibility", "regular"),
-					testutils.CheckFolderSyncExistsRemotely(folderPath, uscPath1),
-					testutils.CheckFolderSyncExistsRemotely(folderPath, uscPath2),
+					checkFolderSyncExistsRemotelyEventually(folderPath, uscPath1, 15, 2*time.Second),
+					checkFolderSyncExistsRemotelyEventually(folderPath, uscPath2, 15, 2*time.Second),
 				),
 			},
 		},
 	})
+}
+
+func checkFolderSyncExistsRemotelyEventually(folder, uscName string, attempts int, delay time.Duration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var lastErr error
+		for attempt := 0; attempt < attempts; attempt++ {
+			err := testutils.CheckFolderSyncExistsRemotely(folder, uscName)(s)
+			if err == nil {
+				return nil
+			}
+
+			errStr := err.Error()
+			if !strings.Contains(errStr, "folder sync not found") &&
+				!strings.Contains(errStr, "404 Not Found") &&
+				!strings.Contains(errStr, "NotFound") {
+				return err
+			}
+
+			lastErr = err
+			time.Sleep(delay)
+		}
+
+		return lastErr
+	}
 }
