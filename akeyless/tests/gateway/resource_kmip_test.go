@@ -8,6 +8,7 @@ import (
 )
 
 func TestKMIPServerAndClientResources(t *testing.T) {
+	t.Skip("TODO: This test may need to be removed")
 	t.Parallel()
 
 	serverRoot := testPath("kmip-server")

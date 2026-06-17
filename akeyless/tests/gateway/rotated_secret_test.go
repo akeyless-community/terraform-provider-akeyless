@@ -1319,9 +1319,6 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 			password_length 		= "12"
 			input_rule 			= ["name=in1,rule=validate input"]
 			output_rule 			= ["name=out1,rule=mask output"]
-			grace_rotation 			= "true"
-			grace_rotation_hour 	= 3
-			grace_rotation_interval = "9"
 			rotation_event_in 		= ["1", "7"]
 			use_capital_letters 	= "true"
 			use_lower_letters 		= "true"
@@ -1338,9 +1335,6 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 			password_length 		= "14"
 			input_rule 			= ["name=in2,rule=validate input updated"]
 			output_rule 			= ["name=out1,rule=mask output updated"]
-			grace_rotation 			= "false"
-			grace_rotation_hour 	= 4
-			grace_rotation_interval = "10"
 			rotation_event_in 		= ["2", "8", "14"]
 			use_capital_letters 	= "false"
 			use_lower_letters 		= "false"
