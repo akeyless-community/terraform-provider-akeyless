@@ -1,4 +1,4 @@
-package no_gateway
+package gateway
 
 import (
 	"fmt"
