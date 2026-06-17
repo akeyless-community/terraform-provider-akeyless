@@ -32,7 +32,6 @@ func TestTargetArtifactoryResource(t *testing.T) {
 	`, secretName, secretPath)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, secretPath)
-
 }
 
 func TestTargetAwsResource(t *testing.T) {

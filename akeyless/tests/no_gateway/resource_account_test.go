@@ -83,7 +83,7 @@ func TestAccountSettingsResource(t *testing.T) {
 			use_special_characters                 = "true"
 			dynamic_secret_max_ttl                 = 1440
 			dynamic_secret_max_ttl_enable          = "true"
-			items_deletion_protection              = "true"
+			items_deletion_protection              = "false"
 			hide_static_password                   = "true"
 			invalid_characters                     = "<>"
 			item_locking_enabled                   = "true"
