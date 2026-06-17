@@ -150,6 +150,35 @@ func resourceAccountSettings() *schema.Resource {
 				Computed:    true,
 				Description: "Company name",
 			},
+			"allow_passkeys": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Allow passkeys [true/false]",
+			},
+			"enable_search_history": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Enable search history [true/false]",
+			},
+			"personal_folder_global_mapping": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Personal folder global mapping settings",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Enable the global mapping [true/false]",
+						},
+						"unique_identifier_claim": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Unique identifier claim",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -239,6 +268,16 @@ func resourceAccountSettingsRead(d *schema.ResourceData, m interface{}) error {
 
 	if rOut.GeneralSettings != nil {
 		g := rOut.GeneralSettings
+		if g.AllowPasskeys != nil {
+			if err := d.Set("allow_passkeys", boolToStr(*g.AllowPasskeys)); err != nil {
+				return err
+			}
+		}
+		if g.EnableSearchHistory != nil {
+			if err := d.Set("enable_search_history", boolToStr(*g.EnableSearchHistory)); err != nil {
+				return err
+			}
+		}
 
 		if g.PasswordPolicy != nil {
 			pp := g.PasswordPolicy
@@ -325,6 +364,22 @@ func resourceAccountSettingsRead(d *schema.ResourceData, m interface{}) error {
 			}
 			if ds.Enable != nil {
 				if err := d.Set("dynamic_secret_max_ttl_enable", boolToStr(*ds.Enable)); err != nil {
+					return err
+				}
+			}
+		}
+
+		if g.PersonalFolderGlobalMapping != nil {
+			pfgm := g.PersonalFolderGlobalMapping
+			block := map[string]interface{}{}
+			if pfgm.Enable != nil {
+				block["enable"] = boolToStr(*pfgm.Enable)
+			}
+			if pfgm.UniqueIdentifierClaim != nil {
+				block["unique_identifier_claim"] = *pfgm.UniqueIdentifierClaim
+			}
+			if len(block) > 0 {
+				if err := d.Set("personal_folder_global_mapping", []interface{}{block}); err != nil {
 					return err
 				}
 			}

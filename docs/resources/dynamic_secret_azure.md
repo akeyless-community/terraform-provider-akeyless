@@ -34,6 +34,8 @@ Azure AD dynamic secret resource
 - `fixed_user_only` (Boolean) Fixed user
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `secure_access_url` (String)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access

@@ -80,6 +80,18 @@ func resourceDynamicSecretSnowflake() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"private_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -141,6 +153,8 @@ func resourceDynamicSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	dbName := d.Get("db_name").(string)
 	keyAlgo := d.Get("key_algo").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	privateKey := d.Get("private_key").(string)
 	privateKeyPassphrase := d.Get("private_key_passphrase").(string)
 	role := d.Get("role").(string)
@@ -163,6 +177,8 @@ func resourceDynamicSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.DbName, dbName)
 	common.GetAkeylessPtr(&body.KeyAlgo, keyAlgo)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
 	common.GetAkeylessPtr(&body.PrivateKeyPassphrase, privateKeyPassphrase)
 	common.GetAkeylessPtr(&body.Role, role)
@@ -274,6 +290,8 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	dbName := d.Get("db_name").(string)
 	keyAlgo := d.Get("key_algo").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	privateKey := d.Get("private_key").(string)
 	privateKeyPassphrase := d.Get("private_key_passphrase").(string)
 	role := d.Get("role").(string)
@@ -296,6 +314,8 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.DbName, dbName)
 	common.GetAkeylessPtr(&body.KeyAlgo, keyAlgo)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
 	common.GetAkeylessPtr(&body.PrivateKeyPassphrase, privateKeyPassphrase)
 	common.GetAkeylessPtr(&body.Role, role)

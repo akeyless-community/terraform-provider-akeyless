@@ -36,6 +36,8 @@ Oracle DB dynamic secret resource
 - `oracle_service_name` (String) Oracle DB Name
 - `oracle_username` (String) Oracle Username
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `secure_access_host` (Set of String) Target DB servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts)

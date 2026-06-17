@@ -33,6 +33,8 @@ Ssh rotated secret resource
 - `key_data_base64` (String) Private key file contents encoded using base64
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `public_key_remote_path` (String) The path to the public key that will be rotated on the server
 - `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]
 - `rotated_password` (String) rotated-username password (relevant only for rotator-type=password)

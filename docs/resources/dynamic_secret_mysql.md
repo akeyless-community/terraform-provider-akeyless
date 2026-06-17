@@ -36,6 +36,8 @@ MySQL dynamic secret resource
 - `mysql_revocation_statements` (String) MySQL Revocation Statements
 - `mysql_username` (String) MySQL Username
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_db_name` (String) The DB name (relevant only for DB Dynamic-Secret)

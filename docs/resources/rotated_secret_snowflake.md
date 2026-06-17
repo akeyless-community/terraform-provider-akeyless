@@ -32,6 +32,8 @@ Snowflake rotated secret resource
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `private_key` (String, Sensitive) RSA Private key (base64 encoded) to rotate (relevant only for rotator-type=key)
 - `private_key_file_name` (String) The path to the file containing the private key (relevant only for rotator-type=key)
 - `rotated_password` (String) rotated-username password (relevant only for rotator-type=password)

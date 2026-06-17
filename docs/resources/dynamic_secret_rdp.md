@@ -30,6 +30,8 @@ RDP dynamic secret resource
 - `fixed_user_only` (String) Allow access using externally (IdP) provided username [true/false]
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `rdp_admin_name` (String) RDP Admin Name
 - `rdp_admin_pwd` (String) RDP Admin password
 - `rdp_host_name` (String) Hostname

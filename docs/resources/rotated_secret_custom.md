@@ -33,6 +33,7 @@ Custom rotated secret resource
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
 - `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]
 - `rotation_event_in` (List of String) How many days before the rotation of the item would you like to be notified
 - `rotation_hour` (Number) The Hour of the rotation in UTC
@@ -50,6 +51,7 @@ Custom rotated secret resource
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `timeout_sec` (Number) Maximum allowed time in seconds for the custom rotator to return the results
+- `output_rule` (List of String) Password output rule definitions
 - `use_capital_letters` (String) Password must contain capital letters [true/false]
 - `use_lower_letters` (String) Password must contain lower case letters [true/false]
 - `use_numbers` (String) Password must contain numbers [true/false]

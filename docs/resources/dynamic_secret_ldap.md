@@ -33,6 +33,8 @@ LDAP dynamic secret resource
 - `ldap_ca_cert` (String) CA Certificate File Content
 - `ldap_url` (String) LDAP Server URL
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `producer_encryption_key_name` (String) Dynamic producer encryption key
 - `provider_type` (String) Provider type
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access

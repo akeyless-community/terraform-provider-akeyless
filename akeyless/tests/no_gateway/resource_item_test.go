@@ -167,6 +167,7 @@ func TestPkiResource(t *testing.T) {
 			postal_code           	= "post1"
 			protect_certificates  	= true
 			is_ca                   = true
+			basic_constraints       = "critical,CA:true,pathlen:0"
 			enable_acme             = false
 			max_path_len          	= 0
 			expiration_event_in   	= ["1"]
@@ -203,6 +204,7 @@ func TestPkiResource(t *testing.T) {
 			postal_code           	= "post2"
 			protect_certificates  	= false
 			is_ca                   = false
+			basic_constraints       = "CA:false"
 			enable_acme             = false
 			max_path_len          	= 0
 			expiration_event_in   	= []

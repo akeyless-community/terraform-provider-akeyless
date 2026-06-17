@@ -9,6 +9,7 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/require"
 )
 
@@ -94,6 +95,8 @@ func TestUscSecretResourceHashi(t *testing.T) {
 	defer testutils.DeleteItem(t, uscPath)
 
 	secretName := "secret/test-"
+	remoteSecretActivationDate := "2026-01-01T00:00:00Z"
+	remoteSecretExpires := "2026-12-31T00:00:00Z"
 
 	value1 := map[string]string{"key1": "value1"}
 	marshalled1, err := json.Marshal(value1)
@@ -110,22 +113,46 @@ func TestUscSecretResourceHashi(t *testing.T) {
 		usc_name 		= "%v"
 		secret_name 	= "%v"
 		value 			= "%v"
+		remote_secret_activation_date = "%v"
+		remote_secret_expires         = "%v"
 		description 	= "aaaa"
 		tags			= ["tag1", "tag2"]
 	}
-`, uscName, uscPath, secretName, val1)
+`, uscName, uscPath, secretName, val1, remoteSecretActivationDate, remoteSecretExpires)
 
 	configUpdate := fmt.Sprintf(`
 	resource "akeyless_usc_secret" "%v" {
 		usc_name 		= "%v"
 		secret_name 	= "%v"
 		value 			= "%v"
+		remote_secret_activation_date = "%v"
+		remote_secret_expires         = "%v"
 		description 	= "bbbb"
 		tags			= ["tag1", "tag3"]
 	}
-`, uscName, uscPath, secretName, val2)
+`, uscName, uscPath, secretName, val2, remoteSecretActivationDate, remoteSecretExpires)
 
-	testutils.TestItemResource(t, providerFactories, uscPath, config, configUpdate)
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(uscPath+"/"+secretName),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(uscPath+"/"+secretName),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires),
+				),
+			},
+		},
+	})
 }
 
 type uscOptions struct {

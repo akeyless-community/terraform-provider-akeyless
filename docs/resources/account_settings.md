@@ -43,6 +43,9 @@ Account Settings resource
 
 ### Read-Only
 
+- `allow_passkeys` (String) Allow passkeys [true/false]
+- `enable_search_history` (String) Enable search history [true/false]
+- `personal_folder_global_mapping` (List of Object) Personal folder global mapping settings
 - `id` (String) The ID of this resource.
 
 

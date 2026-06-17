@@ -98,6 +98,12 @@ func TestDynamicSecretAws(t *testing.T) {
 			aws_user_programmatic_access  = true
 			user_ttl                      = "30m"
 			password_length               = "16"
+			input_rule                    = ["name=in1,rule=validate input"]
+			output_rule                   = ["name=out1,rule=mask output"]
+			use_capital_letters           = "true"
+			use_lower_letters             = "true"
+			use_numbers                   = "true"
+			use_special_characters        = "false"
 			delete_protection             = "false"
 			description                   = "test dynamic secret"
 			enable_admin_rotation         = false
@@ -123,6 +129,12 @@ func TestDynamicSecretAws(t *testing.T) {
 			aws_role_arns                 = "arn:aws:iam::123456789012:role/UpdatedRole"
 			aws_external_id               = "updated-external-id"
 			password_length               = "20"
+			input_rule                    = ["name=in1,rule=validate input"]
+			output_rule                   = ["name=out1,rule=mask output updated"]
+			use_capital_letters           = "true"
+			use_lower_letters             = "true"
+			use_numbers                   = "true"
+			use_special_characters        = "true"
 			description                   = "updated test dynamic secret"
 			enable_admin_rotation         = false
 			admin_rotation_interval_days  = 10
@@ -1574,6 +1586,8 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			name         = "%v"
 			tmp_creds_id = "%v"
 			new_ttl_min  = 30
+			input_rule   = ["name=in1,rule=validate input"]
+			output_rule  = ["name=out1,rule=mask output"]
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1582,6 +1596,8 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			name         = "%v"
 			tmp_creds_id = "%v"
 			new_ttl_min  = 60
+			input_rule   = ["name=in1,rule=validate input"]
+			output_rule  = ["name=out1,rule=mask output updated"]
 		}
 	`, dsPath, tmpCredsId)
 

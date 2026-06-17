@@ -28,11 +28,13 @@ HashiVault rotated secret resource
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
+- `input_rule` (List of String) Password input rule definitions
 - `password_length` (String) The length of the password to be generated
 - `rotation_event_in` (List of String) How many days before the rotation of the item would you like to be notified
 - `rotation_hour` (Number) The Hour of the rotation in UTC
 - `rotation_interval` (String) The number of days to wait between every automatic key rotation (1-365)
 - `tags` (Set of String) Add tags attached to this object
+- `output_rule` (List of String) Password output rule definitions
 - `use_capital_letters` (String) Password must contain capital letters [true/false]
 - `use_lower_letters` (String) Password must contain lower case letters [true/false]
 - `use_numbers` (String) Password must contain numbers [true/false]

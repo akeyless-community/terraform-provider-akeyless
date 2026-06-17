@@ -28,6 +28,8 @@ Redshift dynamic secret resource
 - `encryption_key_name` (String) Dynamic producer encryption key
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `redshift_db_name` (String) Redshift DB Name
 - `redshift_host` (String) Redshift Host
 - `redshift_password` (String) Redshift Password

@@ -25,6 +25,7 @@ func TestRoleResourceBasic(t *testing.T) {
 			delete_protection 	= "true"
 			audit_access 		= "all"
 			analytics_access 	= "own"
+			isi_access 			= "all"
 		}
 	`, rolePath)
 
@@ -35,6 +36,7 @@ func TestRoleResourceBasic(t *testing.T) {
 			delete_protection 	= "false"
 			audit_access 		= "own"
 			analytics_access 	= "all"
+			isi_access 			= "scoped"
 		}
 	`, rolePath)
 
@@ -70,6 +72,7 @@ func TestRoleResourceBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "aaaa"),
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "delete_protection", "true"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "isi_access", "all"),
 				),
 			},
 			{
@@ -77,6 +80,7 @@ func TestRoleResourceBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "bbbb"),
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "delete_protection", "false"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "isi_access", "scoped"),
 				),
 			},
 		},

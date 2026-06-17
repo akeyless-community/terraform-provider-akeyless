@@ -173,6 +173,16 @@ func resourcePKICertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "If set, the basic constraints extension will be added to certificate",
 			},
+			"basic_constraints": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Basic constraints settings to apply to the certificate issuer",
+			},
+			"basic_constraints_critical": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether the basic constraints extension is marked critical",
+			},
 			"enable_acme": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -290,6 +300,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	destinationPath := d.Get("destination_path").(string)
 	protectCertificates := d.Get("protect_certificates").(bool)
 	isCA := d.Get("is_ca").(bool)
+	basicConstraints := d.Get("basic_constraints").(string)
 	enableACME := d.Get("enable_acme").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
@@ -339,6 +350,7 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)
 	common.GetAkeylessPtr(&body.IsCa, isCA)
+	common.GetAkeylessPtr(&body.BasicConstraints, basicConstraints)
 	common.GetAkeylessPtr(&body.EnableAcme, enableACME)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.AllowedExtraExtensions, allowedExtraExtensions)
@@ -593,6 +605,18 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
+			if pki.BasicConstraints != nil {
+				err := d.Set("basic_constraints", *pki.BasicConstraints)
+				if err != nil {
+					return err
+				}
+			}
+			if pki.BasicConstraintsCritical != nil {
+				err := d.Set("basic_constraints_critical", *pki.BasicConstraintsCritical)
+				if err != nil {
+					return err
+				}
+			}
 			if pki.AcmeEnabled != nil {
 				err := d.Set("enable_acme", *pki.AcmeEnabled)
 				if err != nil {
@@ -786,6 +810,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	destinationPath := d.Get("destination_path").(string)
 	protectCertificates := d.Get("protect_certificates").(bool)
 	isCA := d.Get("is_ca").(bool)
+	basicConstraints := d.Get("basic_constraints").(string)
 	enableACME := d.Get("enable_acme").(bool)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
@@ -844,6 +869,7 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwClusterUrl, gwClusterUrl)
 	common.GetAkeylessPtr(&body.DestinationPath, destinationPath)
 	common.GetAkeylessPtr(&body.IsCa, isCA)
+	common.GetAkeylessPtr(&body.BasicConstraints, basicConstraints)
 	common.GetAkeylessPtr(&body.EnableAcme, enableACME)
 	common.GetAkeylessPtr(&body.ProtectCertificates, protectCertificates)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)

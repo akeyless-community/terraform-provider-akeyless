@@ -32,6 +32,8 @@ Cassandra dynamic secret resource
 - `encryption_key_name` (String) Dynamic producer encryption key
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
 - `ssl_certificate` (String) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
 - `tags` (Set of String) Add tags attached to this object

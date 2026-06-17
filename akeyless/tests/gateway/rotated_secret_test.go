@@ -262,6 +262,13 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			name 						= "%v"
 			target_name 				= "%v"
 			custom_payload 				= "payload1"
+			password_length 			= "12"
+			input_rule 					= ["name=in1,rule=validate input"]
+			output_rule 				= ["name=out1,rule=mask output"]
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "false"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -271,6 +278,13 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			name 						= "%v"
 			target_name 				= "%v"
 			custom_payload 				= "payload2"
+			password_length 			= "14"
+			input_rule 					= ["name=in1,rule=validate input"]
+			output_rule 				= ["name=out1,rule=mask output updated"]
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "true"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -1284,6 +1298,8 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 			target_name 			= "%v"
 			description 			= "aaaa"
 			password_length 		= "12"
+			input_rule 			= ["name=in1,rule=validate input"]
+			output_rule 			= ["name=out1,rule=mask output"]
 			grace_rotation 			= "true"
 			grace_rotation_hour 	= 3
 			grace_rotation_interval = "9"
@@ -1301,6 +1317,8 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 			target_name 			= "%v"
 			description 			= "bbbb"
 			password_length 		= "14"
+			input_rule 			= ["name=in1,rule=validate input"]
+			output_rule 			= ["name=out1,rule=mask output updated"]
 			grace_rotation 			= "true"
 			grace_rotation_hour 	= 4
 			grace_rotation_interval = "10"

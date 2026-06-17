@@ -170,6 +170,11 @@ func resourceRole() *schema.Resource {
 				Optional:    true,
 				Description: "Allow this role to view Reverse RBAC. Supported values: 'scoped', 'all'.",
 			},
+			"isi_access": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Allow this role to access Identity & Secrets Intelligence. Currently only 'none', 'scoped' and 'all' values are supported.",
+			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -221,6 +226,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	eventForwardersNameSet := d.Get("event_forwarders_name").(*schema.Set)
 	eventForwardersName := common.ExpandStringList(eventForwardersNameSet.List())
 	reverseRbacAccess := d.Get("reverse_rbac_access").(string)
+	isiAccess := d.Get("isi_access").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.CreateRole{
@@ -239,6 +245,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		body.EventForwardersName = eventForwardersName
 	}
 	common.GetAkeylessPtr(&body.ReverseRbacAccess, reverseRbacAccess)
+	common.GetAkeylessPtr(&body.IsiAccess, isiAccess)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, resp, err := client.CreateRole(ctx).Body(body).Execute()
@@ -385,6 +392,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 				if err := d.Set("reverse_rbac_access", strings.TrimPrefix(*rule.Path, "/")); err != nil {
 					return diag.FromErr(err)
 				}
+			case "isi-rule":
+				if err := d.Set("isi_access", convertIsiPathName(*rule.Path)); err != nil {
+					return diag.FromErr(err)
+				}
 			case "event-forwarder-rule":
 				eventForwarderNames = append(eventForwarderNames, *rule.Path)
 			}
@@ -475,10 +486,11 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	description := d.Get("description").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	reverseRbacAccess := d.Get("reverse_rbac_access").(string)
+	isiAccess := d.Get("isi_access").(string)
 
-	err, ok = updateRoleAccessRules(ctx, name, description, deleteProtection, reverseRbacAccess, accessRulesNewValues, m)
+	err, ok = updateRoleAccessRules(ctx, name, description, deleteProtection, reverseRbacAccess, isiAccess, accessRulesNewValues, m)
 	if !ok {
-		errInner, okInner := updateRoleAccessRules(ctx, name, description, deleteProtection, reverseRbacAccess, accessRulesOldValues, m)
+		errInner, okInner := updateRoleAccessRules(ctx, name, description, deleteProtection, reverseRbacAccess, isiAccess, accessRulesOldValues, m)
 		if !okInner {
 			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
 		}
@@ -982,7 +994,7 @@ func getNewAccessRules(d *schema.ResourceData) []interface{} {
 	return accessRules
 }
 
-func updateRoleAccessRules(ctx context.Context, name, description, deleteProtection, reverseRbacAccess string,
+func updateRoleAccessRules(ctx context.Context, name, description, deleteProtection, reverseRbacAccess, isiAccess string,
 	accessRules []interface{}, m interface{}) (error, bool) {
 
 	provider := m.(*providerMeta)
@@ -1026,6 +1038,7 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 	common.GetAkeylessPtr(&updateBody.Description, description)
 	common.GetAkeylessPtr(&updateBody.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&updateBody.ReverseRbacAccess, reverseRbacAccess)
+	common.GetAkeylessPtr(&updateBody.IsiAccess, isiAccess)
 
 	_, resp, err := client.UpdateRole(ctx).Body(updateBody).Execute()
 	if err != nil {
@@ -1187,6 +1200,17 @@ func convertPathNameOpposite(rolePath string) string {
 		return "/self"
 	default:
 		return ""
+	}
+}
+
+func convertIsiPathName(rolePath string) string {
+	switch rolePath {
+	case "/*":
+		return "all"
+	case "/scoped":
+		return "scoped"
+	default:
+		return "none"
 	}
 }
 

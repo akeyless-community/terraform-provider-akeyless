@@ -39,6 +39,8 @@ Azure rotated secret resource
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `password_length` (String) The length of the password to be generated
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `resource_group_name` (String) The resource group name (only relevant when explicitly-set-sa=true)
 - `resource_name` (String) The name of the storage account (only relevant when explicitly-set-sa=true)
 - `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]

@@ -179,6 +179,41 @@ func TestStaticPasswordResource(t *testing.T) {
 	testStaticSecretResource(t, secretPath, config, configUpdate, configUpdate2)
 }
 
+func TestStaticPasswordResourceRules(t *testing.T) {
+	t.Parallel()
+
+	secretName := "test_password_rules"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path 			= "%v"
+			type 			= "password"
+			username 		= "user"
+			password 		= "abc"
+			input_rule 		= ["name=in1,rule=validate input"]
+			output_rule 	= ["name=out1,rule=mask output"]
+		}
+	`, secretName, secretPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkStaticSecretDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "output_rule.0", "name=out1,rule=mask output"),
+				),
+			},
+		},
+	})
+}
+
 func testStaticSecretResource(t *testing.T, secretPath string, configs ...string) {
 	steps := make([]resource.TestStep, len(configs))
 	for i, config := range configs {

@@ -24,6 +24,8 @@ Manage dynamic secret temporary credentials
 ### Optional
 
 - `host` (String) Host
+- `input_rule` (List of String) Input rule definitions
+- `output_rule` (List of String) Output rule definitions
 
 ### Read-Only
 

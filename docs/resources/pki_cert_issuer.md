@@ -47,6 +47,7 @@ PKI Cert Issuer  resource
 - `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified.
 - `gw_cluster_url` (String) The GW cluster URL to issue the certificate from. Required in Public CA mode, to allow CRLs on private CA, or to enable ACME
 - `is_ca` (Boolean) If set, the basic constraints extension will be added to certificate
+- `basic_constraints` (String) Basic constraints settings to apply to the certificate issuer
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `key_usage` (String) A comma-separated string or list of key usages
 - `locality` (String) A comma-separated list of localities that will be set in the issued certificate
@@ -67,6 +68,7 @@ PKI Cert Issuer  resource
 
 ### Read-Only
 
+- `basic_constraints_critical` (Boolean) Whether the basic constraints extension is marked critical
 - `id` (String) The ID of this resource.
 
 

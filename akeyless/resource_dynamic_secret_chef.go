@@ -74,6 +74,18 @@ func resourceDynamicSecretChef() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"skip_ssl": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -122,6 +134,8 @@ func resourceDynamicSecretChefCreate(d *schema.ResourceData, m interface{}) erro
 	chefServerUsername := d.Get("chef_server_username").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	skipSsl := d.Get("skip_ssl").(bool)
 	targetName := d.Get("target_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -140,6 +154,8 @@ func resourceDynamicSecretChefCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.ChefServerUsername, chefServerUsername)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.SkipSsl, skipSsl)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
@@ -273,6 +289,8 @@ func resourceDynamicSecretChefUpdate(d *schema.ResourceData, m interface{}) erro
 	chefServerUsername := d.Get("chef_server_username").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	skipSsl := d.Get("skip_ssl").(bool)
 	targetName := d.Get("target_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -291,6 +309,8 @@ func resourceDynamicSecretChefUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.ChefServerUsername, chefServerUsername)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.SkipSsl, skipSsl)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)

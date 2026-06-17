@@ -58,6 +58,8 @@ resource "akeyless_static_secret" "secret" {
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `multiline_value` (Boolean) The provided value is a multiline value (separated by '
 ')
+- `input_rule` (List of String) Password input rule definitions
+- `output_rule` (List of String) Password output rule definitions
 - `password` (String, Sensitive) Password value (relevant only for type 'password')
 - `protection_key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
