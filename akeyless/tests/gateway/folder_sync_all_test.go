@@ -30,13 +30,9 @@ func TestFolderSyncAllResource(t *testing.T) {
 
 	uscName1 := "usc_for_folder_sync_all_1"
 	uscPath1 := testPath(uscName1)
-	createUsc(t, uscPath1, targetPath, uscOptions{})
-	defer testutils.DeleteItem(t, uscPath1)
 
 	uscName2 := "usc_for_folder_sync_all_2"
 	uscPath2 := testPath(uscName2)
-	createUsc(t, uscPath2, targetPath, uscOptions{})
-	defer testutils.DeleteItem(t, uscPath2)
 
 	folderName := "folder_for_sync_all"
 	folderPath := testPath(folderName)
@@ -44,6 +40,16 @@ func TestFolderSyncAllResource(t *testing.T) {
 	secretPath := folderPath + "/" + secretName
 
 	config := fmt.Sprintf(`
+		resource "akeyless_usc" "%v" {
+			name                = "%v"
+			target_to_associate = "%v"
+		}
+
+		resource "akeyless_usc" "%v" {
+			name                = "%v"
+			target_to_associate = "%v"
+		}
+
 		resource "akeyless_folder" "%v" {
 			name = "%v"
 		}
@@ -58,11 +64,13 @@ func TestFolderSyncAllResource(t *testing.T) {
 		resource "akeyless_folder_sync_all" "sync_all" {
 			name          = akeyless_folder.%v.name
 			accessibility = "regular"
-			depends_on = [akeyless_static_secret.%v]
+			depends_on = [akeyless_static_secret.%v, akeyless_usc.%v, akeyless_usc.%v]
 		}
-	`, folderName, folderPath,
+	`, uscName1, uscPath1, targetPath,
+		uscName2, uscPath2, targetPath,
+		folderName, folderPath,
 		secretName, secretPath, folderName,
-		folderName, secretName)
+		folderName, secretName, uscName1, uscName2)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
