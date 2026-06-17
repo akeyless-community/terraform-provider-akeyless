@@ -62,9 +62,23 @@ func setRotatedSecretPasswordPolicyReadFields(d *schema.ResourceData, generalInf
 		return nil
 	}
 
+	if generalInfo.PasswordPolicy.PasswordLength != nil {
+		if err := d.Set("password_length", strconv.Itoa(int(*generalInfo.PasswordPolicy.PasswordLength))); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func setRotatedSecretPasswordPolicyBoolReadFields(d *schema.ResourceData, generalInfo *akeyless_api.ItemGeneralInfo) error {
+	if generalInfo == nil || generalInfo.PasswordPolicy == nil {
+		return nil
+	}
+
 	return setPasswordPolicyReadFields(
 		d,
-		generalInfo.PasswordPolicy.PasswordLength,
+		nil,
 		generalInfo.PasswordPolicy.UseCapitalLetters,
 		generalInfo.PasswordPolicy.UseLowerLetters,
 		generalInfo.PasswordPolicy.UseNumbers,
