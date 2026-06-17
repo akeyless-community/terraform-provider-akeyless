@@ -97,23 +97,9 @@ func resourceFolderSyncAllRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceFolderSyncAllDelete(d *schema.ResourceData, m interface{}) error {
-	provider := m.(*providerMeta)
-	client := *provider.client
-	token := *provider.token
-
-	ctx := context.Background()
-	folderName := d.Id()
-	accessibility := d.Get("accessibility").(string)
-
-	body := akeyless_api.NewFolderDeleteSync(folderName, "")
-	body.Token = &token
-	common.GetAkeylessPtr(&body.Accessibility, accessibility)
-
-	_, _, err := client.FolderDeleteSync(ctx).Body(*body).Execute()
-	if err != nil {
-		return err
-	}
-
+	// Folder sync-all is an action-style resource. It should not try to delete
+	// folder sync associations on destroy, because those associations are owned
+	// by the folder-sync prereq resources and may already be removed.
 	return nil
 }
 
