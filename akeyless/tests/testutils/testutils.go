@@ -1402,6 +1402,19 @@ func EnableSRA() error {
 		return fmt.Errorf("send bastion keep-alive: %w", err)
 	}
 	fmt.Println("[EnableSRA] bastion keep-alive sent successfully")
+
+	// The SRA-active marking has a short TTL on the Gator side, so a single
+	// keep-alive expires before the full suite finishes. Refresh it
+	// periodically in the background to keep the cluster SRA-active.
+	go func() {
+		ticker := time.NewTicker(60 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			if err := sendBastionKeepAlive(gatorDNS, uamCreds, clusterName); err != nil {
+				fmt.Printf("[EnableSRA] keep-alive refresh failed: %v\n", err)
+			}
+		}
+	}()
 	return nil
 }
 
