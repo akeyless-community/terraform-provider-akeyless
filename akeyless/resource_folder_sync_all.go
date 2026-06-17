@@ -28,6 +28,7 @@ func resourceFolderSyncAll() *schema.Resource {
 			"accessibility": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Default:     "regular",
 				Description: "For personal password manager",
 			},

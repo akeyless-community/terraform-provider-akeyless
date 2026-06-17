@@ -84,7 +84,7 @@ func TestAccountSettingsResource(t *testing.T) {
 			dynamic_secret_max_ttl                 = 1440
 			dynamic_secret_max_ttl_enable          = "true"
 			items_deletion_protection              = "false"
-			hide_static_password                   = "true"
+			hide_static_password                   = "false"
 			invalid_characters                     = "<>"
 			item_locking_enabled                   = "true"
 			enable_password_expiration             = "true"
@@ -147,8 +147,8 @@ func TestAccountSettingsResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "use_special_characters", "true"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "dynamic_secret_max_ttl", "1440"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "dynamic_secret_max_ttl_enable", "true"),
-					resource.TestCheckResourceAttr("akeyless_account_settings.test", "items_deletion_protection", "true"),
-					resource.TestCheckResourceAttr("akeyless_account_settings.test", "hide_static_password", "true"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "items_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("akeyless_account_settings.test", "hide_static_password", "false"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "invalid_characters", "<>"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "item_locking_enabled", "true"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_password_expiration", "true"),

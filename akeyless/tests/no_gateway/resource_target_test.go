@@ -1,6 +1,7 @@
 package no_gateway
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"testing"
@@ -151,6 +152,11 @@ func TestTargetDbMTLSResource(t *testing.T) {
 	secretName := "db_target_mtls"
 	secretPath := testPath(secretName)
 
+	clientCert1 := base64.StdEncoding.EncodeToString([]byte("client-cert-1"))
+	clientKey1 := base64.StdEncoding.EncodeToString([]byte("client-key-1"))
+	clientCert2 := base64.StdEncoding.EncodeToString([]byte("client-cert-2"))
+	clientKey2 := base64.StdEncoding.EncodeToString([]byte("client-key-2"))
+
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 				= "%v"
@@ -162,11 +168,11 @@ func TestTargetDbMTLSResource(t *testing.T) {
 			db_name 			= "db1"
 			ssl 				= true
 			enable_mtls 		= true
-			client_certificate 	= "client-cert-1"
-			client_private_key 	= "client-key-1"
+			client_certificate 	= "%v"
+			client_private_key 	= "%v"
 			client_key_passphrase = "client-pass-1"
 		}
-	`, secretName, secretPath)
+	`, secretName, secretPath, clientCert1, clientKey1)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
@@ -179,11 +185,11 @@ func TestTargetDbMTLSResource(t *testing.T) {
 			db_name 			= "db2"
 			ssl 				= true
 			enable_mtls 		= true
-			client_certificate 	= "client-cert-2"
-			client_private_key 	= "client-key-2"
+			client_certificate 	= "%v"
+			client_private_key 	= "%v"
 			client_key_passphrase = "client-pass-2"
 		}
-	`, secretName, secretPath)
+	`, secretName, secretPath, clientCert2, clientKey2)
 	resourceName := "akeyless_target_db." + secretName
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
@@ -194,8 +200,8 @@ func TestTargetDbMTLSResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr(resourceName, "enable_mtls", "true"),
-					resource.TestCheckResourceAttr(resourceName, "client_certificate", "client-cert-1"),
-					resource.TestCheckResourceAttr(resourceName, "client_private_key", "client-key-1"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate", clientCert1),
+					resource.TestCheckResourceAttr(resourceName, "client_private_key", clientKey1),
 					resource.TestCheckResourceAttr(resourceName, "client_key_passphrase", "client-pass-1"),
 				),
 			},
@@ -204,8 +210,8 @@ func TestTargetDbMTLSResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr(resourceName, "enable_mtls", "true"),
-					resource.TestCheckResourceAttr(resourceName, "client_certificate", "client-cert-2"),
-					resource.TestCheckResourceAttr(resourceName, "client_private_key", "client-key-2"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate", clientCert2),
+					resource.TestCheckResourceAttr(resourceName, "client_private_key", clientKey2),
 					resource.TestCheckResourceAttr(resourceName, "client_key_passphrase", "client-pass-2"),
 				),
 			},
@@ -854,6 +860,7 @@ func TestTargetLetsEncryptResourceCloudflareDnsZone(t *testing.T) {
 		}
 	`, cfTargetName, cfTargetPath, targetName, targetPath, cfTargetName)
 
+	resourceName := "akeyless_target_lets_encrypt." + targetName
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testutils.CheckTargetDestroyed,
@@ -862,14 +869,14 @@ func TestTargetLetsEncryptResourceCloudflareDnsZone(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
-					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-123"),
+					resource.TestCheckResourceAttr(resourceName, "dns_zone", "cf-zone-123"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
-					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-456"),
+					resource.TestCheckResourceAttr(resourceName, "dns_zone", "cf-zone-456"),
 				),
 			},
 		},

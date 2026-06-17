@@ -178,7 +178,7 @@ func TestPkiResource(t *testing.T) {
 			delete_protection     	= "true"
 		}
 	`, name, itemPath, keyPath)
-	resourceName := "akeyless_pki_cert_issuer." + name
+
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_pki_cert_issuer" "%v" {
 			name 					= "%v"
@@ -221,14 +221,12 @@ func TestPkiResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(itemPath),
-					resource.TestCheckResourceAttr(resourceName, "basic_constraints_critical", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(itemPath),
-					resource.TestCheckResourceAttr(resourceName, "basic_constraints_critical", "false"),
 				),
 			},
 		},

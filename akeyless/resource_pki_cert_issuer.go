@@ -174,11 +174,6 @@ func resourcePKICertIssuer() *schema.Resource {
 				Computed:    true,
 				Description: "Basic constraints settings to apply to the certificate issuer",
 			},
-			"basic_constraints_critical": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Whether the basic constraints extension is marked critical",
-			},
 			"enable_acme": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -595,12 +590,6 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 			}
 			if pki.BasicConstraints != nil {
 				err := d.Set("basic_constraints", *pki.BasicConstraints)
-				if err != nil {
-					return err
-				}
-			}
-			if pki.BasicConstraintsCritical != nil {
-				err := d.Set("basic_constraints_critical", *pki.BasicConstraintsCritical)
 				if err != nil {
 					return err
 				}
