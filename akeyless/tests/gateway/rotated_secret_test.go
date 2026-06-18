@@ -264,6 +264,7 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			custom_payload 				= "payload1"
 			input_rule 					= ["name=in1,rule=validate input"]
 			output_rule 				= ["name=out1,rule=mask output"]
+			password_length 			= "12"
 			use_capital_letters 		= "true"
 			use_lower_letters 			= "true"
 			use_numbers 				= "true"
@@ -279,6 +280,7 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			custom_payload 				= "payload2"
 			input_rule 					= ["name=in1,rule=validate input updated"]
 			output_rule 				= ["name=out1,rule=mask output updated"]
+			password_length 			= "14"
 			use_capital_letters 		= "true"
 			use_lower_letters 			= "true"
 			use_numbers 				= "true"
@@ -300,6 +302,7 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "12"),
 					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
@@ -315,6 +318,7 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "14"),
 					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
