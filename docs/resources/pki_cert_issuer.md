@@ -30,6 +30,7 @@ PKI Cert Issuer  resource
 - `allowed_ip_sans` (String) A list of the allowed CIDRs for ips that clients can request to be included in the certificate as part of the IP Subject Alternative Names (in a comma-delimited list)
 - `allowed_uri_sans` (String) A list of the allowed URIs that clients can request to be included in the certificate as part of the URI Subject Alternative Names (in a comma-delimited list)
 - `auto_renew` (Boolean) Automatically renew certificates before expiration
+- `basic_constraints` (String) Basic constraints settings to apply to the certificate issuer
 - `ca_target` (String) The name of an existing CA target to attach this PKI Certificate Issuer to, required in Public CA mode
 - `client_flag` (Boolean) If set, certificates will be flagged for client auth use
 - `code_signing_flag` (Boolean) If set, certificates will be flagged for code signing use
@@ -46,8 +47,6 @@ PKI Cert Issuer  resource
 - `enable_acme` (Boolean) If set, the cert issuer will support the acme protocol
 - `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified.
 - `gw_cluster_url` (String) The GW cluster URL to issue the certificate from. Required in Public CA mode, to allow CRLs on private CA, or to enable ACME
-- `is_ca` (Boolean) If set, the basic constraints extension will be added to certificate
-- `basic_constraints` (String) Basic constraints settings to apply to the certificate issuer
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `key_usage` (String) A comma-separated string or list of key usages
 - `locality` (String) A comma-separated list of localities that will be set in the issued certificate
@@ -68,7 +67,6 @@ PKI Cert Issuer  resource
 
 ### Read-Only
 
-- `basic_constraints_critical` (Boolean) Whether the basic constraints extension is marked critical
 - `id` (String) The ID of this resource.
 
 

@@ -34,13 +34,13 @@ Azure rotated secret resource
 - `grace_rotation` (String) Create a new access key without deleting the old key from AWS/Azure/GCP for backup (relevant only for AWS/Azure/GCP) [true/false]
 - `grace_rotation_hour` (Number) The Hour of the grace rotation in UTC
 - `grace_rotation_interval` (String) The number of days to wait before deleting the old key (must be bigger than rotation-interval)
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
-- `password_length` (String) The length of the password to be generated
-- `input_rule` (List of String) Password input rule definitions
 - `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `resource_group_name` (String) The resource group name (only relevant when explicitly-set-sa=true)
 - `resource_name` (String) The name of the storage account (only relevant when explicitly-set-sa=true)
 - `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]
@@ -55,6 +55,10 @@ Azure rotated secret resource
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `storage_account_key_name` (String) The name of the storage account key to rotate [key1/key2/kerb1/kerb2] (relevat to azure-storage-account)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 - `username` (String) The user principal name to rotate his password (relevant only for rotator-type=password)
 
 ### Read-Only

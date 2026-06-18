@@ -29,17 +29,21 @@ OpenAI rotated secret resource
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
-- `password_length` (String) The length of the password to be generated
-- `input_rule` (List of String) Password input rule definitions
 - `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `rotation_event_in` (List of String) How many days before the rotation of the item would you like to be notified
 - `rotation_hour` (Number) The Hour of the rotation in UTC
 - `rotation_interval` (String) The number of days to wait between every automatic key rotation (1-365)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 
 ### Read-Only
 

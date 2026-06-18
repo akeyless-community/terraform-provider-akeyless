@@ -25,6 +25,9 @@ DB Target resource
 - `azure_client_id` (String) (Optional) Client id (relevant for "cloud-service-provider" only)
 - `azure_client_secret` (String, Sensitive) (Optional) Client secret (relevant for "cloud-service-provider" only)
 - `azure_tenant_id` (String) (Optional) Tenant id (relevant for "cloud-service-provider" only)
+- `client_certificate` (String, Sensitive) Content of the client certificate (PEM format) in a Base64 format
+- `client_key_passphrase` (String, Sensitive) Passphrase for the client private key
+- `client_private_key` (String, Sensitive) Content of the client private key (PEM format) in a Base64 format
 - `cloud_service_provider` (String) (Optional) Cloud service provider (currently only supports Azure)
 - `cluster_mode` (Boolean) Cluster Mode
 - `connection_type` (String) Type of connection to mssql database [credentials/cloud-identity/wallet/parent-target]
@@ -32,6 +35,7 @@ DB Target resource
 - `db_server_certificates` (String) (Optional) DB server certificates
 - `db_server_name` (String) (Optional) Server name for certificate verification
 - `description` (String) Description of the object
+- `enable_mtls` (Boolean) Enable mutual TLS [true/false]
 - `host` (String) Database host
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
@@ -53,10 +57,6 @@ DB Target resource
 - `snowflake_api_private_key_password` (String, Sensitive) The Private key passphrase
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
 - `ssl_certificate` (String) SSL connection certificate
-- `enable_mtls` (Boolean) Enable mutual TLS [true/false]
-- `client_certificate` (String, Sensitive) Content of the client certificate (PEM format) in a Base64 format
-- `client_private_key` (String, Sensitive) Content of the client private key (PEM format) in a Base64 format
-- `client_key_passphrase` (String, Sensitive) Passphrase for the client private key
 - `user_name` (String) Database user name
 
 ### Read-Only

@@ -28,13 +28,13 @@ Ldap rotated secret resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `host_provider` (String) Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access of ssh cert issuer, ldap rotated secret and ldap dynamic secret
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
-- `password_length` (String) The length of the password to be generated
-- `input_rule` (List of String) Password input rule definitions
 - `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]
 - `rotated_password` (String) rotated-username password (relevant only for rotator-type=ldap)
 - `rotated_username` (String) username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=ldap)
@@ -51,6 +51,10 @@ Ldap rotated secret resource
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target` (List of String) A list of linked targets to be associated, Relevant only for Secure Remote Access for ssh cert issuer, ldap rotated secret and ldap dynamic secret, To specify multiple targets use argument multiple times
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_attribute` (String) LDAP User Attribute, Default value "cn"
 - `user_dn` (String) Base DN to Perform User Search
 

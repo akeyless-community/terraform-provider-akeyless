@@ -32,10 +32,10 @@ Azure AD dynamic secret resource
 - `encryption_key_name` (String) Dynamic secret encryption key
 - `fixed_user_claim_keyname` (String) FixedUserClaimKeyname
 - `fixed_user_only` (Boolean) Fixed user
-- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
-- `password_length` (String) The length of the password to be generated
 - `input_rule` (List of String) Password input rule definitions
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `secure_access_url` (String)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
@@ -43,6 +43,10 @@ Azure AD dynamic secret resource
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_group_obj_id` (String) User Group Object Id
 - `user_portal_access` (Boolean) Azure User portal access
 - `user_principal_name` (String) User Principal Name

@@ -53,12 +53,12 @@ resource "akeyless_static_secret" "secret" {
 - `format` (String) Secret format [text/json/key-value] (relevant only for type 'generic')
 - `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `inject_url` (Set of String) List of URLs associated with the item (relevant only for type 'password')
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `multiline_value` (Boolean) The provided value is a multiline value (separated by '
 ')
-- `input_rule` (List of String) Password input rule definitions
 - `output_rule` (List of String) Password output rule definitions
 - `password` (String, Sensitive) Password value (relevant only for type 'password')
 - `protection_key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)

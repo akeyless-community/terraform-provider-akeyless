@@ -25,6 +25,7 @@ Microsoft SQL Server dynamic secret resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `mssql_allowed_db_names` (String) CSV of allowed DB names for runtime selection when getting the secret value. Empty => use target DB only; "*" => any DB allowed; One or more names => user must choose from this list
 - `mssql_create_statements` (String) MSSQL Creation statements
@@ -34,9 +35,8 @@ Microsoft SQL Server dynamic secret resource
 - `mssql_port` (String) MSSQL Port
 - `mssql_revocation_statements` (String) MSSQL Revocation statements
 - `mssql_username` (String) MSSQL Username
-- `password_length` (String) The length of the password to be generated
-- `input_rule` (List of String) Password input rule definitions
 - `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_db_name` (String) The DB Name
@@ -47,6 +47,10 @@ Microsoft SQL Server dynamic secret resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_ttl` (String) User TTL
 
 ### Read-Only

@@ -29,12 +29,12 @@ LDAP dynamic secret resource
 - `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from (relevant only for external-username=true)
 - `group_dn` (String) Group DN which the temporary user should be added
 - `host_provider` (String) Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access of ssh cert issuer, ldap rotated secret and ldap dynamic secret
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `ldap_ca_cert` (String) CA Certificate File Content
 - `ldap_url` (String) LDAP Server URL
-- `password_length` (String) The length of the password to be generated
-- `input_rule` (List of String) Password input rule definitions
 - `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `producer_encryption_key_name` (String) Dynamic producer encryption key
 - `provider_type` (String) Provider type
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
@@ -47,6 +47,10 @@ LDAP dynamic secret resource
 - `target` (Set of String) A list of linked targets to be associated, Relevant only for Secure Remote Access for ssh cert issuer, ldap rotated secret and ldap dynamic secret, To specify multiple targets use argument multiple times
 - `target_name` (String) Target name
 - `token_expiration` (String) Token expiration
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_attribute` (String) User Attribute
 - `user_dn` (String) User DN
 - `user_ttl` (String) User TTL

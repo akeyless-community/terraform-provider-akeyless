@@ -25,6 +25,7 @@ Mongo DB dynamic secret resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `encryption_key_name` (String) Encrypt producer with following key
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `mongodb_atlas_api_private_key` (String, Sensitive) MongoDB Atlas private key
 - `mongodb_atlas_api_public_key` (String) MongoDB Atlas public key
@@ -39,6 +40,7 @@ Mongo DB dynamic secret resource
 - `mongodb_server_uri` (String) MongoDB server URI
 - `mongodb_uri_options` (String) MongoDB server URI options
 - `mongodb_username` (String) MongoDB server username
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
@@ -49,6 +51,10 @@ Mongo DB dynamic secret resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_ttl` (String) User TTL (e.g. 60s, 60m, 60h)
 
 ### Read-Only

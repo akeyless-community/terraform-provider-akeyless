@@ -30,14 +30,18 @@ Cassandra dynamic secret resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `encryption_key_name` (String) Dynamic producer encryption key
-- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
-- `password_length` (String) The length of the password to be generated
 - `input_rule` (List of String) Password input rule definitions
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
 - `ssl_certificate` (String) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_ttl` (String) User TTL
 
 ### Read-Only

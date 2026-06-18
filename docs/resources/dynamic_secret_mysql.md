@@ -27,6 +27,7 @@ MySQL dynamic secret resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `encryption_key_name` (String) Dynamic producer encryption key
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `mysql_creation_statements` (String) MySQL Creation Statements
 - `mysql_dbname` (String) MySQL DB name
@@ -35,9 +36,8 @@ MySQL dynamic secret resource
 - `mysql_port` (String) MySQL port
 - `mysql_revocation_statements` (String) MySQL Revocation Statements
 - `mysql_username` (String) MySQL Username
-- `password_length` (String) The length of the password to be generated
-- `input_rule` (List of String) Password input rule definitions
 - `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_db_name` (String) The DB name (relevant only for DB Dynamic-Secret)
@@ -49,6 +49,10 @@ MySQL dynamic secret resource
 - `ssl_certificate` (String) SSL connection certificate
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_ttl` (String) User TTL
 
 ### Read-Only

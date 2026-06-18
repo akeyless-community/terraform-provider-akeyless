@@ -36,9 +36,10 @@ AWS dynamic secret resource
 - `description` (String) Description of the object
 - `enable_admin_rotation` (Boolean) Automatic admin credentials rotation
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
-- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
-- `password_length` (String) The length of the password to be generated
 - `input_rule` (List of String) Password input rule definitions
+- `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `region` (String) Region
 - `secure_access_aws_account_id` (String) The aws account id
 - `secure_access_aws_native_cli` (Boolean) The aws native cli
@@ -52,10 +53,13 @@ AWS dynamic secret resource
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `session_tags` (String) Session tags, space separated, relevant only for Assumed Role. Format: Key=name,Value=val Key=name2,Value=val2
-- `output_rule` (List of String) Password output rule definitions
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
 - `transitive_tag_keys` (String) Transitive tag keys, space separated, relevant only for Assumed Role
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_ttl` (String) User TTL
 
 ### Read-Only

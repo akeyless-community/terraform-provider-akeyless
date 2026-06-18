@@ -33,13 +33,13 @@ Aws rotated secret resource
 - `grace_rotation` (String) Create a new access key without deleting the old key from AWS/Azure/GCP for backup (relevant only for AWS/Azure/GCP) [true/false]
 - `grace_rotation_hour` (Number) The Hour of the grace rotation in UTC
 - `grace_rotation_interval` (String) The number of days to wait before deleting the old key (must be bigger than rotation-interval)
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
-- `password_length` (String) The length of the password to be generated
-- `input_rule` (List of String) Password input rule definitions
 - `output_rule` (List of String) Password output rule definitions
+- `password_length` (String) The length of the password to be generated
 - `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]
 - `rotation_event_in` (Set of String) How many days before the rotation of the item would you like to be notified
 - `rotation_hour` (Number) The Hour of the rotation in UTC
@@ -49,6 +49,10 @@ Aws rotated secret resource
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `tags` (Set of String) Add tags attached to this object
+- `use_capital_letters` (String) Password must contain capital letters [true/false]
+- `use_lower_letters` (String) Password must contain lower case letters [true/false]
+- `use_numbers` (String) Password must contain numbers [true/false]
+- `use_special_characters` (String) Password must contain special characters [true/false]
 
 ### Read-Only
 

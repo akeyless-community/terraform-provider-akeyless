@@ -36,7 +36,7 @@ Authenticate to Akeyless and returns a token to be used by the provider
 <a id="nestedblock--api_key_login"></a>
 ### Nested Schema for `api_key_login`
 
-Required:
+Optional:
 
 - `access_id` (String)
 - `access_key` (String, Sensitive)
