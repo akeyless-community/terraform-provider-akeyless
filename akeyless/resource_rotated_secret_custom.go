@@ -433,9 +433,6 @@ func resourceRotatedSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
 		return err
 	}
-	if err = setRotatedSecretPasswordPolicyBoolReadFields(d, itemOut.ItemGeneralInfo); err != nil {
-		return err
-	}
 
 	d.SetId(path)
 

@@ -105,26 +105,6 @@ func resourceRotatedSecretHashiVault() *schema.Resource {
 				Description: "How many days before the rotation of the item would you like to be notified",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"use_capital_letters": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Password must contain capital letters [true/false]",
-			},
-			"use_lower_letters": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Password must contain lower case letters [true/false]",
-			},
-			"use_numbers": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Password must contain numbers [true/false]",
-			},
-			"use_special_characters": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Password must contain special characters [true/false]",
-			},
 		},
 	}
 }
@@ -150,10 +130,6 @@ func resourceRotatedSecretHashiVaultCreate(d *schema.ResourceData, m interface{}
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	maxVersions := d.Get("max_versions").(string)
-	useCapitalLetters := d.Get("use_capital_letters").(string)
-	useLowerLetters := d.Get("use_lower_letters").(string)
-	useNumbers := d.Get("use_numbers").(string)
-	useSpecialCharacters := d.Get("use_special_characters").(string)
 
 	body := akeyless_api.RotatedSecretCreateHashiVault{
 		Name:       name,
@@ -171,10 +147,6 @@ func resourceRotatedSecretHashiVaultCreate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
-	common.GetAkeylessPtr(&body.UseCapitalLetters, useCapitalLetters)
-	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
-	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
-	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
 
 	if len(itemCustomFields) > 0 {
 		fields := make(map[string]string)
@@ -274,26 +246,6 @@ func resourceRotatedSecretHashiVaultRead(d *schema.ResourceData, m interface{}) 
 				return err
 			}
 		}
-		if policy.UseCapitalLetters != nil {
-			if err = d.Set("use_capital_letters", strconv.FormatBool(*policy.UseCapitalLetters)); err != nil {
-				return err
-			}
-		}
-		if policy.UseLowerLetters != nil {
-			if err = d.Set("use_lower_letters", strconv.FormatBool(*policy.UseLowerLetters)); err != nil {
-				return err
-			}
-		}
-		if policy.UseNumbers != nil {
-			if err = d.Set("use_numbers", strconv.FormatBool(*policy.UseNumbers)); err != nil {
-				return err
-			}
-		}
-		if policy.UseSpecialCharacters != nil {
-			if err = d.Set("use_special_characters", strconv.FormatBool(*policy.UseSpecialCharacters)); err != nil {
-				return err
-			}
-		}
 	}
 
 	if itemOut.ItemCustomFieldsDetails != nil {
@@ -314,9 +266,6 @@ func resourceRotatedSecretHashiVaultRead(d *schema.ResourceData, m interface{}) 
 		return err
 	}
 	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
-		return err
-	}
-	if err = setRotatedSecretPasswordPolicyBoolReadFields(d, itemOut.ItemGeneralInfo); err != nil {
 		return err
 	}
 
@@ -345,10 +294,6 @@ func resourceRotatedSecretHashiVaultUpdate(d *schema.ResourceData, m interface{}
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	maxVersions := d.Get("max_versions").(string)
-	useCapitalLetters := d.Get("use_capital_letters").(string)
-	useLowerLetters := d.Get("use_lower_letters").(string)
-	useNumbers := d.Get("use_numbers").(string)
-	useSpecialCharacters := d.Get("use_special_characters").(string)
 
 	body := akeyless_api.RotatedSecretUpdateHashiVault{
 		Name:    name,
@@ -375,10 +320,6 @@ func resourceRotatedSecretHashiVaultUpdate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
-	common.GetAkeylessPtr(&body.UseCapitalLetters, useCapitalLetters)
-	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
-	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
-	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
 
 	if len(itemCustomFields) > 0 {
 		fields := make(map[string]string)

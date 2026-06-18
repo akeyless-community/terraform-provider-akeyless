@@ -7,29 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func setPasswordPolicyReadFields(d *schema.ResourceData, passwordLength *int64, useCapitalLetters, useLowerLetters, useNumbers, useSpecialCharacters *bool) error {
+func setPasswordPolicyReadFields(d *schema.ResourceData, passwordLength *int64) error {
 	if passwordLength != nil {
 		if err := d.Set("password_length", strconv.Itoa(int(*passwordLength))); err != nil {
-			return err
-		}
-	}
-	if useCapitalLetters != nil {
-		if err := d.Set("use_capital_letters", strconv.FormatBool(*useCapitalLetters)); err != nil {
-			return err
-		}
-	}
-	if useLowerLetters != nil {
-		if err := d.Set("use_lower_letters", strconv.FormatBool(*useLowerLetters)); err != nil {
-			return err
-		}
-	}
-	if useNumbers != nil {
-		if err := d.Set("use_numbers", strconv.FormatBool(*useNumbers)); err != nil {
-			return err
-		}
-	}
-	if useSpecialCharacters != nil {
-		if err := d.Set("use_special_characters", strconv.FormatBool(*useSpecialCharacters)); err != nil {
 			return err
 		}
 	}
@@ -43,18 +23,11 @@ func setDynamicSecretPasswordPolicyReadFields(d *schema.ResourceData, details *a
 	}
 
 	passwordLength := details.PasswordLength
-	var useCapitalLetters, useLowerLetters, useNumbers, useSpecialCharacters *bool
-	if details.PasswordPolicyInfo != nil {
-		if passwordLength == nil {
-			passwordLength = details.PasswordPolicyInfo.PasswordLength
-		}
-		useCapitalLetters = details.PasswordPolicyInfo.UseCapitalLetters
-		useLowerLetters = details.PasswordPolicyInfo.UseLowerLetters
-		useNumbers = details.PasswordPolicyInfo.UseNumbers
-		useSpecialCharacters = details.PasswordPolicyInfo.UseSpecialCharacters
+	if details.PasswordPolicyInfo != nil && passwordLength == nil {
+		passwordLength = details.PasswordPolicyInfo.PasswordLength
 	}
 
-	return setPasswordPolicyReadFields(d, passwordLength, useCapitalLetters, useLowerLetters, useNumbers, useSpecialCharacters)
+	return setPasswordPolicyReadFields(d, passwordLength)
 }
 
 func setRotatedSecretPasswordPolicyReadFields(d *schema.ResourceData, generalInfo *akeyless_api.ItemGeneralInfo) error {
@@ -62,26 +35,5 @@ func setRotatedSecretPasswordPolicyReadFields(d *schema.ResourceData, generalInf
 		return nil
 	}
 
-	if generalInfo.PasswordPolicy.PasswordLength != nil {
-		if err := d.Set("password_length", strconv.Itoa(int(*generalInfo.PasswordPolicy.PasswordLength))); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func setRotatedSecretPasswordPolicyBoolReadFields(d *schema.ResourceData, generalInfo *akeyless_api.ItemGeneralInfo) error {
-	if generalInfo == nil || generalInfo.PasswordPolicy == nil {
-		return nil
-	}
-
-	return setPasswordPolicyReadFields(
-		d,
-		nil,
-		generalInfo.PasswordPolicy.UseCapitalLetters,
-		generalInfo.PasswordPolicy.UseLowerLetters,
-		generalInfo.PasswordPolicy.UseNumbers,
-		generalInfo.PasswordPolicy.UseSpecialCharacters,
-	)
+	return setPasswordPolicyReadFields(d, generalInfo.PasswordPolicy.PasswordLength)
 }

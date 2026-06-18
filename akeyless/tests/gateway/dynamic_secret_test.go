@@ -100,10 +100,6 @@ func TestDynamicSecretAws(t *testing.T) {
 			password_length               = "16"
 			input_rule                    = ["name=in1,rule=validate input"]
 			output_rule                   = ["name=out1,rule=mask output"]
-			use_capital_letters           = "true"
-			use_lower_letters             = "true"
-			use_numbers                   = "true"
-			use_special_characters        = "false"
 			delete_protection             = "false"
 			description                   = "test dynamic secret"
 			enable_admin_rotation         = false
@@ -131,10 +127,6 @@ func TestDynamicSecretAws(t *testing.T) {
 			password_length               = "20"
 			input_rule                    = ["name=in1,rule=validate input updated"]
 			output_rule                   = ["name=out1,rule=mask output updated"]
-			use_capital_letters           = "true"
-			use_lower_letters             = "true"
-			use_numbers                   = "true"
-			use_special_characters        = "true"
 			description                   = "updated test dynamic secret"
 			enable_admin_rotation         = false
 			admin_rotation_interval_days  = 10
@@ -161,10 +153,6 @@ func TestDynamicSecretAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
-					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "false"),
 				),
 			},
 			{
@@ -176,10 +164,6 @@ func TestDynamicSecretAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
-					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "true"),
 				),
 			},
 		},
@@ -1299,10 +1283,6 @@ func TestDynamicSecretRdp(t *testing.T) {
 			rdp_host_port   = "3389"
 			rdp_user_groups = "Administrators"
 			password_length = "12"
-			use_capital_letters = "true"
-			use_lower_letters   = "true"
-			use_numbers         = "true"
-			use_special_characters = "false"
 			input_rule      = ["name=in1,rule=validate input"]
 			output_rule     = ["name=out1,rule=mask output"]
 			user_ttl        = "30m"
@@ -1319,10 +1299,6 @@ func TestDynamicSecretRdp(t *testing.T) {
 			rdp_host_port   = "3389"
 			rdp_user_groups = "Administrators"
 			password_length = "14"
-			use_capital_letters = "false"
-			use_lower_letters   = "true"
-			use_numbers         = "false"
-			use_special_characters = "true"
 			input_rule      = ["name=in1,rule=validate input updated"]
 			output_rule     = ["name=out1,rule=mask output updated"]
 			user_ttl        = "60m"
@@ -1338,10 +1314,6 @@ func TestDynamicSecretRdp(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "password_length", "12"),
-					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "use_capital_letters", "true"),
-					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "use_lower_letters", "true"),
-					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "use_numbers", "true"),
-					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "use_special_characters", "false"),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "output_rule.#", "1"),
@@ -1353,10 +1325,6 @@ func TestDynamicSecretRdp(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "password_length", "14"),
-					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "use_capital_letters", "false"),
-					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "use_lower_letters", "true"),
-					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "use_numbers", "false"),
-					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "use_special_characters", "true"),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "output_rule.#", "1"),
@@ -1506,10 +1474,6 @@ func TestDynamicSecretSnowflake(t *testing.T) {
 			account          = "test-account.snowflakecomputing.com"
 			db_name          = "TESTDB"
 			password_length  = "16"
-			use_capital_letters = "true"
-			use_lower_letters   = "true"
-			use_numbers         = "true"
-			use_special_characters = "false"
 			user_ttl         = "30m"
 		}
 	`, dsName, dsPath, targetPath)
@@ -1523,10 +1487,6 @@ func TestDynamicSecretSnowflake(t *testing.T) {
 			account          = "test-account.snowflakecomputing.com"
 			db_name          = "TESTDB"
 			password_length  = "20"
-			use_capital_letters = "true"
-			use_lower_letters   = "false"
-			use_numbers         = "false"
-			use_special_characters = "true"
 			user_ttl         = "60m"
 			tags             = ["test1", "test2"]
 		}
@@ -1541,10 +1501,6 @@ func TestDynamicSecretSnowflake(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "16"),
-					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "false"),
 				),
 			},
 			{
@@ -1552,10 +1508,6 @@ func TestDynamicSecretSnowflake(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
-					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "false"),
-					resource.TestCheckResourceAttr(resourceName, "use_numbers", "false"),
-					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "true"),
 				),
 			},
 		},

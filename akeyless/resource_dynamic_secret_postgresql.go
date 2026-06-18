@@ -100,26 +100,6 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 				Description: "Password output rule definitions",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"use_capital_letters": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Password must contain capital letters [true/false]",
-			},
-			"use_lower_letters": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Password must contain lower case letters [true/false]",
-			},
-			"use_numbers": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Password must contain numbers [true/false]",
-			},
-			"use_special_characters": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Password must contain special characters [true/false]",
-			},
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -219,10 +199,6 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	revocationStatements := d.Get("revocation_statements").(string)
 	ssl := d.Get("ssl").(bool)
 	passwordLength := d.Get("password_length").(string)
-	useCapitalLetters := d.Get("use_capital_letters").(string)
-	useLowerLetters := d.Get("use_lower_letters").(string)
-	useNumbers := d.Get("use_numbers").(string)
-	useSpecialCharacters := d.Get("use_special_characters").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	producerEncryptionKey := d.Get("encryption_key_name").(string)
@@ -260,10 +236,6 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
-	common.GetAkeylessPtr(&body.UseCapitalLetters, useCapitalLetters)
-	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
-	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
-	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
