@@ -92,8 +92,10 @@ func TestUscSecretResourceHashi(t *testing.T) {
 	uscPath := testPath(uscName)
 
 	secretName := "secret/test-"
-	remoteSecretActivationDate := "2026-01-01T00:00:00Z"
-	remoteSecretExpires := "2026-12-31T00:00:00Z"
+	remoteSecretActivationDate1 := "2026-01-01T00:00:00Z"
+	remoteSecretExpires1 := "2026-12-30T00:00:00Z"
+	remoteSecretActivationDate2 := "2026-01-02T00:00:00Z"
+	remoteSecretExpires2 := "2026-12-31T00:00:00Z"
 
 	value1 := map[string]string{"key1": "value1"}
 	marshalled1, err := json.Marshal(value1)
@@ -121,7 +123,7 @@ func TestUscSecretResourceHashi(t *testing.T) {
 		tags			= ["tag1", "tag2"]
 		depends_on      = [akeyless_usc.%v]
 	}
-`, uscName, uscPath, targetPath, uscName, uscPath, secretName, val1, remoteSecretActivationDate, remoteSecretExpires, uscName)
+`, uscName, uscPath, targetPath, uscName, uscPath, secretName, val1, remoteSecretActivationDate1, remoteSecretExpires1, uscName)
 
 	configUpdate := fmt.Sprintf(`
 	resource "akeyless_usc" "%v" {
@@ -139,7 +141,7 @@ func TestUscSecretResourceHashi(t *testing.T) {
 		tags			= ["tag1", "tag3"]
 		depends_on      = [akeyless_usc.%v]
 	}
-`, uscName, uscPath, targetPath, uscName, uscPath, secretName, val2, remoteSecretActivationDate, remoteSecretExpires, uscName)
+`, uscName, uscPath, targetPath, uscName, uscPath, secretName, val2, remoteSecretActivationDate2, remoteSecretExpires2, uscName)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
@@ -149,8 +151,8 @@ func TestUscSecretResourceHashi(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("akeyless_usc_secret."+uscName, "secret_id"),
 					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "value", val1),
-					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate),
-					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate1),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires1),
 				),
 			},
 			{
@@ -158,8 +160,8 @@ func TestUscSecretResourceHashi(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("akeyless_usc_secret."+uscName, "secret_id"),
 					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "value", val2),
-					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate),
-					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate2),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires2),
 				),
 			},
 		},
