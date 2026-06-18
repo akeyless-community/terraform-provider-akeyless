@@ -1312,7 +1312,7 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 	rsPath := testPath(rsName)
 
 	config := fmt.Sprintf(`
-		resource "akeyless_rotated_secret_hashivault" "%v" {
+		resource "akeyless_rotated_secret_hashi_vault" "%v" {
 			name 					= "%v"
 			target_name 			= "%v"
 			description 			= "aaaa"
@@ -1328,7 +1328,7 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_rotated_secret_hashivault" "%v" {
+		resource "akeyless_rotated_secret_hashi_vault" "%v" {
 			name 					= "%v"
 			target_name 			= "%v"
 			description 			= "bbbb"
@@ -1342,7 +1342,7 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 			use_special_characters 	= "true"
 		}
 	`, rsName, rsPath, targetPath)
-	resourceName := "akeyless_rotated_secret_hashivault." + rsName
+	resourceName := "akeyless_rotated_secret_hashi_vault." + rsName
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
