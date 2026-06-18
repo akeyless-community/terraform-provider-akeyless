@@ -262,7 +262,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			name 						= "%v"
 			target_name 				= "%v"
 			custom_payload 				= "payload1"
-			password_length 			= "12"
 			input_rule 					= ["name=in1,rule=validate input"]
 			output_rule 				= ["name=out1,rule=mask output"]
 			use_capital_letters 		= "true"
@@ -278,7 +277,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			name 						= "%v"
 			target_name 				= "%v"
 			custom_payload 				= "payload2"
-			password_length 			= "14"
 			input_rule 					= ["name=in1,rule=validate input updated"]
 			output_rule 				= ["name=out1,rule=mask output updated"]
 			use_capital_letters 		= "true"
@@ -298,7 +296,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
 					resource.TestCheckResourceAttr(resourceName, "custom_payload", "payload1"),
-					resource.TestCheckResourceAttr(resourceName, "password_length", "12"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
@@ -314,7 +311,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
 					resource.TestCheckResourceAttr(resourceName, "custom_payload", "payload2"),
-					resource.TestCheckResourceAttr(resourceName, "password_length", "14"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),

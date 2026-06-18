@@ -60,9 +60,6 @@ func TestStaticSecretSyncResource(t *testing.T) {
 }
 
 func TestRotatedSecretSyncResource(t *testing.T) {
-
-	t.Skip("Skip until fixing bug in GW: UseCapitalLetters and UseCapitalLettersV2 should allow empty strings")
-
 	testutils.SkipIfNoGateway(t)
 
 	hashiTargetName := "target_hashi_for_rs_sync"
