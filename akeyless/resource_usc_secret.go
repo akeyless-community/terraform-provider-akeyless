@@ -232,6 +232,17 @@ func resourceUscSecretRead(d *schema.ResourceData, m any) error {
 		}
 	}
 
+	if v, ok := d.GetOk("remote_secret_activation_date"); ok {
+		if err := d.Set("remote_secret_activation_date", v.(string)); err != nil {
+			return err
+		}
+	}
+	if v, ok := d.GetOk("remote_secret_expires"); ok {
+		if err := d.Set("remote_secret_expires", v.(string)); err != nil {
+			return err
+		}
+	}
+
 	d.SetId(buildUscSecretId(uscName, secretName))
 
 	return nil
