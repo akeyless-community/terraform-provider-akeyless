@@ -44,10 +44,6 @@ Redshift rotated secret resource
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `secure_access_host` (Set of String) Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `use_capital_letters` (String) Password must contain capital letters [true/false]
-- `use_lower_letters` (String) Password must contain lower case letters [true/false]
-- `use_numbers` (String) Password must contain numbers [true/false]
-- `use_special_characters` (String) Password must contain special characters [true/false]
 
 ### Read-Only
 

@@ -56,10 +56,6 @@ AWS dynamic secret resource
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
 - `transitive_tag_keys` (String) Transitive tag keys, space separated, relevant only for Assumed Role
-- `use_capital_letters` (String) Password must contain capital letters [true/false]
-- `use_lower_letters` (String) Password must contain lower case letters [true/false]
-- `use_numbers` (String) Password must contain numbers [true/false]
-- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_ttl` (String) User TTL
 
 ### Read-Only

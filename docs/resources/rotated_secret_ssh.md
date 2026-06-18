@@ -53,10 +53,6 @@ Ssh rotated secret resource
 - `secure_access_ssh_user` (String) Override the SSH username as indicated in SSH Certificate Issuer
 - `secure_access_target_type` (String) Specify target type. Options are ssh or rdp
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `use_capital_letters` (String) Password must contain capital letters [true/false]
-- `use_lower_letters` (String) Password must contain lower case letters [true/false]
-- `use_numbers` (String) Password must contain numbers [true/false]
-- `use_special_characters` (String) Password must contain special characters [true/false]
 
 ### Read-Only
 

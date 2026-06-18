@@ -51,10 +51,6 @@ Ldap rotated secret resource
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target` (List of String) A list of linked targets to be associated, Relevant only for Secure Remote Access for ssh cert issuer, ldap rotated secret and ldap dynamic secret, To specify multiple targets use argument multiple times
-- `use_capital_letters` (String) Password must contain capital letters [true/false]
-- `use_lower_letters` (String) Password must contain lower case letters [true/false]
-- `use_numbers` (String) Password must contain numbers [true/false]
-- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_attribute` (String) LDAP User Attribute, Default value "cn"
 - `user_dn` (String) Base DN to Perform User Search
 

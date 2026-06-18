@@ -44,10 +44,6 @@ Gcp rotated secret resource
 - `rotation_hour` (Number) The Hour of the rotation in UTC
 - `rotation_interval` (String) The number of days to wait between every automatic key rotation (1-365)
 - `tags` (Set of String) Add tags attached to this object
-- `use_capital_letters` (String) Password must contain capital letters [true/false]
-- `use_lower_letters` (String) Password must contain lower case letters [true/false]
-- `use_numbers` (String) Password must contain numbers [true/false]
-- `use_special_characters` (String) Password must contain special characters [true/false]
 
 ### Read-Only
 

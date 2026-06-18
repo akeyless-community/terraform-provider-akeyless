@@ -55,10 +55,6 @@ Azure rotated secret resource
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `storage_account_key_name` (String) The name of the storage account key to rotate [key1/key2/kerb1/kerb2] (relevat to azure-storage-account)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `use_capital_letters` (String) Password must contain capital letters [true/false]
-- `use_lower_letters` (String) Password must contain lower case letters [true/false]
-- `use_numbers` (String) Password must contain numbers [true/false]
-- `use_special_characters` (String) Password must contain special characters [true/false]
 - `username` (String) The user principal name to rotate his password (relevant only for rotator-type=password)
 
 ### Read-Only

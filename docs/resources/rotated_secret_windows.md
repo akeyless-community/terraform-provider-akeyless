@@ -48,10 +48,6 @@ Windows rotated secret resource
 - `secure_access_rdp_domain` (String) Default domain name server. i.e. microsoft.com
 - `secure_access_rdp_user` (String) Override the RDP Domain username
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
-- `use_capital_letters` (String) Password must contain capital letters [true/false]
-- `use_lower_letters` (String) Password must contain lower case letters [true/false]
-- `use_numbers` (String) Password must contain numbers [true/false]
-- `use_special_characters` (String) Password must contain special characters [true/false]
 
 ### Read-Only
 

@@ -44,10 +44,6 @@ Oracle DB dynamic secret resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
-- `use_capital_letters` (String) Password must contain capital letters [true/false]
-- `use_lower_letters` (String) Password must contain lower case letters [true/false]
-- `use_numbers` (String) Password must contain numbers [true/false]
-- `use_special_characters` (String) Password must contain special characters [true/false]
 - `user_ttl` (String) User TTL
 
 ### Read-Only
