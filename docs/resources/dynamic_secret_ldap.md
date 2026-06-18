@@ -29,9 +29,11 @@ LDAP dynamic secret resource
 - `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from (relevant only for external-username=true)
 - `group_dn` (String) Group DN which the temporary user should be added
 - `host_provider` (String) Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access of ssh cert issuer, ldap rotated secret and ldap dynamic secret
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `ldap_ca_cert` (String) CA Certificate File Content
 - `ldap_url` (String) LDAP Server URL
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `producer_encryption_key_name` (String) Dynamic producer encryption key
 - `provider_type` (String) Provider type

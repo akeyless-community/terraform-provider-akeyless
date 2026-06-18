@@ -239,7 +239,6 @@ func resourceAccountSettingsRead(d *schema.ResourceData, m interface{}) error {
 
 	if rOut.GeneralSettings != nil {
 		g := rOut.GeneralSettings
-
 		if g.PasswordPolicy != nil {
 			pp := g.PasswordPolicy
 			if pp.PasswordLength != nil {

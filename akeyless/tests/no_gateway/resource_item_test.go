@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestDfcKeyRsaResource(t *testing.T) {
@@ -166,7 +167,7 @@ func TestPkiResource(t *testing.T) {
 			street_address        	= "stre1"
 			postal_code           	= "post1"
 			protect_certificates  	= true
-			is_ca                   = true
+			basic_constraints       = "critical,CA:true,pathlen:0"
 			enable_acme             = false
 			max_path_len          	= 0
 			expiration_event_in   	= ["1"]
@@ -177,6 +178,7 @@ func TestPkiResource(t *testing.T) {
 			delete_protection     	= "true"
 		}
 	`, name, itemPath, keyPath)
+
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_pki_cert_issuer" "%v" {
 			name 					= "%v"
@@ -202,7 +204,7 @@ func TestPkiResource(t *testing.T) {
 			street_address        	= "stre2"
 			postal_code           	= "post2"
 			protect_certificates  	= false
-			is_ca                   = false
+			basic_constraints       = "CA:false"
 			enable_acme             = false
 			max_path_len          	= 0
 			expiration_event_in   	= []
@@ -212,7 +214,23 @@ func TestPkiResource(t *testing.T) {
 			tags     			  	= ["t1", "t3"]
 		}
 	`, name, itemPath, keyPath)
-	testutils.TestItemResource(t, providerFactories, itemPath, config, configUpdate)
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(itemPath),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(itemPath),
+				),
+			},
+		},
+	})
 }
 
 func TestPkiDataSource(t *testing.T) {

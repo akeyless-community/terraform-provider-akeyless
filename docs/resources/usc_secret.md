@@ -29,6 +29,8 @@ Universal Secrets Connector secret resource
 - `object_type` (String) Either secret or certificate (Relevant only for Azure KV targets)
 - `pfx_password` (String, Sensitive) Optional, the passphrase that protects the private key within the pfx certificate (Relevant only for Azure KV certificates)
 - `region` (String) Optional, create secret in a specific region (GCP only). If empty, a global secret will be created (provider default).
+- `remote_secret_activation_date` (String) Activation date for the secret on the remote endpoint, in UTC format: YYYY-MM-DDTHH:MM:SSZ
+- `remote_secret_expires` (String) Expiration time for the secret on the remote endpoint, in UTC format: YYYY-MM-DDTHH:MM:SSZ
 - `tags` (Set of String) Tags for the universal secrets
 - `usc_encryption_key` (String) Optional, The name of the remote key that used to encrypt the secret value (if empty, the default key will be used)
 - `value` (String, Sensitive) Value of the universal secrets item, either text or base64 encoded binary

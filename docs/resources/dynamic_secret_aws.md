@@ -36,7 +36,9 @@ AWS dynamic secret resource
 - `description` (String) Description of the object
 - `enable_admin_rotation` (Boolean) Automatic admin credentials rotation
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `region` (String) Region
 - `secure_access_aws_account_id` (String) The aws account id

@@ -9,6 +9,7 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,10 +91,11 @@ func TestUscSecretResourceHashi(t *testing.T) {
 	uscName := "test-usc-hashi"
 	uscPath := testPath(uscName)
 
-	createUsc(t, uscPath, targetPath, uscOptions{})
-	defer testutils.DeleteItem(t, uscPath)
-
 	secretName := "secret/test-"
+	remoteSecretActivationDate1 := "2026-01-01T00:00:00Z"
+	remoteSecretExpires1 := "2026-12-30T00:00:00Z"
+	remoteSecretActivationDate2 := "2026-01-02T00:00:00Z"
+	remoteSecretExpires2 := "2026-12-31T00:00:00Z"
 
 	value1 := map[string]string{"key1": "value1"}
 	marshalled1, err := json.Marshal(value1)
@@ -106,26 +108,64 @@ func TestUscSecretResourceHashi(t *testing.T) {
 	val2 := common.Base64Encode(string(marshalled2))
 
 	config := fmt.Sprintf(`
+	resource "akeyless_usc" "%v" {
+		name                = "%v"
+		target_to_associate = "%v"
+	}
+
 	resource "akeyless_usc_secret" "%v" {
 		usc_name 		= "%v"
 		secret_name 	= "%v"
 		value 			= "%v"
+		remote_secret_activation_date = "%v"
+		remote_secret_expires         = "%v"
 		description 	= "aaaa"
 		tags			= ["tag1", "tag2"]
+		depends_on      = [akeyless_usc.%v]
 	}
-`, uscName, uscPath, secretName, val1)
+`, uscName, uscPath, targetPath, uscName, uscPath, secretName, val1, remoteSecretActivationDate1, remoteSecretExpires1, uscName)
 
 	configUpdate := fmt.Sprintf(`
+	resource "akeyless_usc" "%v" {
+		name                = "%v"
+		target_to_associate = "%v"
+	}
+
 	resource "akeyless_usc_secret" "%v" {
 		usc_name 		= "%v"
 		secret_name 	= "%v"
 		value 			= "%v"
+		remote_secret_activation_date = "%v"
+		remote_secret_expires         = "%v"
 		description 	= "bbbb"
 		tags			= ["tag1", "tag3"]
+		depends_on      = [akeyless_usc.%v]
 	}
-`, uscName, uscPath, secretName, val2)
+`, uscName, uscPath, targetPath, uscName, uscPath, secretName, val2, remoteSecretActivationDate2, remoteSecretExpires2, uscName)
 
-	testutils.TestItemResource(t, providerFactories, uscPath, config, configUpdate)
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("akeyless_usc_secret."+uscName, "secret_id"),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "value", val1),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate1),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires1),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("akeyless_usc_secret."+uscName, "secret_id"),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "value", val2),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_activation_date", remoteSecretActivationDate2),
+					resource.TestCheckResourceAttr("akeyless_usc_secret."+uscName, "remote_secret_expires", remoteSecretExpires2),
+				),
+			},
+		},
+	})
 }
 
 type uscOptions struct {
@@ -134,7 +174,6 @@ type uscOptions struct {
 }
 
 func createUsc(t *testing.T, uscName, targetName string, opts uscOptions) {
-
 	client, token, err := testutils.GetClient()
 	require.NoError(t, err)
 

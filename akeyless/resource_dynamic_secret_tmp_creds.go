@@ -42,6 +42,18 @@ func resourceDynamicSecretTmpCreds() *schema.Resource {
 				Optional:    true,
 				Description: "Host",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Input rule definitions",
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Output rule definitions",
+			},
 		},
 	}
 }
@@ -56,6 +68,8 @@ func resourceDynamicSecretTmpCredsUpdate(d *schema.ResourceData, m interface{}) 
 	tmpCredsId := d.Get("tmp_creds_id").(string)
 	host := d.Get("host").(string)
 	newTtlMin := d.Get("new_ttl_min").(int)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 
 	body := akeyless_api.DynamicSecretTmpCredsUpdate{
 		Name:       name,
@@ -64,6 +78,8 @@ func resourceDynamicSecretTmpCredsUpdate(d *schema.ResourceData, m interface{}) 
 		NewTtlMin:  int64(newTtlMin),
 		Token:      &token,
 	}
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 
 	resp, err := client.DynamicSecretTmpCredsUpdate(ctx).Body(body).Execute()
 	if err != nil {

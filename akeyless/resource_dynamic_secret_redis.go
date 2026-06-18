@@ -65,6 +65,18 @@ func resourceDynamicSecretRedis() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"port": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -129,6 +141,8 @@ func resourceDynamicSecretRedisCreate(d *schema.ResourceData, m interface{}) err
 	host := d.Get("host").(string)
 	password := d.Get("password").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	port := d.Get("port").(string)
 	ssl := d.Get("ssl").(bool)
 	sslCertificate := d.Get("ssl_certificate").(string)
@@ -149,6 +163,8 @@ func resourceDynamicSecretRedisCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Password, password)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.Port, port)
 	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
@@ -245,6 +261,13 @@ func resourceDynamicSecretRedisRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -265,6 +288,8 @@ func resourceDynamicSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	host := d.Get("host").(string)
 	password := d.Get("password").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	port := d.Get("port").(string)
 	ssl := d.Get("ssl").(bool)
 	sslCertificate := d.Get("ssl_certificate").(string)
@@ -285,6 +310,8 @@ func resourceDynamicSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.Host, host)
 	common.GetAkeylessPtr(&body.Password, password)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.Port, port)
 	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)

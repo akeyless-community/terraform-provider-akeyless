@@ -25,7 +25,9 @@ Redis dynamic secret resource
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `host` (String) Redis Host
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `output_rule` (List of String) Password output rule definitions
 - `password` (String, Sensitive) Redis Password
 - `password_length` (String) The length of the password to be generated
 - `port` (String) Redis Port

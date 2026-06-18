@@ -30,7 +30,9 @@ HanaDb dynamic secret resource
 - `hanadb_port` (String) HanaDb Port
 - `hanadb_revocation_statements` (String) HanaDb Revocation statements
 - `hanadb_username` (String) HanaDb Username
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `producer_encryption_key_name` (String) Dynamic producer encryption key
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access

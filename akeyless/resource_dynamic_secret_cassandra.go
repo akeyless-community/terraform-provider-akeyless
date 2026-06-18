@@ -81,6 +81,18 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -139,6 +151,8 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	description := d.Get("description").(string)
@@ -158,6 +172,8 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)
@@ -298,6 +314,13 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -323,6 +346,8 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	description := d.Get("description").(string)
@@ -342,6 +367,8 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Tags, tags)

@@ -79,6 +79,18 @@ func resourceRotatedSecretOracle() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -164,6 +176,8 @@ func resourceRotatedSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -200,6 +214,8 @@ func resourceRotatedSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
@@ -410,6 +426,13 @@ func resourceRotatedSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, itemOut.ItemGeneralInfo.AgenticRules); err != nil {
+		return err
+	}
+	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -425,6 +448,8 @@ func resourceRotatedSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -471,6 +496,8 @@ func resourceRotatedSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)

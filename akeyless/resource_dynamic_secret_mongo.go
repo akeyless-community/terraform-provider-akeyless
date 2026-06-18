@@ -111,6 +111,18 @@ func resourceDynamicSecretMongo() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -210,6 +222,8 @@ func resourceDynamicSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	mongodbCustomData := d.Get("mongodb_custom_data").(string)
 	mongodbScopes := d.Get("mongodb_scopes").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -251,6 +265,8 @@ func resourceDynamicSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MongodbCustomData, mongodbCustomData)
 	common.GetAkeylessPtr(&body.MongodbScopes, mongodbScopes)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
@@ -438,6 +454,13 @@ func resourceDynamicSecretMongoRead(d *schema.ResourceData, m interface{}) error
 
 	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
+	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -465,6 +488,8 @@ func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	mongodbCustomData := d.Get("mongodb_custom_data").(string)
 	mongodbScopes := d.Get("mongodb_scopes").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -506,6 +531,8 @@ func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MongodbCustomData, mongodbCustomData)
 	common.GetAkeylessPtr(&body.MongodbScopes, mongodbScopes)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)

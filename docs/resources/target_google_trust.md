@@ -24,7 +24,8 @@ Google Trust Target resource
 
 - `acme_challenge` (String) ACME challenge type. Options: [dns]
 - `description` (String) Description of the object
-- `dns_target_creds` (String) Name of existing cloud target for DNS credentials. Required when challenge type is dns. Supported providers: AWS, Azure, GCP
+- `dns_target_creds` (String) Name of existing cloud target for DNS credentials. Required when challenge type is dns. Supported providers: AWS, Azure, GCP, Cloudflare
+- `dns_zone` (String) Cloudflare DNS zone identifier. Required when DNS credentials target is Cloudflare
 - `eab_hmac_key` (String, Sensitive) External Account Binding HMAC key (required for ACME account bootstrap on create)
 - `eab_key_id` (String) External Account Binding key identifier (required for ACME account bootstrap on create)
 - `gcp_project` (String) GCP Cloud DNS project ID. Optional and can be derived from service account

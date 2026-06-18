@@ -26,7 +26,9 @@ Redshift dynamic secret resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `encryption_key_name` (String) Dynamic producer encryption key
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `redshift_db_name` (String) Redshift DB Name
 - `redshift_host` (String) Redshift Host

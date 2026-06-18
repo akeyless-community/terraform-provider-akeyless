@@ -22,9 +22,10 @@ func TestRoleResourceBasic(t *testing.T) {
 		resource "akeyless_role" "test_role" {
 			name 				= "%v"
 			description 		= "aaaa"
-			delete_protection 	= "true"
-			audit_access 		= "all"
+			audit_access 		= "scoped"
 			analytics_access 	= "own"
+			event_center_access = "all"
+			isi_access 			= "all"
 		}
 	`, rolePath)
 
@@ -32,9 +33,62 @@ func TestRoleResourceBasic(t *testing.T) {
 		resource "akeyless_role" "test_role" {
 			name 				= "%v"
 			description 		= "bbbb"
-			delete_protection 	= "false"
-			audit_access 		= "own"
+			audit_access 		= "all"
 			analytics_access 	= "all"
+			event_center_access = "own"
+			isi_access 			= "scoped"
+		}
+	`, rolePath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "aaaa"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "isi_access", "all"),
+					testutils.CheckRoleRulesRemotely(t, rolePath, []testutils.ExpectedRule{
+						{Type: "search-rule", Path: "/scoped", Capabilities: []string{"read"}},
+						{Type: "reports-rule", Path: "/self", Capabilities: []string{"read"}},
+						{Type: "event-rule", Path: "/*", Capabilities: []string{"read"}},
+						{Type: "isi-rule", Path: "/*", Capabilities: []string{"read"}},
+					}),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "bbbb"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "isi_access", "scoped"),
+					testutils.CheckRoleRulesRemotely(t, rolePath, []testutils.ExpectedRule{
+						{Type: "search-rule", Path: "/*", Capabilities: []string{"read"}},
+						{Type: "reports-rule", Path: "/*", Capabilities: []string{"read"}},
+						{Type: "event-rule", Path: "/self", Capabilities: []string{"read"}},
+						{Type: "isi-rule", Path: "/scoped", Capabilities: []string{"read"}},
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestRoleDeleteProtection(t *testing.T) {
+	rolePath := testPath("test_role_resource")
+	testutils.DeleteRole(rolePath)
+	defer testutils.DeleteRole(rolePath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_role" "test_role" {
+			name 				= "%v"
+			delete_protection 	= "true"
+		}
+	`, rolePath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_role" "test_role" {
+			name 				= "%v"
+			delete_protection 	= "false"
 		}
 	`, rolePath)
 
@@ -68,14 +122,12 @@ func TestRoleResourceBasic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "aaaa"),
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "delete_protection", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "bbbb"),
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "delete_protection", "false"),
 				),
 			},

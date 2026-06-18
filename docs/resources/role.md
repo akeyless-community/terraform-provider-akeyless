@@ -84,6 +84,7 @@ output "demo-role" {
 - `event_forwarders_access` (String) Allow this role to manage Event Forwarders. Currently only 'none' and 'all' values are supported.
 - `event_forwarders_name` (Set of String) Allow this role to manage the following Event Forwarders.
 - `gw_analytics_access` (String) Allow this role to view gw analytics. Currently only 'none', 'scoped', 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
+- `isi_access` (String) Allow this role to access Identity & Secrets Intelligence. Currently only 'none', 'scoped' and 'all' values are supported.
 - `reverse_rbac_access` (String) Allow this role to view Reverse RBAC. Supported values: 'scoped', 'all'.
 - `rules` (Block Set) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
 - `sra_reports_access` (String) Allow this role to view SRA Clusters. Currently only 'none', 'scoped', 'all' values are supported.

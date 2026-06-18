@@ -28,8 +28,10 @@ Snowflake dynamic secret resource
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `db_name` (String) Database name
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `key_algo` (String) Key algorithm
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `private_key` (String, Sensitive) RSA Private key (base64 encoded)
 - `private_key_passphrase` (String, Sensitive) The Private key passphrase

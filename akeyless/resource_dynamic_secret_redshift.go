@@ -82,6 +82,18 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"encryption_key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -159,6 +171,8 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	creationStatements := d.Get("creation_statements").(string)
 	ssl := d.Get("ssl").(bool)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -186,6 +200,8 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
@@ -335,6 +351,13 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 
 	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
 
+	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -356,6 +379,8 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	creationStatements := d.Get("creation_statements").(string)
 	ssl := d.Get("ssl").(bool)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	producerEncryptionKey := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -383,6 +408,8 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.ProducerEncryptionKey, producerEncryptionKey)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)

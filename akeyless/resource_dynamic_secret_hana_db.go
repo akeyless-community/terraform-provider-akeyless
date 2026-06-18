@@ -86,6 +86,18 @@ func resourceDynamicSecretHanaDb() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"secure_access_certificate_issuer": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -164,6 +176,8 @@ func resourceDynamicSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 	hanadbRevocationStatements := d.Get("hanadb_revocation_statements").(string)
 	hanadbUsername := d.Get("hanadb_username").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
 	secureAccessDbName := d.Get("secure_access_db_name").(string)
 	secureAccessDbSchema := d.Get("secure_access_db_schema").(string)
@@ -191,6 +205,8 @@ func resourceDynamicSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.HanadbRevocationStatements, hanadbRevocationStatements)
 	common.GetAkeylessPtr(&body.HanadbUsername, hanadbUsername)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessDbName, secureAccessDbName)
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)
@@ -289,6 +305,13 @@ func resourceDynamicSecretHanaDbRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -313,6 +336,8 @@ func resourceDynamicSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	hanadbRevocationStatements := d.Get("hanadb_revocation_statements").(string)
 	hanadbUsername := d.Get("hanadb_username").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
 	secureAccessDbName := d.Get("secure_access_db_name").(string)
 	secureAccessDbSchema := d.Get("secure_access_db_schema").(string)
@@ -340,6 +365,8 @@ func resourceDynamicSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.HanadbRevocationStatements, hanadbRevocationStatements)
 	common.GetAkeylessPtr(&body.HanadbUsername, hanadbUsername)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessDbName, secureAccessDbName)
 	common.GetAkeylessPtr(&body.SecureAccessDbSchema, secureAccessDbSchema)

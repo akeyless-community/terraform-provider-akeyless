@@ -96,6 +96,18 @@ func resourceDynamicSecretLdap() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"secure_access_certificate_issuer": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -196,6 +208,8 @@ func resourceDynamicSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	ldapCaCert := d.Get("ldap_ca_cert").(string)
 	ldapUrl := d.Get("ldap_url").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
 	secureAccessDelay := d.Get("secure_access_delay").(int)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -230,6 +244,8 @@ func resourceDynamicSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.LdapCaCert, ldapCaCert)
 	common.GetAkeylessPtr(&body.LdapUrl, ldapUrl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessDelay, int64(secureAccessDelay))
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
@@ -332,6 +348,13 @@ func resourceDynamicSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -358,6 +381,8 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	ldapCaCert := d.Get("ldap_ca_cert").(string)
 	ldapUrl := d.Get("ldap_url").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
 	secureAccessDelay := d.Get("secure_access_delay").(int)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -392,6 +417,8 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.LdapCaCert, ldapCaCert)
 	common.GetAkeylessPtr(&body.LdapUrl, ldapUrl)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessDelay, int64(secureAccessDelay))
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)

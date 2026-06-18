@@ -94,6 +94,18 @@ func resourceRotatedSecretAzure() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -216,6 +228,8 @@ func resourceRotatedSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -265,6 +279,8 @@ func resourceRotatedSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.StorageAccountKeyName, storageAccountKeyName)
 	common.GetAkeylessPtr(&body.Username, username)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.ExplicitlySetSa, explicitlySetSa)
 	common.GetAkeylessPtr(&body.GraceRotation, graceRotation)
@@ -455,6 +471,13 @@ func resourceRotatedSecretAzureRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, itemOut.ItemGeneralInfo.AgenticRules); err != nil {
+		return err
+	}
+	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -470,6 +493,8 @@ func resourceRotatedSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	key := d.Get("key").(string)
 	autoRotate := d.Get("auto_rotate").(string)
 	rotationInterval := d.Get("rotation_interval").(string)
@@ -529,6 +554,8 @@ func resourceRotatedSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.Username, username)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.ExplicitlySetSa, explicitlySetSa)
 	common.GetAkeylessPtr(&body.GraceRotation, graceRotation)

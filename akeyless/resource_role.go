@@ -170,6 +170,11 @@ func resourceRole() *schema.Resource {
 				Optional:    true,
 				Description: "Allow this role to view Reverse RBAC. Supported values: 'scoped', 'all'.",
 			},
+			"isi_access": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Allow this role to access Identity & Secrets Intelligence. Currently only 'none', 'scoped' and 'all' values are supported.",
+			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -221,6 +226,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	eventForwardersNameSet := d.Get("event_forwarders_name").(*schema.Set)
 	eventForwardersName := common.ExpandStringList(eventForwardersNameSet.List())
 	reverseRbacAccess := d.Get("reverse_rbac_access").(string)
+	isiAccess := d.Get("isi_access").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.CreateRole{
@@ -239,6 +245,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		body.EventForwardersName = eventForwardersName
 	}
 	common.GetAkeylessPtr(&body.ReverseRbacAccess, reverseRbacAccess)
+	common.GetAkeylessPtr(&body.IsiAccess, isiAccess)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, resp, err := client.CreateRole(ctx).Body(body).Execute()
@@ -337,8 +344,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 
 	if role.RoleAuthMethodsAssoc != nil {
+		// only sync from the API when the user declared assocs; otherwise server-side
+		// associations the user never authored would be written to state and cause a perpetual diff
 		assocsSet := d.Get("assoc_auth_method").(*schema.Set)
-		if len(assocsSet.List()) != 0 {
+		if len(assocsSet.List()) > 0 {
 			err := readAuthMethodsAssoc(d, role.RoleAuthMethodsAssoc)
 			if err != nil {
 				return diag.FromErr(err)
@@ -348,8 +357,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 	if role.Rules != nil {
 		if role.Rules.PathRules != nil {
+			// only sync from the API when the user declared rules; otherwise server-side
+			// default rules the user never authored would be written to state and cause a perpetual diff
 			rulesSet := d.Get("rules").(*schema.Set)
-			if len(rulesSet.List()) != 0 {
+			if len(rulesSet.List()) > 0 {
 				err := readRules(d, role.Rules.PathRules)
 				if err != nil {
 					return diag.FromErr(err)
@@ -380,12 +391,16 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			if rule.Type == nil || rule.Path == nil {
 				continue
 			}
+
+			// handle special access rules
 			switch *rule.Type {
 			case "reverse-rbac-rule":
+				// reverse-rbac-rule has special slash prefix handling
 				if err := d.Set("reverse_rbac_access", strings.TrimPrefix(*rule.Path, "/")); err != nil {
 					return diag.FromErr(err)
 				}
 			case "event-forwarder-rule":
+				// event-forwarder-rule has special handling for multiple event forwarder names
 				eventForwarderNames = append(eventForwarderNames, *rule.Path)
 			}
 		}
@@ -979,6 +994,13 @@ func getNewAccessRules(d *schema.ResourceData) []interface{} {
 		accessRules = append(accessRules, eventForwardersAccessMap)
 	}
 
+	isiAccess := d.Get("isi_access").(string)
+	if isiAccess != "" {
+		path := convertPathNameOpposite(isiAccess)
+		isiAccessMap := map[string]interface{}{"capability": "read", "path": path, "rule_type": "isi-rule"}
+		accessRules = append(accessRules, isiAccessMap)
+	}
+
 	return accessRules
 }
 
@@ -989,10 +1011,20 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 	client := *provider.client
 	token := *provider.token
 
-	var auditAccess, analyticsAccess, gwAnalyticsAccess, sraReportsAccess, usageReportsAccess, eventCenterAccess, eventForwardersAccess = "none", "none", "none", "none", "none", "none", "none"
+	var (
+		auditAccess           = "none"
+		analyticsAccess       = "none"
+		gwAnalyticsAccess     = "none"
+		sraReportsAccess      = "none"
+		usageReportsAccess    = "none"
+		eventCenterAccess     = "none"
+		eventForwardersAccess = "none"
+		isiAccess             = "none"
+	)
+
 	for _, rule := range accessRules {
-		ruleType := rule.(map[string]interface{})["rule_type"].(string)
-		rulePath := convertPathNameWithNoneOption(rule.(map[string]interface{})["path"].(string))
+		ruleType := rule.(map[string]any)["rule_type"].(string)
+		rulePath := convertPathNameWithNoneOption(rule.(map[string]any)["path"].(string))
 
 		switch ruleType {
 		case "search-rule":
@@ -1009,6 +1041,8 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 			eventCenterAccess = rulePath
 		case "event-forwarder-rule":
 			eventForwardersAccess = rulePath
+		case "isi-rule":
+			isiAccess = rulePath
 		}
 	}
 
@@ -1022,6 +1056,7 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 		UsageReportsAccess:   akeyless_api.PtrString(usageReportsAccess),
 		EventCenterAccess:    akeyless_api.PtrString(eventCenterAccess),
 		EventForwarderAccess: akeyless_api.PtrString(eventForwardersAccess),
+		IsiAccess:            akeyless_api.PtrString(isiAccess),
 	}
 	common.GetAkeylessPtr(&updateBody.Description, description)
 	common.GetAkeylessPtr(&updateBody.DeleteProtection, deleteProtection)
@@ -1115,23 +1150,31 @@ func saveRoleAccessRuleOldValues(roleRules []akeyless_api.PathRule) []interface{
 	return roleRulesOldValues
 }
 
-func generateEmptyAccessRulesSet() []interface{} {
+func generateEmptyAccessRulesSet() []any {
 	accessCap := []string{"read"}
 	accessCapAll := []string{"read", "list", "create", "update", "delete"}
 
-	searchRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "search-rule"}
-	reportsRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "reports-rule"}
-	gwReportsRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "gw-reports-rule"}
-	sraReportsRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "sra-reports-rule"}
-	UsageReportRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "usage-reports-rule"}
-	eventRule := map[string]interface{}{"capability": accessCap, "path": "", "rule_type": "event-rule"}
-	eventForwarderRule := map[string]interface{}{"capability": accessCapAll, "path": "", "rule_type": "event-forwarder-rule"}
+	searchRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "search-rule"}
+	reportsRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "reports-rule"}
+	gwReportsRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "gw-reports-rule"}
+	sraReportsRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "sra-reports-rule"}
+	UsageReportRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "usage-reports-rule"}
+	eventRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "event-rule"}
+	eventForwarderRule := map[string]any{"capability": accessCapAll, "path": "", "rule_type": "event-forwarder-rule"}
+	isiRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "isi-rule"}
 
-	return []interface{}{searchRule, reportsRule, gwReportsRule, sraReportsRule, UsageReportRule, eventRule, eventForwarderRule}
+	return []any{searchRule, reportsRule, gwReportsRule, sraReportsRule, UsageReportRule, eventRule, eventForwarderRule, isiRule}
 }
 
 func isAccessRule(ruleType string) bool {
-	return ruleType == "search-rule" || ruleType == "reports-rule" || ruleType == "gw-reports-rule" || ruleType == "sra-reports-rule" || ruleType == "usage-reports-rule" || ruleType == "event-rule" || ruleType == "event-forwarder-rule"
+	return ruleType == "search-rule" ||
+		ruleType == "reports-rule" ||
+		ruleType == "gw-reports-rule" ||
+		ruleType == "sra-reports-rule" ||
+		ruleType == "usage-reports-rule" ||
+		ruleType == "event-rule" ||
+		ruleType == "event-forwarder-rule" ||
+		ruleType == "isi-rule"
 }
 
 func setAccessRuleField(d *schema.ResourceData, roleType, rolePath string) error {
@@ -1152,6 +1195,8 @@ func setAccessRuleField(d *schema.ResourceData, roleType, rolePath string) error
 		return d.Set("event_center_access", rolePath)
 	case "event-forwarder-rule":
 		return d.Set("event_forwarders_access", rolePath)
+	case "isi-rule":
+		return d.Set("isi_access", rolePath)
 	default:
 		return nil
 	}
@@ -1163,6 +1208,8 @@ func convertPathName(rolePath string) string {
 		return "all"
 	case "/self":
 		return "own"
+	case "/scoped":
+		return "scoped"
 	default:
 		return ""
 	}
@@ -1174,6 +1221,8 @@ func convertPathNameWithNoneOption(rolePath string) string {
 		return "all"
 	case "/self":
 		return "own"
+	case "/scoped":
+		return "scoped"
 	default:
 		return "none"
 	}
@@ -1185,6 +1234,8 @@ func convertPathNameOpposite(rolePath string) string {
 		return "/*"
 	case "own":
 		return "/self"
+	case "scoped":
+		return "/scoped"
 	default:
 		return ""
 	}

@@ -87,6 +87,20 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"version": {
 				Type:        schema.TypeInt,
 				Computed:    true,
@@ -221,6 +235,8 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	password := d.Get("password").(string)
 	username := d.Get("username").(string)
 	customField := d.Get("custom_field").(map[string]any)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	ProtectionKey := d.Get("protection_key").(string)
 	multilineValue := d.Get("multiline_value").(bool)
 	description := d.Get("description").(string)
@@ -262,6 +278,8 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Password, password)
 	common.GetAkeylessPtr(&body.Username, username)
 	common.GetAkeylessPtr(&body.CustomField, customField)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&body.SecureAccessSshCreds, secureAccessSshCreds)
@@ -433,6 +451,10 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if err = setAgenticRulesReadFields(d, itemOut.ItemGeneralInfo.AgenticRules); err != nil {
+		return err
 	}
 
 	common.GetSraFromItem(d, itemOut)

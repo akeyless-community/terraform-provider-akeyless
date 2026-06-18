@@ -98,6 +98,8 @@ func TestDynamicSecretAws(t *testing.T) {
 			aws_user_programmatic_access  = true
 			user_ttl                      = "30m"
 			password_length               = "16"
+			input_rule                    = ["name=in1,rule=validate input"]
+			output_rule                   = ["name=out1,rule=mask output"]
 			delete_protection             = "false"
 			description                   = "test dynamic secret"
 			enable_admin_rotation         = false
@@ -123,6 +125,8 @@ func TestDynamicSecretAws(t *testing.T) {
 			aws_role_arns                 = "arn:aws:iam::123456789012:role/UpdatedRole"
 			aws_external_id               = "updated-external-id"
 			password_length               = "20"
+			input_rule                    = ["name=in1,rule=validate input updated"]
+			output_rule                   = ["name=out1,rule=mask output updated"]
 			description                   = "updated test dynamic secret"
 			enable_admin_rotation         = false
 			admin_rotation_interval_days  = 10
@@ -136,8 +140,34 @@ func TestDynamicSecretAws(t *testing.T) {
 			tags                          = ["test1", "test2"]
 		}
 	`, dsName, dsPath, targetPath)
-
-	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
+	resourceName := "akeyless_dynamic_secret_aws." + dsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "16"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
+				),
+			},
+		},
+	})
 }
 
 func TestDynamicSecretAzure(t *testing.T) {
@@ -1252,6 +1282,9 @@ func TestDynamicSecretRdp(t *testing.T) {
 			rdp_host_name   = "rdp.example.com"
 			rdp_host_port   = "3389"
 			rdp_user_groups = "Administrators"
+			password_length = "12"
+			input_rule      = ["name=in1,rule=validate input"]
+			output_rule     = ["name=out1,rule=mask output"]
 			user_ttl        = "30m"
 		}
 	`, dsName, dsPath, targetPath)
@@ -1265,12 +1298,41 @@ func TestDynamicSecretRdp(t *testing.T) {
 			rdp_host_name   = "rdp.example.com"
 			rdp_host_port   = "3389"
 			rdp_user_groups = "Administrators"
+			password_length = "14"
+			input_rule      = ["name=in1,rule=validate input updated"]
+			output_rule     = ["name=out1,rule=mask output updated"]
 			user_ttl        = "60m"
 			tags            = ["test1", "test2"]
 		}
 	`, dsName, dsPath, targetPath)
 
-	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "password_length", "12"),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "output_rule.0", "name=out1,rule=mask output"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "password_length", "14"),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.0", "name=in1,rule=validate input updated"),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "output_rule.0", "name=out1,rule=mask output updated"),
+				),
+			},
+		},
+	})
 }
 
 func TestDynamicSecretRedis(t *testing.T) {
@@ -1411,6 +1473,7 @@ func TestDynamicSecretSnowflake(t *testing.T) {
 			account_password = "DummyPass123"
 			account          = "test-account.snowflakecomputing.com"
 			db_name          = "TESTDB"
+			password_length  = "16"
 			user_ttl         = "30m"
 		}
 	`, dsName, dsPath, targetPath)
@@ -1423,12 +1486,32 @@ func TestDynamicSecretSnowflake(t *testing.T) {
 			account_password = "DummyPass123"
 			account          = "test-account.snowflakecomputing.com"
 			db_name          = "TESTDB"
+			password_length  = "20"
 			user_ttl         = "60m"
 			tags             = ["test1", "test2"]
 		}
 	`, dsName, dsPath, targetPath)
 
-	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
+	resourceName := "akeyless_dynamic_secret_snowflake." + dsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "16"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
+				),
+			},
+		},
+	})
 }
 
 func TestDynamicSecretVenafi(t *testing.T) {
@@ -1574,6 +1657,8 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			name         = "%v"
 			tmp_creds_id = "%v"
 			new_ttl_min  = 30
+			input_rule   = ["name=in1,rule=validate input"]
+			output_rule  = ["name=out1,rule=mask output"]
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1582,6 +1667,8 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			name         = "%v"
 			tmp_creds_id = "%v"
 			new_ttl_min  = 60
+			input_rule   = ["name=in1,rule=validate input updated"]
+			output_rule  = ["name=out1,rule=mask output updated"]
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1608,12 +1695,20 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tmp_creds_id", tmpCredsId),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tmp_creds_id", tmpCredsId),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
 				),
 			},
 		},

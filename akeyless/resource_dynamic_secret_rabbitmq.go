@@ -43,6 +43,18 @@ func resourceDynamicSecretRabbitmq() *schema.Resource {
 				Optional:    true,
 				Description: "The length of the password to be generated",
 			},
+			"input_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password input rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"output_rule": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Password output rule definitions",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"rabbitmq_admin_pwd": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -150,6 +162,8 @@ func resourceDynamicSecretRabbitmqCreate(d *schema.ResourceData, m interface{}) 
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	rabbitmqAdminPwd := d.Get("rabbitmq_admin_pwd").(string)
 	rabbitmqAdminUser := d.Get("rabbitmq_admin_user").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
@@ -175,6 +189,8 @@ func resourceDynamicSecretRabbitmqCreate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.RabbitmqAdminPwd, rabbitmqAdminPwd)
 	common.GetAkeylessPtr(&body.RabbitmqAdminUser, rabbitmqAdminUser)
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
@@ -280,6 +296,13 @@ func resourceDynamicSecretRabbitmqRead(d *schema.ResourceData, m interface{}) er
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -296,6 +319,8 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	passwordLength := d.Get("password_length").(string)
+	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
+	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	rabbitmqAdminPwd := d.Get("rabbitmq_admin_pwd").(string)
 	rabbitmqAdminUser := d.Get("rabbitmq_admin_user").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
@@ -321,6 +346,8 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.InputRule, inputRule)
+	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.RabbitmqAdminPwd, rabbitmqAdminPwd)
 	common.GetAkeylessPtr(&body.RabbitmqAdminUser, rabbitmqAdminUser)
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)

@@ -166,6 +166,23 @@ func GetClient() (*akeyless_api.V2ApiService, string, error) {
 	return nil, "", lastErr
 }
 
+// retryOnTransient retries fn on transient connection errors (EOF, connection
+// reset/refused) to survive Docker gateway restarts during CI.
+func retryOnTransient(fn func() error) error {
+	var lastErr error
+	for attempt := range 5 {
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt*2) * time.Second)
+		}
+		err := fn()
+		if err == nil || !isTransientError(err) {
+			return err
+		}
+		lastErr = err
+	}
+	return lastErr
+}
+
 func isTransientError(err error) bool {
 	if err == nil {
 		return false
@@ -384,7 +401,12 @@ func CreateDfcKey(t *testing.T, name string) {
 	common.GetAkeylessPtr(&body.GenerateSelfSignedCertificate, true)
 	common.GetAkeylessPtr(&body.CertificateTtl, 60)
 
-	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
+	var res *http.Response
+	err := retryOnTransient(func() error {
+		var err error
+		_, res, err = client.CreateDFCKey(context.Background()).Body(body).Execute()
+		return err
+	})
 	if err != nil && !IsAlreadyExistError(err) {
 		require.Fail(t, common.HandleError("can't create dfc key for test", res, err).Error())
 	}
@@ -400,7 +422,12 @@ func CreateProtectionKey(t *testing.T, name string) {
 	}
 	common.GetAkeylessPtr(&body.SplitLevel, 2)
 
-	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
+	var res *http.Response
+	err := retryOnTransient(func() error {
+		var err error
+		_, res, err = client.CreateDFCKey(context.Background()).Body(body).Execute()
+		return err
+	})
 	if err != nil && !IsAlreadyExistError(err) {
 		require.Fail(t, common.HandleError("can't create protection key for test", res, err).Error())
 	}
@@ -803,6 +830,40 @@ func CheckFolderExistsRemotely(folder string) resource.TestCheckFunc {
 	}
 }
 
+func CheckFolderSyncExistsRemotely(folder, uscName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, token, err := GetClient()
+		if err != nil {
+			return err
+		}
+
+		gsvBody := akeyless_api.FolderGet{
+			Name:  folder,
+			Token: &token,
+		}
+
+		rOut, _, err := client.FolderGet(context.Background()).Body(gsvBody).Execute()
+		if err != nil {
+			return err
+		}
+		if rOut.Folder == nil {
+			return fmt.Errorf("folder not found: %s", folder)
+		}
+
+		normalizedUscName := strings.TrimPrefix(uscName, "/")
+		for _, syncConfig := range rOut.Folder.UscSyncConfigs {
+			if syncConfig.UscItemName == nil {
+				continue
+			}
+			if strings.TrimPrefix(*syncConfig.UscItemName, "/") == normalizedUscName {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("folder sync not found for folder %s and usc %s", folder, uscName)
+	}
+}
+
 func CheckTargetExistsRemotely(path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client, token, err := GetClient()
@@ -1126,6 +1187,51 @@ func CheckRemoveRoleRemotely(t *testing.T, roleName string, rulesNum int) resour
 	}
 }
 
+// ExpectedRule describes a single path rule (regular or access rule) as stored
+// on the server.
+type ExpectedRule struct {
+	Type         string
+	Path         string
+	Capabilities []string
+}
+
+// CheckRoleRulesRemotely validates the role's full rule set (including access
+// rules such as search-rule/reports-rule/isi-rule) against the server, so the
+// test fails when the applied rules do not match what is actually stored
+// remotely.
+func CheckRoleRulesRemotely(t *testing.T, roleName string, expected []ExpectedRule) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, token, err := GetClient()
+		if err != nil {
+			return err
+		}
+
+		res, _, err := client.GetRole(context.Background()).Body(akeyless_api.GetRole{
+			Name:  roleName,
+			Token: &token,
+		}).Execute()
+		assert.NoError(t, err)
+
+		rules := res.GetRules()
+		remoteRules := rules.GetPathRules()
+
+		for _, exp := range expected {
+			found := false
+			for _, r := range remoteRules {
+				if r.GetType() == exp.Type && r.GetPath() == exp.Path {
+					found = true
+					assert.ElementsMatch(t, exp.Capabilities, r.GetCapabilities(),
+						"capabilities mismatch for rule type=%s path=%s", exp.Type, exp.Path)
+					break
+				}
+			}
+			assert.True(t, found, "expected rule not found on remote: type=%s path=%s", exp.Type, exp.Path)
+		}
+
+		return nil
+	}
+}
+
 // --- Delete helpers ---
 
 func DeleteTarget(t *testing.T, name string) {
@@ -1368,6 +1474,19 @@ func EnableSRA() error {
 		return fmt.Errorf("send bastion keep-alive: %w", err)
 	}
 	fmt.Println("[EnableSRA] bastion keep-alive sent successfully")
+
+	// The SRA-active marking has a short TTL on the Gator side, so a single
+	// keep-alive expires before the full suite finishes. Refresh it
+	// periodically in the background to keep the cluster SRA-active.
+	go func() {
+		ticker := time.NewTicker(60 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			if err := sendBastionKeepAlive(gatorDNS, uamCreds, clusterName); err != nil {
+				fmt.Printf("[EnableSRA] keep-alive refresh failed: %v\n", err)
+			}
+		}
+	}()
 	return nil
 }
 
@@ -1430,7 +1549,7 @@ func authenticateUAM(authDNS, accessID, accessKeyB64 string) (string, error) {
 	params.Set("timestamp", strconv.FormatInt(serverTime, 10))
 	params.Set("nonce", nonce)
 	params.Set("signature", sigB64)
-	params.Set("creds_expiry", "300")
+	params.Set("creds_expiry", "1800") // 30 minutes
 
 	authURL := authDNS + "/auth-uam?" + params.Encode()
 	resp, err := http.Get(authURL)

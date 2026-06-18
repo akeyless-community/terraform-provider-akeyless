@@ -53,6 +53,11 @@ func resourceGatewayMigrationHashi() *schema.Resource {
 				Optional:    true,
 				Description: "Import secret key as json value or independent secrets (relevant only for HasiCorp Vault migration) [true/false]",
 			},
+			"hashi_metadata_mode": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Controls the amount of HashiCorp Vault secret metadata migrated with each secret value. Options: none|minimal|full",
+			},
 			"protection_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -79,6 +84,7 @@ func resourceGatewayMigrationHashiCreate(d *schema.ResourceData, m interface{}) 
 	hashiToken := d.Get("hashi_token").(string)
 	hashiNs := d.Get("hashi_ns").([]interface{})
 	hashiJson := d.Get("hashi_json").(string)
+	hashiMetadataMode := d.Get("hashi_metadata_mode").(string)
 	protectionKey := d.Get("protection_key").(string)
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
@@ -90,6 +96,7 @@ func resourceGatewayMigrationHashiCreate(d *schema.ResourceData, m interface{}) 
 		body.HashiNs = common.ExpandStringList(hashiNs)
 	}
 	common.GetAkeylessPtr(&body.HashiJson, hashiJson)
+	common.GetAkeylessPtr(&body.HashiMetadataMode, hashiMetadataMode)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
 	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
@@ -154,6 +161,11 @@ func resourceGatewayMigrationHashiRead(d *schema.ResourceData, m interface{}) er
 								return err
 							}
 						}
+						if migration.Payload.MetadataMode != nil {
+							if err := d.Set("hashi_metadata_mode", *migration.Payload.MetadataMode); err != nil {
+								return err
+							}
+						}
 					}
 					break
 				}
@@ -178,6 +190,7 @@ func resourceGatewayMigrationHashiUpdate(d *schema.ResourceData, m interface{}) 
 	hashiToken := d.Get("hashi_token").(string)
 	hashiNs := d.Get("hashi_ns").([]interface{})
 	hashiJson := d.Get("hashi_json").(string)
+	hashiMetadataMode := d.Get("hashi_metadata_mode").(string)
 	protectionKey := d.Get("protection_key").(string)
 
 	body := akeyless_api.NewGatewayUpdateMigration("", "", "", targetLocation)
@@ -189,6 +202,7 @@ func resourceGatewayMigrationHashiUpdate(d *schema.ResourceData, m interface{}) 
 		body.HashiNs = common.ExpandStringList(hashiNs)
 	}
 	common.GetAkeylessPtr(&body.HashiJson, hashiJson)
+	common.GetAkeylessPtr(&body.HashiMetadataMode, hashiMetadataMode)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()

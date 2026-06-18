@@ -31,10 +31,12 @@ Splunk rotated secret resource
 - `expiration_date` (String) Token expiration date in YYYY-MM-DD format (relevant only for rotator-type=token when manual rotation is selected)
 - `hec_token` (String, Sensitive) Current Splunk HEC token value to store (relevant only for rotator-type=hec-token)
 - `hec_token_name` (String) Splunk HEC input name to manage (required for rotator-type=hec-token)
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `rotated_password` (String, Sensitive) Rotated-username password (relevant only for rotator-type=password)
 - `rotated_username` (String) Username to be rotated (relevant only for rotator-type=password)

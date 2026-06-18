@@ -205,9 +205,9 @@ func resourceArtifactoryTargetDelete(d *schema.ResourceData, m interface{}) erro
 	}
 
 	ctx := context.Background()
-	_, _, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
+	_, resp, err := client.TargetDelete(ctx).Body(deleteItem).Execute()
 	if err != nil {
-		return err
+		return common.HandleError("can't delete target", resp, err)
 	}
 
 	return nil

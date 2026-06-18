@@ -262,6 +262,12 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			name 						= "%v"
 			target_name 				= "%v"
 			custom_payload 				= "payload1"
+			input_rule 					= ["name=in1,rule=validate input"]
+			output_rule 				= ["name=out1,rule=mask output"]
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "false"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -271,11 +277,52 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			name 						= "%v"
 			target_name 				= "%v"
 			custom_payload 				= "payload2"
+			input_rule 					= ["name=in1,rule=validate input updated"]
+			output_rule 				= ["name=out1,rule=mask output updated"]
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "true"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
 
-	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+	resourceName := "akeyless_rotated_secret_custom." + rsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "custom_payload", "payload1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "false"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "custom_payload", "payload2"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "true"),
+				),
+			},
+		},
+	})
 }
 
 func TestRotatedSecretDockerhubResource(t *testing.T) {
@@ -666,7 +713,26 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 		}
 	`, rsName, rsPath, targetPath)
 
-	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+	resourceName := "akeyless_rotated_secret_mysql." + rsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
+				),
+			},
+		},
+	})
 }
 
 func TestRotatedSecretOracleResource(t *testing.T) {
@@ -857,6 +923,7 @@ func TestRotatedSecretRedshiftResource(t *testing.T) {
 			authentication_credentials 	= "use-target-creds"
 			rotated_username 			= "user1"
 			rotated_password 			= "pass1"
+			password_length 			= "12"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -869,11 +936,31 @@ func TestRotatedSecretRedshiftResource(t *testing.T) {
 			authentication_credentials 	= "use-target-creds"
 			rotated_username 			= "user2"
 			rotated_password 			= "pass2"
+			password_length 			= "14"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
 
-	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+	resourceName := "akeyless_rotated_secret_redshift." + rsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "12"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "14"),
+				),
+			},
+		},
+	})
 }
 
 func TestRotatedSecretSnowflakeResource(t *testing.T) {
@@ -1251,6 +1338,80 @@ func TestRotatedSecretDataSource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.akeyless_rotated_secret.rsv", "value"),
+				),
+			},
+		},
+	})
+}
+
+func TestRotatedSecretHashiVaultResource(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-hashi-vault-rs"
+	targetPath := testPath(targetName)
+	targetDetailsType := "hashi_target_details"
+
+	expect := map[string]any{
+		"vault_url":        "http://127.0.0.1:8200",
+		"vault_token":      "test",
+		"vault_namespaces": "",
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	rsName := "test-rs-hashi-vault"
+	rsPath := testPath(rsName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_hashi_vault" "%v" {
+			name 					= "%v"
+			target_name 			= "%v"
+			description 			= "aaaa"
+			password_length 		= "12"
+			input_rule 			= ["name=in1,rule=validate input"]
+			output_rule 			= ["name=out1,rule=mask output"]
+			rotation_event_in 		= ["1", "7"]
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_hashi_vault" "%v" {
+			name 					= "%v"
+			target_name 			= "%v"
+			description 			= "bbbb"
+			password_length 		= "14"
+			input_rule 				= ["name=in2,rule=validate input updated"]
+			output_rule 			= ["name=out1,rule=mask output updated"]
+			rotation_event_in 		= ["2", "8", "14"]
+		}
+	`, rsName, rsPath, targetPath)
+	resourceName := "akeyless_rotated_secret_hashi_vault." + rsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "12"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "14"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in2,rule=validate input updated"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
 				),
 			},
 		},

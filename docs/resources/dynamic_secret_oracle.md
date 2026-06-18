@@ -27,6 +27,7 @@ Oracle DB dynamic secret resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `encryption_key_name` (String) Dynamic producer encryption key
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `oracle_creation_statements` (String) Oracle Creation statements
 - `oracle_host` (String) Oracle Host
@@ -35,6 +36,7 @@ Oracle DB dynamic secret resource
 - `oracle_revocation_statements` (String) Oracle Revocation statements
 - `oracle_service_name` (String) Oracle DB Name
 - `oracle_username` (String) Oracle Username
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]

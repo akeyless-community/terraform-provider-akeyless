@@ -37,6 +37,16 @@ func resourceUscSecret() *schema.Resource {
 				Optional:    true,
 				Description: "The version id (if not specified, will retrieve the last version)",
 			},
+			"remote_secret_activation_date": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Activation date for the secret on the remote endpoint, in UTC format: YYYY-MM-DDTHH:MM:SSZ",
+			},
+			"remote_secret_expires": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Expiration time for the secret on the remote endpoint, in UTC format: YYYY-MM-DDTHH:MM:SSZ",
+			},
 			"value": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -113,6 +123,8 @@ func resourceUscSecretCreate(d *schema.ResourceData, m any) error {
 	value := d.Get("value").(string)
 	binaryValue := d.Get("binary_value").(bool)
 	namespace := d.Get("namespace").(string)
+	remoteSecretActivationDate := d.Get("remote_secret_activation_date").(string)
+	remoteSecretExpires := d.Get("remote_secret_expires").(string)
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -133,6 +145,8 @@ func resourceUscSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ObjectType, objectType)
 	common.GetAkeylessPtr(&body.PfxPassword, pfxPassword)
+	common.GetAkeylessPtr(&body.RemoteSecretActivationDate, remoteSecretActivationDate)
+	common.GetAkeylessPtr(&body.RemoteSecretExpires, remoteSecretExpires)
 	common.GetAkeylessPtr(&body.Region, region)
 	common.GetAkeylessPtr(&body.UscEncryptionKey, uscEncryptionKey)
 
@@ -218,6 +232,9 @@ func resourceUscSecretRead(d *schema.ResourceData, m any) error {
 		}
 	}
 
+	// Bug: remote_secret_activation_date, remote_secret_expires do not exist in the response
+	// TODO: Add them to read after fixing it in gateway.
+
 	d.SetId(buildUscSecretId(uscName, secretName))
 
 	return nil
@@ -245,6 +262,8 @@ func resourceUscSecretUpdate(d *schema.ResourceData, m any) error {
 	value := d.Get("value").(string)
 	binaryValue := d.Get("binary_value").(bool)
 	namespace := d.Get("namespace").(string)
+	remoteSecretActivationDate := d.Get("remote_secret_activation_date").(string)
+	remoteSecretExpires := d.Get("remote_secret_expires").(string)
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -262,6 +281,8 @@ func resourceUscSecretUpdate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.PfxPassword, pfxPassword)
+	common.GetAkeylessPtr(&body.RemoteSecretActivationDate, remoteSecretActivationDate)
+	common.GetAkeylessPtr(&body.RemoteSecretExpires, remoteSecretExpires)
 	common.GetAkeylessPtr(&body.UscEncryptionKey, uscEncryptionKey)
 
 	_, resp, err := client.UscUpdate(ctx).Body(body).Execute()

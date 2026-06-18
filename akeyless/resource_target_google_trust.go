@@ -40,7 +40,7 @@ func resourceGoogleTrustTarget() *schema.Resource {
 			"dns_target_creds": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of existing cloud target for DNS credentials. Required when challenge type is dns. Supported providers: AWS, Azure, GCP",
+				Description: "Name of existing cloud target for DNS credentials. Required when challenge type is dns. Supported providers: AWS, Azure, GCP, Cloudflare",
 			},
 			"eab_hmac_key": {
 				Type:        schema.TypeString,
@@ -67,6 +67,11 @@ func resourceGoogleTrustTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Route53 hosted zone ID. Required when DNS credentials target is AWS",
+			},
+			"dns_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Cloudflare DNS zone identifier. Required when DNS credentials target is Cloudflare",
 			},
 			"resource_group": {
 				Type:        schema.TypeString,
@@ -119,6 +124,7 @@ func resourceGoogleTrustTargetCreate(d *schema.ResourceData, m interface{}) erro
 	gcpProject := d.Get("gcp_project").(string)
 	googleTrustUrl := d.Get("google_trust_url").(string)
 	hostedZone := d.Get("hosted_zone").(string)
+	dnsZone := d.Get("dns_zone").(string)
 	resourceGroup := d.Get("resource_group").(string)
 	timeout := d.Get("timeout").(string)
 	description := d.Get("description").(string)
@@ -137,6 +143,7 @@ func resourceGoogleTrustTargetCreate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.GcpProject, gcpProject)
 	common.GetAkeylessPtr(&body.GoogleTrustUrl, googleTrustUrl)
 	common.GetAkeylessPtr(&body.HostedZone, hostedZone)
+	common.GetAkeylessPtr(&body.DnsZone, dnsZone)
 	common.GetAkeylessPtr(&body.ResourceGroup, resourceGroup)
 	common.GetAkeylessPtr(&body.Timeout, timeout)
 	common.GetAkeylessPtr(&body.Description, description)
@@ -222,6 +229,12 @@ func resourceGoogleTrustTargetRead(d *schema.ResourceData, m interface{}) error 
 				return err
 			}
 		}
+		if details.DnsZone != nil {
+			err = d.Set("dns_zone", *details.DnsZone)
+			if err != nil {
+				return err
+			}
+		}
 		if details.ResourceGroup != nil {
 			err = d.Set("resource_group", *details.ResourceGroup)
 			if err != nil {
@@ -273,6 +286,7 @@ func resourceGoogleTrustTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	gcpProject := d.Get("gcp_project").(string)
 	googleTrustUrl := d.Get("google_trust_url").(string)
 	hostedZone := d.Get("hosted_zone").(string)
+	dnsZone := d.Get("dns_zone").(string)
 	resourceGroup := d.Get("resource_group").(string)
 	timeout := d.Get("timeout").(string)
 	description := d.Get("description").(string)
@@ -293,6 +307,7 @@ func resourceGoogleTrustTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.GcpProject, gcpProject)
 	common.GetAkeylessPtr(&body.GoogleTrustUrl, googleTrustUrl)
 	common.GetAkeylessPtr(&body.HostedZone, hostedZone)
+	common.GetAkeylessPtr(&body.DnsZone, dnsZone)
 	common.GetAkeylessPtr(&body.ResourceGroup, resourceGroup)
 	common.GetAkeylessPtr(&body.Timeout, timeout)
 	common.GetAkeylessPtr(&body.Description, description)

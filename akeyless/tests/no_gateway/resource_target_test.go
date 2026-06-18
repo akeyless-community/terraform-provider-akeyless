@@ -1,6 +1,7 @@
 package no_gateway
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"testing"
@@ -32,7 +33,6 @@ func TestTargetArtifactoryResource(t *testing.T) {
 	`, secretName, secretPath)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, secretPath)
-
 }
 
 func TestTargetAwsResource(t *testing.T) {
@@ -146,6 +146,77 @@ func TestTargetDbResource(t *testing.T) {
 	`, secretName, secretPath)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, secretPath)
+}
+
+func TestTargetDbMTLSResource(t *testing.T) {
+	secretName := "db_target_mtls"
+	secretPath := testPath(secretName)
+
+	clientCert1 := base64.StdEncoding.EncodeToString([]byte("client-cert-1"))
+	clientKey1 := base64.StdEncoding.EncodeToString([]byte("client-key-1"))
+	clientCert2 := base64.StdEncoding.EncodeToString([]byte("client-cert-2"))
+	clientKey2 := base64.StdEncoding.EncodeToString([]byte("client-key-2"))
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_db" "%v" {
+			name 				= "%v"
+			db_type     		= "mysql"
+			user_name 			= "user1"
+			pwd 				= "pwd1"
+			host 				= "host1"
+			port 				= "1231"
+			db_name 			= "db1"
+			ssl 				= true
+			enable_mtls 		= true
+			client_certificate 	= "%v"
+			client_private_key 	= "%v"
+			client_key_passphrase = "client-pass-1"
+		}
+	`, secretName, secretPath, clientCert1, clientKey1)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_db" "%v" {
+			name 				= "%v"
+			db_type     		= "mysql"
+			user_name 			= "user2"
+			pwd 				= "pwd2"
+			host 				= "host2"
+			port 				= "1231"
+			db_name 			= "db2"
+			ssl 				= true
+			enable_mtls 		= true
+			client_certificate 	= "%v"
+			client_private_key 	= "%v"
+			client_key_passphrase = "client-pass-2"
+		}
+	`, secretName, secretPath, clientCert2, clientKey2)
+	resourceName := "akeyless_target_db." + secretName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testutils.CheckTargetDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr(resourceName, "enable_mtls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate", clientCert1),
+					resource.TestCheckResourceAttr(resourceName, "client_private_key", clientKey1),
+					resource.TestCheckResourceAttr(resourceName, "client_key_passphrase", "client-pass-1"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr(resourceName, "enable_mtls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate", clientCert2),
+					resource.TestCheckResourceAttr(resourceName, "client_private_key", clientKey2),
+					resource.TestCheckResourceAttr(resourceName, "client_key_passphrase", "client-pass-2"),
+				),
+			},
+		},
+	})
 }
 
 func TestTargetDbOracleResource(t *testing.T) {
@@ -530,6 +601,126 @@ func TestTargetGoogleTrustResource(t *testing.T) {
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
 
+func TestTargetGoogleTrustResourceCloudflareDnsZone(t *testing.T) {
+	eabKeyId := os.Getenv("AKEYLESS_EAB_KEY_ID")
+	eabHmacKey := os.Getenv("AKEYLESS_EAB_HMAC_KEY")
+	if eabKeyId == "" || eabHmacKey == "" {
+		t.Skip("skipping: AKEYLESS_EAB_KEY_ID and AKEYLESS_EAB_HMAC_KEY must be set for Google Trust target tests")
+	}
+
+	cfTargetName := "google_trust_cf_dns_target"
+	cfTargetPath := testPath(cfTargetName)
+	targetName := "google_trust_target_cf"
+	targetPath := testPath(targetName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name        = "%v"
+			account_id  = "test-account-id"
+			api_token   = "test-api-token"
+		}
+
+		resource "akeyless_target_google_trust" "%v" {
+			name 				= "%v"
+			email 				= "test@example.com"
+			eab_key_id 			= "%v"
+			eab_hmac_key 		= "%v"
+			dns_target_creds 	= akeyless_target_cloudflare.%v.name
+			dns_zone 			= "cf-zone-123"
+			google_trust_url 	= "staging"
+			timeout 			= "5m"
+			description 		= "Test Google Trust target"
+		}
+	`, cfTargetName, cfTargetPath, targetName, targetPath, eabKeyId, eabHmacKey, cfTargetName)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name        = "%v"
+			account_id  = "test-account-id"
+			api_token   = "test-api-token"
+		}
+
+		resource "akeyless_target_google_trust" "%v" {
+			name 				= "%v"
+			email 				= "updated@example.com"
+			eab_key_id 			= "%v"
+			eab_hmac_key 		= "%v"
+			dns_target_creds 	= akeyless_target_cloudflare.%v.name
+			dns_zone 			= "cf-zone-456"
+			google_trust_url 	= "production"
+			timeout 			= "10m"
+			description 		= "Updated Google Trust target"
+		}
+	`, cfTargetName, cfTargetPath, targetName, targetPath, eabKeyId, eabHmacKey, cfTargetName)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testutils.CheckTargetDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-123"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-456"),
+				),
+			},
+		},
+	})
+}
+
+func TestTargetCloudflareResource(t *testing.T) {
+	targetName := "cloudflare_target"
+	targetPath := testPath(targetName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name 				= "%v"
+			account_id 			= "test-account-id"
+			api_token 			= "test-api-token"
+			description 		= "Test Cloudflare target"
+		}
+	`, targetName, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name 				= "%v"
+			account_id 			= "test-account-id-2"
+			api_token 			= "test-api-token-2"
+			description 		= "Updated Cloudflare target"
+		}
+	`, targetName, targetPath)
+	resourceName := "akeyless_target_cloudflare." + targetName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testutils.CheckTargetDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "account_id", "test-account-id"),
+					resource.TestCheckResourceAttr(resourceName, "api_token", "test-api-token"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "account_id", "test-account-id-2"),
+					resource.TestCheckResourceAttr(resourceName, "api_token", "test-api-token-2"),
+				),
+			},
+		},
+	})
+}
+
 func TestTargetK8sResource(t *testing.T) {
 	secretName := "k8s-target"
 	secretPath := testPath(secretName)
@@ -584,7 +775,6 @@ func TestTargetLdapResource(t *testing.T) {
 }
 
 func TestTargetLetsEncryptResource(t *testing.T) {
-
 	dnsTargetName := "dns_target"
 	dnsTargetPath := testPath(dnsTargetName)
 	dnsTargetDetailsType := "aws_target_details"
@@ -628,6 +818,71 @@ func TestTargetLetsEncryptResource(t *testing.T) {
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
 
+func TestTargetLetsEncryptResourceCloudflareDnsZone(t *testing.T) {
+	cfTargetName := "lets_encrypt_cf_dns_target"
+	cfTargetPath := testPath(cfTargetName)
+	targetName := "lets_encrypt_target_cf"
+	targetPath := testPath(targetName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name        = "%v"
+			account_id  = "test-account-id"
+			api_token   = "test-api-token"
+		}
+
+		resource "akeyless_target_lets_encrypt" "%v" {
+			name 				= "%v"
+			email 				= "test@example.com"
+			dns_target_creds 	= akeyless_target_cloudflare.%v.name
+			dns_zone 			= "cf-zone-123"
+			lets_encrypt_url 	= "staging"
+			timeout 			= "5m"
+			description 		= "Test Lets Encrypt target"
+		}
+	`, cfTargetName, cfTargetPath, targetName, targetPath, cfTargetName)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name        = "%v"
+			account_id  = "test-account-id"
+			api_token   = "test-api-token"
+		}
+
+		resource "akeyless_target_lets_encrypt" "%v" {
+			name 				= "%v"
+			email 				= "updated@example.com"
+			dns_target_creds 	= akeyless_target_cloudflare.%v.name
+			dns_zone 			= "cf-zone-456"
+			lets_encrypt_url 	= "production"
+			timeout 			= "10m"
+			description 		= "Updated Lets Encrypt target"
+		}
+	`, cfTargetName, cfTargetPath, targetName, targetPath, cfTargetName)
+
+	resourceName := "akeyless_target_lets_encrypt." + targetName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testutils.CheckTargetDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "dns_zone", "cf-zone-123"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "dns_zone", "cf-zone-456"),
+				),
+			},
+		},
+	})
+}
+
 func TestTargetDigiCertResource(t *testing.T) {
 	eabKeyId := os.Getenv("AKEYLESS_DIGICERT_EAB_KEY_ID")
 	eabHmacKey := os.Getenv("AKEYLESS_DIGICERT_EAB_HMAC_KEY")
@@ -660,9 +915,9 @@ func TestTargetDigiCertResource(t *testing.T) {
 			acme_challenge   = "dns"
 			digicert_url     = "us-demo"
 			dns_target_creds = "%v"
+			hosted_zone      = "Z1234567890"
 			eab_hmac_key     = "%v"
 			eab_key_id       = "%v"
-			hosted_zone      = "Z1234567890"
 			timeout          = "5m"
 			description      = "Test DigiCert target"
 		}
@@ -674,15 +929,90 @@ func TestTargetDigiCertResource(t *testing.T) {
 			email            = "updated@example.com"
 			digicert_url     = "eu-demo"
 			dns_target_creds = "%v"
+			hosted_zone      = "Z0987654321"
 			eab_hmac_key     = "%v"
 			eab_key_id       = "%v"
-			hosted_zone      = "Z0987654321"
 			timeout          = "10m"
 			description      = "Updated DigiCert target"
 		}
 	`, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
+func TestTargetDigiCertResourceCloudflareDnsZone(t *testing.T) {
+	eabKeyId := os.Getenv("AKEYLESS_DIGICERT_EAB_KEY_ID")
+	eabHmacKey := os.Getenv("AKEYLESS_DIGICERT_EAB_HMAC_KEY")
+	if eabKeyId == "" || eabHmacKey == "" {
+		t.Skip("skipping: AKEYLESS_DIGICERT_EAB_KEY_ID and AKEYLESS_DIGICERT_EAB_HMAC_KEY must be set for DigiCert target tests")
+	}
+
+	cfTargetName := "digicert_cf_dns_target"
+	cfTargetPath := testPath(cfTargetName)
+	targetName := "digicert_target_cf"
+	targetPath := testPath(targetName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name        = "%v"
+			account_id  = "test-account-id"
+			api_token   = "test-api-token"
+		}
+
+		resource "akeyless_target_digicert" "%v" {
+			name             = "%v"
+			email            = "test@example.com"
+			acme_challenge   = "dns"
+			digicert_url     = "us-demo"
+			dns_target_creds = akeyless_target_cloudflare.%v.name
+			dns_zone         = "cf-zone-123"
+			eab_hmac_key     = "%v"
+			eab_key_id       = "%v"
+			timeout          = "5m"
+			description      = "Test DigiCert target"
+		}
+	`, cfTargetName, cfTargetPath, targetName, targetPath, cfTargetName, eabHmacKey, eabKeyId)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_cloudflare" "%v" {
+			name        = "%v"
+			account_id  = "test-account-id"
+			api_token   = "test-api-token"
+		}
+
+		resource "akeyless_target_digicert" "%v" {
+			name             = "%v"
+			email            = "updated@example.com"
+			digicert_url     = "eu-demo"
+			dns_target_creds = akeyless_target_cloudflare.%v.name
+			dns_zone         = "cf-zone-456"
+			eab_hmac_key     = "%v"
+			eab_key_id       = "%v"
+			timeout          = "10m"
+			description      = "Updated DigiCert target"
+		}
+	`, cfTargetName, cfTargetPath, targetName, targetPath, cfTargetName, eabHmacKey, eabKeyId)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testutils.CheckTargetDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-123"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-456"),
+				),
+			},
+		},
+	})
 }
 
 func TestTargetLinkedResource(t *testing.T) {

@@ -25,6 +25,7 @@ Mongo DB dynamic secret resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `encryption_key_name` (String) Encrypt producer with following key
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `mongodb_atlas_api_private_key` (String, Sensitive) MongoDB Atlas private key
 - `mongodb_atlas_api_public_key` (String) MongoDB Atlas public key
@@ -39,6 +40,7 @@ Mongo DB dynamic secret resource
 - `mongodb_server_uri` (String) MongoDB server URI
 - `mongodb_uri_options` (String) MongoDB server URI options
 - `mongodb_username` (String) MongoDB server username
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access

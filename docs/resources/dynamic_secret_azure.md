@@ -32,7 +32,9 @@ Azure AD dynamic secret resource
 - `encryption_key_name` (String) Dynamic secret encryption key
 - `fixed_user_claim_keyname` (String) FixedUserClaimKeyname
 - `fixed_user_only` (Boolean) Fixed user
+- `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
+- `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `secure_access_url` (String)
