@@ -145,7 +145,7 @@ func Provider() *schema.Provider {
 			"akeyless_dynamic_secret_tmp_creds":                                  resourceDynamicSecretTmpCreds(),
 			"akeyless_rotated_secret_aws":                                        resourceRotatedSecretAws(),
 			"akeyless_rotated_secret_azure":                                      resourceRotatedSecretAzure(),
-			"akeyless_rotated_secret_hashivault":                                 resourceRotatedSecretHashiVault(),
+			"akeyless_rotated_secret_hashi_vault":                                resourceRotatedSecretHashiVault(),
 			"akeyless_rotated_secret_cassandra":                                  resourceRotatedSecretCassandra(),
 			"akeyless_rotated_secret_custom":                                     resourceRotatedSecretCustom(),
 			"akeyless_rotated_secret_dockerhub":                                  resourceRotatedSecretDockerHub(),
