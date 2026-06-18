@@ -60,6 +60,7 @@ func resourceRotatedSecretCustom() *schema.Resource {
 			"password_length": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The length of the password to be generated",
 			},
 			"input_rule": {
