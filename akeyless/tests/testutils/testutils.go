@@ -1160,6 +1160,51 @@ func CheckRemoveRoleRemotely(t *testing.T, roleName string, rulesNum int) resour
 	}
 }
 
+// ExpectedRule describes a single path rule (regular or access rule) as stored
+// on the server.
+type ExpectedRule struct {
+	Type         string
+	Path         string
+	Capabilities []string
+}
+
+// CheckRoleRulesRemotely validates the role's full rule set (including access
+// rules such as search-rule/reports-rule/isi-rule) against the server, so the
+// test fails when the applied rules do not match what is actually stored
+// remotely.
+func CheckRoleRulesRemotely(t *testing.T, roleName string, expected []ExpectedRule) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, token, err := GetClient()
+		if err != nil {
+			return err
+		}
+
+		res, _, err := client.GetRole(context.Background()).Body(akeyless_api.GetRole{
+			Name:  roleName,
+			Token: &token,
+		}).Execute()
+		assert.NoError(t, err)
+
+		rules := res.GetRules()
+		remoteRules := rules.GetPathRules()
+
+		for _, exp := range expected {
+			found := false
+			for _, r := range remoteRules {
+				if r.GetType() == exp.Type && r.GetPath() == exp.Path {
+					found = true
+					assert.ElementsMatch(t, exp.Capabilities, r.GetCapabilities(),
+						"capabilities mismatch for rule type=%s path=%s", exp.Type, exp.Path)
+					break
+				}
+			}
+			assert.True(t, found, "expected rule not found on remote: type=%s path=%s", exp.Type, exp.Path)
+		}
+
+		return nil
+	}
+}
+
 // --- Delete helpers ---
 
 func DeleteTarget(t *testing.T, name string) {
