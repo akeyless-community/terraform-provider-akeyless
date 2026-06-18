@@ -279,7 +279,7 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			target_name 				= "%v"
 			custom_payload 				= "payload2"
 			password_length 			= "14"
-			input_rule 					= ["name=in1,rule=validate input"]
+			input_rule 					= ["name=in1,rule=validate input updated"]
 			output_rule 				= ["name=out1,rule=mask output updated"]
 			use_capital_letters 		= "true"
 			use_lower_letters 			= "true"
@@ -1333,7 +1333,7 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 			target_name 			= "%v"
 			description 			= "bbbb"
 			password_length 		= "14"
-			input_rule 			= ["name=in2,rule=validate input updated"]
+			input_rule 				= ["name=in2,rule=validate input updated"]
 			output_rule 			= ["name=out1,rule=mask output updated"]
 			rotation_event_in 		= ["2", "8", "14"]
 			use_capital_letters 	= "false"

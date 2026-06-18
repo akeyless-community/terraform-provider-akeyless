@@ -129,7 +129,7 @@ func TestDynamicSecretAws(t *testing.T) {
 			aws_role_arns                 = "arn:aws:iam::123456789012:role/UpdatedRole"
 			aws_external_id               = "updated-external-id"
 			password_length               = "20"
-			input_rule                    = ["name=in1,rule=validate input"]
+			input_rule                    = ["name=in1,rule=validate input updated"]
 			output_rule                   = ["name=out1,rule=mask output updated"]
 			use_capital_letters           = "true"
 			use_lower_letters             = "true"
@@ -173,7 +173,7 @@ func TestDynamicSecretAws(t *testing.T) {
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
 					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
@@ -1315,7 +1315,7 @@ func TestDynamicSecretRdp(t *testing.T) {
 			rdp_host_port   = "3389"
 			rdp_user_groups = "Administrators"
 			password_length = "14"
-			input_rule      = ["name=in1,rule=validate input"]
+			input_rule      = ["name=in1,rule=validate input updated"]
 			output_rule     = ["name=out1,rule=mask output updated"]
 			user_ttl        = "60m"
 			tags            = ["test1", "test2"]
@@ -1342,7 +1342,7 @@ func TestDynamicSecretRdp(t *testing.T) {
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "password_length", "14"),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.#", "1"),
-					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr("akeyless_dynamic_secret_rdp."+dsName, "output_rule.0", "name=out1,rule=mask output updated"),
 				),
@@ -1662,7 +1662,7 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			name         = "%v"
 			tmp_creds_id = "%v"
 			new_ttl_min  = 60
-			input_rule   = ["name=in1,rule=validate input"]
+			input_rule   = ["name=in1,rule=validate input updated"]
 			output_rule  = ["name=out1,rule=mask output updated"]
 		}
 	`, dsPath, tmpCredsId)
@@ -1701,7 +1701,7 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tmp_creds_id", tmpCredsId),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
 				),
