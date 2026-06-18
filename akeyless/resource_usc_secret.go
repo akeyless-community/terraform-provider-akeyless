@@ -232,16 +232,8 @@ func resourceUscSecretRead(d *schema.ResourceData, m any) error {
 		}
 	}
 
-	if v, ok := d.GetOk("remote_secret_activation_date"); ok {
-		if err := d.Set("remote_secret_activation_date", v.(string)); err != nil {
-			return err
-		}
-	}
-	if v, ok := d.GetOk("remote_secret_expires"); ok {
-		if err := d.Set("remote_secret_expires", v.(string)); err != nil {
-			return err
-		}
-	}
+	// Bug: remote_secret_activation_date, remote_secret_expires do not exist in the response
+	// TODO: Add them to read after fixing it in gateway.
 
 	d.SetId(buildUscSecretId(uscName, secretName))
 
