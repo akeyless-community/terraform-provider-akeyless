@@ -265,6 +265,10 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			password_length 			= "12"
 			input_rule 					= ["name=in1,rule=validate input"]
 			output_rule 				= ["name=out1,rule=mask output"]
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "false"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -277,6 +281,10 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			password_length 			= "14"
 			input_rule 					= ["name=in1,rule=validate input updated"]
 			output_rule 				= ["name=out1,rule=mask output updated"]
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "true"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -295,6 +303,10 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "false"),
 				),
 			},
 			{
@@ -307,6 +319,10 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "true"),
 				),
 			},
 		},
