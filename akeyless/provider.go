@@ -52,8 +52,6 @@ func Provider() *schema.Provider {
 			"akeyless_dfc_key":                                                   resourceDfcKey(),
 			"akeyless_static_secret":                                             resourceStaticSecret(),
 			"akeyless_pki_cert_issuer":                                           resourcePKICertIssuer(),
-			"akeyless_kmip_server":                                               resourceKMIPServer(),
-			"akeyless_kmip_client":                                               resourceKMIPClient(),
 			"akeyless_ssh_cert_issuer":                                           resourceSSHCertIssuer(),
 			"akeyless_auth_method_api_key":                                       resourceAuthMethodApiKey(),
 			"akeyless_auth_method_aws_iam":                                       resourceAuthMethodAwsIam(),
