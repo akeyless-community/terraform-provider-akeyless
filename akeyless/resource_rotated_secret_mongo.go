@@ -91,6 +91,26 @@ func resourceRotatedSecretMongo() *schema.Resource {
 				Description: "Password output rule definitions",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"use_capital_letters": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Password must contain capital letters [true/false]",
+			},
+			"use_lower_letters": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Password must contain lower case letters [true/false]",
+			},
+			"use_numbers": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Password must contain numbers [true/false]",
+			},
+			"use_special_characters": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Password must contain special characters [true/false]",
+			},
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -181,6 +201,10 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	passwordLength := d.Get("password_length").(string)
+	useCapitalLetters := d.Get("use_capital_letters").(string)
+	useLowerLetters := d.Get("use_lower_letters").(string)
+	useNumbers := d.Get("use_numbers").(string)
+	useSpecialCharacters := d.Get("use_special_characters").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
 	key := d.Get("key").(string)
@@ -227,6 +251,10 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
 	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.UseCapitalLetters, useCapitalLetters)
+	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
+	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
+	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
@@ -449,6 +477,9 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
+		return err
+	}
+	if err = setRotatedSecretPasswordPolicyBoolReadFields(d, itemOut.ItemGeneralInfo); err != nil {
 		return err
 	}
 

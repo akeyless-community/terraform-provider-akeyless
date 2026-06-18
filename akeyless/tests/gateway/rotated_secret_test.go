@@ -289,7 +289,44 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 		}
 	`, rsName, rsPath, targetPath)
 
-	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+	resourceName := "akeyless_rotated_secret_custom." + rsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "custom_payload", "payload1"),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "12"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "false"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "custom_payload", "payload2"),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "14"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "true"),
+				),
+			},
+		},
+	})
 }
 
 func TestRotatedSecretDockerhubResource(t *testing.T) {
@@ -663,6 +700,10 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			rotated_username 			= "test"
   			rotated_password 			= "test"
 			password_length 			= "9"
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "false"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -676,6 +717,10 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			rotated_username 			= "test"
   			rotated_password 			= "test"
 			password_length 			= "9"
+			use_capital_letters 		= "false"
+			use_lower_letters 			= "true"
+			use_numbers 				= "false"
+			use_special_characters 		= "true"
 			tags 						= ["t1","t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -689,6 +734,10 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "false"),
 				),
 			},
 			{
@@ -696,6 +745,10 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "true"),
 				),
 			},
 		},
@@ -890,6 +943,11 @@ func TestRotatedSecretRedshiftResource(t *testing.T) {
 			authentication_credentials 	= "use-target-creds"
 			rotated_username 			= "user1"
 			rotated_password 			= "pass1"
+			password_length 			= "12"
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "false"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -902,11 +960,43 @@ func TestRotatedSecretRedshiftResource(t *testing.T) {
 			authentication_credentials 	= "use-target-creds"
 			rotated_username 			= "user2"
 			rotated_password 			= "pass2"
+			password_length 			= "14"
+			use_capital_letters 		= "false"
+			use_lower_letters 			= "true"
+			use_numbers 				= "false"
+			use_special_characters 		= "true"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
 
-	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
+	resourceName := "akeyless_rotated_secret_redshift." + rsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "12"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "false"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "password_length", "14"),
+					resource.TestCheckResourceAttr(resourceName, "use_capital_letters", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_numbers", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "true"),
+				),
+			},
+		},
+	})
 }
 
 func TestRotatedSecretSnowflakeResource(t *testing.T) {
