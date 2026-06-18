@@ -166,6 +166,23 @@ func GetClient() (*akeyless_api.V2ApiService, string, error) {
 	return nil, "", lastErr
 }
 
+// retryOnTransient retries fn on transient connection errors (EOF, connection
+// reset/refused) to survive Docker gateway restarts during CI.
+func retryOnTransient(fn func() error) error {
+	var lastErr error
+	for attempt := range 5 {
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt*2) * time.Second)
+		}
+		err := fn()
+		if err == nil || !isTransientError(err) {
+			return err
+		}
+		lastErr = err
+	}
+	return lastErr
+}
+
 func isTransientError(err error) bool {
 	if err == nil {
 		return false
@@ -384,7 +401,12 @@ func CreateDfcKey(t *testing.T, name string) {
 	common.GetAkeylessPtr(&body.GenerateSelfSignedCertificate, true)
 	common.GetAkeylessPtr(&body.CertificateTtl, 60)
 
-	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
+	var res *http.Response
+	err := retryOnTransient(func() error {
+		var err error
+		_, res, err = client.CreateDFCKey(context.Background()).Body(body).Execute()
+		return err
+	})
 	if err != nil && !IsAlreadyExistError(err) {
 		require.Fail(t, common.HandleError("can't create dfc key for test", res, err).Error())
 	}
@@ -400,7 +422,12 @@ func CreateProtectionKey(t *testing.T, name string) {
 	}
 	common.GetAkeylessPtr(&body.SplitLevel, 2)
 
-	_, res, err := client.CreateDFCKey(context.Background()).Body(body).Execute()
+	var res *http.Response
+	err := retryOnTransient(func() error {
+		var err error
+		_, res, err = client.CreateDFCKey(context.Background()).Body(body).Execute()
+		return err
+	})
 	if err != nil && !IsAlreadyExistError(err) {
 		require.Fail(t, common.HandleError("can't create protection key for test", res, err).Error())
 	}
