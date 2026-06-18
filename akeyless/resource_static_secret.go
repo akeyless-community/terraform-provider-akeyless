@@ -453,6 +453,10 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 		}
 	}
 
+	if err = setAgenticRulesReadFields(d, itemOut.ItemGeneralInfo.AgenticRules); err != nil {
+		return err
+	}
+
 	common.GetSraFromItem(d, itemOut)
 
 	return nil

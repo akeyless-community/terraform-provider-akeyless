@@ -196,6 +196,17 @@ func TestStaticPasswordResourceRules(t *testing.T) {
 		}
 	`, secretName, secretPath)
 
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path 			= "%v"
+			type 			= "password"
+			username 		= "user"
+			password 		= "abc"
+			input_rule 		= ["name=in1,rule=validate input updated"]
+			output_rule 	= ["name=out1,rule=mask output updated"]
+		}
+	`, secretName, secretPath)
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		CheckDestroy:      checkStaticSecretDestroyed,
@@ -208,6 +219,16 @@ func TestStaticPasswordResourceRules(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "output_rule.0", "name=out1,rule=mask output"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "input_rule.#", "1"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "input_rule.0", "name=in1,rule=validate input updated"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "output_rule.#", "1"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "output_rule.0", "name=out1,rule=mask output updated"),
 				),
 			},
 		},
