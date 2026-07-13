@@ -68,6 +68,7 @@ func resourceKeycloakTarget() *schema.Resource {
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     "false",
 				Description: "Protection from accidental deletion of this object [true/false]",
 			},
 			"keep_prev_version": {

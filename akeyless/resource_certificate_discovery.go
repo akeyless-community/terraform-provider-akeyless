@@ -124,33 +124,40 @@ func resourceCertificateDiscoveryCreate(d *schema.ResourceData, m interface{}) e
 		return common.HandleError("can't run certificate discovery", resp, err)
 	}
 
+	countNew, countExisting, countHosts, countFailed := 0, 0, 0, 0
+	itemNames := []string{}
 	if out != nil && out.Results != nil {
 		results := out.Results
 		if results.CountNew != nil {
-			if err := d.Set("count_new", int(*results.CountNew)); err != nil {
-				return err
-			}
+			countNew = int(*results.CountNew)
 		}
 		if results.CountExisting != nil {
-			if err := d.Set("count_existing", int(*results.CountExisting)); err != nil {
-				return err
-			}
+			countExisting = int(*results.CountExisting)
 		}
 		if results.CountHosts != nil {
-			if err := d.Set("count_hosts", int(*results.CountHosts)); err != nil {
-				return err
-			}
+			countHosts = int(*results.CountHosts)
 		}
 		if results.CountFailed != nil {
-			if err := d.Set("count_failed", int(*results.CountFailed)); err != nil {
-				return err
-			}
+			countFailed = int(*results.CountFailed)
 		}
 		if results.ItemNames != nil {
-			if err := d.Set("item_names", results.ItemNames); err != nil {
-				return err
-			}
+			itemNames = results.ItemNames
 		}
+	}
+	if err := d.Set("count_new", countNew); err != nil {
+		return err
+	}
+	if err := d.Set("count_existing", countExisting); err != nil {
+		return err
+	}
+	if err := d.Set("count_hosts", countHosts); err != nil {
+		return err
+	}
+	if err := d.Set("count_failed", countFailed); err != nil {
+		return err
+	}
+	if err := d.Set("item_names", itemNames); err != nil {
+		return err
 	}
 
 	d.SetId(uuid.New().String())
