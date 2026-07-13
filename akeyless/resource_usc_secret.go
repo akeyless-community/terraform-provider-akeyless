@@ -232,8 +232,17 @@ func resourceUscSecretRead(d *schema.ResourceData, m any) error {
 		}
 	}
 
-	// Bug: remote_secret_activation_date, remote_secret_expires do not exist in the response
-	// TODO: Add them to read after fixing it in gateway.
+	// Read activation/expiration from USC get response when present.
+	if rOut.ActivationDate != nil {
+		if err := d.Set("remote_secret_activation_date", rOut.ActivationDate.UTC().Format("2006-01-02T15:04:05Z")); err != nil {
+			return err
+		}
+	}
+	if rOut.Expiration != nil {
+		if err := d.Set("remote_secret_expires", rOut.Expiration.UTC().Format("2006-01-02T15:04:05Z")); err != nil {
+			return err
+		}
+	}
 
 	d.SetId(buildUscSecretId(uscName, secretName))
 

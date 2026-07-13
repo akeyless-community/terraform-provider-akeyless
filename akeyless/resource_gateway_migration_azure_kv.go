@@ -62,6 +62,12 @@ func resourceGatewayMigrationAzureKv() *schema.Resource {
 				Optional:    true,
 				Description: "The name of the key that protects the classic key value (if empty, the account default key will be used)",
 			},
+			"target_name": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Name of existing target to use to create the migration",
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
+			},
 			"migration_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -84,6 +90,7 @@ func resourceGatewayMigrationAzureKvCreate(d *schema.ResourceData, m interface{}
 	azureSecret := d.Get("azure_secret").(string)
 	azureTenantId := d.Get("azure_tenant_id").(string)
 	protectionKey := d.Get("protection_key").(string)
+	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
@@ -93,6 +100,7 @@ func resourceGatewayMigrationAzureKvCreate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.AzureSecret, azureSecret)
 	common.GetAkeylessPtr(&body.AzureTenantId, azureTenantId)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
+	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	expirationEventInSet := d.Get("expiration_event_in").([]interface{})
 	expirationEventIn := common.ExpandStringList(expirationEventInSet)
@@ -192,6 +200,7 @@ func resourceGatewayMigrationAzureKvUpdate(d *schema.ResourceData, m interface{}
 	azureSecret := d.Get("azure_secret").(string)
 	azureTenantId := d.Get("azure_tenant_id").(string)
 	protectionKey := d.Get("protection_key").(string)
+	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayUpdateMigration("", "", "", targetLocation)
 	body.Token = &token
@@ -201,6 +210,7 @@ func resourceGatewayMigrationAzureKvUpdate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.AzureSecret, azureSecret)
 	common.GetAkeylessPtr(&body.AzureTenantId, azureTenantId)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
+	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	expirationEventInSet := d.Get("expiration_event_in").([]interface{})
 	expirationEventIn := common.ExpandStringList(expirationEventInSet)

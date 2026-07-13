@@ -1,3 +1,4 @@
+// generated file
 package akeyless
 
 import (
@@ -8,15 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceGatewayMigrationAws() *schema.Resource {
+func resourceGatewayMigrationConjur() *schema.Resource {
 	return &schema.Resource{
-		Description: "AWS Migration resource",
-		Create:      resourceGatewayMigrationAwsCreate,
-		Read:        resourceGatewayMigrationAwsRead,
-		Update:      resourceGatewayMigrationAwsUpdate,
-		Delete:      resourceGatewayMigrationAwsDelete,
+		Description: "Conjur Migration resource",
+		Create:      resourceGatewayMigrationConjurCreate,
+		Read:        resourceGatewayMigrationConjurRead,
+		Update:      resourceGatewayMigrationConjurUpdate,
+		Delete:      resourceGatewayMigrationConjurDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceGatewayMigrationAwsImport,
+			State: resourceGatewayMigrationConjurImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -30,26 +31,31 @@ func resourceGatewayMigrationAws() *schema.Resource {
 				Required:    true,
 				Description: "Target location in Akeyless for imported secrets",
 			},
-			"aws_key_id": {
+			"conjur_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "AWS Access Key ID with sufficient permissions to get all secrets, e.g. 'arn:aws:secretsmanager:[Region]:[AccountId]:secret:[/path/to/secrets/_*]' (relevant only for AWS migration)",
+				Description: "Conjur server base URL. If conjur_url is HTTPS and Conjur uses a private CA/self-signed certificate, make the CA bundle available on the Gateway and set CONJUR_SSL_CERT_PATH to its path",
 			},
-			"aws_key": {
+			"conjur_account": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Conjur account name set on your Conjur server",
+			},
+			"conjur_username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Conjur username used to authenticate",
+			},
+			"conjur_api_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				Description: "AWS Secret Access Key (relevant only for AWS migration)",
-			},
-			"aws_region": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "AWS region of the required Secrets Manager (relevant only for AWS migration)",
+				Description: "Conjur API Key for the specified user",
 			},
 			"protection_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The name of the key that protects the classic key value (if empty, the account default key will be used)",
+				Description: "The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
 			},
 			"target_name": {
 				Type:             schema.TypeString,
@@ -66,7 +72,7 @@ func resourceGatewayMigrationAws() *schema.Resource {
 	}
 }
 
-func resourceGatewayMigrationAwsCreate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayMigrationConjurCreate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -74,41 +80,44 @@ func resourceGatewayMigrationAwsCreate(d *schema.ResourceData, m interface{}) er
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
-	awsKeyId := d.Get("aws_key_id").(string)
-	awsKey := d.Get("aws_key").(string)
-	awsRegion := d.Get("aws_region").(string)
+	conjurUrl := d.Get("conjur_url").(string)
+	conjurAccount := d.Get("conjur_account").(string)
+	conjurUsername := d.Get("conjur_username").(string)
+	conjurApiKey := d.Get("conjur_api_key").(string)
 	protectionKey := d.Get("protection_key").(string)
 	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
-	body.Type = akeyless_api.PtrString("aws")
-	common.GetAkeylessPtr(&body.AwsKeyId, awsKeyId)
-	common.GetAkeylessPtr(&body.AwsKey, awsKey)
-	common.GetAkeylessPtr(&body.AwsRegion, awsRegion)
+	body.Type = akeyless_api.PtrString("conjur")
+	common.GetAkeylessPtr(&body.ConjurUrl, conjurUrl)
+	common.GetAkeylessPtr(&body.ConjurAccount, conjurAccount)
+	common.GetAkeylessPtr(&body.ConjurUsername, conjurUsername)
+	common.GetAkeylessPtr(&body.ConjurApiKey, conjurApiKey)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		return common.HandleError("can't create Gateway Migration AWS", resp, err)
+		return common.HandleError("can't create Gateway Migration Conjur", resp, err)
 	}
 
 	migrationID := *out.MigrationId
-	d.Set("migration_id", migrationID)
+	if err := d.Set("migration_id", migrationID); err != nil {
+		return err
+	}
 
 	d.SetId(name)
 
-	return resourceGatewayMigrationAwsRead(d, m)
+	return resourceGatewayMigrationConjurRead(d, m)
 }
 
-func resourceGatewayMigrationAwsRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayMigrationConjurRead(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
 	ctx := context.Background()
-
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
@@ -118,13 +127,13 @@ func resourceGatewayMigrationAwsRead(d *schema.ResourceData, m interface{}) erro
 
 	rOut, res, err := client.GatewayGetMigration(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleReadError(d, "can't get Gateway Migration AWS", res, err)
+		return common.HandleReadError(d, "can't get Gateway Migration Conjur", res, err)
 	}
 
 	if rOut.Body != nil {
-		if len(rOut.Body.AwsSecretsMigrations) > 0 {
-			for _, migration := range rOut.Body.AwsSecretsMigrations {
-				if migration.General != nil && *migration.General.Name == path {
+		if len(rOut.Body.ConjurMigrations) > 0 {
+			for _, migration := range rOut.Body.ConjurMigrations {
+				if migration.General != nil && migration.General.Name != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {
 						if err := d.Set("migration_id", *migration.General.Id); err != nil {
 							return err
@@ -141,13 +150,23 @@ func resourceGatewayMigrationAwsRead(d *schema.ResourceData, m interface{}) erro
 						}
 					}
 					if migration.Payload != nil {
-						if migration.Payload.Region != nil {
-							if err := d.Set("aws_region", *migration.Payload.Region); err != nil {
+						if migration.Payload.ConjurUrl != nil {
+							if err := d.Set("conjur_url", *migration.Payload.ConjurUrl); err != nil {
 								return err
 							}
 						}
-						if migration.Payload.Key != nil {
-							if err := d.Set("aws_key_id", *migration.Payload.Key); err != nil {
+						if migration.Payload.ConjurAccount != nil {
+							if err := d.Set("conjur_account", *migration.Payload.ConjurAccount); err != nil {
+								return err
+							}
+						}
+						if migration.Payload.ConjurUsername != nil {
+							if err := d.Set("conjur_username", *migration.Payload.ConjurUsername); err != nil {
+								return err
+							}
+						}
+						if migration.Payload.ConjurApiKey != nil {
+							if err := d.Set("conjur_api_key", *migration.Payload.ConjurApiKey); err != nil {
 								return err
 							}
 						}
@@ -159,11 +178,10 @@ func resourceGatewayMigrationAwsRead(d *schema.ResourceData, m interface{}) erro
 	}
 
 	d.SetId(path)
-
 	return nil
 }
 
-func resourceGatewayMigrationAwsUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayMigrationConjurUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -171,30 +189,32 @@ func resourceGatewayMigrationAwsUpdate(d *schema.ResourceData, m interface{}) er
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
-	awsKeyId := d.Get("aws_key_id").(string)
-	awsKey := d.Get("aws_key").(string)
-	awsRegion := d.Get("aws_region").(string)
+	conjurUrl := d.Get("conjur_url").(string)
+	conjurAccount := d.Get("conjur_account").(string)
+	conjurUsername := d.Get("conjur_username").(string)
+	conjurApiKey := d.Get("conjur_api_key").(string)
 	protectionKey := d.Get("protection_key").(string)
 	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayUpdateMigration("", "", "", targetLocation)
 	body.Token = &token
 	body.Name = &name
-	common.GetAkeylessPtr(&body.AwsKeyId, awsKeyId)
-	common.GetAkeylessPtr(&body.AwsKey, awsKey)
-	common.GetAkeylessPtr(&body.AwsRegion, awsRegion)
+	common.GetAkeylessPtr(&body.ConjurUrl, conjurUrl)
+	common.GetAkeylessPtr(&body.ConjurAccount, conjurAccount)
+	common.GetAkeylessPtr(&body.ConjurUsername, conjurUsername)
+	common.GetAkeylessPtr(&body.ConjurApiKey, conjurApiKey)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		return common.HandleError("can't update Gateway Migration AWS", resp, err)
+		return common.HandleError("can't update Gateway Migration Conjur", resp, err)
 	}
 
 	return nil
 }
 
-func resourceGatewayMigrationAwsDelete(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayMigrationConjurDelete(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -215,11 +235,10 @@ func resourceGatewayMigrationAwsDelete(d *schema.ResourceData, m interface{}) er
 	return nil
 }
 
-func resourceGatewayMigrationAwsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-
+func resourceGatewayMigrationConjurImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	id := d.Id()
 
-	err := resourceGatewayMigrationAwsRead(d, m)
+	err := resourceGatewayMigrationConjurRead(d, m)
 	if err != nil {
 		return nil, err
 	}

@@ -32,6 +32,7 @@ Kubernetes Migration resource
 - `k8s_url` (String) K8s API Server URL, e.g. https://k8s-api.mycompany.com:6443 (relevant only for K8s migration)
 - `k8s_username` (String) For Password Authentication method K8s Client username with sufficient permission to list and get secrets in the namespace(s) you selected (relevant only for K8s migration with Password Authentication method)
 - `protection_key` (String) The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `target_name` (String) Name of existing target to use to create the migration
 
 ### Read-Only
 

@@ -26,6 +26,7 @@ Certificate Migration resource
 - `expiration_event_in` (List of String) How many days before the expiration of the certificate would you like to be notified
 - `port_ranges` (String) A comma separated list of port ranges Examples: "80,443" or "80,443,8080-8090" or "443"
 - `protection_key` (String) The name of the key that protects the classic key value (if empty, the account default key will be used)
+- `target_name` (String) Name of existing target to use to create the migration
 
 ### Read-Only
 

@@ -84,6 +84,11 @@ func resourceDbTarget() *schema.Resource {
 				Optional:    true,
 				Description: "SSL connection certificate",
 			},
+			"skip_server_name_validation": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Skip server name verification while still validating the certificate chain [true/false]",
+			},
 			"enable_mtls": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -245,6 +250,7 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	dbServerName := d.Get("db_server_name").(string)
 	ssl := d.Get("ssl").(bool)
 	sslCertificate := d.Get("ssl_certificate").(string)
+	skipServerNameValidation := d.Get("skip_server_name_validation").(string)
 	enableMTLS := d.Get("enable_mtls").(bool)
 	clientCertificate := d.Get("client_certificate").(string)
 	clientPrivateKey := d.Get("client_private_key").(string)
@@ -287,6 +293,7 @@ func resourceDbTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
 	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
+	common.GetAkeylessPtr(&body.SkipServerNameValidation, skipServerNameValidation)
 	common.GetAkeylessPtr(&body.EnableMtls, enableMTLS)
 	common.GetAkeylessPtr(&body.ClientCertificate, clientCertificate)
 	common.GetAkeylessPtr(&body.ClientPrivateKey, clientPrivateKey)
@@ -414,6 +421,12 @@ func resourceDbTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 		if dbTargetDetails.SslConnectionCertificate != nil {
 			err = d.Set("ssl_certificate", *dbTargetDetails.SslConnectionCertificate)
+			if err != nil {
+				return err
+			}
+		}
+		if dbTargetDetails.SkipServerNameValidation != nil {
+			err = d.Set("skip_server_name_validation", *dbTargetDetails.SkipServerNameValidation)
 			if err != nil {
 				return err
 			}
@@ -594,6 +607,7 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	dbServerName := d.Get("db_server_name").(string)
 	ssl := d.Get("ssl").(bool)
 	sslCertificate := d.Get("ssl_certificate").(string)
+	skipServerNameValidation := d.Get("skip_server_name_validation").(string)
 	enableMTLS := d.Get("enable_mtls").(bool)
 	clientCertificate := d.Get("client_certificate").(string)
 	clientPrivateKey := d.Get("client_private_key").(string)
@@ -636,6 +650,7 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.DbServerName, dbServerName)
 	common.GetAkeylessPtr(&body.Ssl, ssl)
 	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
+	common.GetAkeylessPtr(&body.SkipServerNameValidation, skipServerNameValidation)
 	common.GetAkeylessPtr(&body.EnableMtls, enableMTLS)
 	common.GetAkeylessPtr(&body.ClientCertificate, clientCertificate)
 	common.GetAkeylessPtr(&body.ClientPrivateKey, clientPrivateKey)

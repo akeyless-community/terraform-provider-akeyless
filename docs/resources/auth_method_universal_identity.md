@@ -35,6 +35,7 @@ Akeyless Universal Identity Auth Method Resource
 - `jwt_ttl` (Number) Creds expiration time in minutes
 - `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
 - `ttl` (Number) Token ttl (in minutes)
+- `uid_expiration_event_at` (Set of String) Trigger an event when Universal Identity Token TTL has reached the specified percentage (e.g. 10, 20, 50)
 
 ### Read-Only
 

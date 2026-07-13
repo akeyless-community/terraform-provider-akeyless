@@ -52,6 +52,7 @@ DB Target resource
 - `parent_target_name` (String) Name of the parent target, relevant only when connection-type is parent-target
 - `port` (String) Database port
 - `pwd` (String, Sensitive) Database password
+- `skip_server_name_validation` (String) Skip server name verification while still validating the certificate chain [true/false]
 - `snowflake_account` (String) Snowflake account name
 - `snowflake_api_private_key` (String, Sensitive) RSA Private key (base64 encoded)
 - `snowflake_api_private_key_password` (String, Sensitive) The Private key passphrase

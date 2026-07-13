@@ -45,6 +45,7 @@ resource "akeyless_auth_method_saml" "saml_auth" {
 - `jwt_ttl` (Number) Creds expiration time in minutes
 - `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
 - `subclaims_delimiters` (Set of String) A list of additional sub claims delimiters (relevant only for SAML, OIDC, OAuth2/JWT)
+- `use_dedicated_saml_urls` (Boolean) Use dedicated SAML URLs
 
 ### Read-Only
 

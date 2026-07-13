@@ -85,6 +85,12 @@ func resourceGatewayMigrationK8s() *schema.Resource {
 				Optional:    true,
 				Description: "The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)",
 			},
+			"target_name": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Name of existing target to use to create the migration",
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
+			},
 			"migration_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -112,6 +118,7 @@ func resourceGatewayMigrationK8sCreate(d *schema.ResourceData, m interface{}) er
 	k8sNamespace := d.Get("k8s_namespace").(string)
 	k8sSkipSystem := d.Get("k8s_skip_system").(bool)
 	protectionKey := d.Get("protection_key").(string)
+	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
@@ -144,6 +151,7 @@ func resourceGatewayMigrationK8sCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.K8sNamespace, k8sNamespace)
 	common.GetAkeylessPtr(&body.K8sSkipSystem, k8sSkipSystem)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
+	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
@@ -247,6 +255,7 @@ func resourceGatewayMigrationK8sUpdate(d *schema.ResourceData, m interface{}) er
 	k8sNamespace := d.Get("k8s_namespace").(string)
 	k8sSkipSystem := d.Get("k8s_skip_system").(bool)
 	protectionKey := d.Get("protection_key").(string)
+	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayUpdateMigration("", "", "", targetLocation)
 	body.Token = &token
@@ -279,6 +288,7 @@ func resourceGatewayMigrationK8sUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.K8sNamespace, k8sNamespace)
 	common.GetAkeylessPtr(&body.K8sSkipSystem, k8sSkipSystem)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
+	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
