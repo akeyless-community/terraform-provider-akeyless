@@ -689,6 +689,7 @@ func TestAuthMethodSAMLResource(t *testing.T) {
 			force_sub_claims 		= true
 			allowed_redirect_uri 	= ["https://localhost/callback"]
 			subclaims_delimiters 	= [","]
+			use_dedicated_saml_urls = true
 		}
 	`, name, path)
 
@@ -705,6 +706,7 @@ func TestAuthMethodSAMLResource(t *testing.T) {
 			force_sub_claims 		= false
 			allowed_redirect_uri 	= ["https://localhost/callback", "https://localhost/callback2"]
 			subclaims_delimiters 	= [",", ";"]
+			use_dedicated_saml_urls = false
 		}
 	`, name, path)
 
@@ -723,6 +725,7 @@ func TestAuthMethodSAMLResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "force_sub_claims", "true"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "allowed_redirect_uri.0", "https://localhost/callback"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "subclaims_delimiters.0", ","),
+					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "use_dedicated_saml_urls", "true"),
 					resource.TestCheckResourceAttrSet("akeyless_auth_method_saml."+name, "access_id"),
 				),
 			},
@@ -736,6 +739,7 @@ func TestAuthMethodSAMLResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "force_sub_claims", "false"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "allowed_redirect_uri.#", "2"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "subclaims_delimiters.#", "2"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "use_dedicated_saml_urls", "false"),
 					resource.TestCheckResourceAttrSet("akeyless_auth_method_saml."+name, "access_id"),
 				),
 			},
@@ -798,29 +802,31 @@ func TestAuthMethodUIDResource(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_auth_method_universal_identity" "%v" {
-			name 				= "%v"
-			description 		= "test uid auth method"
-			jwt_ttl 			= 42
-			deny_inheritance 	= true
-			ttl 				= 120
-            audit_logs_claims 	= ["eee","kk"]
-			delete_protection 	= "true"
-			access_expires 		= 1638741817
-			force_sub_claims 	= true
-			deny_rotate 		= true
+			name 					= "%v"
+			description 			= "test uid auth method"
+			jwt_ttl 				= 42
+			deny_inheritance 		= true
+			ttl 					= 120
+            audit_logs_claims 		= ["eee","kk"]
+			delete_protection 		= "true"
+			access_expires 			= 1638741817
+			force_sub_claims 		= true
+			deny_rotate 			= true
+			uid_expiration_event_at = ["10", "50"]
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_auth_method_universal_identity" "%v" {
-			name 				= "%v"
-			description 		= "updated uid auth method"
-			deny_inheritance 	= false
-			bound_ips 			= ["1.1.1.0/32"]
-            audit_logs_claims 	= ["eee","kk"]
-			delete_protection 	= "false"
-			access_expires 		= 1638741817
-			force_sub_claims 	= false
-			deny_rotate 		= false
+			name 					= "%v"
+			description 			= "updated uid auth method"
+			deny_inheritance 		= false
+			bound_ips 				= ["1.1.1.0/32"]
+            audit_logs_claims 		= ["eee","kk"]
+			delete_protection 		= "false"
+			access_expires 			= 1638741817
+			force_sub_claims 		= false
+			deny_rotate 			= false
+			uid_expiration_event_at = ["20"]
 		}
 	`, name, path)
 
@@ -837,6 +843,7 @@ func TestAuthMethodUIDResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_auth_method_universal_identity."+name, "access_expires", "1638741817"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_universal_identity."+name, "force_sub_claims", "true"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_universal_identity."+name, "deny_rotate", "true"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_universal_identity."+name, "uid_expiration_event_at.#", "2"),
 					resource.TestCheckResourceAttrSet("akeyless_auth_method_universal_identity."+name, "access_id"),
 				),
 			},
@@ -848,6 +855,7 @@ func TestAuthMethodUIDResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_auth_method_universal_identity."+name, "description", "updated uid auth method"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_universal_identity."+name, "force_sub_claims", "false"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_universal_identity."+name, "deny_rotate", "false"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_universal_identity."+name, "uid_expiration_event_at.#", "1"),
 					resource.TestCheckResourceAttrSet("akeyless_auth_method_universal_identity."+name, "access_id"),
 				),
 			},
