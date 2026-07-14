@@ -141,7 +141,7 @@ func resourceMcpSecretOAuthClientCredsCreate(d *schema.ResourceData, m interface
 	}
 
 	d.SetId(name)
-	return resourceMcpSecretOAuthClientCredsRead(d, m)
+	return nil
 }
 
 func resourceMcpSecretOAuthClientCredsRead(d *schema.ResourceData, m interface{}) error {
@@ -188,5 +188,6 @@ func resourceMcpSecretOAuthClientCredsUpdate(d *schema.ResourceData, m interface
 	if err := updateMcpSecretItemMeta(d, m); err != nil {
 		return err
 	}
-	return resourceMcpSecretOAuthClientCredsRead(d, m)
+	d.SetId(name)
+	return nil
 }

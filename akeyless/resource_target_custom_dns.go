@@ -70,14 +70,6 @@ func resourceCustomDnsTarget() *schema.Resource {
 	}
 }
 
-func expandStringMap(raw map[string]interface{}) map[string]string {
-	out := make(map[string]string, len(raw))
-	for k, v := range raw {
-		out[k] = v.(string)
-	}
-	return out
-}
-
 func resourceCustomDnsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
@@ -89,7 +81,7 @@ func resourceCustomDnsTargetCreate(d *schema.ResourceData, m interface{}) error 
 		Name:         name,
 		Token:        &token,
 		ProviderType: d.Get("provider_type").(string),
-		DnsParameter: expandStringMap(d.Get("dns_parameter").(map[string]interface{})),
+		DnsParameter: common.ExpandStringMap(d.Get("dns_parameter").(map[string]interface{})),
 	}
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
 	common.GetAkeylessPtr(&body.Key, d.Get("key").(string))
@@ -160,7 +152,7 @@ func resourceCustomDnsTargetUpdate(d *schema.ResourceData, m interface{}) error 
 		Name:         name,
 		Token:        &token,
 		ProviderType: d.Get("provider_type").(string),
-		DnsParameter: expandStringMap(d.Get("dns_parameter").(map[string]interface{})),
+		DnsParameter: common.ExpandStringMap(d.Get("dns_parameter").(map[string]interface{})),
 	}
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
 	common.GetAkeylessPtr(&body.Key, d.Get("key").(string))

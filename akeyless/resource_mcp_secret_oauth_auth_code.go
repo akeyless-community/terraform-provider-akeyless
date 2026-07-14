@@ -154,7 +154,7 @@ func resourceMcpSecretOAuthAuthCodeCreate(d *schema.ResourceData, m interface{})
 	}
 
 	d.SetId(name)
-	return resourceMcpSecretOAuthAuthCodeRead(d, m)
+	return nil
 }
 
 func resourceMcpSecretOAuthAuthCodeRead(d *schema.ResourceData, m interface{}) error {
@@ -209,5 +209,6 @@ func resourceMcpSecretOAuthAuthCodeUpdate(d *schema.ResourceData, m interface{})
 	if err := updateMcpSecretItemMeta(d, m); err != nil {
 		return err
 	}
-	return resourceMcpSecretOAuthAuthCodeRead(d, m)
+	d.SetId(name)
+	return nil
 }

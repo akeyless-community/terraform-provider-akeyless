@@ -122,7 +122,7 @@ func resourceMcpSecretBearerTokenCreate(d *schema.ResourceData, m interface{}) e
 	}
 
 	d.SetId(name)
-	return resourceMcpSecretBearerTokenRead(d, m)
+	return nil
 }
 
 func resourceMcpSecretBearerTokenRead(d *schema.ResourceData, m interface{}) error {
@@ -169,5 +169,6 @@ func resourceMcpSecretBearerTokenUpdate(d *schema.ResourceData, m interface{}) e
 	if err := updateMcpSecretItemMeta(d, m); err != nil {
 		return err
 	}
-	return resourceMcpSecretBearerTokenRead(d, m)
+	d.SetId(name)
+	return nil
 }

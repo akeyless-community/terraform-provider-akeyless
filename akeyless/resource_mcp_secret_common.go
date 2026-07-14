@@ -60,9 +60,9 @@ func readMcpSecretValue(d *schema.ResourceData, m interface{}) (*mcpSecretAuthCo
 		Name:  path,
 		Token: &token,
 	}
-	itemOut, _, err := client.DescribeItem(ctx).Body(item).Execute()
+	itemOut, res, err := client.DescribeItem(ctx).Body(item).Execute()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, common.HandleReadError(d, "can't describe MCP secret", res, err)
 	}
 
 	value, ok := gsvOut[path]
