@@ -51,12 +51,6 @@ func resourceGatewayMigrationCertificate() *schema.Resource {
 				Optional:    true,
 				Description: "The name of the key that protects the classic key value (if empty, the account default key will be used)",
 			},
-			"target_name": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Description:      "Name of existing target to use to create the migration",
-				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
-			},
 			"migration_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -78,7 +72,6 @@ func resourceGatewayMigrationCertificateCreate(d *schema.ResourceData, m interfa
 	portRanges := d.Get("port_ranges").(string)
 	expirationEventIn := d.Get("expiration_event_in").([]interface{})
 	protectionKey := d.Get("protection_key").(string)
-	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayCreateMigration(hosts, name, "", "", targetLocation)
 	body.Token = &token
@@ -88,7 +81,6 @@ func resourceGatewayMigrationCertificateCreate(d *schema.ResourceData, m interfa
 		body.ExpirationEventIn = common.ExpandStringList(expirationEventIn)
 	}
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
-	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
@@ -169,7 +161,6 @@ func resourceGatewayMigrationCertificateUpdate(d *schema.ResourceData, m interfa
 	portRanges := d.Get("port_ranges").(string)
 	expirationEventIn := d.Get("expiration_event_in").([]interface{})
 	protectionKey := d.Get("protection_key").(string)
-	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayUpdateMigration(hosts, "", "", targetLocation)
 	body.Token = &token
@@ -179,7 +170,6 @@ func resourceGatewayMigrationCertificateUpdate(d *schema.ResourceData, m interfa
 		body.ExpirationEventIn = common.ExpandStringList(expirationEventIn)
 	}
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
-	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {

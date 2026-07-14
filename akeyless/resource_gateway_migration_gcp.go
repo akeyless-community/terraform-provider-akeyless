@@ -41,12 +41,6 @@ func resourceGatewayMigrationGcp() *schema.Resource {
 				Optional:    true,
 				Description: "The name of the key that protects the classic key value (if empty, the account default key will be used)",
 			},
-			"target_name": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Description:      "Name of existing target to use to create the migration",
-				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
-			},
 			"migration_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -66,14 +60,12 @@ func resourceGatewayMigrationGcpCreate(d *schema.ResourceData, m interface{}) er
 	targetLocation := d.Get("target_location").(string)
 	gcpKey := d.Get("gcp_key").(string)
 	protectionKey := d.Get("protection_key").(string)
-	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
 	body.Type = akeyless_api.PtrString("gcp")
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
-	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
@@ -147,14 +139,12 @@ func resourceGatewayMigrationGcpUpdate(d *schema.ResourceData, m interface{}) er
 	targetLocation := d.Get("target_location").(string)
 	gcpKey := d.Get("gcp_key").(string)
 	protectionKey := d.Get("protection_key").(string)
-	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayUpdateMigration("", "", "", targetLocation)
 	body.Token = &token
 	body.Name = &name
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
-	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {

@@ -24,7 +24,6 @@ GCP Migration resource
 
 - `gcp_key` (String, Sensitive) Base64-encoded GCP Service Account private key text with sufficient permissions to Secrets Manager, Minimum required permission is Secret Manager Secret Accessor, e.g. 'roles/secretmanager.secretAccessor' (relevant only for GCP migration)
 - `protection_key` (String) The name of the key that protects the classic key value (if empty, the account default key will be used)
-- `target_name` (String) Name of existing target to use to create the migration
 
 ### Read-Only
 

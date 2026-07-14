@@ -20,7 +20,6 @@ func TestCertificateDiscoveryResource(t *testing.T) {
 			port_ranges          = "443"
 			target_location      = "%v"
 			expiration_event_in  = ["30", "10"]
-			debug                = true
 		}
 	`, name, folder)
 

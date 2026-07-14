@@ -15,37 +15,25 @@ func TestGatewayMigrationAws(t *testing.T) {
 	name := "migration_aws"
 	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
 
-	awsTargetName := testPath("aws-migration-target")
-	testutils.CreateAwsTarget(t, awsTargetName, map[string]any{
-		"access_key_id": "test",
-		"access_key":    "test",
-		"region":        "us-east-1",
-	})
-	t.Cleanup(func() {
-		testutils.DeleteTarget(t, awsTargetName)
-	})
-
 	config := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_aws" "%v" {
 			name            = "%v"
 			target_location = "terraform-tests/migrations/aws"
-			target_name     = "%v"
 			aws_key_id      = "test"
 			aws_key         = "test"
 			aws_region      = "us-east-1"
 		}
-	`, name, migrationName, awsTargetName)
+	`, name, migrationName)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_gateway_migration_aws" "%v" {
 			name            = "%v"
 			target_location = "terraform-tests/migrations/aws-updated"
-			target_name     = "%v"
 			aws_key_id      = "test"
 			aws_key         = "test"
 			aws_region      = "eu-west-1"
 		}
-	`, name, migrationName, awsTargetName)
+	`, name, migrationName)
 
 	testMigrationResource(t, config, configUpdate)
 }

@@ -28,7 +28,6 @@ Azure Key Vault Migration resource
 - `azure_tenant_id` (String) Azure Key Vault Access tenant ID (relevant only for Azure Key Vault migration)
 - `expiration_event_in` (List of String) How many days before the expiration of the certificate would you like to be notified.
 - `protection_key` (String) The name of the key that protects the classic key value (if empty, the account default key will be used)
-- `target_name` (String) Name of existing target to use to create the migration
 
 ### Read-Only
 

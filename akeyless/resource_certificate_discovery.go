@@ -43,7 +43,7 @@ func resourceCertificateDiscovery() *schema.Resource {
 				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"expiration_event_in": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
 				Description: "How many days before the expiration of the certificate would you like to be notified. To specify multiple events, repeat this argument.",
@@ -54,13 +54,6 @@ func resourceCertificateDiscovery() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Description: "The name of the key that protects the certificate value (if empty, the account default key will be used)",
-			},
-			"debug": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				ForceNew:    true,
-				Default:     false,
-				Description: "Debug mode",
 			},
 			"count_new": {
 				Type:        schema.TypeInt,
@@ -101,9 +94,9 @@ func resourceCertificateDiscoveryCreate(d *schema.ResourceData, m interface{}) e
 	hosts := strings.ReplaceAll(d.Get("hosts").(string), " ", "")
 	portRanges := strings.ReplaceAll(d.Get("port_ranges").(string), " ", "")
 	targetLocation := d.Get("target_location").(string)
-	expirationEventIn := common.ExpandStringList(d.Get("expiration_event_in").([]interface{}))
+	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
+	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	protectionKey := d.Get("protection_key").(string)
-	debug := d.Get("debug").(bool)
 
 	if hosts == "" {
 		return fmt.Errorf("hosts cannot be empty")
@@ -117,7 +110,6 @@ func resourceCertificateDiscoveryCreate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.PortRanges, portRanges)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
-	common.GetAkeylessPtr(&body.Debug, debug)
 
 	out, resp, err := client.CertificateDiscovery(ctx).Body(body).Execute()
 	if err != nil {
