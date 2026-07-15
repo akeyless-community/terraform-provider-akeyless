@@ -125,7 +125,7 @@ output "auth_method" {
 - `email_login` (Block List) A configuration block, described below, that attempts to authenticate using email and password. (see [below for nested schema](#nestedblock--email_login))
 - `gcp_login` (Block List) A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials. (see [below for nested schema](#nestedblock--gcp_login))
 - `jwt_login` (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT. (see [below for nested schema](#nestedblock--jwt_login))
-- `retry` (Block List) Optional HTTP retry configuration (AzAPI-style). When omitted, only connection errors are retried. Set this block to enable customized HTTP retries (429/5xx, etc.). See the [Customized Retry](guides/customized_retry.md) guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List) Optional HTTP retry configuration. Defaults retry connection errors and busy HTTP statuses (429/5xx). See the [Customized Retry](guides/customized_retry.md) guide. (see [below for nested schema](#nestedblock--retry))
 - `token_login` (Block List) A configuration block, described below, that attempts to authenticate using akeyless token. The token can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_TOKEN. (see [below for nested schema](#nestedblock--token_login))
 - `uid_login` (Block List) A configuration block, described below, that attempts to authenticate using Universal Identity authentication. (see [below for nested schema](#nestedblock--uid_login))
 

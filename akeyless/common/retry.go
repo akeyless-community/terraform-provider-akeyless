@@ -20,13 +20,13 @@ const (
 	resourceRetryDefaultRandomizationFactor = 0.5
 )
 
-// ResourceRetrySchema is the optional AzAPI-style per-resource retry block.
+// ResourceRetrySchema is the optional per-resource retry block.
 func ResourceRetrySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeList,
 		Optional:    true,
 		MaxItems:    1,
-		Description: "Optional resource-level retry (AzAPI-style). Runs after provider HTTP retries are exhausted; matches error messages.",
+		Description: "Optional resource-level retry. Runs after provider HTTP retries; matches error messages.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"error_message_regex": {
@@ -75,9 +75,8 @@ func AddResourceRetrySchema(m map[string]*schema.Schema) {
 	m["retry"] = ResourceRetrySchema()
 }
 
-// EnableResourceRetry adds the optional resource retry schema and wraps Create/Update/Delete
-// so a single call site (Provider ResourcesMap) can enable AzAPI-style resource retry for all resources.
-// When no retry block is set, CRUD behavior is unchanged (fn runs once).
+// EnableResourceRetry adds the resource retry schema and wraps Create/Update/Delete.
+// With no retry block, CRUD runs once (unchanged).
 func EnableResourceRetry(r *schema.Resource) {
 	if r == nil {
 		return
@@ -86,7 +85,12 @@ func EnableResourceRetry(r *schema.Resource) {
 		r.Schema = map[string]*schema.Schema{}
 	}
 	if _, exists := r.Schema["retry"]; !exists {
-		AddResourceRetrySchema(r.Schema)
+		retrySchema := ResourceRetrySchema()
+		// Create-only resources (no Update) require ForceNew on every schema attribute.
+		if r.Update == nil && r.UpdateContext == nil {
+			retrySchema.ForceNew = true
+		}
+		r.Schema["retry"] = retrySchema
 	}
 
 	if r.Create != nil {
@@ -185,8 +189,7 @@ func resourceRetryConfigFromData(d *schema.ResourceData) (*resourceRetryConfig, 
 	return cfg, nil
 }
 
-// RetryResourceOp runs fn, and if a resource retry block is set, retries when the error
-// message matches configured regexes (AzAPI-style, after provider HTTP retries).
+// RetryResourceOp runs fn, retrying when a resource retry block matches the error message.
 func RetryResourceOp(d *schema.ResourceData, fn func() error) error {
 	cfg, err := resourceRetryConfigFromData(d)
 	if err != nil {

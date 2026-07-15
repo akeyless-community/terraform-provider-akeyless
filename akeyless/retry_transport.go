@@ -13,9 +13,7 @@ import (
 	"time"
 )
 
-// retryTransport is the single HTTP retry layer for all API calls.
-// Connection-error retry keeps the production shape (EOF / reset / refused, attempt*2 sleep).
-// Busy HTTP statuses / Retry-After / release hints are added on top.
+// retryTransport retries connection errors and busy HTTP statuses for all API calls.
 type retryTransport struct {
 	base http.RoundTripper
 	cfg  retryConfig
@@ -54,7 +52,7 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 	}
 
-	// Production used a fixed retries count (3 total). PRD max_retries is "beyond first", so +1.
+	// max_retries is attempts beyond the first call.
 	retries := t.cfg.MaxRetries + 1
 	if retries < 1 {
 		retries = 1
@@ -75,7 +73,6 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			if attempt == retries-1 {
 				return nil, lastErr
 			}
-			// Production connection backoff: attempt*2 seconds (on the next try).
 			wait := time.Duration((attempt+1)*2) * time.Second
 			log.Printf("[INFO] akeyless: retrying connection error (attempt %d/%d) after %s: %v", attempt+1, retries, wait, err)
 			if sleepErr := t.sleep(req.Context(), wait); sleepErr != nil {
@@ -84,7 +81,6 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			continue
 		}
 
-		// Addition: retry busy HTTP statuses / rate-limit bodies (production returned any response as-is).
 		body, readErr := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if readErr != nil {

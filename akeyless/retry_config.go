@@ -18,7 +18,7 @@ const (
 	defaultRandomizationFactor = 0.5
 )
 
-// busyHTTPStatusCodes are retried by default (PRD). Edit this list to add/remove statuses.
+// busyHTTPStatusCodes are retried by default. Edit this list to add/remove statuses.
 var busyHTTPStatusCodes = []int{429, 500, 502, 503, 504}
 
 // releaseHintRE matches Akeyless SaaS rate-limit bodies: "will be released in 14.148893476s"

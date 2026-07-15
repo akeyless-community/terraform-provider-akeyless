@@ -1,6 +1,6 @@
 # Customized Retry
 
-The Akeyless Terraform provider retries transient failures at two layers (AzAPI-style):
+The Akeyless Terraform provider retries transient failures at two layers:
 
 1. **Provider HTTP transport** (all API calls) — connection errors + busy HTTP statuses by default
 2. **Resource `retry`** (optional) — message-regex retries after provider retries are exhausted
@@ -76,4 +76,4 @@ resource "akeyless_dynamic_secret_aws" "example" {
 
 `error_message_regex` is required when a resource `retry` block is set.
 
-Resource retry runs **after** provider HTTP retries (same ordering as AzAPI).
+Resource retry runs **after** provider HTTP retries.
