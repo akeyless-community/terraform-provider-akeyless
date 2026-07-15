@@ -29,6 +29,14 @@ provider "akeyless" {
 //    access_id = ""
 //    access_key = ""
   }
+
+  # Optional — tune HTTP retries (defaults already retry connection errors + 429/5xx).
+  # See docs/guides/customized_retry.md
+  # retry {
+  #   max_retries          = 5
+  #   interval_seconds     = 2
+  #   max_backoff_seconds  = 60
+  # }
 }
 
 resource "akeyless_auth_method" "api_key" {
@@ -117,6 +125,7 @@ output "auth_method" {
 - `email_login` (Block List) A configuration block, described below, that attempts to authenticate using email and password. (see [below for nested schema](#nestedblock--email_login))
 - `gcp_login` (Block List) A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials. (see [below for nested schema](#nestedblock--gcp_login))
 - `jwt_login` (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT. (see [below for nested schema](#nestedblock--jwt_login))
+- `retry` (Block List) Optional HTTP retry configuration (AzAPI-style). When omitted, only connection errors are retried. Set this block to enable customized HTTP retries (429/5xx, etc.). See the [Customized Retry](guides/customized_retry.md) guide. (see [below for nested schema](#nestedblock--retry))
 - `token_login` (Block List) A configuration block, described below, that attempts to authenticate using akeyless token. The token can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_TOKEN. (see [below for nested schema](#nestedblock--token_login))
 - `uid_login` (Block List) A configuration block, described below, that attempts to authenticate using Universal Identity authentication. (see [below for nested schema](#nestedblock--uid_login))
 
@@ -188,6 +197,20 @@ Required:
 
 - `access_id` (String)
 - `jwt` (String, Sensitive)
+
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Additional regexes matched against response bodies to trigger a retry.
+- `interval_seconds` (Number) Initial backoff interval in seconds when Retry-After / release hint is absent.
+- `max_backoff_seconds` (Number) Maximum backoff interval in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `multiplier` (Number) Exponential backoff multiplier.
+- `randomization_factor` (Number) Jitter factor applied to backoff intervals.
+- `retry_on_status_codes` (List of Number) HTTP status codes that trigger a retry. Defaults to 429, 500, 502, 503, 504.
 
 
 <a id="nestedblock--token_login"></a>

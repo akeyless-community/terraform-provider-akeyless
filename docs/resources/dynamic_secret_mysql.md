@@ -38,6 +38,7 @@ MySQL dynamic secret resource
 - `mysql_username` (String) MySQL Username
 - `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
+- `retry` (Block List) Optional resource-level retry after provider HTTP retries are exhausted. See [Customized Retry](../guides/customized_retry.md). (see [below for nested schema](#nestedblock--retry))
 - `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_db_name` (String) The DB name (relevant only for DB Dynamic-Secret)
@@ -55,4 +56,15 @@ MySQL dynamic secret resource
 
 - `id` (String) The ID of this resource.
 
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regexes matched against error messages. If any match, the operation is retried.
+- `interval_seconds` (Number) Initial wait before the first resource-level retry (seconds).
+- `max_interval_seconds` (Number) Maximum wait between resource-level retries (seconds).
+- `max_retries` (Number) Maximum resource-level retries after provider/transport retries are exhausted.
+- `multiplier` (Number) Exponential backoff multiplier.
+- `randomization_factor` (Number) Jitter factor for backoff intervals.
 
