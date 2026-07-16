@@ -34,7 +34,6 @@ func TestRetryTransport_DefaultRetriesHTTP429(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 2
-	cfg.RandomizationFactor = 0
 	rt := testRetryTransport(cfg)
 
 	req, _ := http.NewRequest(http.MethodGet, srv.URL, nil)
@@ -69,7 +68,6 @@ func TestRetryTransport_429Then200(t *testing.T) {
 	cfg.MaxRetries = 3
 	cfg.IntervalSeconds = 0.001
 	cfg.MaxBackoffSeconds = 1
-	cfg.RandomizationFactor = 0
 
 	rt := newRetryTransport(http.DefaultTransport, cfg)
 	var slept time.Duration
@@ -94,7 +92,7 @@ func TestRetryTransport_429Then200(t *testing.T) {
 		t.Fatalf("hits=%d want 2", hits)
 	}
 	if slept <= 0 {
-		t.Fatalf("expected sleep from release hint, got %s", slept)
+		t.Fatalf("expected sleep from body release delay, got %s", slept)
 	}
 }
 
@@ -148,7 +146,6 @@ func TestRetryTransport_Wrapped429In403Body(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 2
-	cfg.RandomizationFactor = 0
 	rt := testRetryTransport(cfg)
 
 	req, _ := http.NewRequest(http.MethodGet, srv.URL, nil)
@@ -235,7 +232,6 @@ func TestRetryTransport_MaxRetriesExhausted(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 2
-	cfg.RandomizationFactor = 0
 	cfg.IntervalSeconds = 0.001
 	rt := testRetryTransport(cfg)
 
@@ -292,7 +288,6 @@ func TestRetryTransport_ErrorMessageRegex(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 2
-	cfg.RandomizationFactor = 0
 	cfg.ErrorMessageRegex = mustCompileRegexes(t, []string{"temporary conflict"})
 	rt := testRetryTransport(cfg)
 
@@ -322,7 +317,6 @@ func TestRetryTransport_500Retry(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 1
-	cfg.RandomizationFactor = 0
 	rt := testRetryTransport(cfg)
 
 	req, _ := http.NewRequest(http.MethodPost, srv.URL, strings.NewReader(`{"a":1}`))
@@ -337,8 +331,8 @@ func TestRetryTransport_500Retry(t *testing.T) {
 	}
 }
 
-func TestParseReleaseHintSeconds(t *testing.T) {
-	sec, ok := parseReleaseHintSeconds(`Message: will be released in 14.148893476s`)
+func TestParseReleaseDelaySeconds(t *testing.T) {
+	sec, ok := parseReleaseDelaySeconds(`Message: will be released in 14.148893476s`)
 	if !ok || sec < 14 || sec > 15 {
 		t.Fatalf("sec=%v ok=%v", sec, ok)
 	}

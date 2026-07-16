@@ -37,7 +37,6 @@ func TestRetryResourceOp_MatchesAndRetries(t *testing.T) {
 				"max_interval_seconds": 0.05,
 				"max_retries":          2,
 				"multiplier":           1.0,
-				"randomization_factor": 0.0,
 			},
 		},
 	})

@@ -66,5 +66,4 @@ Optional:
 - `max_interval_seconds` (Number) Maximum wait between resource-level retries (seconds).
 - `max_retries` (Number) Maximum resource-level retries after provider/transport retries are exhausted.
 - `multiplier` (Number) Exponential backoff multiplier.
-- `randomization_factor` (Number) Jitter factor for backoff intervals.
 

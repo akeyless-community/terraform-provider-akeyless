@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"math/rand"
 	"regexp"
 	"time"
 
@@ -14,13 +13,12 @@ import (
 )
 
 const (
-	resourceRetryDefaultIntervalSeconds     = 10.0
-	resourceRetryDefaultMaxIntervalSeconds  = 180.0
-	resourceRetryDefaultMultiplier          = 1.5
-	resourceRetryDefaultRandomizationFactor = 0.5
+	resourceRetryDefaultIntervalSeconds    = 10.0
+	resourceRetryDefaultMaxIntervalSeconds = 180.0
+	resourceRetryDefaultMultiplier         = 1.5
 )
 
-// ResourceRetrySchema is the optional per-resource retry block.
+// ResourceRetrySchema is the optional resource-level retry block (after provider HTTP retry).
 func ResourceRetrySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeList,
@@ -52,12 +50,6 @@ func ResourceRetrySchema() *schema.Schema {
 					Optional:    true,
 					Default:     resourceRetryDefaultMultiplier,
 					Description: "Exponential backoff multiplier.",
-				},
-				"randomization_factor": {
-					Type:        schema.TypeFloat,
-					Optional:    true,
-					Default:     resourceRetryDefaultRandomizationFactor,
-					Description: "Jitter factor for backoff intervals.",
 				},
 				"max_retries": {
 					Type:        schema.TypeInt,
@@ -132,12 +124,11 @@ func EnableResourceRetry(r *schema.Resource) {
 }
 
 type resourceRetryConfig struct {
-	MaxRetries          int
-	IntervalSeconds     float64
-	MaxIntervalSeconds  float64
-	Multiplier          float64
-	RandomizationFactor float64
-	ErrorMessageRegex   []*regexp.Regexp
+	MaxRetries         int
+	IntervalSeconds    float64
+	MaxIntervalSeconds float64
+	Multiplier         float64
+	ErrorMessageRegex  []*regexp.Regexp
 }
 
 func resourceRetryConfigFromData(d *schema.ResourceData) (*resourceRetryConfig, error) {
@@ -148,11 +139,10 @@ func resourceRetryConfigFromData(d *schema.ResourceData) (*resourceRetryConfig, 
 	m := raw[0].(map[string]interface{})
 
 	cfg := &resourceRetryConfig{
-		MaxRetries:          3,
-		IntervalSeconds:     resourceRetryDefaultIntervalSeconds,
-		MaxIntervalSeconds:  resourceRetryDefaultMaxIntervalSeconds,
-		Multiplier:          resourceRetryDefaultMultiplier,
-		RandomizationFactor: resourceRetryDefaultRandomizationFactor,
+		MaxRetries:         3,
+		IntervalSeconds:    resourceRetryDefaultIntervalSeconds,
+		MaxIntervalSeconds: resourceRetryDefaultMaxIntervalSeconds,
+		Multiplier:         resourceRetryDefaultMultiplier,
 	}
 	if v, ok := m["max_retries"].(int); ok {
 		cfg.MaxRetries = v
@@ -165,9 +155,6 @@ func resourceRetryConfigFromData(d *schema.ResourceData) (*resourceRetryConfig, 
 	}
 	if v, ok := m["multiplier"].(float64); ok {
 		cfg.Multiplier = v
-	}
-	if v, ok := m["randomization_factor"].(float64); ok {
-		cfg.RandomizationFactor = v
 	}
 
 	patterns, _ := m["error_message_regex"].([]interface{})
@@ -242,6 +229,7 @@ func RetryResourceOpDiag(d *schema.ResourceData, fn func() diag.Diagnostics) dia
 	return last
 }
 
+// diagnosticsMessage returns the first error text so resource retry can match error_message_regex.
 func diagnosticsMessage(diags diag.Diagnostics) string {
 	for _, d := range diags {
 		if d.Severity != diag.Error {
@@ -264,17 +252,9 @@ func (c *resourceRetryConfig) matches(msg string) bool {
 	return false
 }
 
+// backoff computes how long to wait before the next resource-level retry.
 func (c *resourceRetryConfig) backoff(attempt int) time.Duration {
 	base := c.IntervalSeconds * math.Pow(c.Multiplier, float64(attempt))
-	if c.RandomizationFactor > 0 {
-		delta := c.RandomizationFactor * base
-		min := base - delta
-		max := base + delta
-		if min < 0 {
-			min = 0
-		}
-		base = min + rand.Float64()*(max-min)
-	}
 	d := time.Duration(base * float64(time.Second))
 	max := time.Duration(c.MaxIntervalSeconds * float64(time.Second))
 	if max > 0 && d > max {

@@ -16,8 +16,8 @@ By default the provider retries:
 Backoff order:
 
 1. `Retry-After` header
-2. SaaS release hint (`will be released in Ns`)
-3. Exponential backoff with jitter
+2. SaaS body release delay (`will be released in Ns`)
+3. Exponential backoff
 
 Optional knobs:
 
@@ -36,7 +36,6 @@ provider "akeyless" {
     interval_seconds      = 2
     max_backoff_seconds   = 60
     multiplier            = 1.5
-    randomization_factor  = 0.5
     error_message_regex   = [".*temporary.*"]
   }
 }
@@ -52,7 +51,6 @@ Plain **401** / **403** without a rate-limit body are not retried.
 - `AKEYLESS_RETRY_INTERVAL_SECONDS`
 - `AKEYLESS_MAX_BACKOFF_SECONDS`
 - `AKEYLESS_RETRY_MULTIPLIER`
-- `AKEYLESS_RETRY_RANDOMIZATION_FACTOR`
 
 ## Resource-level retry
 
@@ -68,7 +66,6 @@ resource "akeyless_dynamic_secret_aws" "example" {
     interval_seconds     = 10
     max_interval_seconds = 180
     multiplier           = 1.5
-    randomization_factor = 0.5
     max_retries          = 3
   }
 }

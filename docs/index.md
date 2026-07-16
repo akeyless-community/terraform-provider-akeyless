@@ -205,11 +205,10 @@ Required:
 Optional:
 
 - `error_message_regex` (List of String) Additional regexes matched against response bodies to trigger a retry.
-- `interval_seconds` (Number) Initial backoff interval in seconds when Retry-After / release hint is absent.
+- `interval_seconds` (Number) Initial backoff interval in seconds when Retry-After / body release delay is absent.
 - `max_backoff_seconds` (Number) Maximum backoff interval in seconds.
 - `max_retries` (Number) Maximum number of retries after the first attempt.
 - `multiplier` (Number) Exponential backoff multiplier.
-- `randomization_factor` (Number) Jitter factor applied to backoff intervals.
 - `retry_on_status_codes` (List of Number) HTTP status codes that trigger a retry. Defaults to 429, 500, 502, 503, 504.
 
 

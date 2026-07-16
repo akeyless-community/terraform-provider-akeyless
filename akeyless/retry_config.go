@@ -11,40 +11,40 @@ import (
 )
 
 const (
-	defaultMaxRetries          = 3
-	defaultIntervalSeconds     = 1.0
-	defaultMaxBackoffSeconds   = 30.0
-	defaultMultiplier          = 1.5
-	defaultRandomizationFactor = 0.5
+	defaultMaxRetries        = 3
+	defaultIntervalSeconds   = 1.0
+	defaultMaxBackoffSeconds = 30.0
+	defaultMultiplier        = 1.5
 )
 
-// busyHTTPStatusCodes are retried by default. Edit this list to add/remove statuses.
+// busyHTTPStatusCodes are retried by default.
 var busyHTTPStatusCodes = []int{429, 500, 502, 503, 504}
 
-// releaseHintRE matches Akeyless SaaS rate-limit bodies: "will be released in 14.148893476s"
-var releaseHintRE = regexp.MustCompile(`(?i)will be released in\s+([0-9]+(?:\.[0-9]+)?)\s*s`)
+// releaseDelayRE extracts wait seconds from SaaS bodies like "will be released in 14.15s".
+var releaseDelayRE = regexp.MustCompile(`(?i)will be released in\s+([0-9]+(?:\.[0-9]+)?)\s*s`)
 
-// rateLimitBodyRE detects SaaS rate limiting even when wrapped in another HTTP status (e.g. 403).
+// rateLimitBodyRE detects SaaS rate limiting in the body (also when outer status is e.g. 403).
 var rateLimitBodyRE = regexp.MustCompile(`(?i)(429\s+Too Many Requests|Too Many Requests|will be released in)`)
 
 type retryConfig struct {
-	MaxRetries          int
-	RetryOnStatusCodes  map[int]struct{}
-	IntervalSeconds     float64
-	MaxBackoffSeconds   float64
-	Multiplier          float64
-	RandomizationFactor float64
-	ErrorMessageRegex   []*regexp.Regexp
+	MaxRetries         int
+	RetryOnStatusCodes map[int]struct{}
+	// IntervalSeconds: first wait between retries (default 1s). Used only when no Retry-After/body delay.
+	IntervalSeconds float64
+	// MaxBackoffSeconds: never wait longer than this (default 30s). Caps IntervalSeconds growth too.
+	MaxBackoffSeconds float64
+	// Multiplier: each next wait is previous × this (default 1.5).
+	Multiplier        float64
+	ErrorMessageRegex []*regexp.Regexp
 }
 
 func defaultRetryConfig() retryConfig {
 	return retryConfig{
-		MaxRetries:          defaultMaxRetries,
-		RetryOnStatusCodes:  statusCodeSet(busyHTTPStatusCodes),
-		IntervalSeconds:     defaultIntervalSeconds,
-		MaxBackoffSeconds:   defaultMaxBackoffSeconds,
-		Multiplier:          defaultMultiplier,
-		RandomizationFactor: defaultRandomizationFactor,
+		MaxRetries:         defaultMaxRetries,
+		RetryOnStatusCodes: statusCodeSet(busyHTTPStatusCodes),
+		IntervalSeconds:    defaultIntervalSeconds,
+		MaxBackoffSeconds:  defaultMaxBackoffSeconds,
+		Multiplier:         defaultMultiplier,
 	}
 }
 
@@ -72,7 +72,7 @@ func providerRetrySchema() *schema.Schema {
 					Type:        schema.TypeFloat,
 					Optional:    true,
 					Default:     defaultIntervalSeconds,
-					Description: "Initial backoff interval in seconds when Retry-After / release hint is absent. Env: AKEYLESS_RETRY_INTERVAL_SECONDS.",
+					Description: "Initial backoff interval in seconds when Retry-After / body release delay is absent. Env: AKEYLESS_RETRY_INTERVAL_SECONDS.",
 				},
 				"max_backoff_seconds": {
 					Type:        schema.TypeFloat,
@@ -85,12 +85,6 @@ func providerRetrySchema() *schema.Schema {
 					Optional:    true,
 					Default:     defaultMultiplier,
 					Description: "Exponential backoff multiplier. Env: AKEYLESS_RETRY_MULTIPLIER.",
-				},
-				"randomization_factor": {
-					Type:        schema.TypeFloat,
-					Optional:    true,
-					Default:     defaultRandomizationFactor,
-					Description: "Jitter factor applied to backoff intervals. Env: AKEYLESS_RETRY_RANDOMIZATION_FACTOR.",
 				},
 				"error_message_regex": {
 					Type:        schema.TypeList,
@@ -121,9 +115,6 @@ func retryConfigFromProviderData(d *schema.ResourceData) (retryConfig, error) {
 		}
 		if v, ok := m["multiplier"].(float64); ok {
 			cfg.Multiplier = v
-		}
-		if v, ok := m["randomization_factor"].(float64); ok {
-			cfg.RandomizationFactor = v
 		}
 		if codes, ok := m["retry_on_status_codes"].([]interface{}); ok && len(codes) > 0 {
 			parsed := make([]int, 0, len(codes))
@@ -173,11 +164,6 @@ func applyRetryEnvOverrides(cfg retryConfig) retryConfig {
 			cfg.Multiplier = f
 		}
 	}
-	if v := os.Getenv("AKEYLESS_RETRY_RANDOMIZATION_FACTOR"); v != "" {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
-			cfg.RandomizationFactor = f
-		}
-	}
 	return cfg
 }
 
@@ -189,8 +175,9 @@ func statusCodeSet(codes []int) map[int]struct{} {
 	return out
 }
 
-func parseReleaseHintSeconds(body string) (float64, bool) {
-	m := releaseHintRE.FindStringSubmatch(body)
+// parseReleaseDelaySeconds returns the wait (seconds) from "will be released in Ns" in the body.
+func parseReleaseDelaySeconds(body string) (float64, bool) {
+	m := releaseDelayRE.FindStringSubmatch(body)
 	if len(m) < 2 {
 		return 0, false
 	}

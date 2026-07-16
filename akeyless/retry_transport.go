@@ -6,14 +6,14 @@ import (
 	"io"
 	"log"
 	"math"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 )
 
-// retryTransport retries connection errors and busy HTTP statuses for all API calls.
+// retryTransport is the provider-level HTTP retry (all API calls).
+// Resource-level retry lives in akeyless/common/retry.go and runs later, on CRUD errors.
 type retryTransport struct {
 	base http.RoundTripper
 	cfg  retryConfig
@@ -29,12 +29,12 @@ func newRetryTransport(base http.RoundTripper, cfg retryConfig) *retryTransport 
 		base: base,
 		cfg:  cfg,
 		sleep: func(ctx context.Context, d time.Duration) error {
-			timer := time.NewTimer(d)
+			timer := time.NewTimer(d) // fire after d
 			defer timer.Stop()
-			select {
-			case <-ctx.Done():
+			select { // wait for WHICHEVER happens first
+			case <-ctx.Done(): // cancel → stop waiting, return error
 				return ctx.Err()
-			case <-timer.C:
+			case <-timer.C: // timer finished → OK to retry
 				return nil
 			}
 		},
@@ -102,6 +102,7 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return nil, lastErr
 }
 
+// shouldRetry: true if status is busy, or body looks like rate-limit, or a customer regex matches.
 func (t *retryTransport) shouldRetry(status int, body string) bool {
 	if _, ok := t.cfg.RetryOnStatusCodes[status]; ok {
 		return true
@@ -123,6 +124,7 @@ func (t *retryTransport) waitDuration(attempt int, resp *http.Response, body str
 			if sec, err := strconv.ParseFloat(strings.TrimSpace(ra), 64); err == nil {
 				return t.capDuration(time.Duration(sec * float64(time.Second)))
 			}
+			// second try against response body (HTTP-date)
 			if when, err := http.ParseTime(ra); err == nil {
 				d := time.Until(when)
 				if d < 0 {
@@ -132,7 +134,8 @@ func (t *retryTransport) waitDuration(attempt int, resp *http.Response, body str
 			}
 		}
 	}
-	if sec, ok := parseReleaseHintSeconds(body); ok {
+	// Same idea as Retry-After, but delay taken from the response body.
+	if sec, ok := parseReleaseDelaySeconds(body); ok {
 		return t.capDuration(time.Duration(sec * float64(time.Second)))
 	}
 	return t.backoffDuration(attempt)
@@ -140,22 +143,14 @@ func (t *retryTransport) waitDuration(attempt int, resp *http.Response, body str
 
 func (t *retryTransport) backoffDuration(attempt int) time.Duration {
 	base := t.cfg.IntervalSeconds * math.Pow(t.cfg.Multiplier, float64(attempt))
-	if t.cfg.RandomizationFactor > 0 {
-		delta := t.cfg.RandomizationFactor * base
-		min := base - delta
-		max := base + delta
-		if min < 0 {
-			min = 0
-		}
-		base = min + rand.Float64()*(max-min)
-	}
 	return t.capDuration(time.Duration(base * float64(time.Second)))
 }
 
+// capDuration limits wait to MaxBackoffSeconds so Retry-After / body delay cannot stall forever.
 func (t *retryTransport) capDuration(d time.Duration) time.Duration {
 	max := time.Duration(t.cfg.MaxBackoffSeconds * float64(time.Second))
 	if max > 0 && d > max {
-		return max
+		return max // asked wait is longer than the configured cap
 	}
 	if d < 0 {
 		return 0
