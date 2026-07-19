@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
@@ -58,14 +57,6 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	// Resource retry {} overrides provider HTTP retry for that CRUD goroutine.
-	if common.SkipProviderHTTPRetry() {
-		if bodyBytes != nil {
-			req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
-		}
-		return t.base.RoundTrip(req)
 	}
 
 	// max_retries is attempts beyond the first call.

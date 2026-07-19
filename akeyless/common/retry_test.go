@@ -14,7 +14,7 @@ func TestRetryResourceOp_NoConfig(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{})
 
 	calls := 0
-	err := RetryResourceOp(d, func() error {
+	err := RetryResourceOp(d, nil, func(interface{}) error {
 		calls++
 		return nil
 	})
@@ -32,7 +32,7 @@ func TestRetryResourceOp_MatchesAndRetries(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
 		"retry": []interface{}{
 			map[string]interface{}{
-				"retry_on_messages":  []interface{}{"Too Many Requests"},
+				"retry_on_messages":    []interface{}{"Too Many Requests"},
 				"interval_seconds":     0.01,
 				"max_interval_seconds": 0.05,
 				"max_retries":          2,
@@ -42,7 +42,7 @@ func TestRetryResourceOp_MatchesAndRetries(t *testing.T) {
 	})
 
 	var calls int32
-	err := RetryResourceOp(d, func() error {
+	err := RetryResourceOp(d, nil, func(interface{}) error {
 		n := atomic.AddInt32(&calls, 1)
 		if n < 3 {
 			return errors.New("429 Too Many Requests")
@@ -64,14 +64,14 @@ func TestRetryResourceOp_NoMatch(t *testing.T) {
 		"retry": []interface{}{
 			map[string]interface{}{
 				"retry_on_messages": []interface{}{"will be released in"},
-				"interval_seconds":    0.01,
-				"max_retries":         3,
+				"interval_seconds":  0.01,
+				"max_retries":       3,
 			},
 		},
 	})
 
 	calls := 0
-	err := RetryResourceOp(d, func() error {
+	err := RetryResourceOp(d, nil, func(interface{}) error {
 		calls++
 		return errors.New("permission denied")
 	})
@@ -97,7 +97,7 @@ func TestRetryResourceOp_DefaultRegexWhenOmitted(t *testing.T) {
 	})
 
 	var calls int32
-	err := RetryResourceOp(d, func() error {
+	err := RetryResourceOp(d, nil, func(interface{}) error {
 		n := atomic.AddInt32(&calls, 1)
 		if n < 3 {
 			return errors.New("429 Too Many Requests")
@@ -112,31 +112,41 @@ func TestRetryResourceOp_DefaultRegexWhenOmitted(t *testing.T) {
 	}
 }
 
-func TestRetryResourceOp_SkipsProviderHTTPRetry(t *testing.T) {
+func TestRetryResourceOp_UsesNoRetryMetaWhenConfigured(t *testing.T) {
+	orig := NoRetryMeta
+	defer func() { NoRetryMeta = orig }()
+
+	const retryMeta, plainMeta = "retry", "no-retry"
+	NoRetryMeta = func(interface{}) interface{} { return plainMeta }
+
+	// With a retry block, fn should receive the no-retry meta.
 	r := &schema.Resource{Schema: map[string]*schema.Schema{}}
 	AddResourceRetrySchema(r.Schema)
-	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
+	withRetry := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
 		"retry": []interface{}{
-			map[string]interface{}{
-				"retry_on_messages": []interface{}{"x"},
-				"max_retries":         0,
-			},
+			map[string]interface{}{"max_retries": 0},
 		},
 	})
-
-	if SkipProviderHTTPRetry() {
-		t.Fatal("skip should be off before RetryResourceOp")
-	}
-	err := RetryResourceOp(d, func() error {
-		if !SkipProviderHTTPRetry() {
-			t.Fatal("skip should be on during resource retry")
-		}
+	var got interface{}
+	if err := RetryResourceOp(withRetry, retryMeta, func(m interface{}) error {
+		got = m
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	if SkipProviderHTTPRetry() {
-		t.Fatal("skip should be off after RetryResourceOp")
+	if got != plainMeta {
+		t.Fatalf("got meta %v, want %v", got, plainMeta)
+	}
+
+	// Without a retry block, fn should receive the original meta unchanged.
+	noRetry := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{})
+	if err := RetryResourceOp(noRetry, retryMeta, func(m interface{}) error {
+		got = m
+		return nil
+	}); err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if got != retryMeta {
+		t.Fatalf("got meta %v, want %v", got, retryMeta)
 	}
 }

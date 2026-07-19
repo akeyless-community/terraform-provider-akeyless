@@ -83,6 +83,12 @@ func AddResourceRetrySchema(m map[string]*schema.Schema) {
 	m["retry"] = ResourceRetrySchema()
 }
 
+// NoRetryMeta returns a copy of the provider meta whose client uses the plain
+// (no provider-retry) transport. The akeyless package sets it. Resource retry
+// uses it so provider HTTP retry does not stack on top of resource retry.
+// The default is identity, so tests and callers without a provider meta are unaffected.
+var NoRetryMeta = func(providerDeps interface{}) interface{} { return providerDeps }
+
 // EnableResourceRetry adds the resource retry schema and wraps Create/Update/Delete.
 // With no retry block, CRUD runs once (unchanged).
 func EnableResourceRetry(r *schema.Resource) {
@@ -103,38 +109,38 @@ func EnableResourceRetry(r *schema.Resource) {
 
 	if r.Create != nil {
 		orig := r.Create
-		r.Create = func(d *schema.ResourceData, m interface{}) error {
-			return RetryResourceOp(d, func() error { return orig(d, m) })
+		r.Create = func(d *schema.ResourceData, providerDeps interface{}) error {
+			return RetryResourceOp(d, providerDeps, func(providerDeps interface{}) error { return orig(d, providerDeps) })
 		}
 	}
 	if r.Update != nil {
 		orig := r.Update
-		r.Update = func(d *schema.ResourceData, m interface{}) error {
-			return RetryResourceOp(d, func() error { return orig(d, m) })
+		r.Update = func(d *schema.ResourceData, providerDeps interface{}) error {
+			return RetryResourceOp(d, providerDeps, func(providerDeps interface{}) error { return orig(d, providerDeps) })
 		}
 	}
 	if r.Delete != nil {
 		orig := r.Delete
-		r.Delete = func(d *schema.ResourceData, m interface{}) error {
-			return RetryResourceOp(d, func() error { return orig(d, m) })
+		r.Delete = func(d *schema.ResourceData, providerDeps interface{}) error {
+			return RetryResourceOp(d, providerDeps, func(providerDeps interface{}) error { return orig(d, providerDeps) })
 		}
 	}
 	if r.CreateContext != nil {
 		orig := r.CreateContext
-		r.CreateContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			return RetryResourceOpDiag(d, func() diag.Diagnostics { return orig(ctx, d, m) })
+		r.CreateContext = func(ctx context.Context, d *schema.ResourceData, providerDeps interface{}) diag.Diagnostics {
+			return RetryResourceOpDiag(d, providerDeps, func(providerDeps interface{}) diag.Diagnostics { return orig(ctx, d, providerDeps) })
 		}
 	}
 	if r.UpdateContext != nil {
 		orig := r.UpdateContext
-		r.UpdateContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			return RetryResourceOpDiag(d, func() diag.Diagnostics { return orig(ctx, d, m) })
+		r.UpdateContext = func(ctx context.Context, d *schema.ResourceData, providerDeps interface{}) diag.Diagnostics {
+			return RetryResourceOpDiag(d, providerDeps, func(providerDeps interface{}) diag.Diagnostics { return orig(ctx, d, providerDeps) })
 		}
 	}
 	if r.DeleteContext != nil {
 		orig := r.DeleteContext
-		r.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-			return RetryResourceOpDiag(d, func() diag.Diagnostics { return orig(ctx, d, m) })
+		r.DeleteContext = func(ctx context.Context, d *schema.ResourceData, providerDeps interface{}) diag.Diagnostics {
+			return RetryResourceOpDiag(d, providerDeps, func(providerDeps interface{}) diag.Diagnostics { return orig(ctx, d, providerDeps) })
 		}
 	}
 }
@@ -194,31 +200,35 @@ func resourceRetryConfigFromData(d *schema.ResourceData) (*resourceRetryConfig, 
 }
 
 // RetryResourceOp wraps older CRUD hooks that return error (Create/Update/Delete).
-func RetryResourceOp(d *schema.ResourceData, fn func() error) error {
+// When a retry block is configured, fn is called with the no-provider-retry meta
+// so only resource retry is active.
+func RetryResourceOp(d *schema.ResourceData, providerDeps interface{}, fn func(providerDeps interface{}) error) error {
 	cfg, err := resourceRetryConfigFromData(d)
 	if err != nil {
 		return err
 	}
 	if cfg == nil {
-		return fn()
+		return fn(providerDeps)
 	}
-	return cfg.run(fn)
+	providerDeps = NoRetryMeta(providerDeps)
+	return cfg.run(func() error { return fn(providerDeps) })
 }
 
 // RetryResourceOpDiag wraps Context CRUD hooks that return diag.Diagnostics
 // (CreateContext/UpdateContext/DeleteContext). Same retry policy as RetryResourceOp.
-func RetryResourceOpDiag(d *schema.ResourceData, fn func() diag.Diagnostics) diag.Diagnostics {
+func RetryResourceOpDiag(d *schema.ResourceData, providerDeps interface{}, fn func(providerDeps interface{}) diag.Diagnostics) diag.Diagnostics {
 	cfg, err := resourceRetryConfigFromData(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfg == nil {
-		return fn()
+		return fn(providerDeps)
 	}
+	providerDeps = NoRetryMeta(providerDeps)
 
 	var last diag.Diagnostics
 	_ = cfg.run(func() error {
-		last = fn()
+		last = fn(providerDeps)
 		if !last.HasError() {
 			return nil
 		}
@@ -227,15 +237,12 @@ func RetryResourceOpDiag(d *schema.ResourceData, fn func() diag.Diagnostics) dia
 	return last
 }
 
-// run is the shared resource-retry loop. Set skip inside RetryFunc: SDK runs it on a
-// worker goroutine (same one as HTTP calls).
+// run is the shared resource-retry loop. Provider HTTP retry is already disabled
+// for these calls via the no-retry meta passed to fn.
 func (cfg *resourceRetryConfig) run(fn func() error) error {
 	attempt := 0
 	var lastErr error
 	err := retry.RetryContext(context.Background(), sdkRetryTimeout, func() *retry.RetryError {
-		SetSkipProviderHTTPRetry(true)
-		defer SetSkipProviderHTTPRetry(false)
-
 		lastErr = fn()
 		if lastErr == nil {
 			return nil
