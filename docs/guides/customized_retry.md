@@ -56,7 +56,10 @@ Plain **401** / **403** without a rate-limit body are not retried.
 
 ## Resource-level retry
 
-When a resource sets `retry {}`, provider HTTP retry is skipped for that resource's API calls. Only the resource retry loop runs.
+When a resource sets `retry {}`, its API calls retry at the HTTP transport level using
+these settings **instead of** the provider defaults (the same request-level mechanism as
+provider retry, just per-resource). The retry happens on individual API calls, so a create
+is never re-run as a whole.
 
 ```terraform
 resource "akeyless_dynamic_secret_aws" "example" {
@@ -72,20 +75,13 @@ resource "akeyless_dynamic_secret_aws" "example" {
 }
 ```
 
-If `retry_on_messages` is omitted, defaults match the same transient/rate-limit text used by provider retry:
-
-- `Too Many Requests`
-- `will be released in`
-- `EOF`
-- `connection reset by peer`
-- `connection refused`
-
-Override with an explicit list when you need different matchers:
+Like provider retry, connection errors (`EOF`, `connection reset by peer`,
+`connection refused`), busy HTTP statuses (`429`, `5xx`), and wrapped SaaS rate-limit
+bodies are always retried. `retry_on_messages` adds extra response-body matchers on top:
 
 ```terraform
   retry {
-    retry_on_messages  = [".*temporary.*"]
-    max_retries          = 5
+    retry_on_messages = [".*temporary.*"]
+    max_retries       = 5
   }
-}
 ```

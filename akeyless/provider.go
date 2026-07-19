@@ -234,7 +234,7 @@ func Provider() *schema.Provider {
 	}
 
 	for _, r := range p.ResourcesMap {
-		common.EnableResourceRetry(r)
+		EnableResourceRetry(r)
 	}
 	return p
 }
@@ -400,25 +400,11 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 }
 
 type providerMeta struct {
-	client *akeyless_api.V2ApiService // default client; provider HTTP retry transport
-	// clientNoRetry has no provider HTTP retry. It is used when a resource sets a retry {} block
-	// - so the resource-level retry win
-	clientNoRetry *akeyless_api.V2ApiService
-	token         *string
-}
-
-// init wires resource-level retry to the no-retry client so provider HTTP retry
-// does not stack on top of resource retry. The returned copy shares the token.
-func init() {
-	common.NoRetryMeta = func(raw interface{}) interface{} {
-		pm, ok := raw.(*providerMeta)
-		if !ok || pm == nil || pm.clientNoRetry == nil {
-			return raw
-		}
-		cp := *pm
-		cp.client = pm.clientNoRetry
-		return &cp
-	}
+	client *akeyless_api.V2ApiService // default client; uses provider-level retry settings
+	// apiGwAddress lets a resource with a retry {} block build its own client that
+	// retries per the resource's settings (see resource_retry.go).
+	apiGwAddress string
+	token        *string
 }
 
 func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, error) {
@@ -499,20 +485,17 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")
 }
 
-func getProviderClient(_ context.Context, d *schema.ResourceData) (clientWithRetry, clientNoRetry *akeyless_api.V2ApiService, err error) {
-	apiGwAddress := d.Get("api_gateway_address").(string)
+func getProviderClient(_ context.Context, d *schema.ResourceData) (client *akeyless_api.V2ApiService, apiGwAddress string, err error) {
+	apiGwAddress = d.Get("api_gateway_address").(string)
 
 	cfg, err := retryConfigFromProviderData(d)
 	if err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
 
-	// clientWithRetry uses provider HTTP retry; clientNoRetry uses a plain transport and is
-	// used when a resource sets retry {}, so resource retry does not stack on it.
-	clientWithRetry = buildAPIClient(apiGwAddress, newRetryTransport(http.DefaultTransport, cfg))
-	clientNoRetry = buildAPIClient(apiGwAddress, http.DefaultTransport)
-
-	return clientWithRetry, clientNoRetry, nil
+	client = buildAPIClient(apiGwAddress, newRetryTransport(http.DefaultTransport, cfg))
+	// Return apiGwAddress too so a resource with retry {} can rebuild a client for the same gateway.
+	return client, apiGwAddress, nil
 }
 
 func buildAPIClient(apiGwAddress string, transport http.RoundTripper) *akeyless_api.V2ApiService {
@@ -526,14 +509,14 @@ func buildAPIClient(apiGwAddress string, transport http.RoundTripper) *akeyless_
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diagnostic diag.Diagnostics
 
-	clientWithRetry, clientNoRetry, err := getProviderClient(ctx, d)
+	client, apiGwAddress, err := getProviderClient(ctx, d)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
 
-	token, err := getProviderToken(ctx, d, clientWithRetry)
+	token, err := getProviderToken(ctx, d, client)
 	if err != nil {
 		diagnostic = diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error()}}
 	}
-	return &providerMeta{client: clientWithRetry, clientNoRetry: clientNoRetry, token: &token}, diagnostic
+	return &providerMeta{client: client, apiGwAddress: apiGwAddress, token: &token}, diagnostic
 }
