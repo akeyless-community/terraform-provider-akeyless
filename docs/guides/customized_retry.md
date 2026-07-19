@@ -47,6 +47,12 @@ When `retry {}` is omitted, the same defaults apply (`max_retries = 3`, statuses
 
 Plain **401** / **403** without a rate-limit body are not retried.
 
+Notes:
+
+- `retry_on_messages` are error-message texts, matched as **regular expressions** (plain text works; regex is supported). Note that regex metacharacters (`.`, `(`, `*`, ...) in the text are interpreted as regex.
+- Passing an empty `retry_on_status_codes = []` keeps the defaults (429/5xx); it does not disable status-code retries.
+- Wrapped SaaS rate-limit bodies are always retried and cannot be turned off.
+
 ### Environment overrides
 
 - `AKEYLESS_MAX_RETRIES`
@@ -77,7 +83,8 @@ resource "akeyless_dynamic_secret_aws" "example" {
 
 Like provider retry, connection errors (`EOF`, `connection reset by peer`,
 `connection refused`), busy HTTP statuses (`429`, `5xx`), and wrapped SaaS rate-limit
-bodies are always retried. `retry_on_messages` adds extra response-body matchers on top:
+bodies are always retried. `retry_on_messages` adds extra error-message matches on top
+(matched as regular expressions):
 
 ```terraform
   retry {
@@ -85,3 +92,8 @@ bodies are always retried. `retry_on_messages` adds extra response-body matchers
     max_retries       = 5
   }
 ```
+
+**Note:** on resources without an update operation (create-only), the `retry` block is
+`ForceNew` — changing any retry setting triggers a destroy + recreate of the item. This is
+a Terraform SDK constraint for create-only resources. Set retry once at creation, or expect
+recreation when you change it.

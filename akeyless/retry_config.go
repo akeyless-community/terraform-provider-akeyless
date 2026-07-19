@@ -89,7 +89,7 @@ func providerRetrySchema() *schema.Schema {
 				"retry_on_messages": {
 					Type:        schema.TypeList,
 					Optional:    true,
-					Description: "Additional response-body message texts that trigger a retry.",
+					Description: "Extra error messages that trigger a retry (matched as regex; plain text works).",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 			},
