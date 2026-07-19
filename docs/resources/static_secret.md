@@ -62,6 +62,7 @@ resource "akeyless_static_secret" "secret" {
 - `output_rule` (List of String) Password output rule definitions
 - `password` (String, Sensitive) Password value (relevant only for type 'password')
 - `protection_key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `retry` (Block List) Optional resource-level retry after provider HTTP retries are exhausted. See [Customized Retry](../guides/customized_retry.md). (see [below for nested schema](#nestedblock--retry))
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
 - `secure_access_gateway` (String) Secure Remote Access Gateway
@@ -82,6 +83,17 @@ resource "akeyless_static_secret" "secret" {
 
 - `id` (String) The ID of this resource.
 - `version` (Number) The version of the secret.
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `retry_on_messages` (List of String) Patterns matched against error messages. If any match, the operation is retried.
+- `interval_seconds` (Number) Initial wait before the first resource-level retry (seconds).
+- `max_interval_seconds` (Number) Maximum wait between resource-level retries (seconds).
+- `max_retries` (Number) Maximum resource-level retries after provider/transport retries are exhausted.
+- `multiplier` (Number) Exponential backoff multiplier.
 
 ## Import
 

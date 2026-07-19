@@ -1,14 +1,10 @@
 package akeyless
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
-	"strings"
-	"time"
 
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
@@ -25,7 +21,7 @@ const publicApi = "https://api.akeyless.io"
 
 // Provider returns Akeyless Terraform provider
 func Provider() *schema.Provider {
-	return &schema.Provider{
+	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_gateway_address": {
 				Type:        schema.TypeString,
@@ -42,6 +38,7 @@ func Provider() *schema.Provider {
 			"uid_login":      uidLoginSchema,
 			"cert_login":     certLoginSchema,
 			"token_login":    tokenLoginSchema,
+			"retry":          providerRetrySchema(),
 		},
 		//ConfigureFunc: configureProvider,
 		ConfigureContextFunc: configureProvider,
@@ -235,6 +232,11 @@ func Provider() *schema.Provider {
 			"akeyless_detokenize":               dataSourceDetokenize(),
 		},
 	}
+
+	for _, r := range p.ResourcesMap {
+		EnableResourceRetry(r)
+	}
+	return p
 }
 
 func getProviderToken(ctx context.Context, d *schema.ResourceData, client *akeyless_api.V2ApiService) (string, error) {
@@ -398,8 +400,11 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 }
 
 type providerMeta struct {
-	client *akeyless_api.V2ApiService
-	token  *string
+	client *akeyless_api.V2ApiService // default client; uses provider-level retry settings
+	// apiGwAddress lets a resource with a retry {} block build its own client that
+	// retries per the resource's settings (see resource_retry.go).
+	apiGwAddress string
+	token        *string
 }
 
 func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, error) {
@@ -480,80 +485,38 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")
 }
 
-func getProviderClient(_ context.Context, d *schema.ResourceData) *akeyless_api.V2ApiService {
-	apiGwAddress := d.Get("api_gateway_address").(string)
+func getProviderClient(_ context.Context, d *schema.ResourceData) (client *akeyless_api.V2ApiService, apiGwAddress string, err error) {
+	apiGwAddress = d.Get("api_gateway_address").(string)
 
-	httpClient := &http.Client{
-		Transport: &retryTransport{base: http.DefaultTransport, retries: 3},
+	cfg, err := retryConfigFromProviderData(d)
+	if err != nil {
+		return nil, "", err
 	}
 
-	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
-		Servers: []akeyless_api.ServerConfiguration{
-			{
-				URL: apiGwAddress,
-			},
-		},
+	client = buildAPIClient(apiGwAddress, newRetryTransport(http.DefaultTransport, cfg))
+	// Return apiGwAddress too so a resource with retry {} can rebuild a client for the same gateway.
+	return client, apiGwAddress, nil
+}
+
+func buildAPIClient(apiGwAddress string, transport http.RoundTripper) *akeyless_api.V2ApiService {
+	return akeyless_api.NewAPIClient(&akeyless_api.Configuration{
+		Servers:       []akeyless_api.ServerConfiguration{{URL: apiGwAddress}},
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
-		HTTPClient:    httpClient,
+		HTTPClient:    &http.Client{Transport: transport},
 	}).V2Api
-
-	return client
-}
-
-type retryTransport struct {
-	base    http.RoundTripper
-	retries int
-}
-
-func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	var bodyBytes []byte
-	if req.Body != nil {
-		var err error
-		bodyBytes, err = io.ReadAll(req.Body)
-		req.Body.Close()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	var lastErr error
-	for attempt := range t.retries {
-		if attempt > 0 {
-			time.Sleep(time.Duration(attempt*2) * time.Second)
-		}
-		if bodyBytes != nil {
-			req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
-		}
-		resp, err := t.base.RoundTrip(req)
-		if err == nil {
-			return resp, nil
-		}
-		lastErr = err
-		if !isTransientConnError(err) {
-			return nil, err
-		}
-	}
-	return nil, lastErr
-}
-
-func isTransientConnError(err error) bool {
-	if err == nil {
-		return false
-	}
-	msg := err.Error()
-	return strings.Contains(msg, "EOF") ||
-		strings.Contains(msg, "connection reset by peer") ||
-		strings.Contains(msg, "connection refused")
 }
 
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diagnostic diag.Diagnostics
 
-	client := getProviderClient(ctx, d)
+	client, apiGwAddress, err := getProviderClient(ctx, d)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
 
 	token, err := getProviderToken(ctx, d, client)
 	if err != nil {
 		diagnostic = diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error()}}
 	}
-	return &providerMeta{client: client, token: &token}, diagnostic
+	return &providerMeta{client: client, apiGwAddress: apiGwAddress, token: &token}, diagnostic
 }

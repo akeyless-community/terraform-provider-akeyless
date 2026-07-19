@@ -52,6 +52,8 @@ jobs:
           TF_ACC_GCP_BOUND_SERVICE_ACC: ${{ secrets.TF_ACC_GCP_BOUND_SERVICE_ACC }}
         run: |
           TF_ACC=1 go test ./akeyless/tests/no_gateway/ ./akeyless/common/ -v -count 1 -parallel 4 -timeout 120m
+          # Retry unit tests live in package akeyless (they test unexported internals); run them by name.
+          go test ./akeyless/ -run 'TestResourceRetry|TestRetryTransport|TestParseReleaseDelaySeconds' -v -count 1
 
   test-gateway-items:
     runs-on: ubuntu-22.04
