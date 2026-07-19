@@ -86,10 +86,10 @@ func providerRetrySchema() *schema.Schema {
 					Default:     defaultMultiplier,
 					Description: "Exponential backoff multiplier. Env: AKEYLESS_RETRY_MULTIPLIER.",
 				},
-				"error_message_regex": {
+				"retry_on_messages": {
 					Type:        schema.TypeList,
 					Optional:    true,
-					Description: "Additional regexes matched against response bodies to trigger a retry.",
+					Description: "Additional response-body message texts that trigger a retry.",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 			},
@@ -123,7 +123,7 @@ func retryConfigFromProviderData(d *schema.ResourceData) (retryConfig, error) {
 			}
 			cfg.RetryOnStatusCodes = statusCodeSet(parsed)
 		}
-		if patterns, ok := m["error_message_regex"].([]interface{}); ok {
+		if patterns, ok := m["retry_on_messages"].([]interface{}); ok {
 			regexes := make([]*regexp.Regexp, 0, len(patterns))
 			for _, p := range patterns {
 				s, ok := p.(string)
@@ -132,7 +132,7 @@ func retryConfigFromProviderData(d *schema.ResourceData) (retryConfig, error) {
 				}
 				re, err := regexp.Compile(s)
 				if err != nil {
-					return cfg, fmt.Errorf("invalid error_message_regex %q: %w", s, err)
+					return cfg, fmt.Errorf("invalid retry_on_messages %q: %w", s, err)
 				}
 				regexes = append(regexes, re)
 			}

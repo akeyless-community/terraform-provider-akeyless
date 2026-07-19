@@ -32,7 +32,7 @@ func TestRetryResourceOp_MatchesAndRetries(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
 		"retry": []interface{}{
 			map[string]interface{}{
-				"error_message_regex":  []interface{}{"Too Many Requests"},
+				"retry_on_messages":  []interface{}{"Too Many Requests"},
 				"interval_seconds":     0.01,
 				"max_interval_seconds": 0.05,
 				"max_retries":          2,
@@ -63,7 +63,7 @@ func TestRetryResourceOp_NoMatch(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
 		"retry": []interface{}{
 			map[string]interface{}{
-				"error_message_regex": []interface{}{"will be released in"},
+				"retry_on_messages": []interface{}{"will be released in"},
 				"interval_seconds":    0.01,
 				"max_retries":         3,
 			},
@@ -83,19 +83,60 @@ func TestRetryResourceOp_NoMatch(t *testing.T) {
 	}
 }
 
-func TestRetryResourceOp_RequiresRegex(t *testing.T) {
+func TestRetryResourceOp_DefaultRegexWhenOmitted(t *testing.T) {
 	r := &schema.Resource{Schema: map[string]*schema.Schema{}}
 	AddResourceRetrySchema(r.Schema)
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
 		"retry": []interface{}{
 			map[string]interface{}{
-				"max_retries": 1,
+				"interval_seconds": 0.01,
+				"max_retries":      2,
+				"multiplier":       1.0,
 			},
 		},
 	})
 
-	err := RetryResourceOp(d, func() error { return nil })
-	if err == nil {
-		t.Fatal("expected error for missing error_message_regex")
+	var calls int32
+	err := RetryResourceOp(d, func() error {
+		n := atomic.AddInt32(&calls, 1)
+		if n < 3 {
+			return errors.New("429 Too Many Requests")
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if calls != 3 {
+		t.Fatalf("calls=%d want 3", calls)
+	}
+}
+
+func TestRetryResourceOp_SkipsProviderHTTPRetry(t *testing.T) {
+	r := &schema.Resource{Schema: map[string]*schema.Schema{}}
+	AddResourceRetrySchema(r.Schema)
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
+		"retry": []interface{}{
+			map[string]interface{}{
+				"retry_on_messages": []interface{}{"x"},
+				"max_retries":         0,
+			},
+		},
+	})
+
+	if SkipProviderHTTPRetry() {
+		t.Fatal("skip should be off before RetryResourceOp")
+	}
+	err := RetryResourceOp(d, func() error {
+		if !SkipProviderHTTPRetry() {
+			t.Fatal("skip should be on during resource retry")
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if SkipProviderHTTPRetry() {
+		t.Fatal("skip should be off after RetryResourceOp")
 	}
 }

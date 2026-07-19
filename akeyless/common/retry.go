@@ -9,28 +9,44 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// sdkRetryTimeout is large on purpose: we stop with max_retries inside RetryFunc,
+// not with the SDK helper's timeout clock.
+const sdkRetryTimeout = 24 * time.Hour
+
+// default config values
 const (
 	resourceRetryDefaultIntervalSeconds    = 10.0
 	resourceRetryDefaultMaxIntervalSeconds = 180.0
 	resourceRetryDefaultMultiplier         = 1.5
 )
 
-// ResourceRetrySchema is the optional resource-level retry block (after provider HTTP retry).
+// defaultResourceRetryErrorPatterns mirrors provider-level transient/rate-limit text defaults.
+var defaultResourceRetryErrorPatterns = []string{
+	"Too Many Requests",
+	"will be released in",
+	"EOF",
+	"connection reset by peer",
+	"connection refused",
+}
+
+// ResourceRetrySchema is the optional resource-level retry block.
+// When set, it overrides provider HTTP retry for that resource's CRUD calls.
 func ResourceRetrySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeList,
 		Optional:    true,
 		MaxItems:    1,
-		Description: "Optional resource-level retry. Runs after provider HTTP retries; matches error messages.",
+		Description: "Optional resource-level retry. When set, overrides provider HTTP retry for this resource.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"error_message_regex": {
+				"retry_on_messages": {
 					Type:        schema.TypeList,
 					Optional:    true,
-					Description: "Regexes matched against error messages. If any match, the operation is retried.",
+					Description: "Error message texts that trigger a retry. Defaults to provider transient/rate-limit messages when omitted.",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 				"interval_seconds": {
@@ -157,7 +173,7 @@ func resourceRetryConfigFromData(d *schema.ResourceData) (*resourceRetryConfig, 
 		cfg.Multiplier = v
 	}
 
-	patterns, _ := m["error_message_regex"].([]interface{})
+	patterns, _ := m["retry_on_messages"].([]interface{})
 	for _, p := range patterns {
 		s, ok := p.(string)
 		if !ok || s == "" {
@@ -165,18 +181,19 @@ func resourceRetryConfigFromData(d *schema.ResourceData) (*resourceRetryConfig, 
 		}
 		re, err := regexp.Compile(s)
 		if err != nil {
-			return nil, fmt.Errorf("invalid retry.error_message_regex %q: %w", s, err)
+			return nil, fmt.Errorf("invalid retry.retry_on_messages %q: %w", s, err)
 		}
 		cfg.ErrorMessageRegex = append(cfg.ErrorMessageRegex, re)
 	}
 	if len(cfg.ErrorMessageRegex) == 0 {
-		// Without message matchers, resource-level retry would retry every error — refuse that.
-		return nil, fmt.Errorf("retry.error_message_regex must contain at least one pattern")
+		for _, s := range defaultResourceRetryErrorPatterns {
+			cfg.ErrorMessageRegex = append(cfg.ErrorMessageRegex, regexp.MustCompile(s))
+		}
 	}
 	return cfg, nil
 }
 
-// RetryResourceOp runs fn, retrying when a resource retry block matches the error message.
+// RetryResourceOp wraps older CRUD hooks that return error (Create/Update/Delete).
 func RetryResourceOp(d *schema.ResourceData, fn func() error) error {
 	cfg, err := resourceRetryConfigFromData(d)
 	if err != nil {
@@ -185,24 +202,11 @@ func RetryResourceOp(d *schema.ResourceData, fn func() error) error {
 	if cfg == nil {
 		return fn()
 	}
-
-	var lastErr error
-	for attempt := 0; attempt <= cfg.MaxRetries; attempt++ {
-		lastErr = fn()
-		if lastErr == nil {
-			return nil
-		}
-		if attempt == cfg.MaxRetries || !cfg.matches(lastErr.Error()) {
-			return lastErr
-		}
-		wait := cfg.backoff(attempt)
-		log.Printf("[DEBUG] akeyless: resource retry attempt %d/%d after %s: %v", attempt+1, cfg.MaxRetries, wait, lastErr)
-		time.Sleep(wait)
-	}
-	return lastErr
+	return cfg.run(fn)
 }
 
-// RetryResourceOpDiag is the Context-CRUD equivalent of RetryResourceOp.
+// RetryResourceOpDiag wraps Context CRUD hooks that return diag.Diagnostics
+// (CreateContext/UpdateContext/DeleteContext). Same retry policy as RetryResourceOp.
 func RetryResourceOpDiag(d *schema.ResourceData, fn func() diag.Diagnostics) diag.Diagnostics {
 	cfg, err := resourceRetryConfigFromData(d)
 	if err != nil {
@@ -213,23 +217,45 @@ func RetryResourceOpDiag(d *schema.ResourceData, fn func() diag.Diagnostics) dia
 	}
 
 	var last diag.Diagnostics
-	for attempt := 0; attempt <= cfg.MaxRetries; attempt++ {
+	_ = cfg.run(func() error {
 		last = fn()
 		if !last.HasError() {
-			return last
+			return nil
 		}
-		msg := diagnosticsMessage(last)
-		if attempt == cfg.MaxRetries || !cfg.matches(msg) {
-			return last
-		}
-		wait := cfg.backoff(attempt)
-		log.Printf("[DEBUG] akeyless: resource retry attempt %d/%d after %s: %s", attempt+1, cfg.MaxRetries, wait, msg)
-		time.Sleep(wait)
-	}
+		return fmt.Errorf("%s", diagnosticsMessage(last))
+	})
 	return last
 }
 
-// diagnosticsMessage returns the first error text so resource retry can match error_message_regex.
+// run is the shared resource-retry loop. Set skip inside RetryFunc: SDK runs it on a
+// worker goroutine (same one as HTTP calls).
+func (cfg *resourceRetryConfig) run(fn func() error) error {
+	attempt := 0
+	var lastErr error
+	err := retry.RetryContext(context.Background(), sdkRetryTimeout, func() *retry.RetryError {
+		SetSkipProviderHTTPRetry(true)
+		defer SetSkipProviderHTTPRetry(false)
+
+		lastErr = fn()
+		if lastErr == nil {
+			return nil
+		}
+		if attempt >= cfg.MaxRetries || !cfg.matches(lastErr.Error()) {
+			return retry.NonRetryableError(lastErr)
+		}
+		wait := cfg.backoff(attempt)
+		log.Printf("[DEBUG] akeyless: resource retry attempt %d/%d after %s: %v", attempt+1, cfg.MaxRetries, wait, lastErr)
+		time.Sleep(wait)
+		attempt++
+		return retry.RetryableError(lastErr)
+	})
+	if lastErr != nil {
+		return lastErr
+	}
+	return err
+}
+
+// diagnosticsMessage returns the first error text so resource retry can match retry_on_messages.
 func diagnosticsMessage(diags diag.Diagnostics) string {
 	for _, d := range diags {
 		if d.Severity != diag.Error {

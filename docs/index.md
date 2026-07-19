@@ -204,7 +204,7 @@ Required:
 
 Optional:
 
-- `error_message_regex` (List of String) Additional regexes matched against response bodies to trigger a retry.
+- `retry_on_messages` (List of String) Additional patterns matched against response bodies to trigger a retry.
 - `interval_seconds` (Number) Initial backoff interval in seconds when Retry-After / body release delay is absent.
 - `max_backoff_seconds` (Number) Maximum backoff interval in seconds.
 - `max_retries` (Number) Maximum number of retries after the first attempt.

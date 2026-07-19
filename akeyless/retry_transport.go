@@ -3,6 +3,7 @@ package akeyless
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"math"
@@ -10,7 +11,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
+
+// sdkRetryTimeout is intentionally large: we stop via max_retries inside RetryFunc,
+// not via the helper's timeout. (retry.RetryContext also inserts MinTimeout ~500ms between attempts.)
+const sdkRetryTimeout = 24 * time.Hour
 
 // retryTransport is the provider-level HTTP retry (all API calls).
 // Resource-level retry lives in akeyless/common/retry.go and runs later, on CRUD errors.
@@ -52,54 +60,92 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 	}
 
-	// max_retries is attempts beyond the first call.
-	retries := t.cfg.MaxRetries + 1
-	if retries < 1 {
-		retries = 1
+	// Resource retry {} overrides provider HTTP retry for that CRUD goroutine.
+	if common.SkipProviderHTTPRetry() {
+		if bodyBytes != nil {
+			req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+		}
+		return t.base.RoundTrip(req)
 	}
 
-	var lastErr error
-	for attempt := range retries {
+	// max_retries is attempts beyond the first call.
+	maxAttempts := t.cfg.MaxRetries + 1
+	if maxAttempts < 1 {
+		maxAttempts = 1
+	}
+
+	attempt := 0
+	var finalResp *http.Response
+	var finalErr error
+
+	// retry.RetryContext is the loop: returning RetryableError re-invokes this func;
+	// NonRetryableError / nil stops. There is no for/while in this file on purpose.
+	err := retry.RetryContext(req.Context(), sdkRetryTimeout, func() *retry.RetryError {
 		if bodyBytes != nil {
 			req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 		}
 
 		resp, err := t.base.RoundTrip(req)
 		if err != nil {
-			lastErr = err
-			if !isTransientConnError(err) {
-				return nil, err
-			}
-			if attempt == retries-1 {
-				return nil, lastErr
-			}
-			wait := time.Duration((attempt+1)*2) * time.Second
-			log.Printf("[INFO] akeyless: retrying connection error (attempt %d/%d) after %s: %v", attempt+1, retries, wait, err)
-			if sleepErr := t.sleep(req.Context(), wait); sleepErr != nil {
-				return nil, sleepErr
-			}
-			continue
+			return t.onConnError(req.Context(), err, &attempt, maxAttempts, &finalErr)
 		}
+		return t.onHTTPResponse(req, resp, &attempt, maxAttempts, &finalResp, &finalErr)
+	})
 
-		body, readErr := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if readErr != nil {
-			return nil, readErr
-		}
-		resp.Body = io.NopCloser(bytes.NewReader(body))
-
-		if !t.shouldRetry(resp.StatusCode, string(body)) || attempt == retries-1 {
-			return resp, nil
-		}
-
-		wait := t.waitDuration(attempt, resp, string(body))
-		log.Printf("[INFO] akeyless: retrying HTTP %d (attempt %d/%d) after %s path=%s",
-			resp.StatusCode, attempt+1, retries, wait, req.URL.Path)
-		if sleepErr := t.sleep(req.Context(), wait); sleepErr != nil {
-			return nil, sleepErr
-		}
+	if finalResp != nil {
+		return finalResp, nil
 	}
-	return nil, lastErr
+	if finalErr != nil {
+		return nil, finalErr
+	}
+	return nil, err
+}
+
+// onConnError: Path A — no HTTP response (dial/TLS/connection failed).
+func (t *retryTransport) onConnError(ctx context.Context, err error, attempt *int, maxAttempts int, finalErr *error) *retry.RetryError {
+	if !isTransientConnError(err) {
+		*finalErr = err
+		return retry.NonRetryableError(err)
+	}
+	if *attempt >= maxAttempts-1 {
+		*finalErr = err
+		return retry.NonRetryableError(err)
+	}
+	wait := time.Duration((*attempt+1)*2) * time.Second
+	log.Printf("[INFO] akeyless: retrying connection error (attempt %d/%d) after %s: %v", *attempt+1, maxAttempts, wait, err)
+	if sleepErr := t.sleep(ctx, wait); sleepErr != nil {
+		*finalErr = sleepErr
+		return retry.NonRetryableError(sleepErr)
+	}
+	*attempt++
+	return retry.RetryableError(err) // → RetryContext calls RoundTrip callback again
+}
+
+// onHTTPResponse: Path B — got status + body; retry busy/rate-limit via shouldRetry.
+func (t *retryTransport) onHTTPResponse(req *http.Request, resp *http.Response, attempt *int, maxAttempts int, finalResp **http.Response, finalErr *error) *retry.RetryError {
+	body, readErr := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if readErr != nil {
+		*finalErr = readErr
+		return retry.NonRetryableError(readErr)
+	}
+	resp.Body = io.NopCloser(bytes.NewReader(body))
+
+	if !t.shouldRetry(resp.StatusCode, string(body)) || *attempt >= maxAttempts-1 {
+		*finalResp = resp
+		*finalErr = nil
+		return nil // stop: success or non-retryable / out of attempts
+	}
+
+	wait := t.waitDuration(*attempt, resp, string(body))
+	log.Printf("[INFO] akeyless: retrying HTTP %d (attempt %d/%d) after %s path=%s",
+		resp.StatusCode, *attempt+1, maxAttempts, wait, req.URL.Path)
+	if sleepErr := t.sleep(req.Context(), wait); sleepErr != nil {
+		*finalErr = sleepErr
+		return retry.NonRetryableError(sleepErr)
+	}
+	*attempt++
+	return retry.RetryableError(fmt.Errorf("HTTP %d", resp.StatusCode)) // → loop again
 }
 
 // shouldRetry: true if status is busy, or body looks like rate-limit, or a customer regex matches.

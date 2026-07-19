@@ -89,7 +89,7 @@ resource "akeyless_static_secret" "secret" {
 
 Optional:
 
-- `error_message_regex` (List of String) Regexes matched against error messages. If any match, the operation is retried.
+- `retry_on_messages` (List of String) Patterns matched against error messages. If any match, the operation is retried.
 - `interval_seconds` (Number) Initial wait before the first resource-level retry (seconds).
 - `max_interval_seconds` (Number) Maximum wait between resource-level retries (seconds).
 - `max_retries` (Number) Maximum resource-level retries after provider/transport retries are exhausted.

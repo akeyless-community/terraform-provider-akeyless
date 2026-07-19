@@ -3,7 +3,9 @@
 The Akeyless Terraform provider retries transient failures at two layers:
 
 1. **Provider HTTP transport** (all API calls) — connection errors + busy HTTP statuses by default
-2. **Resource `retry`** (optional) — message-regex retries after provider retries are exhausted
+2. **Resource `retry`** (optional) — when set on a resource, **overrides** provider HTTP retry for that resource's CRUD calls
+
+Only one layer runs per resource operation: resource `retry {}` wins over provider `retry {}`.
 
 ## Provider-level retry (default on)
 
@@ -36,7 +38,7 @@ provider "akeyless" {
     interval_seconds      = 2
     max_backoff_seconds   = 60
     multiplier            = 1.5
-    error_message_regex   = [".*temporary.*"]
+    retry_on_messages   = [".*temporary.*"]
   }
 }
 ```
@@ -54,7 +56,7 @@ Plain **401** / **403** without a rate-limit body are not retried.
 
 ## Resource-level retry
 
-After provider HTTP retries are exhausted, any resource can retry again when the error message matches configured regexes.
+When a resource sets `retry {}`, provider HTTP retry is skipped for that resource's API calls. Only the resource retry loop runs.
 
 ```terraform
 resource "akeyless_dynamic_secret_aws" "example" {
@@ -62,7 +64,6 @@ resource "akeyless_dynamic_secret_aws" "example" {
   target_name = akeyless_target_aws.example.name
 
   retry {
-    error_message_regex  = [".*Too Many Requests.*", ".*will be released in.*"]
     interval_seconds     = 10
     max_interval_seconds = 180
     multiplier           = 1.5
@@ -71,6 +72,20 @@ resource "akeyless_dynamic_secret_aws" "example" {
 }
 ```
 
-`error_message_regex` is required when a resource `retry` block is set.
+If `retry_on_messages` is omitted, defaults match the same transient/rate-limit text used by provider retry:
 
-Resource retry runs **after** provider HTTP retries.
+- `Too Many Requests`
+- `will be released in`
+- `EOF`
+- `connection reset by peer`
+- `connection refused`
+
+Override with an explicit list when you need different matchers:
+
+```terraform
+  retry {
+    retry_on_messages  = [".*temporary.*"]
+    max_retries          = 5
+  }
+}
+```
