@@ -75,6 +75,14 @@ func ExpandStringList(configured []interface{}) []string {
 	return vs
 }
 
+func ExpandStringMap(raw map[string]interface{}) map[string]string {
+	out := make(map[string]string, len(raw))
+	for k, v := range raw {
+		out[k] = v.(string)
+	}
+	return out
+}
+
 func ErrorDiagnostics(message string) diag.Diagnostic {
 	return diag.Diagnostic{
 		Severity: diag.Error,

@@ -125,6 +125,37 @@ func TestGatewayMigrationHashi(t *testing.T) {
 	testMigrationResource(t, config, configUpdate)
 }
 
+func TestGatewayMigrationConjur(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	name := "migration_conjur"
+	migrationName := fmt.Sprintf("tf-test-%s-%s", testRunID, name)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_gateway_migration_conjur" "%v" {
+			name             = "%v"
+			target_location  = "terraform-tests/migrations/conjur"
+			conjur_url       = "https://conjur.example.com"
+			conjur_account   = "myorg"
+			conjur_username  = "admin"
+			conjur_api_key   = "dummy-api-key"
+		}
+	`, name, migrationName)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_gateway_migration_conjur" "%v" {
+			name             = "%v"
+			target_location  = "terraform-tests/migrations/conjur-updated"
+			conjur_url       = "https://conjur2.example.com"
+			conjur_account   = "myorg2"
+			conjur_username  = "admin2"
+			conjur_api_key   = "dummy-api-key-2"
+		}
+	`, name, migrationName)
+
+	testMigrationResource(t, config, configUpdate)
+}
+
 func TestGatewayMigrationK8s(t *testing.T) {
 
 	t.Skip("TODO: GW is broken. Next release will fix this.")

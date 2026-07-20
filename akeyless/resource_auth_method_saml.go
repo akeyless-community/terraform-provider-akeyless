@@ -119,6 +119,11 @@ func resourceAuthMethodSaml() *schema.Resource {
 				Description: "A list of additional sub claims delimiters (relevant only for SAML, OIDC, OAuth2/JWT)",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"use_dedicated_saml_urls": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Use dedicated SAML URLs",
+			},
 			"access_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -159,6 +164,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	productType := common.ExpandStringList(productTypeSet.List())
 	subclaimsDelimitersSet := d.Get("subclaims_delimiters").(*schema.Set)
 	subclaimsDelimiters := common.ExpandStringList(subclaimsDelimitersSet.List())
+	useDedicatedSamlUrls := d.Get("use_dedicated_saml_urls").(bool)
 
 	body := akeyless_api.AuthMethodCreateSAML{
 		Name:             name,
@@ -180,6 +186,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
+	common.GetAkeylessPtr(&body.UseDedicatedSamlUrls, useDedicatedSamlUrls)
 
 	rOut, resp, err := client.AuthMethodCreateSAML(ctx).Body(body).Execute()
 	if err != nil {
@@ -338,6 +345,13 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if rOut.AccessInfo.SamlAccessRules != nil && rOut.AccessInfo.SamlAccessRules.UseDedicatedSamlUrls != nil {
+		err = d.Set("use_dedicated_saml_urls", *rOut.AccessInfo.SamlAccessRules.UseDedicatedSamlUrls)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -374,6 +388,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	productType := common.ExpandStringList(productTypeSet.List())
 	subclaimsDelimitersSet := d.Get("subclaims_delimiters").(*schema.Set)
 	subclaimsDelimiters := common.ExpandStringList(subclaimsDelimitersSet.List())
+	useDedicatedSamlUrls := d.Get("use_dedicated_saml_urls").(bool)
 
 	body := akeyless_api.AuthMethodUpdateSAML{
 		Name:             name,
@@ -396,6 +411,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
+	common.GetAkeylessPtr(&body.UseDedicatedSamlUrls, useDedicatedSamlUrls)
 
 	_, resp, err := client.AuthMethodUpdateSAML(ctx).Body(body).Execute()
 	if err != nil {

@@ -122,26 +122,28 @@ func TestTargetDbResource(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
-			name 		= "%v"
-			db_type     = "mysql"
-			user_name 	= "user1"
-			pwd 		= "pwd1"
-			host 		= "host1"
-			port 		= "1231"
-			db_name 	= "db1"
-			description = "aaa"
+			name 						 = "%v"
+			db_type     				 = "mysql"
+			user_name 					 = "user1"
+			pwd 						 = "pwd1"
+			host 						 = "host1"
+			port 						 = "1231"
+			db_name 					 = "db1"
+			description 				 = "aaa"
+			skip_server_name_validation = "true"
 		}
 	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
-			name 		= "%v"
-			db_type     = "mysql"
-			user_name 	= "user2"
-			pwd 		= "pwd2"
-			host		= "host2"
-			port 		= "1231"
-			db_name 	= "db2"
+			name 						 = "%v"
+			db_type     				 = "mysql"
+			user_name 					 = "user2"
+			pwd 						 = "pwd2"
+			host						 = "host2"
+			port 						 = "1231"
+			db_name 					 = "db2"
+			skip_server_name_validation = "false"
 		}
 	`, secretName, secretPath)
 

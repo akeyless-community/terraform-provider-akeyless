@@ -1,23 +1,23 @@
+// generated file
 package akeyless
 
 import (
 	"context"
-	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceGatewayMigrationHashi() *schema.Resource {
+func resourceGatewayMigrationConjur() *schema.Resource {
 	return &schema.Resource{
-		Description: "HashiCorp Vault Migration resource",
-		Create:      resourceGatewayMigrationHashiCreate,
-		Read:        resourceGatewayMigrationHashiRead,
-		Update:      resourceGatewayMigrationHashiUpdate,
-		Delete:      resourceGatewayMigrationHashiDelete,
+		Description: "Conjur Migration resource",
+		Create:      resourceGatewayMigrationConjurCreate,
+		Read:        resourceGatewayMigrationConjurRead,
+		Update:      resourceGatewayMigrationConjurUpdate,
+		Delete:      resourceGatewayMigrationConjurDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceGatewayMigrationHashiImport,
+			State: resourceGatewayMigrationConjurImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -31,32 +31,26 @@ func resourceGatewayMigrationHashi() *schema.Resource {
 				Required:    true,
 				Description: "Target location in Akeyless for imported secrets",
 			},
-			"hashi_url": {
+			"conjur_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "HashiCorp Vault API URL, e.g. https://vault-mgr01:8200 (relevant only for HasiCorp Vault migration)",
+				Description: "Conjur server base URL. If conjur_url is HTTPS and Conjur uses a private CA/self-signed certificate, make the CA bundle available on the Gateway and set CONJUR_SSL_CERT_PATH to its path",
 			},
-			"hashi_token": {
+			"conjur_account": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Conjur account name set on your Conjur server",
+			},
+			"conjur_username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Conjur username used to authenticate",
+			},
+			"conjur_api_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				Description: "HashiCorp Vault access token with sufficient permissions to preform list & read operations on secrets objects (relevant only for HasiCorp Vault migration)",
-			},
-			"hashi_ns": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "HashiCorp Vault Namespaces is a comma-separated list of namespaces which need to be imported into Akeyless Vault. For every provided namespace, all its child namespaces are imported as well, e.g. nmsp/subnmsp1/subnmsp2,nmsp/anothernmsp. By default, import all namespaces (relevant only for HasiCorp Vault migration)",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"hashi_json": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Import secret key as json value or independent secrets (relevant only for HasiCorp Vault migration) [true/false]",
-			},
-			"hashi_metadata_mode": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Controls the amount of HashiCorp Vault secret metadata migrated with each secret value. Options: none|minimal|full",
+				Description: "Conjur API Key for the specified user",
 			},
 			"protection_key": {
 				Type:        schema.TypeString,
@@ -78,7 +72,7 @@ func resourceGatewayMigrationHashi() *schema.Resource {
 	}
 }
 
-func resourceGatewayMigrationHashiCreate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayMigrationConjurCreate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -86,47 +80,44 @@ func resourceGatewayMigrationHashiCreate(d *schema.ResourceData, m interface{}) 
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
-	hashiUrl := d.Get("hashi_url").(string)
-	hashiToken := d.Get("hashi_token").(string)
-	hashiNs := d.Get("hashi_ns").([]interface{})
-	hashiJson := d.Get("hashi_json").(string)
-	hashiMetadataMode := d.Get("hashi_metadata_mode").(string)
+	conjurUrl := d.Get("conjur_url").(string)
+	conjurAccount := d.Get("conjur_account").(string)
+	conjurUsername := d.Get("conjur_username").(string)
+	conjurApiKey := d.Get("conjur_api_key").(string)
 	protectionKey := d.Get("protection_key").(string)
 	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
 	body.Token = &token
-	body.Type = akeyless_api.PtrString("hashi")
-	common.GetAkeylessPtr(&body.HashiUrl, hashiUrl)
-	common.GetAkeylessPtr(&body.HashiToken, hashiToken)
-	if len(hashiNs) > 0 {
-		body.HashiNs = common.ExpandStringList(hashiNs)
-	}
-	common.GetAkeylessPtr(&body.HashiJson, hashiJson)
-	common.GetAkeylessPtr(&body.HashiMetadataMode, hashiMetadataMode)
+	body.Type = akeyless_api.PtrString("conjur")
+	common.GetAkeylessPtr(&body.ConjurUrl, conjurUrl)
+	common.GetAkeylessPtr(&body.ConjurAccount, conjurAccount)
+	common.GetAkeylessPtr(&body.ConjurUsername, conjurUsername)
+	common.GetAkeylessPtr(&body.ConjurApiKey, conjurApiKey)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		return common.HandleError("can't create Gateway Migration HashiCorp Vault", resp, err)
+		return common.HandleError("can't create Gateway Migration Conjur", resp, err)
 	}
 
 	migrationID := *out.MigrationId
-	d.Set("migration_id", migrationID)
+	if err := d.Set("migration_id", migrationID); err != nil {
+		return err
+	}
 
 	d.SetId(name)
 
-	return resourceGatewayMigrationHashiRead(d, m)
+	return resourceGatewayMigrationConjurRead(d, m)
 }
 
-func resourceGatewayMigrationHashiRead(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayMigrationConjurRead(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
 	ctx := context.Background()
-
 	path := d.Id()
 
 	body := akeyless_api.GatewayGetMigration{
@@ -136,13 +127,13 @@ func resourceGatewayMigrationHashiRead(d *schema.ResourceData, m interface{}) er
 
 	rOut, res, err := client.GatewayGetMigration(ctx).Body(body).Execute()
 	if err != nil {
-		return common.HandleReadError(d, "can't get Gateway Migration HashiCorp", res, err)
+		return common.HandleReadError(d, "can't get Gateway Migration Conjur", res, err)
 	}
 
 	if rOut.Body != nil {
-		if len(rOut.Body.HashiMigrations) > 0 {
-			for _, migration := range rOut.Body.HashiMigrations {
-				if migration.General != nil && *migration.General.Name == path {
+		if len(rOut.Body.ConjurMigrations) > 0 {
+			for _, migration := range rOut.Body.ConjurMigrations {
+				if migration.General != nil && migration.General.Name != nil && *migration.General.Name == path {
 					if migration.General.Id != nil {
 						if err := d.Set("migration_id", *migration.General.Id); err != nil {
 							return err
@@ -159,18 +150,23 @@ func resourceGatewayMigrationHashiRead(d *schema.ResourceData, m interface{}) er
 						}
 					}
 					if migration.Payload != nil {
-						if migration.Payload.Url != nil {
-							if err := d.Set("hashi_url", *migration.Payload.Url); err != nil {
+						if migration.Payload.ConjurUrl != nil {
+							if err := d.Set("conjur_url", *migration.Payload.ConjurUrl); err != nil {
 								return err
 							}
 						}
-						if migration.Payload.ImportAsJson != nil {
-							if err := d.Set("hashi_json", fmt.Sprintf("%v", *migration.Payload.ImportAsJson)); err != nil {
+						if migration.Payload.ConjurAccount != nil {
+							if err := d.Set("conjur_account", *migration.Payload.ConjurAccount); err != nil {
 								return err
 							}
 						}
-						if migration.Payload.MetadataMode != nil {
-							if err := d.Set("hashi_metadata_mode", *migration.Payload.MetadataMode); err != nil {
+						if migration.Payload.ConjurUsername != nil {
+							if err := d.Set("conjur_username", *migration.Payload.ConjurUsername); err != nil {
+								return err
+							}
+						}
+						if migration.Payload.ConjurApiKey != nil {
+							if err := d.Set("conjur_api_key", *migration.Payload.ConjurApiKey); err != nil {
 								return err
 							}
 						}
@@ -182,11 +178,10 @@ func resourceGatewayMigrationHashiRead(d *schema.ResourceData, m interface{}) er
 	}
 
 	d.SetId(path)
-
 	return nil
 }
 
-func resourceGatewayMigrationHashiUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayMigrationConjurUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -194,36 +189,32 @@ func resourceGatewayMigrationHashiUpdate(d *schema.ResourceData, m interface{}) 
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
-	hashiUrl := d.Get("hashi_url").(string)
-	hashiToken := d.Get("hashi_token").(string)
-	hashiNs := d.Get("hashi_ns").([]interface{})
-	hashiJson := d.Get("hashi_json").(string)
-	hashiMetadataMode := d.Get("hashi_metadata_mode").(string)
+	conjurUrl := d.Get("conjur_url").(string)
+	conjurAccount := d.Get("conjur_account").(string)
+	conjurUsername := d.Get("conjur_username").(string)
+	conjurApiKey := d.Get("conjur_api_key").(string)
 	protectionKey := d.Get("protection_key").(string)
 	targetName := d.Get("target_name").(string)
 
 	body := akeyless_api.NewGatewayUpdateMigration("", "", "", targetLocation)
 	body.Token = &token
 	body.Name = &name
-	common.GetAkeylessPtr(&body.HashiUrl, hashiUrl)
-	common.GetAkeylessPtr(&body.HashiToken, hashiToken)
-	if len(hashiNs) > 0 {
-		body.HashiNs = common.ExpandStringList(hashiNs)
-	}
-	common.GetAkeylessPtr(&body.HashiJson, hashiJson)
-	common.GetAkeylessPtr(&body.HashiMetadataMode, hashiMetadataMode)
+	common.GetAkeylessPtr(&body.ConjurUrl, conjurUrl)
+	common.GetAkeylessPtr(&body.ConjurAccount, conjurAccount)
+	common.GetAkeylessPtr(&body.ConjurUsername, conjurUsername)
+	common.GetAkeylessPtr(&body.ConjurApiKey, conjurApiKey)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()
 	if err != nil {
-		return common.HandleError("can't update Gateway Migration HashiCorp Vault", resp, err)
+		return common.HandleError("can't update Gateway Migration Conjur", resp, err)
 	}
 
 	return nil
 }
 
-func resourceGatewayMigrationHashiDelete(d *schema.ResourceData, m interface{}) error {
+func resourceGatewayMigrationConjurDelete(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
@@ -244,11 +235,10 @@ func resourceGatewayMigrationHashiDelete(d *schema.ResourceData, m interface{}) 
 	return nil
 }
 
-func resourceGatewayMigrationHashiImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-
+func resourceGatewayMigrationConjurImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	id := d.Id()
 
-	err := resourceGatewayMigrationHashiRead(d, m)
+	err := resourceGatewayMigrationConjurRead(d, m)
 	if err != nil {
 		return nil, err
 	}
