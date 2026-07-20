@@ -488,7 +488,7 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 func getProviderClient(_ context.Context, d *schema.ResourceData) (client *akeyless_api.V2ApiService, apiGwAddress string, err error) {
 	apiGwAddress = d.Get("api_gateway_address").(string)
 
-	cfg, err := retryConfigFromProviderData(d)
+	cfg, err := providerRetryConfigFromData(d)
 	if err != nil {
 		return nil, "", err
 	}
@@ -510,6 +510,7 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diagnostic diag.Diagnostics
 
 	client, apiGwAddress, err := getProviderClient(ctx, d)
+	// 2 clients created here : client for the provider and apiGwAddress for the resource
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}

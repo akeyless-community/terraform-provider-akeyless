@@ -10,10 +10,14 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// --- Transport tests ---
+
 func testRetryTransport(cfg retryConfig) *retryTransport {
-	rt := newRetryTransport(http.DefaultTransport, cfg)
+	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
 	rt.sleep = func(ctx context.Context, d time.Duration) error { return nil }
 	return rt
 }
@@ -69,17 +73,14 @@ func TestRetryTransport_429Then200(t *testing.T) {
 	cfg.IntervalSeconds = 0.001
 	cfg.MaxBackoffSeconds = 1
 
-	rt := newRetryTransport(http.DefaultTransport, cfg)
+	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
 	var slept time.Duration
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		slept += d
 		return nil
 	}
 
-	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	req, _ := http.NewRequest(http.MethodGet, srv.URL, nil)
 	resp, err := rt.RoundTrip(req)
 	if err != nil {
 		t.Fatal(err)
@@ -113,7 +114,7 @@ func TestRetryTransport_RetryAfterHeader(t *testing.T) {
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 2
 	cfg.MaxBackoffSeconds = 30
-	rt := newRetryTransport(http.DefaultTransport, cfg)
+	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
 	var slept time.Duration
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		slept = d
@@ -173,7 +174,7 @@ func TestRetryTransport_Plain403NoRetry(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 3
-	rt := newRetryTransport(http.DefaultTransport, cfg)
+	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		t.Fatal("should not sleep")
 		return nil
@@ -204,7 +205,7 @@ func TestRetryTransport_401NoRetry(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 3
-	rt := newRetryTransport(http.DefaultTransport, cfg)
+	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		t.Fatal("should not sleep")
 		return nil
@@ -244,7 +245,7 @@ func TestRetryTransport_MaxRetriesExhausted(t *testing.T) {
 	if resp.StatusCode != http.StatusTooManyRequests {
 		t.Fatalf("status=%d", resp.StatusCode)
 	}
-	if atomic.LoadInt32(&hits) != 3 { // 1 initial + 2 retries
+	if atomic.LoadInt32(&hits) != 3 {
 		t.Fatalf("hits=%d want 3", hits)
 	}
 }
@@ -258,7 +259,7 @@ func TestRetryTransport_ContextCancel(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 5
-	rt := newRetryTransport(http.DefaultTransport, cfg)
+	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		return context.Canceled
 	}
@@ -349,4 +350,129 @@ func mustCompileRegexes(t *testing.T, patterns []string) []*regexp.Regexp {
 		out = append(out, re)
 	}
 	return out
+}
+
+// --- Resource retry tests ---
+
+func resourceWithRetrySchema() *schema.Resource {
+	r := &schema.Resource{Schema: map[string]*schema.Schema{}}
+	r.Schema["retry"] = resourceRetrySchema()
+	return r
+}
+
+func TestResourceRetryConfig_Absent(t *testing.T) {
+	r := resourceWithRetrySchema()
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{})
+
+	_, ok, err := resourceRetryConfigFromData(d)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if ok {
+		t.Fatal("expected ok=false when no retry block is set")
+	}
+}
+
+func TestResourceRetryConfig_OverridesAndDefaults(t *testing.T) {
+	r := resourceWithRetrySchema()
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
+		"retry": []interface{}{
+			map[string]interface{}{
+				"max_retries":         5,
+				"interval_seconds":    2.0,
+				"max_backoff_seconds": 20.0,
+				"multiplier":          3.0,
+				"retry_on_messages":   []interface{}{"custom error"},
+			},
+		},
+	})
+
+	cfg, ok, err := resourceRetryConfigFromData(d)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if !ok {
+		t.Fatal("expected ok=true when retry block is set")
+	}
+	if cfg.MaxRetries != 5 || cfg.IntervalSeconds != 2.0 || cfg.MaxBackoffSeconds != 20.0 || cfg.Multiplier != 3.0 {
+		t.Fatalf("unexpected cfg: %+v", cfg)
+	}
+	if _, retried := cfg.RetryOnStatusCodes[429]; !retried {
+		t.Fatal("expected default busy status codes to be inherited")
+	}
+	if len(cfg.ErrorMessageRegex) != 1 || !cfg.ErrorMessageRegex[0].MatchString("a custom error b") {
+		t.Fatalf("retry_on_messages not compiled: %+v", cfg.ErrorMessageRegex)
+	}
+}
+
+func TestResourceRetryConfig_StatusCodesOverride(t *testing.T) {
+	r := resourceWithRetrySchema()
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
+		"retry": []interface{}{
+			map[string]interface{}{
+				"retry_on_status_codes": []interface{}{429, 503},
+			},
+		},
+	})
+
+	cfg, ok, err := resourceRetryConfigFromData(d)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if !ok {
+		t.Fatal("expected ok=true")
+	}
+	if _, ok := cfg.RetryOnStatusCodes[429]; !ok {
+		t.Fatal("expected 429")
+	}
+	if _, ok := cfg.RetryOnStatusCodes[503]; !ok {
+		t.Fatal("expected 503")
+	}
+	if _, ok := cfg.RetryOnStatusCodes[500]; ok {
+		t.Fatal("500 should not be present when overridden")
+	}
+}
+
+func TestResourceRetryConfig_InvalidRegexErrors(t *testing.T) {
+	r := resourceWithRetrySchema()
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
+		"retry": []interface{}{
+			map[string]interface{}{
+				"retry_on_messages": []interface{}{"("},
+			},
+		},
+	})
+
+	if _, _, err := resourceRetryConfigFromData(d); err == nil {
+		t.Fatal("expected error for invalid regex")
+	}
+}
+
+func TestResourceRetryDeps_SwapsClientOnlyWhenConfigured(t *testing.T) {
+	r := resourceWithRetrySchema()
+	pm := &providerMeta{apiGwAddress: "https://api.example.com"}
+
+	noRetry := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{})
+	got, err := resourceRetryDeps(noRetry, pm)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if got != interface{}(pm) {
+		t.Fatal("expected unchanged meta when no retry block")
+	}
+
+	withRetry := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
+		"retry": []interface{}{map[string]interface{}{"max_retries": 1}},
+	})
+	got, err = resourceRetryDeps(withRetry, pm)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	cp, ok := got.(*providerMeta)
+	if !ok || cp == pm {
+		t.Fatal("expected a distinct providerMeta copy")
+	}
+	if cp.client == nil {
+		t.Fatal("expected a resource retry client to be built")
+	}
 }

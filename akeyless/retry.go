@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -15,16 +16,50 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-// sdkRetryTimeout is intentionally large: we stop via max_retries inside RetryFunc,
-// not via the helper's timeout. (retry.RetryContext also inserts MinTimeout ~500ms between attempts.)
+// Shared retry defaults (provider and resource may override).
+const (
+	defaultMaxRetries        = 3
+	defaultIntervalSeconds   = 1.0
+	defaultMaxBackoffSeconds = 30.0
+	defaultMultiplier        = 1.5
+)
+
+// sdkRetryTimeout is intentionally large: we stop via max_retries, not timeout.
 const sdkRetryTimeout = 24 * time.Hour
 
-// retryTransport is the provider-level HTTP retry (all API calls).
-// Resource-level retry lives in akeyless/common/retry.go and runs later, on CRUD errors.
+// busyHTTPStatusCodes are retried by default.
+var busyHTTPStatusCodes = []int{429, 500, 502, 503, 504}
+
+// releaseDelayRE extracts wait seconds from "will be released in 14.15s".
+var releaseDelayRE = regexp.MustCompile(`(?i)will be released in\s+([0-9]+(?:\.[0-9]+)?)\s*s`)
+
+// rateLimitBodyRE detects rate limiting in response body.
+var rateLimitBodyRE = regexp.MustCompile(`(?i)(429\s+Too Many Requests|Too Many Requests|will be released in)`)
+
+// retryConfig holds retry settings for the HTTP transport.
+type retryConfig struct {
+	MaxRetries         int
+	RetryOnStatusCodes map[int]struct{}
+	IntervalSeconds    float64
+	MaxBackoffSeconds  float64
+	Multiplier         float64
+	ErrorMessageRegex  []*regexp.Regexp
+}
+
+func defaultRetryConfig() retryConfig {
+	return retryConfig{
+		MaxRetries:         defaultMaxRetries,
+		RetryOnStatusCodes: statusCodeSet(busyHTTPStatusCodes),
+		IntervalSeconds:    defaultIntervalSeconds,
+		MaxBackoffSeconds:  defaultMaxBackoffSeconds,
+		Multiplier:         defaultMultiplier,
+	}
+}
+
+// retryTransport wraps http.RoundTripper with retry logic.
 type retryTransport struct {
-	base http.RoundTripper
-	cfg  retryConfig
-	// sleep is overridable in tests.
+	base  http.RoundTripper
+	cfg   retryConfig
 	sleep func(ctx context.Context, d time.Duration) error
 }
 
@@ -36,12 +71,12 @@ func newRetryTransport(base http.RoundTripper, cfg retryConfig) *retryTransport 
 		base: base,
 		cfg:  cfg,
 		sleep: func(ctx context.Context, d time.Duration) error {
-			timer := time.NewTimer(d) // fire after d
+			timer := time.NewTimer(d)
 			defer timer.Stop()
-			select { // wait for WHICHEVER happens first
-			case <-ctx.Done(): // cancel → stop waiting, return error
+			select {
+			case <-ctx.Done():
 				return ctx.Err()
-			case <-timer.C: // timer finished → OK to retry
+			case <-timer.C:
 				return nil
 			}
 		},
@@ -59,7 +94,6 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 	}
 
-	// max_retries is attempts beyond the first call.
 	maxAttempts := t.cfg.MaxRetries + 1
 	if maxAttempts < 1 {
 		maxAttempts = 1
@@ -69,13 +103,10 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	var finalResp *http.Response
 	var finalErr error
 
-	// retry.RetryContext is the loop: returning RetryableError re-invokes this func;
-	// NonRetryableError / nil stops. There is no for/while in this file on purpose.
 	err := retry.RetryContext(req.Context(), sdkRetryTimeout, func() *retry.RetryError {
 		if bodyBytes != nil {
 			req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 		}
-
 		resp, err := t.base.RoundTrip(req)
 		if err != nil {
 			return t.onConnError(req.Context(), err, &attempt, maxAttempts, &finalErr)
@@ -92,13 +123,8 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return nil, err
 }
 
-// onConnError: Path A — no HTTP response (dial/TLS/connection failed).
 func (t *retryTransport) onConnError(ctx context.Context, err error, attempt *int, maxAttempts int, finalErr *error) *retry.RetryError {
-	if !isTransientConnError(err) {
-		*finalErr = err
-		return retry.NonRetryableError(err)
-	}
-	if *attempt >= maxAttempts-1 {
+	if !isTransientConnError(err) || *attempt >= maxAttempts-1 {
 		*finalErr = err
 		return retry.NonRetryableError(err)
 	}
@@ -109,10 +135,9 @@ func (t *retryTransport) onConnError(ctx context.Context, err error, attempt *in
 		return retry.NonRetryableError(sleepErr)
 	}
 	*attempt++
-	return retry.RetryableError(err) // → RetryContext calls RoundTrip callback again
+	return retry.RetryableError(err)
 }
 
-// onHTTPResponse: Path B — got status + body; retry busy/rate-limit via shouldRetry.
 func (t *retryTransport) onHTTPResponse(req *http.Request, resp *http.Response, attempt *int, maxAttempts int, finalResp **http.Response, finalErr *error) *retry.RetryError {
 	body, readErr := io.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -124,8 +149,7 @@ func (t *retryTransport) onHTTPResponse(req *http.Request, resp *http.Response, 
 
 	if !t.shouldRetry(resp.StatusCode, string(body)) || *attempt >= maxAttempts-1 {
 		*finalResp = resp
-		*finalErr = nil
-		return nil // stop: success or non-retryable / out of attempts
+		return nil
 	}
 
 	wait := t.waitDuration(*attempt, resp, string(body))
@@ -136,10 +160,9 @@ func (t *retryTransport) onHTTPResponse(req *http.Request, resp *http.Response, 
 		return retry.NonRetryableError(sleepErr)
 	}
 	*attempt++
-	return retry.RetryableError(fmt.Errorf("HTTP %d", resp.StatusCode)) // → loop again
+	return retry.RetryableError(fmt.Errorf("HTTP %d", resp.StatusCode))
 }
 
-// shouldRetry: true if status is busy, or body looks like rate-limit, or a customer regex matches.
 func (t *retryTransport) shouldRetry(status int, body string) bool {
 	if _, ok := t.cfg.RetryOnStatusCodes[status]; ok {
 		return true
@@ -161,7 +184,6 @@ func (t *retryTransport) waitDuration(attempt int, resp *http.Response, body str
 			if sec, err := strconv.ParseFloat(strings.TrimSpace(ra), 64); err == nil {
 				return t.capDuration(time.Duration(sec * float64(time.Second)))
 			}
-			// second try against response body (HTTP-date)
 			if when, err := http.ParseTime(ra); err == nil {
 				d := time.Until(when)
 				if d < 0 {
@@ -171,7 +193,6 @@ func (t *retryTransport) waitDuration(attempt int, resp *http.Response, body str
 			}
 		}
 	}
-	// Same idea as Retry-After, but delay taken from the response body.
 	if sec, ok := parseReleaseDelaySeconds(body); ok {
 		return t.capDuration(time.Duration(sec * float64(time.Second)))
 	}
@@ -183,14 +204,49 @@ func (t *retryTransport) backoffDuration(attempt int) time.Duration {
 	return t.capDuration(time.Duration(base * float64(time.Second)))
 }
 
-// capDuration limits wait to MaxBackoffSeconds so Retry-After / body delay cannot stall forever.
 func (t *retryTransport) capDuration(d time.Duration) time.Duration {
 	max := time.Duration(t.cfg.MaxBackoffSeconds * float64(time.Second))
 	if max > 0 && d > max {
-		return max // asked wait is longer than the configured cap
+		return max
 	}
 	if d < 0 {
 		return 0
 	}
 	return d
+}
+
+// --- Helpers ---
+
+func statusCodeSet(codes []int) map[int]struct{} {
+	out := make(map[int]struct{}, len(codes))
+	for _, c := range codes {
+		out[c] = struct{}{}
+	}
+	return out
+}
+
+func parseReleaseDelaySeconds(body string) (float64, bool) {
+	m := releaseDelayRE.FindStringSubmatch(body)
+	if len(m) < 2 {
+		return 0, false
+	}
+	sec, err := strconv.ParseFloat(m[1], 64)
+	if err != nil {
+		return 0, false
+	}
+	return sec, true
+}
+
+func bodyLooksLikeRateLimit(body string) bool {
+	return rateLimitBodyRE.MatchString(body)
+}
+
+func isTransientConnError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "EOF") ||
+		strings.Contains(msg, "connection reset by peer") ||
+		strings.Contains(msg, "connection refused")
 }

@@ -73,23 +73,25 @@ resource "akeyless_dynamic_secret_aws" "example" {
   target_name = akeyless_target_aws.example.name
 
   retry {
-    interval_seconds     = 10
-    max_interval_seconds = 180
-    multiplier           = 1.5
-    max_retries          = 3
+    interval_seconds      = 10
+    max_backoff_seconds   = 180
+    multiplier            = 1.5
+    max_retries           = 3
+    retry_on_status_codes = [429, 500, 502, 503, 504]
   }
 }
 ```
 
 Like provider retry, connection errors (`EOF`, `connection reset by peer`,
 `connection refused`), busy HTTP statuses (`429`, `5xx`), and wrapped SaaS rate-limit
-bodies are always retried. `retry_on_messages` adds extra error-message matches on top
-(matched as regular expressions):
+bodies are retried by default. Override statuses with `retry_on_status_codes`, and add
+extra body/text matches with `retry_on_messages` (matched as regular expressions):
 
 ```terraform
   retry {
-    retry_on_messages = [".*temporary.*"]
-    max_retries       = 5
+    retry_on_status_codes = [429, 503]
+    retry_on_messages     = [".*temporary.*"]
+    max_retries           = 5
   }
 ```
 
