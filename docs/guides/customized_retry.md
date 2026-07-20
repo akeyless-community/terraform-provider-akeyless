@@ -37,13 +37,13 @@ provider "akeyless" {
     retry_on_status_codes = [429, 500, 502, 503, 504]
     interval_seconds      = 2
     max_backoff_seconds   = 60
-    multiplier            = 1.5
-    retry_on_messages   = [".*temporary.*"]
+    multiplier            = 2
+    retry_on_messages     = [".*temporary.*"]
   }
 }
 ```
 
-When `retry {}` is omitted, the same defaults apply (`max_retries = 3`, statuses above, etc.).
+When `retry {}` is omitted, defaults apply: `max_retries = 3`, `interval_seconds = 2`, `max_backoff_seconds = 60`, `multiplier = 2`.
 
 Plain **401** / **403** without a rate-limit body are not retried.
 
@@ -73,9 +73,9 @@ resource "akeyless_dynamic_secret_aws" "example" {
   target_name = akeyless_target_aws.example.name
 
   retry {
-    interval_seconds      = 10
-    max_backoff_seconds   = 180
-    multiplier            = 1.5
+    interval_seconds      = 2
+    max_backoff_seconds   = 60
+    multiplier            = 2
     max_retries           = 3
     retry_on_status_codes = [429, 500, 502, 503, 504]
   }

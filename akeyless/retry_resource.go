@@ -10,12 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Resource-level retry defaults (longer intervals than provider).
-const (
-	resourceRetryDefaultIntervalSeconds   = 10.0
-	resourceRetryDefaultMaxBackoffSeconds = 180.0
-)
-
 // resourceRetrySchema returns the optional resource-level retry {} block schema.
 // When set, overrides provider HTTP retry for this resource.
 func resourceRetrySchema() *schema.Schema {
@@ -41,13 +35,13 @@ func resourceRetrySchema() *schema.Schema {
 				"interval_seconds": {
 					Type:        schema.TypeFloat,
 					Optional:    true,
-					Default:     resourceRetryDefaultIntervalSeconds,
+					Default:     defaultIntervalSeconds,
 					Description: "Initial backoff interval in seconds.",
 				},
 				"max_backoff_seconds": {
 					Type:        schema.TypeFloat,
 					Optional:    true,
-					Default:     resourceRetryDefaultMaxBackoffSeconds,
+					Default:     defaultMaxBackoffSeconds,
 					Description: "Maximum backoff interval in seconds.",
 				},
 				"multiplier": {

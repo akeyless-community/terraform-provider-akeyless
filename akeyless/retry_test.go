@@ -17,7 +17,7 @@ import (
 // --- Transport tests ---
 
 func testRetryTransport(cfg retryConfig) *retryTransport {
-	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
+	rt := newRetryTransport(http.DefaultTransport, cfg)
 	rt.sleep = func(ctx context.Context, d time.Duration) error { return nil }
 	return rt
 }
@@ -73,7 +73,7 @@ func TestRetryTransport_429Then200(t *testing.T) {
 	cfg.IntervalSeconds = 0.001
 	cfg.MaxBackoffSeconds = 1
 
-	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
+	rt := newRetryTransport(http.DefaultTransport, cfg)
 	var slept time.Duration
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		slept += d
@@ -114,7 +114,7 @@ func TestRetryTransport_RetryAfterHeader(t *testing.T) {
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 2
 	cfg.MaxBackoffSeconds = 30
-	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
+	rt := newRetryTransport(http.DefaultTransport, cfg)
 	var slept time.Duration
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		slept = d
@@ -174,7 +174,7 @@ func TestRetryTransport_Plain403NoRetry(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 3
-	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
+	rt := newRetryTransport(http.DefaultTransport, cfg)
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		t.Fatal("should not sleep")
 		return nil
@@ -205,7 +205,7 @@ func TestRetryTransport_401NoRetry(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 3
-	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
+	rt := newRetryTransport(http.DefaultTransport, cfg)
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		t.Fatal("should not sleep")
 		return nil
@@ -259,7 +259,7 @@ func TestRetryTransport_ContextCancel(t *testing.T) {
 
 	cfg := defaultRetryConfig()
 	cfg.MaxRetries = 5
-	rt := newRetryTransport(http.DefaultTransport, cfg, "test")
+	rt := newRetryTransport(http.DefaultTransport, cfg)
 	rt.sleep = func(ctx context.Context, d time.Duration) error {
 		return context.Canceled
 	}

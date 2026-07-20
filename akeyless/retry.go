@@ -19,9 +19,9 @@ import (
 // Shared retry defaults (provider and resource may override).
 const (
 	defaultMaxRetries        = 3
-	defaultIntervalSeconds   = 1.0
-	defaultMaxBackoffSeconds = 30.0
-	defaultMultiplier        = 1.5
+	defaultIntervalSeconds   = 2.0
+	defaultMaxBackoffSeconds = 60.0
+	defaultMultiplier        = 2.0
 )
 
 // sdkRetryTimeout is intentionally large: we stop via max_retries, not timeout.
