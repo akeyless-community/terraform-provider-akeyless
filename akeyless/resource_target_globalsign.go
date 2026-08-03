@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGlobalsignTarget() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceGlobalsignTarget() *schema.Resource {
 		Delete:      resourceGlobalsignTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGlobalsignTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,6 +41,17 @@ func resourceGlobalsignTarget() *schema.Resource {
 				Required:    true,
 				Sensitive:   true,
 				Description: "Password of the GlobalSign GCC account",
+			},
+			"password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+			},
+			"password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for password_wo. Increment to update the value.",
 			},
 			"profile_id": {
 				Type:        schema.TypeString,
@@ -102,7 +118,10 @@ func resourceGlobalsignTargetCreate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	username := d.Get("username").(string)
-	password := d.Get("password").(string)
+	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	if err != nil {
+		return err
+	}
 	profileId := d.Get("profile_id").(string)
 	contactFirstName := d.Get("contact_first_name").(string)
 	contactLastName := d.Get("contact_last_name").(string)
@@ -168,7 +187,7 @@ func resourceGlobalsignTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if targetDetails.GlobalsignTargetDetails.Password != nil {
-			err := d.Set("password", *targetDetails.GlobalsignTargetDetails.Password)
+			err := common.SetSecretFromRead(d, "password", "password_wo", "password_wo_version", *targetDetails.GlobalsignTargetDetails.Password)
 			if err != nil {
 				return err
 			}
@@ -244,7 +263,10 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	username := d.Get("username").(string)
-	password := d.Get("password").(string)
+	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	if err != nil {
+		return err
+	}
 	profileId := d.Get("profile_id").(string)
 	contactFirstName := d.Get("contact_first_name").(string)
 	contactLastName := d.Get("contact_last_name").(string)

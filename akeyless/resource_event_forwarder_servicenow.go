@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceEventForwarderServiceNow() *schema.Resource {
@@ -19,6 +21,11 @@ func resourceEventForwarderServiceNow() *schema.Resource {
 		Delete:      resourceEventForwarderServiceNowDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceEventForwarderServiceNowImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("admin_pwd"), cty.GetAttrPath("admin_pwd_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("client_secret"), cty.GetAttrPath("client_secret_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("app_private_key_base64"), cty.GetAttrPath("app_private_key_base64_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -85,6 +92,17 @@ func resourceEventForwarderServiceNow() *schema.Resource {
 				Sensitive:   true,
 				Description: "Workstation Admin Password",
 			},
+			"admin_pwd_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Workstation Admin Password (write-only, not stored in state). Requires Terraform 1.11+. Bump admin_pwd_wo_version to change it.",
+			},
+			"admin_pwd_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for admin_pwd_wo. Increment to update the value.",
+			},
 			"user_email": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -101,11 +119,33 @@ func resourceEventForwarderServiceNow() *schema.Resource {
 				Sensitive:   true,
 				Description: "The client secret to use when connecting with jwt authentication",
 			},
+			"client_secret_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "The client secret to use when connecting with jwt authentication (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
+			},
+			"client_secret_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for client_secret_wo. Increment to update the value.",
+			},
 			"app_private_key_base64": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "The RSA Private Key to use when connecting with jwt authentication",
+			},
+			"app_private_key_base64_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "The RSA Private Key to use when connecting with jwt authentication (write-only, not stored in state). Requires Terraform 1.11+. Bump app_private_key_base64_wo_version to change it.",
+			},
+			"app_private_key_base64_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for app_private_key_base64_wo. Increment to update the value.",
 			},
 			"runner_type": {
 				Type:        schema.TypeString,
@@ -159,11 +199,20 @@ func resourceEventForwarderServiceNowCreate(d *schema.ResourceData, m interface{
 	host := d.Get("host").(string)
 	authType := d.Get("auth_type").(string)
 	adminName := d.Get("admin_name").(string)
-	adminPwd := d.Get("admin_pwd").(string)
+	adminPwd, err := common.EffectiveSecretValue(d, "admin_pwd", "admin_pwd_wo")
+	if err != nil {
+		return err
+	}
 	userEmail := d.Get("user_email").(string)
 	clientId := d.Get("client_id").(string)
-	clientSecret := d.Get("client_secret").(string)
-	appPrivateKeyBase64 := d.Get("app_private_key_base64").(string)
+	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
+	if err != nil {
+		return err
+	}
+	appPrivateKeyBase64, err := common.EffectiveSecretValue(d, "app_private_key_base64", "app_private_key_base64_wo")
+	if err != nil {
+		return err
+	}
 	runnerType := d.Get("runner_type").(string)
 	every := d.Get("every").(string)
 	description := d.Get("description").(string)
@@ -301,11 +350,20 @@ func resourceEventForwarderServiceNowUpdate(d *schema.ResourceData, m interface{
 	host := d.Get("host").(string)
 	authType := d.Get("auth_type").(string)
 	adminName := d.Get("admin_name").(string)
-	adminPwd := d.Get("admin_pwd").(string)
+	adminPwd, err := common.EffectiveSecretValue(d, "admin_pwd", "admin_pwd_wo")
+	if err != nil {
+		return err
+	}
 	userEmail := d.Get("user_email").(string)
 	clientId := d.Get("client_id").(string)
-	clientSecret := d.Get("client_secret").(string)
-	appPrivateKeyBase64 := d.Get("app_private_key_base64").(string)
+	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
+	if err != nil {
+		return err
+	}
+	appPrivateKeyBase64, err := common.EffectiveSecretValue(d, "app_private_key_base64", "app_private_key_base64_wo")
+	if err != nil {
+		return err
+	}
 	description := d.Get("description").(string)
 	enable := d.Get("enable").(string)
 	keepPrevVersion := d.Get("keep_prev_version").(string)

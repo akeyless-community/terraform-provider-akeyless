@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceSSHTarget() *schema.Resource {
@@ -18,6 +20,11 @@ func resourceSSHTarget() *schema.Resource {
 		Delete:      resourceSSHTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSSHTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("private_key_password"), cty.GetAttrPath("private_key_password_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("private_key"), cty.GetAttrPath("private_key_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("ssh_password"), cty.GetAttrPath("ssh_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -56,17 +63,50 @@ func resourceSSHTarget() *schema.Resource {
 				Optional:    true,
 				Description: "SSH password to rotate",
 			},
+			"ssh_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "ssh_password (write-only, not stored in state). Requires Terraform 1.11+. Bump ssh_password_wo_version to change it.",
+			},
+			"ssh_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for ssh_password_wo. Increment to update the value.",
+			},
 			"private_key": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "SSH private key",
 			},
+			"private_key_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_wo_version to change it.",
+			},
+			"private_key_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for private_key_wo. Increment to update the value.",
+			},
 			"private_key_password": {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
 				Description: "SSH private key password",
+			},
+			"private_key_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "private_key_password (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_password_wo_version to change it.",
+			},
+			"private_key_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for private_key_password_wo. Increment to update the value.",
 			},
 			"key": {
 				Type:        schema.TypeString,
@@ -99,9 +139,18 @@ func resourceSSHTargetCreate(d *schema.ResourceData, m interface{}) error {
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
 	sshUsername := d.Get("ssh_username").(string)
-	sshPassword := d.Get("ssh_password").(string)
-	privateKey := d.Get("private_key").(string)
-	privateKeyPassword := d.Get("private_key_password").(string)
+	sshPassword, err := common.EffectiveSecretValue(d, "ssh_password", "ssh_password_wo")
+	if err != nil {
+		return err
+	}
+	privateKey, err := common.EffectiveSecretValue(d, "private_key", "private_key_wo")
+	if err != nil {
+		return err
+	}
+	privateKeyPassword, err := common.EffectiveSecretValue(d, "private_key_password", "private_key_password_wo")
+	if err != nil {
+		return err
+	}
 	key := d.Get("key").(string)
 	maxVersions := d.Get("max_versions").(string)
 
@@ -160,13 +209,13 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.SshTargetDetails.PrivateKey != nil {
-		err = d.Set("private_key", *rOut.Value.SshTargetDetails.PrivateKey)
+		err = common.SetSecretFromRead(d, "private_key", "private_key_wo", "private_key_wo_version", *rOut.Value.SshTargetDetails.PrivateKey)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.Value.SshTargetDetails.PrivateKeyPassword != nil {
-		err = d.Set("private_key_password", *rOut.Value.SshTargetDetails.PrivateKeyPassword)
+		err = common.SetSecretFromRead(d, "private_key_password", "private_key_password_wo", "private_key_password_wo_version", *rOut.Value.SshTargetDetails.PrivateKeyPassword)
 		if err != nil {
 			return err
 		}
@@ -179,7 +228,7 @@ func resourceSSHTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.SshTargetDetails.Password != nil {
-		err = d.Set("ssh_password", *rOut.Value.SshTargetDetails.Password)
+		err = common.SetSecretFromRead(d, "ssh_password", "ssh_password_wo", "ssh_password_wo_version", *rOut.Value.SshTargetDetails.Password)
 		if err != nil {
 			return err
 		}
@@ -213,9 +262,18 @@ func resourceSSHTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	host := d.Get("host").(string)
 	port := d.Get("port").(string)
 	sshUsername := d.Get("ssh_username").(string)
-	sshPassword := d.Get("ssh_password").(string)
-	privateKey := d.Get("private_key").(string)
-	privateKeyPassword := d.Get("private_key_password").(string)
+	sshPassword, err := common.EffectiveSecretValue(d, "ssh_password", "ssh_password_wo")
+	if err != nil {
+		return err
+	}
+	privateKey, err := common.EffectiveSecretValue(d, "private_key", "private_key_wo")
+	if err != nil {
+		return err
+	}
+	privateKeyPassword, err := common.EffectiveSecretValue(d, "private_key_password", "private_key_password_wo")
+	if err != nil {
+		return err
+	}
 	key := d.Get("key").(string)
 	maxVersions := d.Get("max_versions").(string)
 	keepPrevVersion := d.Get("keep_prev_version").(string)

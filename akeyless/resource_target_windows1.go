@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceWindowsTarget() *schema.Resource {
@@ -19,6 +21,10 @@ func resourceWindowsTarget() *schema.Resource {
 		Delete:      resourceWindowsTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceWindowsTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("certificate"), cty.GetAttrPath("certificate_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -43,6 +49,17 @@ func resourceWindowsTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "Privileged user password",
 			},
+			"password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+			},
+			"password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for password_wo. Increment to update the value.",
+			},
 			"domain": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -65,6 +82,17 @@ func resourceWindowsTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)",
+			},
+			"certificate_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_wo_version to change it.",
+			},
+			"certificate_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for certificate_wo. Increment to update the value.",
 			},
 			"key": {
 				Type:        schema.TypeString,
@@ -111,11 +139,17 @@ func resourceWindowsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	hostname := d.Get("hostname").(string)
 	username := d.Get("username").(string)
-	password := d.Get("password").(string)
+	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	if err != nil {
+		return err
+	}
 	domain := d.Get("domain").(string)
 	port := d.Get("port").(string)
 	useTls := d.Get("use_tls").(string)
-	certificate := d.Get("certificate").(string)
+	certificate, err := common.EffectiveSecretValue(d, "certificate", "certificate_wo")
+	if err != nil {
+		return err
+	}
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 	connectionType := d.Get("connection_type").(string)
@@ -180,7 +214,7 @@ func resourceWindowsTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.WindowsTargetDetails.Password != nil {
-		err = d.Set("password", *rOut.Value.WindowsTargetDetails.Password)
+		err = common.SetSecretFromRead(d, "password", "password_wo", "password_wo_version", *rOut.Value.WindowsTargetDetails.Password)
 		if err != nil {
 			return err
 		}
@@ -204,7 +238,7 @@ func resourceWindowsTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.WindowsTargetDetails.Certificate != nil {
-		err = d.Set("certificate", *rOut.Value.WindowsTargetDetails.Certificate)
+		err = common.SetSecretFromRead(d, "certificate", "certificate_wo", "certificate_wo_version", *rOut.Value.WindowsTargetDetails.Certificate)
 		if err != nil {
 			return err
 		}
@@ -248,11 +282,17 @@ func resourceWindowsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	hostname := d.Get("hostname").(string)
 	username := d.Get("username").(string)
-	password := d.Get("password").(string)
+	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	if err != nil {
+		return err
+	}
 	domain := d.Get("domain").(string)
 	port := d.Get("port").(string)
 	useTls := d.Get("use_tls").(string)
-	certificate := d.Get("certificate").(string)
+	certificate, err := common.EffectiveSecretValue(d, "certificate", "certificate_wo")
+	if err != nil {
+		return err
+	}
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 	connectionType := d.Get("connection_type").(string)

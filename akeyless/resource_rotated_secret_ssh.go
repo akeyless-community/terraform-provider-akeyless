@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceRotatedSecretSsh() *schema.Resource {
@@ -18,6 +20,10 @@ func resourceRotatedSecretSsh() *schema.Resource {
 		Delete:      resourceRotatedSecretSshDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRotatedSecretSshImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("key_data_base64"), cty.GetAttrPath("key_data_base64_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("rotated_password"), cty.GetAttrPath("rotated_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -58,6 +64,17 @@ func resourceRotatedSecretSsh() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "rotated-username password (relevant only for rotator-type=password)",
+			},
+			"rotated_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
+			},
+			"rotated_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for rotated_password_wo. Increment to update the value.",
 			},
 			"rotator_custom_cmd": {
 				Type:        schema.TypeString,
@@ -124,6 +141,17 @@ func resourceRotatedSecretSsh() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Private key file contents encoded using base64",
+			},
+			"key_data_base64_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "key_data_base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump key_data_base64_wo_version to change it.",
+			},
+			"key_data_base64_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for key_data_base64_wo. Increment to update the value.",
 			},
 			"max_versions": {
 				Type:        schema.TypeString,
@@ -223,7 +251,10 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword := d.Get("rotated_password").(string)
+	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
+	if err != nil {
+		return err
+	}
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
@@ -231,7 +262,10 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	for k, v := range itemCustomFieldsMap {
 		itemCustomFields[k] = v.(string)
 	}
-	keyDataBase64 := d.Get("key_data_base64").(string)
+	keyDataBase64, err := common.EffectiveSecretValue(d, "key_data_base64", "key_data_base64_wo")
+	if err != nil {
+		return err
+	}
 	maxVersions := d.Get("max_versions").(string)
 	publicKeyRemotePath := d.Get("public_key_remote_path").(string)
 	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
@@ -439,7 +473,7 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 					}
 				}
 				if password, ok := value["password"]; ok {
-					err := d.Set("rotated_password", password.(string))
+					err := common.SetSecretFromRead(d, "rotated_password", "rotated_password_wo", "rotated_password_wo_version", password.(string))
 					if err != nil {
 						return err
 					}
@@ -487,7 +521,10 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword := d.Get("rotated_password").(string)
+	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
+	if err != nil {
+		return err
+	}
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -497,7 +534,10 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	for k, v := range itemCustomFieldsMap {
 		itemCustomFields[k] = v.(string)
 	}
-	keyDataBase64 := d.Get("key_data_base64").(string)
+	keyDataBase64, err := common.EffectiveSecretValue(d, "key_data_base64", "key_data_base64_wo")
+	if err != nil {
+		return err
+	}
 	maxVersions := d.Get("max_versions").(string)
 	publicKeyRemotePath := d.Get("public_key_remote_path").(string)
 	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)

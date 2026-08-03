@@ -8,8 +8,10 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGwSessionForwardingLogstash() *schema.Resource {
@@ -21,6 +23,9 @@ func resourceGwSessionForwardingLogstash() *schema.Resource {
 		DeleteContext: resourceGwSessionForwardingLogstashDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGwSessionForwardingLogstashImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("tls_certificate"), cty.GetAttrPath("tls_certificate_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -62,6 +67,17 @@ func resourceGwSessionForwardingLogstash() *schema.Resource {
 				Sensitive:   true,
 				Description: "Logstash tls certificate (PEM format) in a Base64 format",
 				Default:     "use-existing",
+			},
+			"tls_certificate_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Logstash tls certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump tls_certificate_wo_version to change it.",
+			},
+			"tls_certificate_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for tls_certificate_wo. Increment to update the value.",
 			},
 		},
 	}
@@ -114,7 +130,7 @@ func resourceGwSessionForwardingLogstashRead(d *schema.ResourceData, m interface
 			}
 		}
 		if config.LogstashTlsCertificate != nil {
-			err := d.Set("tls_certificate", common.Base64Encode(*config.LogstashTlsCertificate))
+			err := common.SetSecretFromRead(d, "tls_certificate", "tls_certificate_wo", "tls_certificate_wo_version", common.Base64Encode(*config.LogstashTlsCertificate))
 			if err != nil {
 				return err
 			}
@@ -136,7 +152,10 @@ func resourceGwSessionForwardingLogstashUpdate(d *schema.ResourceData, m interfa
 	dns := d.Get("dns").(string)
 	protocol := d.Get("protocol").(string)
 	enableTls := d.Get("enable_tls").(bool)
-	tlsCertificate := d.Get("tls_certificate").(string)
+	tlsCertificate, err := common.EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo")
+	if err != nil {
+		return err
+	}
 
 	body := akeyless_api.GwUpdateRemoteAccessSessionLogsLogstash{
 		Token: &token,

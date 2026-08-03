@@ -8,8 +8,10 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGwSessionForwardingDatadog() *schema.Resource {
@@ -21,6 +23,9 @@ func resourceGwSessionForwardingDatadog() *schema.Resource {
 		DeleteContext: resourceGwSessionForwardingDatadogDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGwSessionForwardingDatadogImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -51,6 +56,17 @@ func resourceGwSessionForwardingDatadog() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Datadog api key",
+			},
+			"api_key_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Datadog api key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+			},
+			"api_key_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"log_source": {
 				Type:        schema.TypeString,
@@ -109,7 +125,7 @@ func resourceGwSessionForwardingDatadogRead(d *schema.ResourceData, m interface{
 			}
 		}
 		if config.DatadogApiKey != nil {
-			err := d.Set("api_key", *config.DatadogApiKey)
+			err := common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *config.DatadogApiKey)
 			if err != nil {
 				return err
 			}
@@ -147,7 +163,10 @@ func resourceGwSessionForwardingDatadogUpdate(d *schema.ResourceData, m interfac
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
 	host := d.Get("host").(string)
-	apiKey := d.Get("api_key").(string)
+	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 	logSource := d.Get("log_source").(string)
 	logTags := d.Get("log_tags").(string)
 	logService := d.Get("log_service").(string)

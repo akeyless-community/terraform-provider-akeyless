@@ -7,8 +7,10 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayUpdateTlsCert() *schema.Resource {
@@ -21,6 +23,10 @@ func resourceGatewayUpdateTlsCert() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateTlsCertImport,
 		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("cert_data"), cty.GetAttrPath("cert_data_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("key_data"), cty.GetAttrPath("key_data_wo")),
+		},
 		Schema: map[string]*schema.Schema{
 			"cert_data": {
 				Type:        schema.TypeString,
@@ -28,11 +34,33 @@ func resourceGatewayUpdateTlsCert() *schema.Resource {
 				Sensitive:   true,
 				Description: "TLS certificate data (PEM format)",
 			},
+			"cert_data_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "TLS certificate data (PEM format) (write-only, not stored in state). Requires Terraform 1.11+. Bump cert_data_wo_version to change it.",
+			},
+			"cert_data_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for cert_data_wo. Increment to update the value.",
+			},
 			"key_data": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "TLS private key data (PEM format)",
+			},
+			"key_data_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "TLS private key data (PEM format) (write-only, not stored in state). Requires Terraform 1.11+. Bump key_data_wo_version to change it.",
+			},
+			"key_data_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for key_data_wo. Increment to update the value.",
 			},
 			"expiration_event_in": {
 				Type:        schema.TypeList,
@@ -66,13 +94,13 @@ func resourceGatewayUpdateTlsCertRead(d *schema.ResourceData, m interface{}) err
 		tlsConf := *rOut.General
 
 		if tlsConf.TlsCert != nil {
-			err := d.Set("cert_data", common.Base64Encode(*tlsConf.TlsCert))
+			err := common.SetSecretFromRead(d, "cert_data", "cert_data_wo", "cert_data_wo_version", common.Base64Encode(*tlsConf.TlsCert))
 			if err != nil {
 				return err
 			}
 		}
 		if tlsConf.TlsKey != nil {
-			err := d.Set("key_data", common.Base64Encode(*tlsConf.TlsKey))
+			err := common.SetSecretFromRead(d, "key_data", "key_data_wo", "key_data_wo_version", common.Base64Encode(*tlsConf.TlsKey))
 			if err != nil {
 				return err
 			}
@@ -94,8 +122,14 @@ func resourceGatewayUpdateTlsCertUpdate(d *schema.ResourceData, m interface{}) e
 	token := *provider.token
 
 	ctx := context.Background()
-	certData := d.Get("cert_data").(string)
-	keyData := d.Get("key_data").(string)
+	certData, err := common.EffectiveSecretValue(d, "cert_data", "cert_data_wo")
+	if err != nil {
+		return err
+	}
+	keyData, err := common.EffectiveSecretValue(d, "key_data", "key_data_wo")
+	if err != nil {
+		return err
+	}
 
 	body := akeyless_api.GatewayUpdateTlsCert{
 		Token: &token,

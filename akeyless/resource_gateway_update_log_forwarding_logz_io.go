@@ -8,8 +8,10 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayUpdateLogForwardingLogzIo() *schema.Resource {
@@ -21,6 +23,9 @@ func resourceGatewayUpdateLogForwardingLogzIo() *schema.Resource {
 		DeleteContext: resourceGatewayUpdateLogForwardingLogzIoDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLogForwardingLogzIoImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("logz_io_token"), cty.GetAttrPath("logz_io_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -46,6 +51,17 @@ func resourceGatewayUpdateLogForwardingLogzIo() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Logz-io token",
+			},
+			"logz_io_token_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Logz-io token (write-only, not stored in state). Requires Terraform 1.11+. Bump logz_io_token_wo_version to change it.",
+			},
+			"logz_io_token_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for logz_io_token_wo. Increment to update the value.",
 			},
 			"protocol": {
 				Type:        schema.TypeString,
@@ -85,7 +101,7 @@ func resourceGatewayUpdateLogForwardingLogzIoRead(d *schema.ResourceData, m inte
 	config := rOut.LogzIoConfig
 	if config != nil {
 		if config.TargetLogzIoToken != nil {
-			err := d.Set("logz_io_token", *config.TargetLogzIoToken)
+			err := common.SetSecretFromRead(d, "logz_io_token", "logz_io_token_wo", "logz_io_token_wo_version", *config.TargetLogzIoToken)
 			if err != nil {
 				return err
 			}
@@ -110,7 +126,10 @@ func resourceGatewayUpdateLogForwardingLogzIoUpdate(d *schema.ResourceData, m in
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
-	logzIoToken := d.Get("logz_io_token").(string)
+	logzIoToken, err := common.EffectiveSecretValue(d, "logz_io_token", "logz_io_token_wo")
+	if err != nil {
+		return err
+	}
 	protocol := d.Get("protocol").(string)
 
 	body := akeyless_api.GatewayUpdateLogForwardingLogzIo{
@@ -169,7 +188,7 @@ func resourceGatewayUpdateLogForwardingLogzIoImport(d *schema.ResourceData, m in
 	config := rOut.LogzIoConfig
 	if config != nil {
 		if config.TargetLogzIoToken != nil {
-			err := d.Set("logz_io_token", *config.TargetLogzIoToken)
+			err := common.SetSecretFromRead(d, "logz_io_token", "logz_io_token_wo", "logz_io_token_wo_version", *config.TargetLogzIoToken)
 			if err != nil {
 				return nil, err
 			}

@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretRedshift() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 		Delete:      resourceDynamicSecretRedshiftDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretRedshiftImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("redshift_password"), cty.GetAttrPath("redshift_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -46,6 +51,17 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Redshift Password",
+			},
+			"redshift_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "redshift_password (write-only, not stored in state). Requires Terraform 1.11+. Bump redshift_password_wo_version to change it.",
+			},
+			"redshift_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for redshift_password_wo. Increment to update the value.",
 			},
 			"redshift_host": {
 				Type:        schema.TypeString,
@@ -165,7 +181,10 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	targetName := d.Get("target_name").(string)
 	redshiftDbName := d.Get("redshift_db_name").(string)
 	redshiftUsername := d.Get("redshift_username").(string)
-	redshiftPassword := d.Get("redshift_password").(string)
+	redshiftPassword, err := common.EffectiveSecretValue(d, "redshift_password", "redshift_password_wo")
+	if err != nil {
+		return err
+	}
 	redshiftHost := d.Get("redshift_host").(string)
 	redshiftPort := d.Get("redshift_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
@@ -277,7 +296,7 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 		}
 	}
 	if rOut.DbPwd != nil {
-		err = d.Set("redshift_password", *rOut.DbPwd)
+		err = common.SetSecretFromRead(d, "redshift_password", "redshift_password_wo", "redshift_password_wo_version", *rOut.DbPwd)
 		if err != nil {
 			return err
 		}
@@ -373,7 +392,10 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	targetName := d.Get("target_name").(string)
 	redshiftDbName := d.Get("redshift_db_name").(string)
 	redshiftUsername := d.Get("redshift_username").(string)
-	redshiftPassword := d.Get("redshift_password").(string)
+	redshiftPassword, err := common.EffectiveSecretValue(d, "redshift_password", "redshift_password_wo")
+	if err != nil {
+		return err
+	}
 	redshiftHost := d.Get("redshift_host").(string)
 	redshiftPort := d.Get("redshift_port").(string)
 	creationStatements := d.Get("creation_statements").(string)

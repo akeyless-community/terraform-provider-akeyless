@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDigicertTarget() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceDigicertTarget() *schema.Resource {
 		Delete:      resourceDigicertTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDigicertTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("eab_hmac_key"), cty.GetAttrPath("eab_hmac_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -53,6 +58,17 @@ func resourceDigicertTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "External Account Binding HMAC key (required for ACME account bootstrap on create)",
+			},
+			"eab_hmac_key_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "External Account Binding HMAC key (required for ACME account bootstrap on create) (write-only, not stored in state). Requires Terraform 1.11+. Bump eab_hmac_key_wo_version to change it.",
+			},
+			"eab_hmac_key_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for eab_hmac_key_wo. Increment to update the value.",
 			},
 			"eab_key_id": {
 				Type:        schema.TypeString,
@@ -122,7 +138,10 @@ func resourceDigicertTargetCreate(d *schema.ResourceData, m interface{}) error {
 	acmeChallenge := d.Get("acme_challenge").(string)
 	digicertUrl := d.Get("digicert_url").(string)
 	dnsTargetCreds := d.Get("dns_target_creds").(string)
-	eabHmacKey := d.Get("eab_hmac_key").(string)
+	eabHmacKey, err := common.EffectiveSecretValue(d, "eab_hmac_key", "eab_hmac_key_wo")
+	if err != nil {
+		return err
+	}
 	eabKeyId := d.Get("eab_key_id").(string)
 	gcpProject := d.Get("gcp_project").(string)
 	hostedZone := d.Get("hosted_zone").(string)
@@ -208,7 +227,7 @@ func resourceDigicertTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if details.EabHmacKey != nil {
-			err = d.Set("eab_hmac_key", *details.EabHmacKey)
+			err = common.SetSecretFromRead(d, "eab_hmac_key", "eab_hmac_key_wo", "eab_hmac_key_wo_version", *details.EabHmacKey)
 			if err != nil {
 				return err
 			}
@@ -284,7 +303,10 @@ func resourceDigicertTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	acmeChallenge := d.Get("acme_challenge").(string)
 	digicertUrl := d.Get("digicert_url").(string)
 	dnsTargetCreds := d.Get("dns_target_creds").(string)
-	eabHmacKey := d.Get("eab_hmac_key").(string)
+	eabHmacKey, err := common.EffectiveSecretValue(d, "eab_hmac_key", "eab_hmac_key_wo")
+	if err != nil {
+		return err
+	}
 	eabKeyId := d.Get("eab_key_id").(string)
 	gcpProject := d.Get("gcp_project").(string)
 	hostedZone := d.Get("hosted_zone").(string)

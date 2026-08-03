@@ -5,7 +5,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGodaddyTarget() *schema.Resource {
@@ -17,6 +19,11 @@ func resourceGodaddyTarget() *schema.Resource {
 		Delete:      resourceGodaddyTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGodaddyTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("secret"), cty.GetAttrPath("secret_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("imap_password"), cty.GetAttrPath("imap_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -31,11 +38,33 @@ func resourceGodaddyTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "Key of the api credentials to the Godaddy account",
 			},
+			"api_key_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Key of the api credentials to the Godaddy account (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+			},
+			"api_key_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for api_key_wo. Increment to update the key.",
+			},
 			"secret": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
 				Description: "Secret of the api credentials to the Godaddy account",
+			},
+			"secret_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Secret of the api credentials to the Godaddy account (write-only, not stored in state). Requires Terraform 1.11+. Bump secret_wo_version to change it.",
+			},
+			"secret_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for secret_wo. Increment to update the secret.",
 			},
 			"imap_fqdn": {
 				Type:        schema.TypeString,
@@ -52,6 +81,17 @@ func resourceGodaddyTarget() *schema.Resource {
 				Required:    true,
 				Sensitive:   true,
 				Description: "ImapPassword to access the IMAP service",
+			},
+			"imap_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "ImapPassword to access the IMAP service (write-only, not stored in state). Requires Terraform 1.11+. Bump imap_password_wo_version to change it.",
+			},
+			"imap_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for imap_password_wo. Increment to update the password.",
 			},
 			"imap_port": {
 				Type:        schema.TypeString,
@@ -108,11 +148,20 @@ func resourceGodaddyTargetCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
-	secret := d.Get("secret").(string)
+	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
+	secret, err := common.EffectiveSecretValue(d, "secret", "secret_wo")
+	if err != nil {
+		return err
+	}
 	imapFqdn := d.Get("imap_fqdn").(string)
 	imapUsername := d.Get("imap_username").(string)
-	imapPassword := d.Get("imap_password").(string)
+	imapPassword, err := common.EffectiveSecretValue(d, "imap_password", "imap_password_wo")
+	if err != nil {
+		return err
+	}
 	imapPort := d.Get("imap_port").(string)
 	customerId := d.Get("customer_id").(string)
 	timeout := d.Get("timeout").(string)
@@ -170,13 +219,13 @@ func resourceGodaddyTargetRead(d *schema.ResourceData, m interface{}) error {
 
 		if targetDetails.GodaddyTargetDetails != nil {
 			if targetDetails.GodaddyTargetDetails.Key != nil {
-				err := d.Set("api_key", *targetDetails.GodaddyTargetDetails.Key)
+				err := common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *targetDetails.GodaddyTargetDetails.Key)
 				if err != nil {
 					return err
 				}
 			}
 			if targetDetails.GodaddyTargetDetails.Secret != nil {
-				err := d.Set("secret", *targetDetails.GodaddyTargetDetails.Secret)
+				err := common.SetSecretFromRead(d, "secret", "secret_wo", "secret_wo_version", *targetDetails.GodaddyTargetDetails.Secret)
 				if err != nil {
 					return err
 				}
@@ -194,7 +243,7 @@ func resourceGodaddyTargetRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if targetDetails.GodaddyTargetDetails.ImapPassword != nil {
-				err := d.Set("imap_password", *targetDetails.GodaddyTargetDetails.ImapPassword)
+				err := common.SetSecretFromRead(d, "imap_password", "imap_password_wo", "imap_password_wo_version", *targetDetails.GodaddyTargetDetails.ImapPassword)
 				if err != nil {
 					return err
 				}
@@ -257,11 +306,20 @@ func resourceGodaddyTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
-	secret := d.Get("secret").(string)
+	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
+	secret, err := common.EffectiveSecretValue(d, "secret", "secret_wo")
+	if err != nil {
+		return err
+	}
 	imapFqdn := d.Get("imap_fqdn").(string)
 	imapUsername := d.Get("imap_username").(string)
-	imapPassword := d.Get("imap_password").(string)
+	imapPassword, err := common.EffectiveSecretValue(d, "imap_password", "imap_password_wo")
+	if err != nil {
+		return err
+	}
 	imapPort := d.Get("imap_port").(string)
 	customerId := d.Get("customer_id").(string)
 	timeout := d.Get("timeout").(string)

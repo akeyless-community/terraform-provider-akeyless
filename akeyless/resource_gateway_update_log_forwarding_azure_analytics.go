@@ -8,8 +8,10 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayUpdateLogForwardingAzureAnalytics() *schema.Resource {
@@ -21,6 +23,9 @@ func resourceGatewayUpdateLogForwardingAzureAnalytics() *schema.Resource {
 		DeleteContext: resourceGatewayUpdateLogForwardingAzureAnalyticsDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLogForwardingAzureAnalyticsImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("workspace_key"), cty.GetAttrPath("workspace_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -57,6 +62,17 @@ func resourceGatewayUpdateLogForwardingAzureAnalytics() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Azure workspace key",
+			},
+			"workspace_key_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Azure workspace key (write-only, not stored in state). Requires Terraform 1.11+. Bump workspace_key_wo_version to change it.",
+			},
+			"workspace_key_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for workspace_key_wo. Increment to update the value.",
 			},
 		},
 	}
@@ -103,7 +119,7 @@ func resourceGatewayUpdateLogForwardingAzureAnalyticsRead(d *schema.ResourceData
 			}
 		}
 		if config.AzureWorkspaceKey != nil {
-			err := d.Set("workspace_key", *config.AzureWorkspaceKey)
+			err := common.SetSecretFromRead(d, "workspace_key", "workspace_key_wo", "workspace_key_wo_version", *config.AzureWorkspaceKey)
 			if err != nil {
 				return err
 			}
@@ -124,7 +140,10 @@ func resourceGatewayUpdateLogForwardingAzureAnalyticsUpdate(d *schema.ResourceDa
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
 	workspaceId := d.Get("workspace_id").(string)
-	workspaceKey := d.Get("workspace_key").(string)
+	workspaceKey, err := common.EffectiveSecretValue(d, "workspace_key", "workspace_key_wo")
+	if err != nil {
+		return err
+	}
 
 	body := akeyless_api.GatewayUpdateLogForwardingAzureAnalytics{
 		Token: &token,
@@ -195,7 +214,7 @@ func resourceGatewayUpdateLogForwardingAzureAnalyticsImport(d *schema.ResourceDa
 			}
 		}
 		if config.AzureWorkspaceKey != nil {
-			err := d.Set("workspace_key", *config.AzureWorkspaceKey)
+			err := common.SetSecretFromRead(d, "workspace_key", "workspace_key_wo", "workspace_key_wo_version", *config.AzureWorkspaceKey)
 			if err != nil {
 				return nil, err
 			}

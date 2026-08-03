@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretArtifactory() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 		Delete:      resourceDynamicSecretArtifactoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretArtifactoryImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("artifactory_admin_pwd"), cty.GetAttrPath("artifactory_admin_pwd_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -55,6 +60,17 @@ func resourceDynamicSecretArtifactory() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Admin API Key/Password",
+			},
+			"artifactory_admin_pwd_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "artifactory_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump artifactory_admin_pwd_wo_version to change it.",
+			},
+			"artifactory_admin_pwd_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for artifactory_admin_pwd_wo. Increment to update the value.",
 			},
 			"user_ttl": {
 				Type:        schema.TypeString,
@@ -112,7 +128,10 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	targetName := d.Get("target_name").(string)
 	baseUrl := d.Get("base_url").(string)
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
-	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
+	artifactoryAdminPwd, err := common.EffectiveSecretValue(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
+	if err != nil {
+		return err
+	}
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -221,7 +240,7 @@ func resourceDynamicSecretArtifactoryRead(d *schema.ResourceData, m interface{})
 		}
 	}
 	if rOut.ArtifactoryAdminApikey != nil {
-		err = d.Set("artifactory_admin_pwd", *rOut.ArtifactoryAdminApikey)
+		err = common.SetSecretFromRead(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo", "artifactory_admin_pwd_wo_version", *rOut.ArtifactoryAdminApikey)
 		if err != nil {
 			return err
 		}
@@ -289,7 +308,10 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	targetName := d.Get("target_name").(string)
 	baseUrl := d.Get("base_url").(string)
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
-	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
+	artifactoryAdminPwd, err := common.EffectiveSecretValue(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
+	if err != nil {
+		return err
+	}
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)

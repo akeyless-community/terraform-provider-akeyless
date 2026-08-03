@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceRotatedSecretPostgreSql() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceRotatedSecretPostgreSql() *schema.Resource {
 		Delete:      resourceRotatedSecretPostgreSqlDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRotatedSecretPostgreSqlImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("rotated_password"), cty.GetAttrPath("rotated_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -59,6 +64,17 @@ func resourceRotatedSecretPostgreSql() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "rotated-username password (relevant only for rotator-type=password)",
+			},
+			"rotated_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
+			},
+			"rotated_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for rotated_password_wo. Increment to update the value.",
 			},
 			"auto_rotate": {
 				Type:        schema.TypeString,
@@ -196,7 +212,10 @@ func resourceRotatedSecretPostgreSqlCreate(d *schema.ResourceData, m interface{}
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword := d.Get("rotated_password").(string)
+	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
+	if err != nil {
+		return err
+	}
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	maxVersions := d.Get("max_versions").(string)
@@ -384,7 +403,7 @@ func resourceRotatedSecretPostgreSqlRead(d *schema.ResourceData, m interface{}) 
 					}
 				}
 				if password, ok := value["password"]; ok {
-					err := d.Set("rotated_password", password.(string))
+					err := common.SetSecretFromRead(d, "rotated_password", "rotated_password_wo", "rotated_password_wo_version", password.(string))
 					if err != nil {
 						return err
 					}
@@ -432,7 +451,10 @@ func resourceRotatedSecretPostgreSqlUpdate(d *schema.ResourceData, m interface{}
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword := d.Get("rotated_password").(string)
+	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
+	if err != nil {
+		return err
+	}
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)

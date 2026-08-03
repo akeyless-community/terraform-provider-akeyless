@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayMigrationConjur() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceGatewayMigrationConjur() *schema.Resource {
 		Delete:      resourceGatewayMigrationConjurDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayMigrationConjurImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("conjur_api_key"), cty.GetAttrPath("conjur_api_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -52,6 +57,17 @@ func resourceGatewayMigrationConjur() *schema.Resource {
 				Sensitive:   true,
 				Description: "Conjur API Key for the specified user",
 			},
+			"conjur_api_key_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Conjur API Key for the specified user (write-only, not stored in state). Requires Terraform 1.11+. Bump conjur_api_key_wo_version to change it.",
+			},
+			"conjur_api_key_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for conjur_api_key_wo. Increment to update the value.",
+			},
 			"protection_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -83,7 +99,10 @@ func resourceGatewayMigrationConjurCreate(d *schema.ResourceData, m interface{})
 	conjurUrl := d.Get("conjur_url").(string)
 	conjurAccount := d.Get("conjur_account").(string)
 	conjurUsername := d.Get("conjur_username").(string)
-	conjurApiKey := d.Get("conjur_api_key").(string)
+	conjurApiKey, err := common.EffectiveSecretValue(d, "conjur_api_key", "conjur_api_key_wo")
+	if err != nil {
+		return err
+	}
 	protectionKey := d.Get("protection_key").(string)
 	targetName := d.Get("target_name").(string)
 
@@ -192,7 +211,10 @@ func resourceGatewayMigrationConjurUpdate(d *schema.ResourceData, m interface{})
 	conjurUrl := d.Get("conjur_url").(string)
 	conjurAccount := d.Get("conjur_account").(string)
 	conjurUsername := d.Get("conjur_username").(string)
-	conjurApiKey := d.Get("conjur_api_key").(string)
+	conjurApiKey, err := common.EffectiveSecretValue(d, "conjur_api_key", "conjur_api_key_wo")
+	if err != nil {
+		return err
+	}
 	protectionKey := d.Get("protection_key").(string)
 	targetName := d.Get("target_name").(string)
 

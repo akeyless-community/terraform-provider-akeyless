@@ -8,8 +8,10 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGwSessionForwardingSplunk() *schema.Resource {
@@ -21,6 +23,10 @@ func resourceGwSessionForwardingSplunk() *schema.Resource {
 		DeleteContext: resourceGwSessionForwardingSplunkDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGwSessionForwardingSplunkImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("splunk_token"), cty.GetAttrPath("splunk_token_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("tls_certificate"), cty.GetAttrPath("tls_certificate_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -58,6 +64,17 @@ func resourceGwSessionForwardingSplunk() *schema.Resource {
 				Sensitive:   true,
 				Description: "Splunk token",
 			},
+			"splunk_token_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Splunk token (write-only, not stored in state). Requires Terraform 1.11+. Bump splunk_token_wo_version to change it.",
+			},
+			"splunk_token_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for splunk_token_wo. Increment to update the value.",
+			},
 			"source": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -86,6 +103,17 @@ func resourceGwSessionForwardingSplunk() *schema.Resource {
 				Sensitive:   true,
 				Description: "Splunk tls certificate (PEM format) in a Base64 format",
 				Default:     "use-existing",
+			},
+			"tls_certificate_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Splunk tls certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump tls_certificate_wo_version to change it.",
+			},
+			"tls_certificate_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for tls_certificate_wo. Increment to update the value.",
 			},
 		},
 	}
@@ -126,7 +154,7 @@ func resourceGwSessionForwardingSplunkRead(d *schema.ResourceData, m interface{}
 			}
 		}
 		if config.SplunkToken != nil {
-			err := d.Set("splunk_token", *config.SplunkToken)
+			err := common.SetSecretFromRead(d, "splunk_token", "splunk_token_wo", "splunk_token_wo_version", *config.SplunkToken)
 			if err != nil {
 				return err
 			}
@@ -162,7 +190,7 @@ func resourceGwSessionForwardingSplunkRead(d *schema.ResourceData, m interface{}
 			}
 		}
 		if config.SplunkTlsCertificate != nil {
-			err := d.Set("tls_certificate", common.Base64Encode(*config.SplunkTlsCertificate))
+			err := common.SetSecretFromRead(d, "tls_certificate", "tls_certificate_wo", "tls_certificate_wo_version", common.Base64Encode(*config.SplunkTlsCertificate))
 			if err != nil {
 				return err
 			}
@@ -183,12 +211,18 @@ func resourceGwSessionForwardingSplunkUpdate(d *schema.ResourceData, m interface
 	pullInterval := d.Get("pull_interval").(string)
 	enableBatch := d.Get("enable_batch").(string)
 	splunkUrl := d.Get("splunk_url").(string)
-	splunkToken := d.Get("splunk_token").(string)
+	splunkToken, err := common.EffectiveSecretValue(d, "splunk_token", "splunk_token_wo")
+	if err != nil {
+		return err
+	}
 	source := d.Get("source").(string)
 	sourceType := d.Get("source_type").(string)
 	index := d.Get("index").(string)
 	enableTls := d.Get("enable_tls").(bool)
-	tlsCertificate := d.Get("tls_certificate").(string)
+	tlsCertificate, err := common.EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo")
+	if err != nil {
+		return err
+	}
 
 	body := akeyless_api.GwUpdateRemoteAccessSessionLogsSplunk{
 		Token: &token,

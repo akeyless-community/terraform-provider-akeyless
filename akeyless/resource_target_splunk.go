@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceSplunkTarget() *schema.Resource {
@@ -18,6 +20,10 @@ func resourceSplunkTarget() *schema.Resource {
 		Delete:      resourceSplunkTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSplunkTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("splunk_token"), cty.GetAttrPath("splunk_token_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -42,11 +48,33 @@ func resourceSplunkTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "Splunk Password (used when authenticating with username/password)",
 			},
+			"password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+			},
+			"password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for password_wo. Increment to update the value.",
+			},
 			"splunk_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Splunk Token (used when authenticating with token)",
+			},
+			"splunk_token_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "splunk_token (write-only, not stored in state). Requires Terraform 1.11+. Bump splunk_token_wo_version to change it.",
+			},
+			"splunk_token_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for splunk_token_wo. Increment to update the value.",
 			},
 			"token_owner": {
 				Type:        schema.TypeString,
@@ -94,8 +122,14 @@ func resourceSplunkTargetCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	url := d.Get("url").(string)
 	username := d.Get("username").(string)
-	password := d.Get("password").(string)
-	splunkToken := d.Get("splunk_token").(string)
+	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	if err != nil {
+		return err
+	}
+	splunkToken, err := common.EffectiveSecretValue(d, "splunk_token", "splunk_token_wo")
+	if err != nil {
+		return err
+	}
 	tokenOwner := d.Get("token_owner").(string)
 	audience := d.Get("audience").(string)
 	useTls := d.Get("use_tls").(bool)
@@ -162,13 +196,13 @@ func resourceSplunkTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if details.Password != nil {
-			err = d.Set("password", *details.Password)
+			err = common.SetSecretFromRead(d, "password", "password_wo", "password_wo_version", *details.Password)
 			if err != nil {
 				return err
 			}
 		}
 		if details.Token != nil {
-			err = d.Set("splunk_token", *details.Token)
+			err = common.SetSecretFromRead(d, "splunk_token", "splunk_token_wo", "splunk_token_wo_version", *details.Token)
 			if err != nil {
 				return err
 			}

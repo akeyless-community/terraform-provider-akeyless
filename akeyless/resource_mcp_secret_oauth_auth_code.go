@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceMcpSecretOAuthAuthCode() *schema.Resource {
@@ -18,6 +20,10 @@ func resourceMcpSecretOAuthAuthCode() *schema.Resource {
 		Delete:      resourceMcpSecretDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceMcpSecretImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("oauth_refresh_token"), cty.GetAttrPath("oauth_refresh_token_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("oauth_client_secret"), cty.GetAttrPath("oauth_client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -43,6 +49,17 @@ func resourceMcpSecretOAuthAuthCode() *schema.Resource {
 				Sensitive:   true,
 				Description: "OAuth client secret",
 			},
+			"oauth_client_secret_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "oauth_client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump oauth_client_secret_wo_version to change it.",
+			},
+			"oauth_client_secret_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for oauth_client_secret_wo. Increment to update the value.",
+			},
 			"oauth_token_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -64,6 +81,17 @@ func resourceMcpSecretOAuthAuthCode() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "OAuth refresh token",
+			},
+			"oauth_refresh_token_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "oauth_refresh_token (write-only, not stored in state). Requires Terraform 1.11+. Bump oauth_refresh_token_wo_version to change it.",
+			},
+			"oauth_refresh_token_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for oauth_refresh_token_wo. Increment to update the value.",
 			},
 			"accessibility": {
 				Type:        schema.TypeString,
@@ -134,11 +162,19 @@ func resourceMcpSecretOAuthAuthCodeCreate(d *schema.ResourceData, m interface{})
 	}
 	common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
 	common.GetAkeylessPtr(&body.OauthClientId, d.Get("oauth_client_id").(string))
-	common.GetAkeylessPtr(&body.OauthClientSecret, d.Get("oauth_client_secret").(string))
+	oauthClientSecret, err := common.EffectiveSecretValue(d, "oauth_client_secret", "oauth_client_secret_wo")
+	if err != nil {
+		return err
+	}
+	common.GetAkeylessPtr(&body.OauthClientSecret, oauthClientSecret)
 	common.GetAkeylessPtr(&body.OauthTokenUrl, d.Get("oauth_token_url").(string))
 	common.GetAkeylessPtr(&body.OauthScopes, expandOptionalStringList(d, "oauth_scopes"))
 	common.GetAkeylessPtr(&body.OauthRedirectUri, d.Get("oauth_redirect_uri").(string))
-	common.GetAkeylessPtr(&body.OauthRefreshToken, d.Get("oauth_refresh_token").(string))
+	oauthRefreshToken, err := common.EffectiveSecretValue(d, "oauth_refresh_token", "oauth_refresh_token_wo")
+	if err != nil {
+		return err
+	}
+	common.GetAkeylessPtr(&body.OauthRefreshToken, oauthRefreshToken)
 	common.GetAkeylessPtr(&body.ProtectionKey, d.Get("protection_key").(string))
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
 	common.GetAkeylessPtr(&body.Accessibility, d.Get("accessibility").(string))
@@ -169,7 +205,7 @@ func resourceMcpSecretOAuthAuthCodeRead(d *schema.ResourceData, m interface{}) e
 		if err := d.Set("oauth_redirect_uri", cfg.RedirectURI); err != nil {
 			return err
 		}
-		if err := d.Set("oauth_refresh_token", cfg.RefreshToken); err != nil {
+		if err := common.SetSecretFromRead(d, "oauth_refresh_token", "oauth_refresh_token_wo", "oauth_refresh_token_wo_version", cfg.RefreshToken); err != nil {
 			return err
 		}
 	}
@@ -183,18 +219,26 @@ func resourceMcpSecretOAuthAuthCodeUpdate(d *schema.ResourceData, m interface{})
 	ctx := context.Background()
 	name := d.Id()
 
-	if d.HasChanges("url", "oauth_client_id", "oauth_client_secret", "oauth_token_url", "oauth_scopes", "oauth_redirect_uri", "oauth_refresh_token", "protection_key", "keep_prev_version", "input_rule", "output_rule") {
+	if d.HasChanges("url", "oauth_client_id", "oauth_client_secret", "oauth_token_url", "oauth_scopes", "oauth_redirect_uri", "oauth_refresh_token", "protection_key", "keep_prev_version", "input_rule", "output_rule", "oauth_client_secret_wo_version", "oauth_refresh_token_wo_version") {
 		body := akeyless_api.UpdateMcpSecretOAuthAuthCode{
 			Name:  name,
 			Token: &token,
 		}
 		common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
 		common.GetAkeylessPtr(&body.OauthClientId, d.Get("oauth_client_id").(string))
-		common.GetAkeylessPtr(&body.OauthClientSecret, d.Get("oauth_client_secret").(string))
+		oauthClientSecret, err := common.EffectiveSecretValue(d, "oauth_client_secret", "oauth_client_secret_wo")
+		if err != nil {
+			return err
+		}
+		common.GetAkeylessPtr(&body.OauthClientSecret, oauthClientSecret)
 		common.GetAkeylessPtr(&body.OauthTokenUrl, d.Get("oauth_token_url").(string))
 		common.GetAkeylessPtr(&body.OauthScopes, expandOptionalStringList(d, "oauth_scopes"))
 		common.GetAkeylessPtr(&body.OauthRedirectUri, d.Get("oauth_redirect_uri").(string))
-		common.GetAkeylessPtr(&body.OauthRefreshToken, d.Get("oauth_refresh_token").(string))
+		oauthRefreshToken, err := common.EffectiveSecretValue(d, "oauth_refresh_token", "oauth_refresh_token_wo")
+		if err != nil {
+			return err
+		}
+		common.GetAkeylessPtr(&body.OauthRefreshToken, oauthRefreshToken)
 		common.GetAkeylessPtr(&body.Key, d.Get("protection_key").(string))
 		common.GetAkeylessPtr(&body.KeepPrevVersion, d.Get("keep_prev_version").(string))
 		common.GetAkeylessPtr(&body.InputRule, expandOptionalStringList(d, "input_rule"))

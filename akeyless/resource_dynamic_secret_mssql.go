@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretMssql() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceDynamicSecretMssql() *schema.Resource {
 		Delete:      resourceDynamicSecretMssqlDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretMssqlImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mssql_password"), cty.GetAttrPath("mssql_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -47,6 +52,17 @@ func resourceDynamicSecretMssql() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "MSSQL Password",
+			},
+			"mssql_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "MSSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump mssql_password_wo_version to change it.",
+			},
+			"mssql_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for mssql_password_wo. Increment to update the value.",
 			},
 			"mssql_host": {
 				Type:        schema.TypeString,
@@ -192,7 +208,10 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mssqlDbname := d.Get("mssql_dbname").(string)
 	mssqlUsername := d.Get("mssql_username").(string)
-	mssqlPassword := d.Get("mssql_password").(string)
+	mssqlPassword, err := common.EffectiveSecretValue(d, "mssql_password", "mssql_password_wo")
+	if err != nil {
+		return err
+	}
 	mssqlHost := d.Get("mssql_host").(string)
 	mssqlPort := d.Get("mssql_port").(string)
 	mssqlCreateStatements := d.Get("mssql_create_statements").(string)
@@ -323,7 +342,7 @@ func resourceDynamicSecretMssqlRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.DbPwd != nil {
-		err = d.Set("mssql_password", *rOut.DbPwd)
+		err = common.SetSecretFromRead(d, "mssql_password", "mssql_password_wo", "mssql_password_wo_version", *rOut.DbPwd)
 		if err != nil {
 			return err
 		}
@@ -418,7 +437,10 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mssqlDbname := d.Get("mssql_dbname").(string)
 	mssqlUsername := d.Get("mssql_username").(string)
-	mssqlPassword := d.Get("mssql_password").(string)
+	mssqlPassword, err := common.EffectiveSecretValue(d, "mssql_password", "mssql_password_wo")
+	if err != nil {
+		return err
+	}
 	mssqlHost := d.Get("mssql_host").(string)
 	mssqlPort := d.Get("mssql_port").(string)
 	mssqlCreateStatements := d.Get("mssql_create_statements").(string)

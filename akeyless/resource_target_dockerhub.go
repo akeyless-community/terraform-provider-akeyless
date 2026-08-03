@@ -5,7 +5,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDockerhubTarget() *schema.Resource {
@@ -17,6 +19,9 @@ func resourceDockerhubTarget() *schema.Resource {
 		Delete:      resourceDockerhubTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDockerhubTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("dockerhub_password"), cty.GetAttrPath("dockerhub_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -35,6 +40,17 @@ func resourceDockerhubTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Password for docker repository",
+			},
+			"dockerhub_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Password for docker repository (write-only, not stored in state). Requires Terraform 1.11+. Bump dockerhub_password_wo_version to change it.",
+			},
+			"dockerhub_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for dockerhub_password_wo. Increment to update the value.",
 			},
 			"key": {
 				Type:        schema.TypeString,
@@ -69,7 +85,10 @@ func resourceDockerhubTargetCreate(d *schema.ResourceData, m interface{}) error 
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	dockerhubUsername := d.Get("dockerhub_username").(string)
-	dockerhubPassword := d.Get("dockerhub_password").(string)
+	dockerhubPassword, err := common.EffectiveSecretValue(d, "dockerhub_password", "dockerhub_password_wo")
+	if err != nil {
+		return err
+	}
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 	maxVersions := d.Get("max_versions").(string)
@@ -124,7 +143,7 @@ func resourceDockerhubTargetRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if targetDetails.DockerhubTargetDetails.Password != nil {
-				err := d.Set("dockerhub_password", *targetDetails.DockerhubTargetDetails.Password)
+				err := common.SetSecretFromRead(d, "dockerhub_password", "dockerhub_password_wo", "dockerhub_password_wo_version", *targetDetails.DockerhubTargetDetails.Password)
 				if err != nil {
 					return err
 				}
@@ -162,7 +181,10 @@ func resourceDockerhubTargetUpdate(d *schema.ResourceData, m interface{}) error 
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	dockerhubUsername := d.Get("dockerhub_username").(string)
-	dockerhubPassword := d.Get("dockerhub_password").(string)
+	dockerhubPassword, err := common.EffectiveSecretValue(d, "dockerhub_password", "dockerhub_password_wo")
+	if err != nil {
+		return err
+	}
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 	maxVersions := d.Get("max_versions").(string)

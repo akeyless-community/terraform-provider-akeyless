@@ -11,7 +11,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceClassicKey() *schema.Resource {
@@ -23,6 +25,9 @@ func resourceClassicKey() *schema.Resource {
 		Delete:      resourceClassicKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceClassicKeyImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("key_data"), cty.GetAttrPath("key_data_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -52,6 +57,17 @@ func resourceClassicKey() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Base64-encoded classic key value",
+			},
+			"key_data_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "key_data (write-only, not stored in state). Requires Terraform 1.11+. Bump key_data_wo_version to change it.",
+			},
+			"key_data_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for key_data_wo. Increment to update the value.",
 			},
 			"cert_file_data": {
 				Type:        schema.TypeString,
@@ -176,7 +192,10 @@ func resourceClassicKeyCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	alg := d.Get("alg").(string)
-	keyData := d.Get("key_data").(string)
+	keyData, err := common.EffectiveSecretValue(d, "key_data", "key_data_wo")
+	if err != nil {
+		return err
+	}
 	certFileData := d.Get("cert_file_data").(string)
 	gpgAlg := d.Get("gpg_alg").(string)
 	protectionKeyName := d.Get("protection_key_name").(string)

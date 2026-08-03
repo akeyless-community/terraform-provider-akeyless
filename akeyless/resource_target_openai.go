@@ -5,7 +5,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceOpenAITarget() *schema.Resource {
@@ -17,6 +19,9 @@ func resourceOpenAITarget() *schema.Resource {
 		Delete:      resourceOpenAITargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceOpenAITargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -30,6 +35,17 @@ func resourceOpenAITarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "API key for OpenAI",
+			},
+			"api_key_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+			},
+			"api_key_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"api_key_id": {
 				Type:        schema.TypeString,
@@ -88,7 +104,10 @@ func resourceOpenAITargetCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
+	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 	apiKeyId := d.Get("api_key_id").(string)
 	model := d.Get("model").(string)
 	openaiUrl := d.Get("openai_url").(string)
@@ -141,7 +160,7 @@ func resourceOpenAITargetRead(d *schema.ResourceData, m interface{}) error {
 
 	if rOut.Value != nil && rOut.Value.OpenaiTargetDetails != nil {
 		if rOut.Value.OpenaiTargetDetails.ApiKey != nil {
-			err = d.Set("api_key", *rOut.Value.OpenaiTargetDetails.ApiKey)
+			err = common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *rOut.Value.OpenaiTargetDetails.ApiKey)
 			if err != nil {
 				return err
 			}
@@ -196,7 +215,10 @@ func resourceOpenAITargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
+	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 	apiKeyId := d.Get("api_key_id").(string)
 	model := d.Get("model").(string)
 	openaiUrl := d.Get("openai_url").(string)

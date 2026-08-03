@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceCloudflareTarget() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceCloudflareTarget() *schema.Resource {
 		Delete:      resourceCloudflareTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudflareTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_token"), cty.GetAttrPath("api_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,6 +41,17 @@ func resourceCloudflareTarget() *schema.Resource {
 				Required:    true,
 				Sensitive:   true,
 				Description: "Cloudflare API token",
+			},
+			"api_token_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Cloudflare API token (write-only, not stored in state). Requires Terraform 1.11+. Bump api_token_wo_version to change it.",
+			},
+			"api_token_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for api_token_wo. Increment to update the value.",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -71,7 +87,10 @@ func resourceCloudflareTargetCreate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accountID := d.Get("account_id").(string)
-	apiToken := d.Get("api_token").(string)
+	apiToken, err := common.EffectiveSecretValue(d, "api_token", "api_token_wo")
+	if err != nil {
+		return err
+	}
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 	maxVersions := d.Get("max_versions").(string)
@@ -124,7 +143,7 @@ func resourceCloudflareTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if details.ApiToken != nil {
-			if err = d.Set("api_token", *details.ApiToken); err != nil {
+			if err = common.SetSecretFromRead(d, "api_token", "api_token_wo", "api_token_wo_version", *details.ApiToken); err != nil {
 				return err
 			}
 		}
@@ -162,7 +181,10 @@ func resourceCloudflareTargetUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accountID := d.Get("account_id").(string)
-	apiToken := d.Get("api_token").(string)
+	apiToken, err := common.EffectiveSecretValue(d, "api_token", "api_token_wo")
+	if err != nil {
+		return err
+	}
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 	maxVersions := d.Get("max_versions").(string)

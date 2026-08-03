@@ -8,7 +8,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAuthMethodCert() *schema.Resource {
@@ -20,6 +22,9 @@ func resourceAuthMethodCert() *schema.Resource {
 		Delete:      resourceAuthMethodCertDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAuthMethodCertImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("certificate_data"), cty.GetAttrPath("certificate_data_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,6 +72,17 @@ func resourceAuthMethodCert() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The certificate data in base64, if no file was provided",
+			},
+			"certificate_data_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "certificate_data (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_data_wo_version to change it.",
+			},
+			"certificate_data_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for certificate_data_wo. Increment to update the value.",
 			},
 			"bound_common_names": {
 				Type:        schema.TypeSet,
@@ -175,7 +191,10 @@ func resourceAuthMethodCertCreate(d *schema.ResourceData, m interface{}) error {
 	gwBoundIps := common.ExpandStringList(gwBoundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	jwtTtl := d.Get("jwt_ttl").(int)
-	certificateData := d.Get("certificate_data").(string)
+	certificateData, err := common.EffectiveSecretValue(d, "certificate_data", "certificate_data_wo")
+	if err != nil {
+		return err
+	}
 	boundCommonNamesSet := d.Get("bound_common_names").(*schema.Set)
 	boundCommonNames := common.ExpandStringList(boundCommonNamesSet.List())
 	boundDnsSansSet := d.Get("bound_dns_sans").(*schema.Set)
@@ -415,7 +434,7 @@ func resourceAuthMethodCertRead(d *schema.ResourceData, m interface{}) error {
 					certData = base64.StdEncoding.EncodeToString([]byte(certData))
 				}
 
-				err = d.Set("certificate_data", certData)
+				err = common.SetSecretFromRead(d, "certificate_data", "certificate_data_wo", "certificate_data_wo_version", certData)
 				if err != nil {
 					return err
 				}
@@ -449,7 +468,10 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	gwBoundIps := common.ExpandStringList(gwBoundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	jwtTtl := d.Get("jwt_ttl").(int)
-	certificateData := d.Get("certificate_data").(string)
+	certificateData, err := common.EffectiveSecretValue(d, "certificate_data", "certificate_data_wo")
+	if err != nil {
+		return err
+	}
 	boundCommonNamesSet := d.Get("bound_common_names").(*schema.Set)
 	boundCommonNames := common.ExpandStringList(boundCommonNamesSet.List())
 	boundDnsSansSet := d.Get("bound_dns_sans").(*schema.Set)

@@ -8,8 +8,10 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGwSessionForwardingSumologic() *schema.Resource {
@@ -21,6 +23,9 @@ func resourceGwSessionForwardingSumologic() *schema.Resource {
 		DeleteContext: resourceGwSessionForwardingSumologicDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGwSessionForwardingSumologicImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("endpoint"), cty.GetAttrPath("endpoint_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -46,6 +51,17 @@ func resourceGwSessionForwardingSumologic() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Sumologic endpoint URL",
+			},
+			"endpoint_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Sumologic endpoint URL (write-only, not stored in state). Requires Terraform 1.11+. Bump endpoint_wo_version to change it.",
+			},
+			"endpoint_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for endpoint_wo. Increment to update the value.",
 			},
 			"sumologic_tags": {
 				Type:        schema.TypeString,
@@ -92,7 +108,7 @@ func resourceGwSessionForwardingSumologicRead(d *schema.ResourceData, m interfac
 	config := rOut.SumoLogicConfig
 	if config != nil {
 		if config.SumoLogicEndpoint != nil {
-			err := d.Set("endpoint", *config.SumoLogicEndpoint)
+			err := common.SetSecretFromRead(d, "endpoint", "endpoint_wo", "endpoint_wo_version", *config.SumoLogicEndpoint)
 			if err != nil {
 				return err
 			}
@@ -123,7 +139,10 @@ func resourceGwSessionForwardingSumologicUpdate(d *schema.ResourceData, m interf
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
-	endpoint := d.Get("endpoint").(string)
+	endpoint, err := common.EffectiveSecretValue(d, "endpoint", "endpoint_wo")
+	if err != nil {
+		return err
+	}
 	sumologicTags := d.Get("sumologic_tags").(string)
 	host := d.Get("host").(string)
 

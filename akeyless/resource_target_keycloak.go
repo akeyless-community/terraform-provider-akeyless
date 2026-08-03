@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceKeycloakTarget() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceKeycloakTarget() *schema.Resource {
 		Delete:      resourceKeycloakTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceKeycloakTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("client_secret"), cty.GetAttrPath("client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -48,6 +53,17 @@ func resourceKeycloakTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Keycloak client secret",
+			},
+			"client_secret_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Keycloak client secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
+			},
+			"client_secret_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for client_secret_wo. Increment to update the secret.",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -86,12 +102,16 @@ func resourceKeycloakTargetCreate(d *schema.ResourceData, m interface{}) error {
 	token := *provider.token
 	ctx := context.Background()
 	name := d.Get("name").(string)
+	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
+	if err != nil {
+		return err
+	}
 
 	body := akeyless_api.TargetCreateKeycloak{Name: name, Token: &token}
 	common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
 	common.GetAkeylessPtr(&body.Realm, d.Get("realm").(string))
 	common.GetAkeylessPtr(&body.ClientId, d.Get("client_id").(string))
-	common.GetAkeylessPtr(&body.ClientSecret, d.Get("client_secret").(string))
+	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
 	common.GetAkeylessPtr(&body.Key, d.Get("key").(string))
 	common.GetAkeylessPtr(&body.MaxVersions, d.Get("max_versions").(string))
@@ -134,7 +154,7 @@ func resourceKeycloakTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if details.KeycloakClientSecret != nil {
-			if err = d.Set("client_secret", *details.KeycloakClientSecret); err != nil {
+			if err = common.SetSecretFromRead(d, "client_secret", "client_secret_wo", "client_secret_wo_version", *details.KeycloakClientSecret); err != nil {
 				return err
 			}
 		}
@@ -166,12 +186,16 @@ func resourceKeycloakTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	token := *provider.token
 	ctx := context.Background()
 	name := d.Get("name").(string)
+	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
+	if err != nil {
+		return err
+	}
 
 	body := akeyless_api.TargetUpdateKeycloak{Name: name, Token: &token}
 	common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
 	common.GetAkeylessPtr(&body.Realm, d.Get("realm").(string))
 	common.GetAkeylessPtr(&body.ClientId, d.Get("client_id").(string))
-	common.GetAkeylessPtr(&body.ClientSecret, d.Get("client_secret").(string))
+	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
 	common.GetAkeylessPtr(&body.Key, d.Get("key").(string))
 	common.GetAkeylessPtr(&body.MaxVersions, d.Get("max_versions").(string))

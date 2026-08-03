@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretPostgresql() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 		Delete:      resourceDynamicSecretPostgresqlDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretPostgresqlImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("postgresql_password"), cty.GetAttrPath("postgresql_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -46,6 +51,17 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "PostgreSQL Password",
+			},
+			"postgresql_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "PostgreSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump postgresql_password_wo_version to change it.",
+			},
+			"postgresql_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for postgresql_password_wo. Increment to update the value.",
 			},
 			"postgresql_host": {
 				Type:        schema.TypeString,
@@ -192,7 +208,10 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	targetName := d.Get("target_name").(string)
 	postgresqlDbName := d.Get("postgresql_db_name").(string)
 	postgresqlUsername := d.Get("postgresql_username").(string)
-	postgresqlPassword := d.Get("postgresql_password").(string)
+	postgresqlPassword, err := common.EffectiveSecretValue(d, "postgresql_password", "postgresql_password_wo")
+	if err != nil {
+		return err
+	}
 	postgresqlHost := d.Get("postgresql_host").(string)
 	postgresqlPort := d.Get("postgresql_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
@@ -320,7 +339,7 @@ func resourceDynamicSecretPostgresqlRead(d *schema.ResourceData, m interface{}) 
 		}
 	}
 	if rOut.DbPwd != nil {
-		err = d.Set("postgresql_password", *rOut.DbPwd)
+		err = common.SetSecretFromRead(d, "postgresql_password", "postgresql_password_wo", "postgresql_password_wo_version", *rOut.DbPwd)
 		if err != nil {
 			return err
 		}
@@ -436,7 +455,10 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	targetName := d.Get("target_name").(string)
 	postgresqlDbName := d.Get("postgresql_db_name").(string)
 	postgresqlUsername := d.Get("postgresql_username").(string)
-	postgresqlPassword := d.Get("postgresql_password").(string)
+	postgresqlPassword, err := common.EffectiveSecretValue(d, "postgresql_password", "postgresql_password_wo")
+	if err != nil {
+		return err
+	}
 	postgresqlHost := d.Get("postgresql_host").(string)
 	postgresqlPort := d.Get("postgresql_port").(string)
 	creationStatements := d.Get("creation_statements").(string)

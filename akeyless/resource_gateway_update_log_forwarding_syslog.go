@@ -8,8 +8,10 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayUpdateLogForwardingSyslog() *schema.Resource {
@@ -21,6 +23,9 @@ func resourceGatewayUpdateLogForwardingSyslog() *schema.Resource {
 		DeleteContext: resourceGatewayUpdateLogForwardingSyslogDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLogForwardingSyslogImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("tls_certificate"), cty.GetAttrPath("tls_certificate_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -75,6 +80,17 @@ func resourceGatewayUpdateLogForwardingSyslog() *schema.Resource {
 				Sensitive:   true,
 				Description: "Syslog tls certificate (PEM format) in a Base64 format",
 				Default:     "use-existing",
+			},
+			"tls_certificate_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Syslog tls certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump tls_certificate_wo_version to change it.",
+			},
+			"tls_certificate_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for tls_certificate_wo. Increment to update the value.",
 			},
 		},
 	}
@@ -139,9 +155,12 @@ func resourceGatewayUpdateLogForwardingSyslogRead(d *schema.ResourceData, m inte
 			}
 		}
 		if config.SyslogTlsCertificate != nil {
-			currentVal := d.Get("tls_certificate").(string)
+			currentVal, err := common.EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo")
+			if err != nil {
+				return err
+			}
 			if currentVal != "use-existing" {
-				err := d.Set("tls_certificate", common.Base64Encode(*config.SyslogTlsCertificate))
+				err := common.SetSecretFromRead(d, "tls_certificate", "tls_certificate_wo", "tls_certificate_wo_version", common.Base64Encode(*config.SyslogTlsCertificate))
 				if err != nil {
 					return err
 				}
@@ -167,7 +186,10 @@ func resourceGatewayUpdateLogForwardingSyslogUpdate(d *schema.ResourceData, m in
 	targetTag := d.Get("target_tag").(string)
 	formatter := d.Get("formatter").(string)
 	enableTls := d.Get("enable_tls").(bool)
-	tlsCertificate := d.Get("tls_certificate").(string)
+	tlsCertificate, err := common.EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo")
+	if err != nil {
+		return err
+	}
 
 	body := akeyless_api.GatewayUpdateLogForwardingSyslog{
 		Token: &token,
@@ -259,7 +281,7 @@ func resourceGatewayUpdateLogForwardingSyslogImport(d *schema.ResourceData, m in
 			}
 		}
 		if config.SyslogTlsCertificate != nil {
-			err := d.Set("tls_certificate", common.Base64Encode(*config.SyslogTlsCertificate))
+			err := common.SetSecretFromRead(d, "tls_certificate", "tls_certificate_wo", "tls_certificate_wo_version", common.Base64Encode(*config.SyslogTlsCertificate))
 			if err != nil {
 				return nil, err
 			}

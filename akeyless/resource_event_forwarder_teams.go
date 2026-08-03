@@ -5,7 +5,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceEventForwarderTeams() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceEventForwarderTeams() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceEventForwarderTeamsImport,
 		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("url"), cty.GetAttrPath("url_wo")),
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -27,9 +32,20 @@ func resourceEventForwarderTeams() *schema.Resource {
 			},
 			"url": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				Description: "Teams Webhook URL",
+			},
+			"url_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "Teams Webhook URL (write-only, not stored in state). Requires Terraform 1.11+. Bump url_wo_version to change it.",
+			},
+			"url_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for url_wo. Increment to update the value.",
 			},
 			"gateway_event_source_locations": {
 				Type:        schema.TypeSet,
@@ -104,7 +120,10 @@ func resourceEventForwarderTeamsCreate(d *schema.ResourceData, m interface{}) er
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	url := d.Get("url").(string)
+	url, err := common.EffectiveSecretValue(d, "url", "url_wo")
+	if err != nil {
+		return err
+	}
 	gatewayEventSourceLocationsSet := d.Get("gateway_event_source_locations").(*schema.Set)
 	gatewayEventSourceLocations := common.ExpandStringList(gatewayEventSourceLocationsSet.List())
 	itemsEventSourceLocationsSet := d.Get("items_event_source_locations").(*schema.Set)
@@ -167,7 +186,7 @@ func resourceEventForwarderTeamsRead(d *schema.ResourceData, m interface{}) erro
 	if rOut.EventForwarderDetails != nil {
 		if rOut.EventForwarderDetails.TeamsNotiForwarderDetails != nil {
 			if rOut.EventForwarderDetails.TeamsNotiForwarderDetails.WebhookUrl != nil {
-				err = d.Set("url", *rOut.EventForwarderDetails.TeamsNotiForwarderDetails.WebhookUrl)
+				err = common.SetSecretFromRead(d, "url", "url_wo", "url_wo_version", *rOut.EventForwarderDetails.TeamsNotiForwarderDetails.WebhookUrl)
 				if err != nil {
 					return err
 				}
@@ -214,7 +233,10 @@ func resourceEventForwarderTeamsUpdate(d *schema.ResourceData, m interface{}) er
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	url := d.Get("url").(string)
+	url, err := common.EffectiveSecretValue(d, "url", "url_wo")
+	if err != nil {
+		return err
+	}
 	gatewayEventSourceLocationsSet := d.Get("gateway_event_source_locations").(*schema.Set)
 	gatewayEventSourceLocations := common.ExpandStringList(gatewayEventSourceLocationsSet.List())
 	itemsEventSourceLocationsSet := d.Get("items_event_source_locations").(*schema.Set)

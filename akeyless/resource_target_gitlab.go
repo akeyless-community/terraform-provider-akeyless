@@ -5,7 +5,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGitlabTarget() *schema.Resource {
@@ -17,6 +19,10 @@ func resourceGitlabTarget() *schema.Resource {
 		Delete:      resourceGitlabTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGitlabTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gitlab_certificate"), cty.GetAttrPath("gitlab_certificate_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gitlab_access_token"), cty.GetAttrPath("gitlab_access_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -31,11 +37,33 @@ func resourceGitlabTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "Gitlab access token",
 			},
+			"gitlab_access_token_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "gitlab_access_token (write-only, not stored in state). Requires Terraform 1.11+. Bump gitlab_access_token_wo_version to change it.",
+			},
+			"gitlab_access_token_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for gitlab_access_token_wo. Increment to update the value.",
+			},
 			"gitlab_certificate": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Gitlab tls certificate (base64 encoded)",
+			},
+			"gitlab_certificate_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "gitlab_certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump gitlab_certificate_wo_version to change it.",
+			},
+			"gitlab_certificate_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for gitlab_certificate_wo. Increment to update the value.",
 			},
 			"gitlab_url": {
 				Type:        schema.TypeString,
@@ -75,8 +103,14 @@ func resourceGitlabTargetCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	gitlabAccessToken := d.Get("gitlab_access_token").(string)
-	gitlabCertificate := d.Get("gitlab_certificate").(string)
+	gitlabAccessToken, err := common.EffectiveSecretValue(d, "gitlab_access_token", "gitlab_access_token_wo")
+	if err != nil {
+		return err
+	}
+	gitlabCertificate, err := common.EffectiveSecretValue(d, "gitlab_certificate", "gitlab_certificate_wo")
+	if err != nil {
+		return err
+	}
 	gitlabUrl := d.Get("gitlab_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -123,13 +157,13 @@ func resourceGitlabTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.Value.GitlabTargetDetails.GitlabAccessToken != nil {
-		err = d.Set("gitlab_access_token", *rOut.Value.GitlabTargetDetails.GitlabAccessToken)
+		err = common.SetSecretFromRead(d, "gitlab_access_token", "gitlab_access_token_wo", "gitlab_access_token_wo_version", *rOut.Value.GitlabTargetDetails.GitlabAccessToken)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.Value.GitlabTargetDetails.GitlabCertificate != nil {
-		err = d.Set("gitlab_certificate", *rOut.Value.GitlabTargetDetails.GitlabCertificate)
+		err = common.SetSecretFromRead(d, "gitlab_certificate", "gitlab_certificate_wo", "gitlab_certificate_wo_version", *rOut.Value.GitlabTargetDetails.GitlabCertificate)
 		if err != nil {
 			return err
 		}
@@ -167,8 +201,14 @@ func resourceGitlabTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	gitlabAccessToken := d.Get("gitlab_access_token").(string)
-	gitlabCertificate := d.Get("gitlab_certificate").(string)
+	gitlabAccessToken, err := common.EffectiveSecretValue(d, "gitlab_access_token", "gitlab_access_token_wo")
+	if err != nil {
+		return err
+	}
+	gitlabCertificate, err := common.EffectiveSecretValue(d, "gitlab_certificate", "gitlab_certificate_wo")
+	if err != nil {
+		return err
+	}
 	gitlabUrl := d.Get("gitlab_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)

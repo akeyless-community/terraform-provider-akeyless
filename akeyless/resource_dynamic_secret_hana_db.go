@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretHanaDb() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceDynamicSecretHanaDb() *schema.Resource {
 		Delete:      resourceDynamicSecretHanaDbDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretHanaDbImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("hanadb_password"), cty.GetAttrPath("hanadb_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -64,6 +69,17 @@ func resourceDynamicSecretHanaDb() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "HanaDb Password",
+			},
+			"hanadb_password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "HanaDb Password (write-only, not stored in state). Requires Terraform 1.11+. Bump hanadb_password_wo_version to change it.",
+			},
+			"hanadb_password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for hanadb_password_wo. Increment to update the password.",
 			},
 			"hanadb_port": {
 				Type:        schema.TypeString,
@@ -171,7 +187,10 @@ func resourceDynamicSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 	hanaDbname := d.Get("hana_dbname").(string)
 	hanadbCreateStatements := d.Get("hanadb_create_statements").(string)
 	hanadbHost := d.Get("hanadb_host").(string)
-	hanadbPassword := d.Get("hanadb_password").(string)
+	hanadbPassword, err := common.EffectiveSecretValue(d, "hanadb_password", "hanadb_password_wo")
+	if err != nil {
+		return err
+	}
 	hanadbPort := d.Get("hanadb_port").(string)
 	hanadbRevocationStatements := d.Get("hanadb_revocation_statements").(string)
 	hanadbUsername := d.Get("hanadb_username").(string)
@@ -331,7 +350,10 @@ func resourceDynamicSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	hanaDbname := d.Get("hana_dbname").(string)
 	hanadbCreateStatements := d.Get("hanadb_create_statements").(string)
 	hanadbHost := d.Get("hanadb_host").(string)
-	hanadbPassword := d.Get("hanadb_password").(string)
+	hanadbPassword, err := common.EffectiveSecretValue(d, "hanadb_password", "hanadb_password_wo")
+	if err != nil {
+		return err
+	}
 	hanadbPort := d.Get("hanadb_port").(string)
 	hanadbRevocationStatements := d.Get("hanadb_revocation_statements").(string)
 	hanadbUsername := d.Get("hanadb_username").(string)

@@ -8,7 +8,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceStaticSecret() *schema.Resource {
@@ -20,6 +22,10 @@ func resourceStaticSecret() *schema.Resource {
 		Delete:      resourceStaticSecretDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceStaticSecretImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("value"), cty.GetAttrPath("value_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"path": {
@@ -51,6 +57,17 @@ func resourceStaticSecret() *schema.Resource {
 				Sensitive:   true,
 				Description: "The secret content.",
 			},
+			"value_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "The secret content (write-only, not stored in state). Requires Terraform 1.11+. Bump value_wo_version to change it.",
+			},
+			"value_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for value_wo. Increment to update the secret value.",
+			},
 			"format": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -74,6 +91,17 @@ func resourceStaticSecret() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Password value (relevant only for type 'password')",
+			},
+			"password_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+			},
+			"password_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for password_wo. Increment to update the value.",
 			},
 			"username": {
 				Type:        schema.TypeString,
@@ -226,13 +254,19 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 
 	path := d.Get("path").(string)
 	secretType := d.Get("type").(string)
-	value := d.Get("value").(string)
+	value, err := common.EffectiveSecretValue(d, "value", "value_wo")
+	if err != nil {
+		return err
+	}
 	format := d.Get("format").(string)
 	accessibility := d.Get("accessibility").(string)
 	changeEvent := d.Get("change_event").(string)
 	injectUrlSet := d.Get("inject_url").(*schema.Set)
 	injectUrl := common.ExpandStringList(injectUrlSet.List())
-	password := d.Get("password").(string)
+	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	if err != nil {
+		return err
+	}
 	username := d.Get("username").(string)
 	customField := d.Get("custom_field").(map[string]any)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
@@ -427,7 +461,7 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 	}
 
 	if *secretType == "generic" {
-		err = d.Set("value", stringValue)
+		err = common.SetSecretFromRead(d, "value", "value_wo", "value_wo_version", stringValue)
 		if err != nil {
 			return err
 		}
@@ -437,7 +471,8 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 		if err != nil {
 			return fmt.Errorf("can't convert secret password value")
 		}
-		err = d.Set("password", jsonValue["password"])
+		passwordVal, _ := jsonValue["password"].(string)
+		err = common.SetSecretFromRead(d, "password", "password_wo", "password_wo_version", passwordVal)
 		if err != nil {
 			return err
 		}
@@ -475,8 +510,11 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 		return nil
 	}
 
-	if d.HasChanges("value", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field") {
-		value := d.Get("value").(string)
+	if d.HasChanges("value", "value_wo_version", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field", "password_wo_version") {
+		value, err := common.EffectiveSecretValue(d, "value", "value_wo")
+		if err != nil {
+			return err
+		}
 		format := d.Get("format").(string)
 		protectionKey := d.Get("protection_key").(string)
 		multilineValue := d.Get("multiline_value").(bool)
@@ -484,7 +522,10 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 		injectUrlSet := d.Get("inject_url").(*schema.Set)
 		injectUrl := common.ExpandStringList(injectUrlSet.List())
 		username := d.Get("username").(string)
-		password := d.Get("password").(string)
+		password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+		if err != nil {
+			return err
+		}
 		customField := d.Get("custom_field").(map[string]any)
 
 		body := akeyless_api.UpdateSecretVal{

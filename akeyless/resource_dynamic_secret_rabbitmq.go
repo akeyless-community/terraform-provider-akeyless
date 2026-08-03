@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretRabbitmq() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceDynamicSecretRabbitmq() *schema.Resource {
 		Delete:      resourceDynamicSecretRabbitmqDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretRabbitmqImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("rabbitmq_admin_pwd"), cty.GetAttrPath("rabbitmq_admin_pwd_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -60,6 +65,17 @@ func resourceDynamicSecretRabbitmq() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "RabbitMQ Admin password",
+			},
+			"rabbitmq_admin_pwd_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "rabbitmq_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_admin_pwd_wo_version to change it.",
+			},
+			"rabbitmq_admin_pwd_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for rabbitmq_admin_pwd_wo. Increment to update the value.",
 			},
 			"rabbitmq_admin_user": {
 				Type:        schema.TypeString,
@@ -164,7 +180,10 @@ func resourceDynamicSecretRabbitmqCreate(d *schema.ResourceData, m interface{}) 
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
-	rabbitmqAdminPwd := d.Get("rabbitmq_admin_pwd").(string)
+	rabbitmqAdminPwd, err := common.EffectiveSecretValue(d, "rabbitmq_admin_pwd", "rabbitmq_admin_pwd_wo")
+	if err != nil {
+		return err
+	}
 	rabbitmqAdminUser := d.Get("rabbitmq_admin_user").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	rabbitmqUserConfPermission := d.Get("rabbitmq_user_conf_permission").(string)
@@ -321,7 +340,10 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
-	rabbitmqAdminPwd := d.Get("rabbitmq_admin_pwd").(string)
+	rabbitmqAdminPwd, err := common.EffectiveSecretValue(d, "rabbitmq_admin_pwd", "rabbitmq_admin_pwd_wo")
+	if err != nil {
+		return err
+	}
 	rabbitmqAdminUser := d.Get("rabbitmq_admin_user").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	rabbitmqUserConfPermission := d.Get("rabbitmq_user_conf_permission").(string)

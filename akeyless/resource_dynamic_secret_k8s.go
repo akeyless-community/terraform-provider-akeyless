@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretK8s() *schema.Resource {
@@ -19,6 +21,10 @@ func resourceDynamicSecretK8s() *schema.Resource {
 		Delete:      resourceDynamicSecretK8sDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretK8sImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("k8s_cluster_ca_cert"), cty.GetAttrPath("k8s_cluster_ca_cert_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("k8s_cluster_token"), cty.GetAttrPath("k8s_cluster_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -43,11 +49,33 @@ func resourceDynamicSecretK8s() *schema.Resource {
 				Sensitive:   true,
 				Description: "K8S cluster CA certificate",
 			},
+			"k8s_cluster_ca_cert_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "K8S cluster CA certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_ca_cert_wo_version to change it.",
+			},
+			"k8s_cluster_ca_cert_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for k8s_cluster_ca_cert_wo. Increment to update the password.",
+			},
 			"k8s_cluster_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "K8S cluster Bearer token",
+			},
+			"k8s_cluster_token_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				WriteOnly:   true,
+				Description: "K8S cluster Bearer token (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_token_wo_version to change it.",
+			},
+			"k8s_cluster_token_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version trigger for k8s_cluster_token_wo. Increment to update the password.",
 			},
 			"k8s_cluster_name": {
 				Type:        schema.TypeString,
@@ -207,8 +235,14 @@ func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
-	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
-	k8sClusterToken := d.Get("k8s_cluster_token").(string)
+	k8sClusterCaCert, err := common.EffectiveSecretValue(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
+	if err != nil {
+		return err
+	}
+	k8sClusterToken, err := common.EffectiveSecretValue(d, "k8s_cluster_token", "k8s_cluster_token_wo")
+	if err != nil {
+		return err
+	}
 	k8sClusterName := d.Get("k8s_cluster_name").(string)
 	k8sServiceAccount := d.Get("k8s_service_account").(string)
 	k8sNamespace := d.Get("k8s_namespace").(string)
@@ -383,13 +417,13 @@ func resourceDynamicSecretK8sRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.K8sClusterCaCertificate != nil {
-		err = d.Set("k8s_cluster_ca_cert", *rOut.K8sClusterCaCertificate)
+		err = common.SetSecretFromRead(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo", "k8s_cluster_ca_cert_wo_version", *rOut.K8sClusterCaCertificate)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.K8sBearerToken != nil {
-		err = d.Set("k8s_cluster_token", *rOut.K8sBearerToken)
+		err = common.SetSecretFromRead(d, "k8s_cluster_token", "k8s_cluster_token_wo", "k8s_cluster_token_wo_version", *rOut.K8sBearerToken)
 		if err != nil {
 			return err
 		}
@@ -461,8 +495,14 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
-	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
-	k8sClusterToken := d.Get("k8s_cluster_token").(string)
+	k8sClusterCaCert, err := common.EffectiveSecretValue(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
+	if err != nil {
+		return err
+	}
+	k8sClusterToken, err := common.EffectiveSecretValue(d, "k8s_cluster_token", "k8s_cluster_token_wo")
+	if err != nil {
+		return err
+	}
 	k8sClusterName := d.Get("k8s_cluster_name").(string)
 	k8sServiceAccount := d.Get("k8s_service_account").(string)
 	k8sNamespace := d.Get("k8s_namespace").(string)
