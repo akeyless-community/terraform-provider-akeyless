@@ -3,6 +3,7 @@ package testutils
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os/exec"
 	"testing"
 
@@ -14,7 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // NewMuxProtoV6ProviderFactories returns the muxed SDK+Framework provider
@@ -64,5 +67,21 @@ func SkipIfTerraformBelow(t *testing.T, min string) {
 	}
 	if cur.LessThan(want) {
 		t.Skipf("skipping: needs Terraform >= %s (have %s)", min, info.TerraformVersion)
+	}
+}
+
+// CheckSecretNotInState asserts that a sensitive attribute is not persisted
+// as a usable secret value. Accepts both omitted and empty string, since TF
+// 1.11+ may nullify cleared optional attributes after write-only Read().
+func CheckSecretNotInState(addr, attr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[addr]
+		if !ok {
+			return fmt.Errorf("resource %s not found in state", addr)
+		}
+		if v, exists := rs.Primary.Attributes[attr]; exists && v != "" {
+			return fmt.Errorf("%s.%s still present in state", addr, attr)
+		}
+		return nil
 	}
 }

@@ -73,7 +73,7 @@ func TestStaticSecretWriteOnly(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					checkSecretValueRemotely(secretPath, "write-only-secret-v1"),
-					resource.TestCheckResourceAttr(resourceAddr, "value", ""),
+					testutils.CheckSecretNotInState(resourceAddr, "value"),
 					resource.TestCheckNoResourceAttr(resourceAddr, "value_wo"),
 				),
 			},
@@ -81,7 +81,7 @@ func TestStaticSecretWriteOnly(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					checkSecretValueRemotely(secretPath, "write-only-secret-v2"),
-					resource.TestCheckResourceAttr(resourceAddr, "value", ""),
+					testutils.CheckSecretNotInState(resourceAddr, "value"),
 				),
 			},
 		},

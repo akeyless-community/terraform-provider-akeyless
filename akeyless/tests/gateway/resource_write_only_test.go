@@ -71,7 +71,7 @@ func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					resource.TestCheckResourceAttr(resourceAddr, "mysql_password", ""),
+					testutils.CheckSecretNotInState(resourceAddr, "mysql_password"),
 					resource.TestCheckNoResourceAttr(resourceAddr, "mysql_password_wo"),
 					resource.TestCheckResourceAttr(resourceAddr, "mysql_password_wo_version", "1"),
 				),
@@ -80,6 +80,7 @@ func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
+					testutils.CheckSecretNotInState(resourceAddr, "mysql_password"),
 					resource.TestCheckResourceAttr(resourceAddr, "mysql_password_wo_version", "2"),
 				),
 			},
@@ -131,7 +132,7 @@ func TestDynamicSecretLdapWriteOnly(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					resource.TestCheckResourceAttr(resourceAddr, "bind_dn_password", ""),
+					testutils.CheckSecretNotInState(resourceAddr, "bind_dn_password"),
 					resource.TestCheckNoResourceAttr(resourceAddr, "bind_dn_password_wo"),
 				),
 			},
@@ -193,7 +194,7 @@ func TestRotatedSecretMysqlWriteOnly(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
-					resource.TestCheckResourceAttr(addr, "rotated_password", ""),
+					testutils.CheckSecretNotInState(addr, "rotated_password"),
 					resource.TestCheckNoResourceAttr(addr, "rotated_password_wo"),
 					resource.TestCheckResourceAttr(addr, "rotated_password_wo_version", "1"),
 				),
@@ -202,7 +203,7 @@ func TestRotatedSecretMysqlWriteOnly(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
-					resource.TestCheckResourceAttr(addr, "rotated_password", ""),
+					testutils.CheckSecretNotInState(addr, "rotated_password"),
 					resource.TestCheckResourceAttr(addr, "rotated_password_wo_version", "2"),
 				),
 			},

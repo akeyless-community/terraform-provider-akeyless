@@ -11,6 +11,9 @@ import (
 // TestDynamicSecretEphemeral opens ephemeral dynamic-secret creds and writes
 // them into a static secret via value_wo — proving Open works without a data
 // source landing the value in state.
+//
+// Two steps are required: ephemeral Open runs during plan, so the dynamic
+// secret must already exist before the ephemeral block is introduced.
 func TestDynamicSecretEphemeral(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 	testutils.SkipIfTerraformBelow(t, "1.11.0")
@@ -29,7 +32,15 @@ func TestDynamicSecretEphemeral(t *testing.T) {
 	dsPath := testPath("ds_mysql_ephemeral")
 	dstPath := testPath("ephemeral_ds_dst")
 
-	config := fmt.Sprintf(`
+	createDS := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_mysql" "ds" {
+			name        = "%v"
+			target_name = "%v"
+			user_ttl    = "5m"
+		}
+	`, dsPath, targetPath)
+
+	withEphemeral := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_mysql" "ds" {
 			name        = "%v"
 			target_name = "%v"
@@ -37,8 +48,7 @@ func TestDynamicSecretEphemeral(t *testing.T) {
 		}
 
 		ephemeral "akeyless_dynamic_secret" "e" {
-			path       = akeyless_dynamic_secret_mysql.ds.name
-			depends_on = [akeyless_dynamic_secret_mysql.ds]
+			path = akeyless_dynamic_secret_mysql.ds.name
 		}
 
 		resource "akeyless_static_secret" "dst" {
@@ -52,11 +62,15 @@ func TestDynamicSecretEphemeral(t *testing.T) {
 		ProtoV6ProviderFactories: testutils.NewMuxProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: createDS,
+				Check:  testutils.CheckItemExistsRemotely(dsPath),
+			},
+			{
+				Config: withEphemeral,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					testutils.CheckItemExistsRemotely(dstPath),
-					resource.TestCheckResourceAttr("akeyless_static_secret.dst", "value", ""),
+					testutils.CheckSecretNotInState("akeyless_static_secret.dst", "value"),
 				),
 			},
 		},

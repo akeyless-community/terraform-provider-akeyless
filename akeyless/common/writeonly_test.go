@@ -120,3 +120,33 @@ func TestSetSecretFromRead_SetsOnLegacyPath(t *testing.T) {
 		t.Fatalf("expected password from API on legacy path, got %q", got)
 	}
 }
+
+// TestEffectiveSecretValue_EmptyRawConfigFallsBack covers refresh/import
+// paths where GetRawConfigAt reports Empty Raw Config — must not error.
+func TestEffectiveSecretValue_EmptyRawConfigFallsBack(t *testing.T) {
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"tls_certificate": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"tls_certificate_wo": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				WriteOnly: true,
+			},
+		},
+	}
+
+	d := r.Data(nil)
+	if err := d.Set("tls_certificate", "legacy-cert"); err != nil {
+		t.Fatal(err)
+	}
+	got, err := EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo")
+	if err != nil {
+		t.Fatalf("expected no error on empty raw config, got %v", err)
+	}
+	if got != "legacy-cert" {
+		t.Fatalf("expected legacy fallback, got %q", got)
+	}
+}

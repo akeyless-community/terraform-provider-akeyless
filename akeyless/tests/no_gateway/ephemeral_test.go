@@ -11,6 +11,9 @@ import (
 // TestStaticSecretEphemeral opens an ephemeral static secret and feeds its
 // value into another secret via value_wo — proving Open works and the secret
 // never lands in state as a data source.
+//
+// Two steps are required: ephemeral Open runs during plan, so the source
+// item must already exist before the ephemeral block is introduced.
 func TestStaticSecretEphemeral(t *testing.T) {
 	testutils.SkipIfTerraformBelow(t, "1.11.0")
 	t.Parallel()
@@ -19,7 +22,15 @@ func TestStaticSecretEphemeral(t *testing.T) {
 	dstPath := testPath("ephemeral_static_dst")
 	want := "ephemeral-static-value"
 
-	config := fmt.Sprintf(`
+	createSrc := fmt.Sprintf(`
+		resource "akeyless_static_secret" "src" {
+			path             = "%v"
+			value_wo         = "%v"
+			value_wo_version = 1
+		}
+	`, srcPath, want)
+
+	withEphemeral := fmt.Sprintf(`
 		resource "akeyless_static_secret" "src" {
 			path             = "%v"
 			value_wo         = "%v"
@@ -27,8 +38,7 @@ func TestStaticSecretEphemeral(t *testing.T) {
 		}
 
 		ephemeral "akeyless_static_secret" "e" {
-			path       = akeyless_static_secret.src.path
-			depends_on = [akeyless_static_secret.src]
+			path = akeyless_static_secret.src.path
 		}
 
 		resource "akeyless_static_secret" "dst" {
@@ -43,11 +53,15 @@ func TestStaticSecretEphemeral(t *testing.T) {
 		CheckDestroy:             checkStaticSecretDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: createSrc,
+				Check:  checkSecretValueRemotely(srcPath, want),
+			},
+			{
+				Config: withEphemeral,
 				Check: resource.ComposeTestCheckFunc(
 					checkSecretValueRemotely(dstPath, want),
-					resource.TestCheckResourceAttr("akeyless_static_secret.src", "value", ""),
-					resource.TestCheckResourceAttr("akeyless_static_secret.dst", "value", ""),
+					testutils.CheckSecretNotInState("akeyless_static_secret.src", "value"),
+					testutils.CheckSecretNotInState("akeyless_static_secret.dst", "value"),
 				),
 			},
 		},
