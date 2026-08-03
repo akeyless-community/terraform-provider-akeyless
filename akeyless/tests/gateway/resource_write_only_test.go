@@ -138,3 +138,74 @@ func TestDynamicSecretLdapWriteOnly(t *testing.T) {
 		},
 	})
 }
+
+// TestRotatedSecretMysqlWriteOnly proves rotated_password_wo is applied without
+// persisting the password in state, and that bumping *_wo_version triggers update.
+func TestRotatedSecretMysqlWriteOnly(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetPath := testPath("test-target-db-rs-wo")
+	testutils.CreateTargetByType(t, targetPath, "db_target_details", map[string]any{
+		"db_type":   "mysql",
+		"user_name": "test",
+		"pwd":       "test",
+		"host":      "127.0.0.1",
+		"port":      "3306",
+		"db_name":   "test",
+	})
+	t.Cleanup(func() { testutils.DeleteTarget(t, targetPath) })
+
+	rsName := "rs_mysql_wo_test"
+	rsPath := testPath(rsName)
+	addr := "akeyless_rotated_secret_mysql." + rsName
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mysql" "%v" {
+			name                        = "%v"
+			target_name                 = "%v"
+			rotator_type                = "target"
+			authentication_credentials  = "use-target-creds"
+			rotated_username            = "test"
+			rotated_password_wo         = "test"
+			rotated_password_wo_version = 1
+			password_length             = "9"
+		}
+	`, rsName, rsPath, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mysql" "%v" {
+			name                        = "%v"
+			target_name                 = "%v"
+			rotator_type                = "target"
+			authentication_credentials  = "use-target-creds"
+			rotated_username            = "test"
+			rotated_password_wo         = "test-updated"
+			rotated_password_wo_version = 2
+			password_length             = "9"
+			description                 = "wo-updated"
+		}
+	`, rsName, rsPath, targetPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(addr, "rotated_password", ""),
+					resource.TestCheckNoResourceAttr(addr, "rotated_password_wo"),
+					resource.TestCheckResourceAttr(addr, "rotated_password_wo_version", "1"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(addr, "rotated_password", ""),
+					resource.TestCheckResourceAttr(addr, "rotated_password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
