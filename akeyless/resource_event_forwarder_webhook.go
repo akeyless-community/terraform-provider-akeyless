@@ -7,9 +7,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceEventForwarderWebhook() *schema.Resource {
@@ -21,13 +19,6 @@ func resourceEventForwarderWebhook() *schema.Resource {
 		Delete:      resourceEventForwarderWebhookDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceEventForwarderWebhookImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("server_certificates"), cty.GetAttrPath("server_certificates_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("auth_token"), cty.GetAttrPath("auth_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("client_cert_data"), cty.GetAttrPath("client_cert_data_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("private_key_data"), cty.GetAttrPath("private_key_data_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -94,17 +85,6 @@ func resourceEventForwarderWebhook() *schema.Resource {
 				Sensitive:   true,
 				Description: "Base64 encoded PEM certificate of the Webhook",
 			},
-			"server_certificates_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Base64 encoded PEM certificate of the Webhook (write-only, not stored in state). Requires Terraform 1.11+. Bump server_certificates_wo_version to change it.",
-			},
-			"server_certificates_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for server_certificates_wo. Increment to update the value.",
-			},
 			"auth_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -122,33 +102,11 @@ func resourceEventForwarderWebhook() *schema.Resource {
 				Sensitive:   true,
 				Description: "Password for authentication relevant for user-pass auth-type",
 			},
-			"password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Password for authentication relevant for user-pass auth-type (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
-			},
-			"password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for password_wo. Increment to update the value.",
-			},
 			"auth_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Base64 encoded Token string for authentication type Token",
-			},
-			"auth_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Base64 encoded Token string for authentication type Token (write-only, not stored in state). Requires Terraform 1.11+. Bump auth_token_wo_version to change it.",
-			},
-			"auth_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for auth_token_wo. Increment to update the value.",
 			},
 			"client_cert_data": {
 				Type:        schema.TypeString,
@@ -156,33 +114,11 @@ func resourceEventForwarderWebhook() *schema.Resource {
 				Sensitive:   true,
 				Description: "Base64 encoded PEM certificate, relevant for certificate auth-type",
 			},
-			"client_cert_data_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Base64 encoded PEM certificate, relevant for certificate auth-type (write-only, not stored in state). Requires Terraform 1.11+. Bump client_cert_data_wo_version to change it.",
-			},
-			"client_cert_data_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for client_cert_data_wo. Increment to update the value.",
-			},
 			"private_key_data": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Base64 encoded PEM RSA Private Key, relevant for certificate auth-type",
-			},
-			"private_key_data_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Base64 encoded PEM RSA Private Key, relevant for certificate auth-type (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_data_wo_version to change it.",
-			},
-			"private_key_data_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for private_key_data_wo. Increment to update the value.",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -225,28 +161,13 @@ func resourceEventForwarderWebhookCreate(d *schema.ResourceData, m interface{}) 
 	runnerType := d.Get("runner_type").(string)
 	every := d.Get("every").(string)
 	url := d.Get("url").(string)
-	serverCertificates, err := common.EffectiveSecretValue(d, "server_certificates", "server_certificates_wo")
-	if err != nil {
-		return err
-	}
+	serverCertificates := d.Get("server_certificates").(string)
 	authType := d.Get("auth_type").(string)
 	username := d.Get("username").(string)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
-	authToken, err := common.EffectiveSecretValue(d, "auth_token", "auth_token_wo")
-	if err != nil {
-		return err
-	}
-	clientCertData, err := common.EffectiveSecretValue(d, "client_cert_data", "client_cert_data_wo")
-	if err != nil {
-		return err
-	}
-	privateKeyData, err := common.EffectiveSecretValue(d, "private_key_data", "private_key_data_wo")
-	if err != nil {
-		return err
-	}
+	password := d.Get("password").(string)
+	authToken := d.Get("auth_token").(string)
+	clientCertData := d.Get("client_cert_data").(string)
+	privateKeyData := d.Get("private_key_data").(string)
 	description := d.Get("description").(string)
 
 	body := akeyless_api.EventForwarderCreateWebhook{
@@ -364,28 +285,13 @@ func resourceEventForwarderWebhookUpdate(d *schema.ResourceData, m interface{}) 
 	eventTypes := common.ExpandStringList(eventTypesSet.List())
 	key := d.Get("key").(string)
 	url := d.Get("url").(string)
-	serverCertificates, err := common.EffectiveSecretValue(d, "server_certificates", "server_certificates_wo")
-	if err != nil {
-		return err
-	}
+	serverCertificates := d.Get("server_certificates").(string)
 	authType := d.Get("auth_type").(string)
 	username := d.Get("username").(string)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
-	authToken, err := common.EffectiveSecretValue(d, "auth_token", "auth_token_wo")
-	if err != nil {
-		return err
-	}
-	clientCertData, err := common.EffectiveSecretValue(d, "client_cert_data", "client_cert_data_wo")
-	if err != nil {
-		return err
-	}
-	privateKeyData, err := common.EffectiveSecretValue(d, "private_key_data", "private_key_data_wo")
-	if err != nil {
-		return err
-	}
+	password := d.Get("password").(string)
+	authToken := d.Get("auth_token").(string)
+	clientCertData := d.Get("client_cert_data").(string)
+	privateKeyData := d.Get("private_key_data").(string)
 	description := d.Get("description").(string)
 	enable := d.Get("enable").(string)
 	keepPrevVersion := d.Get("keep_prev_version").(string)

@@ -8,10 +8,8 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayUpdateLogForwardingLogstash() *schema.Resource {
@@ -23,9 +21,6 @@ func resourceGatewayUpdateLogForwardingLogstash() *schema.Resource {
 		DeleteContext: resourceGatewayUpdateLogForwardingLogstashDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLogForwardingLogstashImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("tls_certificate"), cty.GetAttrPath("tls_certificate_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -67,17 +62,6 @@ func resourceGatewayUpdateLogForwardingLogstash() *schema.Resource {
 				Sensitive:   true,
 				Description: "Logstash tls certificate (PEM format) in a Base64 format",
 				Default:     "use-existing",
-			},
-			"tls_certificate_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Logstash tls certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump tls_certificate_wo_version to change it.",
-			},
-			"tls_certificate_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for tls_certificate_wo. Increment to update the value.",
 			},
 		},
 	}
@@ -130,7 +114,7 @@ func resourceGatewayUpdateLogForwardingLogstashRead(d *schema.ResourceData, m in
 			}
 		}
 		if config.LogstashTlsCertificate != nil {
-			err := common.SetSecretFromRead(d, "tls_certificate", "tls_certificate_wo", "tls_certificate_wo_version", common.Base64Encode(*config.LogstashTlsCertificate))
+			err := d.Set("tls_certificate", common.Base64Encode(*config.LogstashTlsCertificate))
 			if err != nil {
 				return err
 			}
@@ -152,10 +136,7 @@ func resourceGatewayUpdateLogForwardingLogstashUpdate(d *schema.ResourceData, m 
 	dns := d.Get("dns").(string)
 	protocol := d.Get("protocol").(string)
 	enableTls := d.Get("enable_tls").(bool)
-	tlsCertificate, err := common.EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo")
-	if err != nil {
-		return err
-	}
+	tlsCertificate := d.Get("tls_certificate").(string)
 
 	body := akeyless_api.GatewayUpdateLogForwardingLogstash{
 		Token: &token,
@@ -233,7 +214,7 @@ func resourceGatewayUpdateLogForwardingLogstashImport(d *schema.ResourceData, m 
 			}
 		}
 		if config.LogstashTlsCertificate != nil {
-			err := common.SetSecretFromRead(d, "tls_certificate", "tls_certificate_wo", "tls_certificate_wo_version", common.Base64Encode(*config.LogstashTlsCertificate))
+			err := d.Set("tls_certificate", common.Base64Encode(*config.LogstashTlsCertificate))
 			if err != nil {
 				return nil, err
 			}

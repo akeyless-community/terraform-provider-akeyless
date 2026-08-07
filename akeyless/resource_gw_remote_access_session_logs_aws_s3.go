@@ -8,10 +8,8 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGwSessionForwardingAwsS3() *schema.Resource {
@@ -23,9 +21,6 @@ func resourceGwSessionForwardingAwsS3() *schema.Resource {
 		DeleteContext: resourceGwSessionForwardingAwsS3Delete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGwSessionForwardingAwsS3Import,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("access_key"), cty.GetAttrPath("access_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -72,17 +67,6 @@ func resourceGwSessionForwardingAwsS3() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "AWS access key relevant for access_key auth-type",
-			},
-			"access_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "AWS access key relevant for access_key auth-type (write-only, not stored in state). Requires Terraform 1.11+. Bump access_key_wo_version to change it.",
-			},
-			"access_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for access_key_wo. Increment to update the value.",
 			},
 			"region": {
 				Type:        schema.TypeString,
@@ -151,7 +135,7 @@ func resourceGwSessionForwardingAwsS3Read(d *schema.ResourceData, m interface{})
 			}
 		}
 		if config.AwsAccessKey != nil {
-			err := common.SetSecretFromRead(d, "access_key", "access_key_wo", "access_key_wo_version", *config.AwsAccessKey)
+			err := d.Set("access_key", *config.AwsAccessKey)
 			if err != nil {
 				return err
 			}
@@ -186,10 +170,7 @@ func resourceGwSessionForwardingAwsS3Update(d *schema.ResourceData, m interface{
 	bucketName := d.Get("bucket_name").(string)
 	authType := d.Get("auth_type").(string)
 	accessId := d.Get("access_id").(string)
-	accessKey, err := common.EffectiveSecretValue(d, "access_key", "access_key_wo")
-	if err != nil {
-		return err
-	}
+	accessKey := d.Get("access_key").(string)
 	region := d.Get("region").(string)
 	roleArn := d.Get("role_arn").(string)
 

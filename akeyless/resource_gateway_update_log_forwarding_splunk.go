@@ -8,10 +8,8 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayUpdateLogForwardingSplunk() *schema.Resource {
@@ -23,10 +21,6 @@ func resourceGatewayUpdateLogForwardingSplunk() *schema.Resource {
 		DeleteContext: resourceGatewayUpdateLogForwardingSplunkDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLogForwardingSplunkImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("splunk_token"), cty.GetAttrPath("splunk_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("tls_certificate"), cty.GetAttrPath("tls_certificate_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -64,17 +58,6 @@ func resourceGatewayUpdateLogForwardingSplunk() *schema.Resource {
 				Sensitive:   true,
 				Description: "Splunk token",
 			},
-			"splunk_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Splunk token (write-only, not stored in state). Requires Terraform 1.11+. Bump splunk_token_wo_version to change it.",
-			},
-			"splunk_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for splunk_token_wo. Increment to update the value.",
-			},
 			"source": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -103,17 +86,6 @@ func resourceGatewayUpdateLogForwardingSplunk() *schema.Resource {
 				Sensitive:   true,
 				Description: "Splunk tls certificate (PEM format) in a Base64 format",
 				Default:     "use-existing",
-			},
-			"tls_certificate_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Splunk tls certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump tls_certificate_wo_version to change it.",
-			},
-			"tls_certificate_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for tls_certificate_wo. Increment to update the value.",
 			},
 		},
 	}
@@ -154,7 +126,7 @@ func resourceGatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m inte
 			}
 		}
 		if config.SplunkToken != nil {
-			err := common.SetSecretFromRead(d, "splunk_token", "splunk_token_wo", "splunk_token_wo_version", *config.SplunkToken)
+			err := d.Set("splunk_token", *config.SplunkToken)
 			if err != nil {
 				return err
 			}
@@ -190,7 +162,7 @@ func resourceGatewayUpdateLogForwardingSplunkRead(d *schema.ResourceData, m inte
 			}
 		}
 		if config.SplunkTlsCertificate != nil {
-			err := common.SetSecretFromRead(d, "tls_certificate", "tls_certificate_wo", "tls_certificate_wo_version", common.Base64Encode(*config.SplunkTlsCertificate))
+			err := d.Set("tls_certificate", common.Base64Encode(*config.SplunkTlsCertificate))
 			if err != nil {
 				return err
 			}
@@ -211,18 +183,12 @@ func resourceGatewayUpdateLogForwardingSplunkUpdate(d *schema.ResourceData, m in
 	pullInterval := d.Get("pull_interval").(string)
 	enableBatch := d.Get("enable_batch").(string)
 	splunkUrl := d.Get("splunk_url").(string)
-	splunkToken, err := common.EffectiveSecretValue(d, "splunk_token", "splunk_token_wo")
-	if err != nil {
-		return err
-	}
+	splunkToken := d.Get("splunk_token").(string)
 	source := d.Get("source").(string)
 	sourceType := d.Get("source_type").(string)
 	index := d.Get("index").(string)
 	enableTls := d.Get("enable_tls").(bool)
-	tlsCertificate, err := common.EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo")
-	if err != nil {
-		return err
-	}
+	tlsCertificate := d.Get("tls_certificate").(string)
 
 	body := akeyless_api.GatewayUpdateLogForwardingSplunk{
 		Token: &token,
@@ -292,7 +258,7 @@ func resourceGatewayUpdateLogForwardingSplunkImport(d *schema.ResourceData, m in
 			}
 		}
 		if config.SplunkToken != nil {
-			err := common.SetSecretFromRead(d, "splunk_token", "splunk_token_wo", "splunk_token_wo_version", *config.SplunkToken)
+			err := d.Set("splunk_token", *config.SplunkToken)
 			if err != nil {
 				return nil, err
 			}
@@ -328,7 +294,7 @@ func resourceGatewayUpdateLogForwardingSplunkImport(d *schema.ResourceData, m in
 			}
 		}
 		if config.SplunkTlsCertificate != nil {
-			err := common.SetSecretFromRead(d, "tls_certificate", "tls_certificate_wo", "tls_certificate_wo_version", common.Base64Encode(*config.SplunkTlsCertificate))
+			err := d.Set("tls_certificate", common.Base64Encode(*config.SplunkTlsCertificate))
 			if err != nil {
 				return nil, err
 			}

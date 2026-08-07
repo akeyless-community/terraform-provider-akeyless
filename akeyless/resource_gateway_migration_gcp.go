@@ -5,9 +5,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayMigrationGcp() *schema.Resource {
@@ -19,9 +17,6 @@ func resourceGatewayMigrationGcp() *schema.Resource {
 		Delete:      resourceGatewayMigrationGcpDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayMigrationGcpImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gcp_key"), cty.GetAttrPath("gcp_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,17 +35,6 @@ func resourceGatewayMigrationGcp() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Base64-encoded GCP Service Account private key text with sufficient permissions to Secrets Manager, Minimum required permission is Secret Manager Secret Accessor, e.g. 'roles/secretmanager.secretAccessor' (relevant only for GCP migration)",
-			},
-			"gcp_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Base64-encoded GCP Service Account private key text with sufficient permissions to Secrets Manager, Minimum required permission is Secret Manager Secret Accessor, e.g. 'roles/secretmanager.secretAccessor' (relevant only for GCP migration) (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.",
-			},
-			"gcp_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for gcp_key_wo. Increment to update the value.",
 			},
 			"protection_key": {
 				Type:        schema.TypeString,
@@ -74,10 +58,7 @@ func resourceGatewayMigrationGcpCreate(d *schema.ResourceData, m interface{}) er
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
-	gcpKey, err := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
-	if err != nil {
-		return err
-	}
+	gcpKey := d.Get("gcp_key").(string)
 	protectionKey := d.Get("protection_key").(string)
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
@@ -156,10 +137,7 @@ func resourceGatewayMigrationGcpUpdate(d *schema.ResourceData, m interface{}) er
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
-	gcpKey, err := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
-	if err != nil {
-		return err
-	}
+	gcpKey := d.Get("gcp_key").(string)
 	protectionKey := d.Get("protection_key").(string)
 
 	body := akeyless_api.NewGatewayUpdateMigration("", "", "", targetLocation)

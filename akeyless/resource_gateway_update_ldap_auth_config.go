@@ -8,10 +8,8 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayUpdateLdapAuthConfig() *schema.Resource {
@@ -23,10 +21,6 @@ func resourceGatewayUpdateLdapAuthConfig() *schema.Resource {
 		DeleteContext: resourceGatewayUpdateLdapAuthConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLdapAuthConfigImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("bind_dn_password"), cty.GetAttrPath("bind_dn_password_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("signing_key_data"), cty.GetAttrPath("signing_key_data_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"ldap_enable": {
@@ -49,17 +43,6 @@ func resourceGatewayUpdateLdapAuthConfig() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Bind DN password",
-			},
-			"bind_dn_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Bind DN password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.",
-			},
-			"bind_dn_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for bind_dn_password_wo. Increment to update the value.",
 			},
 			"group_attr": {
 				Type:        schema.TypeString,
@@ -92,17 +75,6 @@ func resourceGatewayUpdateLdapAuthConfig() *schema.Resource {
 				Sensitive:   true,
 				Description: " The private key (base64 encoded), associated with the public key defined in the Ldap auth",
 			},
-			"signing_key_data_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: " The private key (base64 encoded), associated with the public key defined in the Ldap auth (write-only, not stored in state). Requires Terraform 1.11+. Bump signing_key_data_wo_version to change it.",
-			},
-			"signing_key_data_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for signing_key_data_wo. Increment to update the value.",
-			},
 			"user_attribute": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -127,19 +99,13 @@ func resourceGatewayUpdateLdapAuthConfigUpdate(d *schema.ResourceData, m interfa
 	ldapEnable := d.Get("ldap_enable").(string)
 	accessId := d.Get("access_id").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword, err := common.EffectiveSecretValue(d, "bind_dn_password", "bind_dn_password_wo")
-	if err != nil {
-		return err
-	}
+	bindDnPassword := d.Get("bind_dn_password").(string)
 	groupAttr := d.Get("group_attr").(string)
 	groupDn := d.Get("group_dn").(string)
 	groupFilter := d.Get("group_filter").(string)
 	ldapCaCert := d.Get("ldap_ca_cert").(string)
 	ldapUrl := d.Get("ldap_url").(string)
-	signingKeyData, err := common.EffectiveSecretValue(d, "signing_key_data", "signing_key_data_wo")
-	if err != nil {
-		return err
-	}
+	signingKeyData := d.Get("signing_key_data").(string)
 	userAttribute := d.Get("user_attribute").(string)
 	userDn := d.Get("user_dn").(string)
 
@@ -207,7 +173,7 @@ func resourceGatewayUpdateLdapAuthConfigRead(d *schema.ResourceData, m interface
 		}
 	}
 	if rOut.LdapBindPassword != nil {
-		err = common.SetSecretFromRead(d, "bind_dn_password", "bind_dn_password_wo", "bind_dn_password_wo_version", *rOut.LdapBindPassword)
+		err = d.Set("bind_dn_password", *rOut.LdapBindPassword)
 		if err != nil {
 			return err
 		}

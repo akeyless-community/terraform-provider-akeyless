@@ -7,10 +7,8 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayUpdateRemoteAccessRdpRecording() *schema.Resource {
@@ -22,11 +20,6 @@ func resourceGatewayUpdateRemoteAccessRdpRecording() *schema.Resource {
 		DeleteContext: resourceGatewayUpdateRemoteAccessRdpRecordingDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateRemoteAccessRdpRecordingImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("aws_storage_secret_access_key"), cty.GetAttrPath("aws_storage_secret_access_key_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("azure_storage_client_secret"), cty.GetAttrPath("azure_storage_client_secret_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("rdp_session_recording_encryption_key"), cty.GetAttrPath("rdp_session_recording_encryption_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"rdp_session_recording": {
@@ -65,17 +58,6 @@ func resourceGatewayUpdateRemoteAccessRdpRecording() *schema.Resource {
 				Sensitive:   true,
 				Description: "AWS secret access key. For more information refer to https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html",
 			},
-			"aws_storage_secret_access_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "AWS secret access key. For more information refer to https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html (write-only, not stored in state). Requires Terraform 1.11+. Bump aws_storage_secret_access_key_wo_version to change it.",
-			},
-			"aws_storage_secret_access_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for aws_storage_secret_access_key_wo. Increment to update the value.",
-			},
 			"azure_storage_account_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -97,17 +79,6 @@ func resourceGatewayUpdateRemoteAccessRdpRecording() *schema.Resource {
 				Sensitive:   true,
 				Description: "Azure client secret. For more information refer to https://learn.microsoft.com/en-us/azure/storage/common/storage-account-get-info?tabs=portal",
 			},
-			"azure_storage_client_secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Azure client secret. For more information refer to https://learn.microsoft.com/en-us/azure/storage/common/storage-account-get-info?tabs=portal (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_storage_client_secret_wo_version to change it.",
-			},
-			"azure_storage_client_secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for azure_storage_client_secret_wo. Increment to update the value.",
-			},
 			"azure_storage_tenant_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -123,17 +94,6 @@ func resourceGatewayUpdateRemoteAccessRdpRecording() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "If provided, this key will be used to encrypt uploaded recordings.",
-			},
-			"rdp_session_recording_encryption_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "If provided, this key will be used to encrypt uploaded recordings (write-only, not stored in state). Requires Terraform 1.11+. Bump rdp_session_recording_encryption_key_wo_version to change it.",
-			},
-			"rdp_session_recording_encryption_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for rdp_session_recording_encryption_key_wo. Increment to update the value.",
 			},
 			"rdp_session_recording_quality": {
 				Type:        schema.TypeString,
@@ -203,7 +163,7 @@ func resourceGatewayUpdateRemoteAccessRdpRecordingRead(d *schema.ResourceData, m
 						}
 					}
 					if aws.AccessKeySecret != nil {
-						err = common.SetSecretFromRead(d, "aws_storage_secret_access_key", "aws_storage_secret_access_key_wo", "aws_storage_secret_access_key_wo_version", *aws.AccessKeySecret)
+						err = d.Set("aws_storage_secret_access_key", *aws.AccessKeySecret)
 						if err != nil {
 							return err
 						}
@@ -232,7 +192,7 @@ func resourceGatewayUpdateRemoteAccessRdpRecordingRead(d *schema.ResourceData, m
 						}
 					}
 					if azure.ClientSecret != nil {
-						err = common.SetSecretFromRead(d, "azure_storage_client_secret", "azure_storage_client_secret_wo", "azure_storage_client_secret_wo_version", *azure.ClientSecret)
+						err = d.Set("azure_storage_client_secret", *azure.ClientSecret)
 						if err != nil {
 							return err
 						}
@@ -252,7 +212,7 @@ func resourceGatewayUpdateRemoteAccessRdpRecordingRead(d *schema.ResourceData, m
 				}
 			}
 			if rdpRecord.EncryptionKey != nil {
-				err = common.SetSecretFromRead(d, "rdp_session_recording_encryption_key", "rdp_session_recording_encryption_key_wo", "rdp_session_recording_encryption_key_wo_version", *rdpRecord.EncryptionKey)
+				err = d.Set("rdp_session_recording_encryption_key", *rdpRecord.EncryptionKey)
 				if err != nil {
 					return err
 				}
@@ -283,23 +243,14 @@ func resourceGatewayUpdateRemoteAccessRdpRecordingUpdate(d *schema.ResourceData,
 	awsStorageBucketName := d.Get("aws_storage_bucket_name").(string)
 	awsStorageBucketPrefix := d.Get("aws_storage_bucket_prefix").(string)
 	awsStorageAccessKeyId := d.Get("aws_storage_access_key_id").(string)
-	awsStorageSecretAccessKey, err := common.EffectiveSecretValue(d, "aws_storage_secret_access_key", "aws_storage_secret_access_key_wo")
-	if err != nil {
-		return err
-	}
+	awsStorageSecretAccessKey := d.Get("aws_storage_secret_access_key").(string)
 	azureStorageAccountName := d.Get("azure_storage_account_name").(string)
 	azureStorageContainerName := d.Get("azure_storage_container_name").(string)
 	azureStorageClientId := d.Get("azure_storage_client_id").(string)
-	azureStorageClientSecret, err := common.EffectiveSecretValue(d, "azure_storage_client_secret", "azure_storage_client_secret_wo")
-	if err != nil {
-		return err
-	}
+	azureStorageClientSecret := d.Get("azure_storage_client_secret").(string)
 	azureStorageTenantId := d.Get("azure_storage_tenant_id").(string)
 	rdpSessionRecordingCompress := d.Get("rdp_session_recording_compress").(bool)
-	rdpSessionRecordingEncryptionKey, err := common.EffectiveSecretValue(d, "rdp_session_recording_encryption_key", "rdp_session_recording_encryption_key_wo")
-	if err != nil {
-		return err
-	}
+	rdpSessionRecordingEncryptionKey := d.Get("rdp_session_recording_encryption_key").(string)
 	rdpSessionRecordingQuality := d.Get("rdp_session_recording_quality").(string)
 
 	body := akeyless_api.GatewayUpdateRemoteAccessRdpRecordings{

@@ -8,10 +8,8 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGwSessionForwardingElasticsearch() *schema.Resource {
@@ -23,11 +21,6 @@ func resourceGwSessionForwardingElasticsearch() *schema.Resource {
 		DeleteContext: resourceGwSessionForwardingElasticsearchDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGwSessionForwardingElasticsearchImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("tls_certificate"), cty.GetAttrPath("tls_certificate_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -79,17 +72,6 @@ func resourceGwSessionForwardingElasticsearch() *schema.Resource {
 				Sensitive:   true,
 				Description: "Elasticsearch api key relevant only for api_key auth-type",
 			},
-			"api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Elasticsearch api key relevant only for api_key auth-type (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
-			},
-			"api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_key_wo. Increment to update the value.",
-			},
 			"user_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -100,17 +82,6 @@ func resourceGwSessionForwardingElasticsearch() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Elasticsearch password relevant only for password auth-type",
-			},
-			"password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Elasticsearch password relevant only for password auth-type (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
-			},
-			"password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for password_wo. Increment to update the value.",
 			},
 			"enable_tls": {
 				Type:        schema.TypeBool,
@@ -123,17 +94,6 @@ func resourceGwSessionForwardingElasticsearch() *schema.Resource {
 				Sensitive:   true,
 				Description: "Elasticsearch tls certificate (PEM format) in a Base64 format",
 				Default:     "use-existing",
-			},
-			"tls_certificate_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Elasticsearch tls certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump tls_certificate_wo_version to change it.",
-			},
-			"tls_certificate_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for tls_certificate_wo. Increment to update the value.",
 			},
 		},
 	}
@@ -198,7 +158,7 @@ func resourceGwSessionForwardingElasticsearchRead(d *schema.ResourceData, m inte
 			}
 		}
 		if config.ElasticsearchApiKey != nil {
-			err := common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *config.ElasticsearchApiKey)
+			err := d.Set("api_key", *config.ElasticsearchApiKey)
 			if err != nil {
 				return err
 			}
@@ -210,7 +170,7 @@ func resourceGwSessionForwardingElasticsearchRead(d *schema.ResourceData, m inte
 			}
 		}
 		if config.ElasticsearchPassword != nil {
-			err := common.SetSecretFromRead(d, "password", "password_wo", "password_wo_version", *config.ElasticsearchPassword)
+			err := d.Set("password", *config.ElasticsearchPassword)
 			if err != nil {
 				return err
 			}
@@ -222,7 +182,7 @@ func resourceGwSessionForwardingElasticsearchRead(d *schema.ResourceData, m inte
 			}
 		}
 		if config.ElasticsearchTlsCertificate != nil {
-			err := common.SetSecretFromRead(d, "tls_certificate", "tls_certificate_wo", "tls_certificate_wo_version", common.Base64Encode(*config.ElasticsearchTlsCertificate))
+			err := d.Set("tls_certificate", common.Base64Encode(*config.ElasticsearchTlsCertificate))
 			if err != nil {
 				return err
 			}
@@ -246,20 +206,11 @@ func resourceGwSessionForwardingElasticsearchUpdate(d *schema.ResourceData, m in
 	nodes := d.Get("nodes").(string)
 	cloudId := d.Get("cloud_id").(string)
 	authType := d.Get("auth_type").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
-	if err != nil {
-		return err
-	}
+	apiKey := d.Get("api_key").(string)
 	userName := d.Get("user_name").(string)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
+	password := d.Get("password").(string)
 	enableTls := d.Get("enable_tls").(bool)
-	tlsCertificate, err := common.EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo")
-	if err != nil {
-		return err
-	}
+	tlsCertificate := d.Get("tls_certificate").(string)
 
 	body := akeyless_api.GwUpdateRemoteAccessSessionLogsElasticsearch{
 		Token: &token,

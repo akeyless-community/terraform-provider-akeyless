@@ -5,9 +5,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayMigrationAws() *schema.Resource {
@@ -19,9 +17,6 @@ func resourceGatewayMigrationAws() *schema.Resource {
 		Delete:      resourceGatewayMigrationAwsDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayMigrationAwsImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("aws_key"), cty.GetAttrPath("aws_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -45,17 +40,6 @@ func resourceGatewayMigrationAws() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "AWS Secret Access Key (relevant only for AWS migration)",
-			},
-			"aws_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "AWS Secret Access Key (relevant only for AWS migration) (write-only, not stored in state). Requires Terraform 1.11+. Bump aws_key_wo_version to change it.",
-			},
-			"aws_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for aws_key_wo. Increment to update the value.",
 			},
 			"aws_region": {
 				Type:        schema.TypeString,
@@ -85,10 +69,7 @@ func resourceGatewayMigrationAwsCreate(d *schema.ResourceData, m interface{}) er
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
 	awsKeyId := d.Get("aws_key_id").(string)
-	awsKey, err := common.EffectiveSecretValue(d, "aws_key", "aws_key_wo")
-	if err != nil {
-		return err
-	}
+	awsKey := d.Get("aws_key").(string)
 	awsRegion := d.Get("aws_region").(string)
 	protectionKey := d.Get("protection_key").(string)
 
@@ -183,10 +164,7 @@ func resourceGatewayMigrationAwsUpdate(d *schema.ResourceData, m interface{}) er
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
 	awsKeyId := d.Get("aws_key_id").(string)
-	awsKey, err := common.EffectiveSecretValue(d, "aws_key", "aws_key_wo")
-	if err != nil {
-		return err
-	}
+	awsKey := d.Get("aws_key").(string)
 	awsRegion := d.Get("aws_region").(string)
 	protectionKey := d.Get("protection_key").(string)
 

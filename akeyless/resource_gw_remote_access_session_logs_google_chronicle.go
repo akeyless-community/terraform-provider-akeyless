@@ -8,10 +8,8 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGwSessionForwardingGoogleChronicle() *schema.Resource {
@@ -23,9 +21,6 @@ func resourceGwSessionForwardingGoogleChronicle() *schema.Resource {
 		DeleteContext: resourceGwSessionForwardingGoogleChronicleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGwSessionForwardingGoogleChronicleImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gcp_key"), cty.GetAttrPath("gcp_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -51,17 +46,6 @@ func resourceGwSessionForwardingGoogleChronicle() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Base64-encoded service account private key text",
-			},
-			"gcp_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.",
-			},
-			"gcp_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for gcp_key_wo. Increment to update the value.",
 			},
 			"customer_id": {
 				Type:        schema.TypeString,
@@ -111,7 +95,7 @@ func resourceGwSessionForwardingGoogleChronicleRead(d *schema.ResourceData, m in
 	config := rOut.GoogleChronicleConfig
 	if config != nil {
 		if config.ServiceAccountKey != nil {
-			err := common.SetSecretFromRead(d, "gcp_key", "gcp_key_wo", "gcp_key_wo_version", *config.ServiceAccountKey)
+			err := d.Set("gcp_key", *config.ServiceAccountKey)
 			if err != nil {
 				return err
 			}
@@ -148,10 +132,7 @@ func resourceGwSessionForwardingGoogleChronicleUpdate(d *schema.ResourceData, m 
 	enable := d.Get("enable").(string)
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
-	gcpKey, err := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
-	if err != nil {
-		return err
-	}
+	gcpKey := d.Get("gcp_key").(string)
 	customerId := d.Get("customer_id").(string)
 	region := d.Get("region").(string)
 	logType := d.Get("log_type").(string)

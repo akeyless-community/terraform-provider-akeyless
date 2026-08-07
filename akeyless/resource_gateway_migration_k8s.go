@@ -5,9 +5,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayMigrationK8s() *schema.Resource {
@@ -19,10 +17,6 @@ func resourceGatewayMigrationK8s() *schema.Resource {
 		Delete:      resourceGatewayMigrationK8sDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayMigrationK8sImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("k8s_token"), cty.GetAttrPath("k8s_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("k8s_password"), cty.GetAttrPath("k8s_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -47,17 +41,6 @@ func resourceGatewayMigrationK8s() *schema.Resource {
 				Sensitive:   true,
 				Description: "For Token Authentication method K8s Bearer Token with sufficient permission to list and get secrets in the namespace(s) you selected (relevant only for K8s migration with Token Authentication method)",
 			},
-			"k8s_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "For Token Authentication method K8s Bearer Token with sufficient permission to list and get secrets in the namespace(s) you selected (relevant only for K8s migration with Token Authentication method) (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_token_wo_version to change it.",
-			},
-			"k8s_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for k8s_token_wo. Increment to update the value.",
-			},
 			"k8s_username": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -68,17 +51,6 @@ func resourceGatewayMigrationK8s() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "K8s Client password (relevant only for K8s migration with Password Authentication method)",
-			},
-			"k8s_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "K8s Client password (relevant only for K8s migration with Password Authentication method) (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_password_wo_version to change it.",
-			},
-			"k8s_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for k8s_password_wo. Increment to update the value.",
 			},
 			"k8s_ca_certificate": {
 				Type:        schema.TypeList,
@@ -131,15 +103,9 @@ func resourceGatewayMigrationK8sCreate(d *schema.ResourceData, m interface{}) er
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
 	k8sUrl := d.Get("k8s_url").(string)
-	k8sToken, err := common.EffectiveSecretValue(d, "k8s_token", "k8s_token_wo")
-	if err != nil {
-		return err
-	}
+	k8sToken := d.Get("k8s_token").(string)
 	k8sUsername := d.Get("k8s_username").(string)
-	k8sPassword, err := common.EffectiveSecretValue(d, "k8s_password", "k8s_password_wo")
-	if err != nil {
-		return err
-	}
+	k8sPassword := d.Get("k8s_password").(string)
 	k8sCaCertificate := d.Get("k8s_ca_certificate").([]interface{})
 	k8sClientCertificate := d.Get("k8s_client_certificate").([]interface{})
 	k8sClientKey := d.Get("k8s_client_key").([]interface{})
@@ -272,15 +238,9 @@ func resourceGatewayMigrationK8sUpdate(d *schema.ResourceData, m interface{}) er
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
 	k8sUrl := d.Get("k8s_url").(string)
-	k8sToken, err := common.EffectiveSecretValue(d, "k8s_token", "k8s_token_wo")
-	if err != nil {
-		return err
-	}
+	k8sToken := d.Get("k8s_token").(string)
 	k8sUsername := d.Get("k8s_username").(string)
-	k8sPassword, err := common.EffectiveSecretValue(d, "k8s_password", "k8s_password_wo")
-	if err != nil {
-		return err
-	}
+	k8sPassword := d.Get("k8s_password").(string)
 	k8sCaCertificate := d.Get("k8s_ca_certificate").([]interface{})
 	k8sClientCertificate := d.Get("k8s_client_certificate").([]interface{})
 	k8sClientKey := d.Get("k8s_client_key").([]interface{})

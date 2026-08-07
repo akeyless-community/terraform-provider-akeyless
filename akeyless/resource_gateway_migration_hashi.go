@@ -6,9 +6,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayMigrationHashi() *schema.Resource {
@@ -20,9 +18,6 @@ func resourceGatewayMigrationHashi() *schema.Resource {
 		Delete:      resourceGatewayMigrationHashiDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayMigrationHashiImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("hashi_token"), cty.GetAttrPath("hashi_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -46,17 +41,6 @@ func resourceGatewayMigrationHashi() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "HashiCorp Vault access token with sufficient permissions to preform list & read operations on secrets objects (relevant only for HasiCorp Vault migration)",
-			},
-			"hashi_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "HashiCorp Vault access token with sufficient permissions to preform list & read operations on secrets objects (relevant only for HasiCorp Vault migration) (write-only, not stored in state). Requires Terraform 1.11+. Bump hashi_token_wo_version to change it.",
-			},
-			"hashi_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for hashi_token_wo. Increment to update the value.",
 			},
 			"hashi_ns": {
 				Type:        schema.TypeList,
@@ -103,10 +87,7 @@ func resourceGatewayMigrationHashiCreate(d *schema.ResourceData, m interface{}) 
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
 	hashiUrl := d.Get("hashi_url").(string)
-	hashiToken, err := common.EffectiveSecretValue(d, "hashi_token", "hashi_token_wo")
-	if err != nil {
-		return err
-	}
+	hashiToken := d.Get("hashi_token").(string)
 	hashiNs := d.Get("hashi_ns").([]interface{})
 	hashiJson := d.Get("hashi_json").(string)
 	hashiMetadataMode := d.Get("hashi_metadata_mode").(string)
@@ -214,10 +195,7 @@ func resourceGatewayMigrationHashiUpdate(d *schema.ResourceData, m interface{}) 
 	name := d.Get("name").(string)
 	targetLocation := d.Get("target_location").(string)
 	hashiUrl := d.Get("hashi_url").(string)
-	hashiToken, err := common.EffectiveSecretValue(d, "hashi_token", "hashi_token_wo")
-	if err != nil {
-		return err
-	}
+	hashiToken := d.Get("hashi_token").(string)
 	hashiNs := d.Get("hashi_ns").([]interface{})
 	hashiJson := d.Get("hashi_json").(string)
 	hashiMetadataMode := d.Get("hashi_metadata_mode").(string)

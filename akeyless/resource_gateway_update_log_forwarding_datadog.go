@@ -8,10 +8,8 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayUpdateLogForwardingDatadog() *schema.Resource {
@@ -23,9 +21,6 @@ func resourceGatewayUpdateLogForwardingDatadog() *schema.Resource {
 		DeleteContext: resourceGatewayUpdateLogForwardingDatadogDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayUpdateLogForwardingDatadogImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"enable": {
@@ -56,17 +51,6 @@ func resourceGatewayUpdateLogForwardingDatadog() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Datadog api key",
-			},
-			"api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Datadog api key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
-			},
-			"api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"log_source": {
 				Type:        schema.TypeString,
@@ -125,7 +109,7 @@ func resourceGatewayUpdateLogForwardingDatadogRead(d *schema.ResourceData, m int
 			}
 		}
 		if config.DatadogApiKey != nil {
-			err := common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *config.DatadogApiKey)
+			err := d.Set("api_key", *config.DatadogApiKey)
 			if err != nil {
 				return err
 			}
@@ -163,10 +147,7 @@ func resourceGatewayUpdateLogForwardingDatadogUpdate(d *schema.ResourceData, m i
 	outputFormat := d.Get("output_format").(string)
 	pullInterval := d.Get("pull_interval").(string)
 	host := d.Get("host").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
-	if err != nil {
-		return err
-	}
+	apiKey := d.Get("api_key").(string)
 	logSource := d.Get("log_source").(string)
 	logTags := d.Get("log_tags").(string)
 	logService := d.Get("log_service").(string)
@@ -236,7 +217,7 @@ func resourceGatewayUpdateLogForwardingDatadogImport(d *schema.ResourceData, m i
 			}
 		}
 		if config.DatadogApiKey != nil {
-			err := common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *config.DatadogApiKey)
+			err := d.Set("api_key", *config.DatadogApiKey)
 			if err != nil {
 				return nil, err
 			}

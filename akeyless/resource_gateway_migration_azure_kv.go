@@ -5,9 +5,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGatewayMigrationAzureKv() *schema.Resource {
@@ -19,9 +17,6 @@ func resourceGatewayMigrationAzureKv() *schema.Resource {
 		Delete:      resourceGatewayMigrationAzureKvDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGatewayMigrationAzureKvImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("azure_secret"), cty.GetAttrPath("azure_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -50,17 +45,6 @@ func resourceGatewayMigrationAzureKv() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Azure Key Vault secret (relevant only for Azure Key Vault migration)",
-			},
-			"azure_secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Azure Key Vault secret (relevant only for Azure Key Vault migration) (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_secret_wo_version to change it.",
-			},
-			"azure_secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for azure_secret_wo. Increment to update the value.",
 			},
 			"azure_tenant_id": {
 				Type:        schema.TypeString,
@@ -97,10 +81,7 @@ func resourceGatewayMigrationAzureKvCreate(d *schema.ResourceData, m interface{}
 	targetLocation := d.Get("target_location").(string)
 	azureKvName := d.Get("azure_kv_name").(string)
 	azureClientId := d.Get("azure_client_id").(string)
-	azureSecret, err := common.EffectiveSecretValue(d, "azure_secret", "azure_secret_wo")
-	if err != nil {
-		return err
-	}
+	azureSecret := d.Get("azure_secret").(string)
 	azureTenantId := d.Get("azure_tenant_id").(string)
 	protectionKey := d.Get("protection_key").(string)
 
@@ -208,10 +189,7 @@ func resourceGatewayMigrationAzureKvUpdate(d *schema.ResourceData, m interface{}
 	targetLocation := d.Get("target_location").(string)
 	azureKvName := d.Get("azure_kv_name").(string)
 	azureClientId := d.Get("azure_client_id").(string)
-	azureSecret, err := common.EffectiveSecretValue(d, "azure_secret", "azure_secret_wo")
-	if err != nil {
-		return err
-	}
+	azureSecret := d.Get("azure_secret").(string)
 	azureTenantId := d.Get("azure_tenant_id").(string)
 	protectionKey := d.Get("protection_key").(string)
 
