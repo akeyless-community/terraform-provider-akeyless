@@ -1,9 +1,14 @@
 package akeyless
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/aws"
 	"github.com/akeylesslabs/akeyless-go-cloud-id/cloudprovider/azure"
@@ -22,13 +27,10 @@ const publicApi = "https://api.akeyless.io"
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			// No DefaultFunc: the AKEYLESS_GATEWAY env var / publicApi fallback
-			// is applied explicitly in getProviderClient instead, so this schema
-			// can be mirrored exactly by a muxed terraform-plugin-framework
-			// provider (Framework has no DefaultFunc equivalent).
 			"api_gateway_address": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_GATEWAY", publicApi),
 				Description: "Origin URL of the API Gateway server. This is a URL with a scheme, a hostname and a port.",
 			},
 			"api_key_login":  apiKeyLoginSchema,
@@ -516,34 +518,70 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")
 }
 
-// resolveApiGatewayAddress applies, in Go code, the same
-// "config value, else AKEYLESS_GATEWAY env var, else public API" fallback
-// that used to live in the api_gateway_address schema's DefaultFunc.
-func resolveApiGatewayAddress(d *schema.ResourceData) string {
-	apiGwAddress := d.Get("api_gateway_address").(string)
-	if apiGwAddress == "" {
-		apiGwAddress = os.Getenv("AKEYLESS_GATEWAY")
-	}
-	if apiGwAddress == "" {
-		apiGwAddress = publicApi
-	}
-	return apiGwAddress
-}
-
 func getProviderClient(_ context.Context, d *schema.ResourceData) *akeyless_api.V2ApiService {
-	apiGwAddress := resolveApiGatewayAddress(d)
+	httpClient := &http.Client{
+		Transport: &retryTransport{base: http.DefaultTransport, retries: 3},
+	}
 
-	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
+	return akeyless_api.NewAPIClient(&akeyless_api.Configuration{
 		Servers: []akeyless_api.ServerConfiguration{
 			{
-				URL: apiGwAddress,
+				URL: d.Get("api_gateway_address").(string),
 			},
 		},
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
-		HTTPClient:    common.NewRetryHTTPClient(3),
+		HTTPClient:    httpClient,
 	}).V2Api
+}
 
-	return client
+func resolveApiGatewayAddress(d *schema.ResourceData) string {
+	return d.Get("api_gateway_address").(string)
+}
+
+type retryTransport struct {
+	base    http.RoundTripper
+	retries int
+}
+
+func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	var bodyBytes []byte
+	if req.Body != nil {
+		var err error
+		bodyBytes, err = io.ReadAll(req.Body)
+		req.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var lastErr error
+	for attempt := range t.retries {
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt*2) * time.Second)
+		}
+		if bodyBytes != nil {
+			req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+		}
+		resp, err := t.base.RoundTrip(req)
+		if err == nil {
+			return resp, nil
+		}
+		lastErr = err
+		if !isTransientConnError(err) {
+			return nil, err
+		}
+	}
+	return nil, lastErr
+}
+
+func isTransientConnError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "EOF") ||
+		strings.Contains(msg, "connection reset by peer") ||
+		strings.Contains(msg, "connection refused")
 }
 
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {

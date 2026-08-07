@@ -19,13 +19,6 @@ const (
 // loginType is kept as an alias so existing unexported helpers keep compiling.
 type loginType = LoginType
 
-// Note: access_id/access_key are Optional (not Required) with no DefaultFunc,
-// even though at least one of them is effectively mandatory. This is required
-// so this schema can be mirrored exactly by a terraform-plugin-framework
-// provider when muxed together (ephemeral resources). The env var fallback
-// and "must be set" validation are applied explicitly in setAuthBody instead
-// of via schema DefaultFunc, since Framework has no DefaultFunc equivalent
-// for provider-level schemas.
 var apiKeyLoginSchema = &schema.Schema{
 	Type:        schema.TypeList,
 	Optional:    true,
@@ -33,13 +26,15 @@ var apiKeyLoginSchema = &schema.Schema{
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"access_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_ACCESS_ID", nil),
 			},
 			"access_key": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_ACCESS_KEY", nil),
 			},
 		},
 	},
@@ -102,9 +97,10 @@ var jwtLoginSchema = &schema.Schema{
 				Required: true,
 			},
 			"jwt": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_JWT", nil),
 			},
 		},
 	},
@@ -117,12 +113,14 @@ var emailLoginSchema = &schema.Schema{
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"admin_email": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_EMAIL", nil),
 			},
 			"admin_password": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_PASSWORD", nil),
 			},
 		},
 	},
@@ -139,9 +137,10 @@ var uidLoginSchema = &schema.Schema{
 				Optional: true,
 			},
 			"uid_token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_UID", nil),
 			},
 		},
 	},
@@ -162,18 +161,20 @@ var certLoginSchema = &schema.Schema{
 				Optional: true,
 			},
 			"cert_data": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_CERT", nil),
 			},
 			"key_file_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"key_data": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_KEY", nil),
 			},
 		},
 	},
@@ -186,9 +187,10 @@ var tokenLoginSchema = &schema.Schema{
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_AUTH_TOKEN", nil),
 			},
 		},
 	},

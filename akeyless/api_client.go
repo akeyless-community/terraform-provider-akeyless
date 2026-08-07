@@ -3,6 +3,7 @@ package akeyless
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -34,7 +35,7 @@ func NewV2Api(apiGateway string) *akeyless_api.V2ApiService {
 			URL: ResolveGateway(apiGateway),
 		}},
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
-		HTTPClient:    common.NewRetryHTTPClient(3),
+		HTTPClient:    &http.Client{Transport: &retryTransport{base: http.DefaultTransport, retries: 3}},
 	}).V2Api
 }
 
