@@ -15,7 +15,6 @@ import (
 // Two steps are required: ephemeral Open runs during plan, so the source
 // item must already exist before the ephemeral block is introduced.
 func TestStaticSecretEphemeral(t *testing.T) {
-	testutils.SkipIfTerraformBelow(t, "1.11.0")
 	t.Parallel()
 
 	srcPath := testPath("ephemeral_static_src")

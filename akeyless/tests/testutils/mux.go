@@ -2,14 +2,10 @@ package testutils
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os/exec"
-	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
 	fwprovider "github.com/akeylesslabs/terraform-provider-akeyless/internal/framework"
-	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -41,32 +37,6 @@ func NewMuxProtoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServe
 			}
 			return mux.ProviderServer(), nil
 		},
-	}
-}
-
-// SkipIfTerraformBelow skips when the local terraform CLI is older than min (e.g. "1.11.0").
-func SkipIfTerraformBelow(t *testing.T, min string) {
-	t.Helper()
-	out, err := exec.Command("terraform", "version", "-json").Output()
-	if err != nil {
-		t.Skipf("skipping: terraform version unavailable: %v", err)
-	}
-	var info struct {
-		TerraformVersion string `json:"terraform_version"`
-	}
-	if err := json.Unmarshal(out, &info); err != nil {
-		t.Skipf("skipping: parse terraform version: %v", err)
-	}
-	cur, err := version.NewVersion(info.TerraformVersion)
-	if err != nil {
-		t.Skipf("skipping: invalid terraform version %q: %v", info.TerraformVersion, err)
-	}
-	want, err := version.NewVersion(min)
-	if err != nil {
-		t.Fatalf("invalid min version %q: %v", min, err)
-	}
-	if cur.LessThan(want) {
-		t.Skipf("skipping: needs Terraform >= %s (have %s)", min, info.TerraformVersion)
 	}
 }
 

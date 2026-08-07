@@ -16,7 +16,6 @@ import (
 // secret must already exist before the ephemeral block is introduced.
 func TestDynamicSecretEphemeral(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
-	testutils.SkipIfTerraformBelow(t, "1.11.0")
 
 	targetPath := testPath("test-target-db-ephemeral")
 	testutils.CreateTargetByType(t, targetPath, "db_target_details", map[string]any{

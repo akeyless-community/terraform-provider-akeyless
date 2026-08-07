@@ -310,7 +310,6 @@ func (p *Provider) EphemeralResources(_ context.Context) []func() fwephemeral.Ep
 		ephemeral.NewCertificate,
 		ephemeral.NewPKICertificate,
 		ephemeral.NewSSHCertificate,
-		ephemeral.NewKubeExecCreds,
 		ephemeral.NewTargetDetails,
 	}
 }

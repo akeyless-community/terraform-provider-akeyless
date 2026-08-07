@@ -51,10 +51,10 @@ func NewApiClientWithToken(apiGateway, token string) (*ApiClient, error) {
 // NewApiClient authenticates with the given login block and returns a client.
 // loginAttrs must be the same map shape used by the SDK login schemas
 // (e.g. {"access_id": "...", "access_key": "..."} for api_key_login).
-func NewApiClient(ctx context.Context, apiGateway string, authType LoginType, loginAttrs map[string]interface{}) (*ApiClient, error) {
+func NewApiClient(ctx context.Context, apiGateway string, authType string, loginAttrs map[string]interface{}) (*ApiClient, error) {
 	client := NewV2Api(apiGateway)
 	authBody := akeyless_api.NewAuthWithDefaults()
-	if err := setAuthBody(authBody, loginAttrs, authType); err != nil {
+	if err := setAuthBody(authBody, loginAttrs, loginType(authType)); err != nil {
 		return nil, err
 	}
 	authOut, resp, err := client.Auth(ctx).Body(*authBody).Execute()

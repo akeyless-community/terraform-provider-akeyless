@@ -2,22 +2,18 @@ package akeyless
 
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-// LoginType identifies which provider login block was used.
-type LoginType string
+type loginType string
 
 const (
-	ApiKeyLogin  LoginType = "api_key_login"
-	AwsIAMLogin  LoginType = "aws_iam_login"
-	GcpIAMLogin  LoginType = "gcp_login"
-	AzureADLogin LoginType = "azure_ad_login"
-	JwtLogin     LoginType = "jwt_login"
-	EmailLogin   LoginType = "email_login"
-	UidLogin     LoginType = "uid_login"
-	CertLogin    LoginType = "cert_login"
+	ApiKeyLogin  = "api_key_login"
+	AwsIAMLogin  = "aws_iam_login"
+	GcpIAMLogin  = "gcp_login"
+	AzureADLogin = "azure_ad_login"
+	JwtLogin     = "jwt_login"
+	EmailLogin   = "email_login"
+	UidLogin     = "uid_login"
+	CertLogin    = "cert_login"
 )
-
-// loginType is kept as an alias so existing unexported helpers keep compiling.
-type loginType = LoginType
 
 var apiKeyLoginSchema = &schema.Schema{
 	Type:        schema.TypeList,
