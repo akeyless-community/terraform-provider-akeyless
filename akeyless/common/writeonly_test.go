@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestUsingWriteOnly_WoVersionInState(t *testing.T) {
-	r := &schema.Resource{
+func writeOnlyTestResource() *schema.Resource {
+	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"mysql_password": {
 				Type:     schema.TypeString,
@@ -22,10 +22,21 @@ func TestUsingWriteOnly_WoVersionInState(t *testing.T) {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"tls_certificate": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"tls_certificate_wo": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				WriteOnly: true,
+			},
 		},
 	}
+}
 
-	d := r.Data(nil)
+func TestUsingWriteOnly_WoVersionInState(t *testing.T) {
+	d := writeOnlyTestResource().Data(nil)
 	if err := d.Set("mysql_password_wo_version", 1); err != nil {
 		t.Fatal(err)
 	}
@@ -35,25 +46,7 @@ func TestUsingWriteOnly_WoVersionInState(t *testing.T) {
 }
 
 func TestUsingWriteOnly_LegacyPath(t *testing.T) {
-	r := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"mysql_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"mysql_password_wo": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				WriteOnly: true,
-			},
-			"mysql_password_wo_version": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-		},
-	}
-
-	d := r.Data(nil)
+	d := writeOnlyTestResource().Data(nil)
 	if err := d.Set("mysql_password", "secret"); err != nil {
 		t.Fatal(err)
 	}
@@ -63,25 +56,7 @@ func TestUsingWriteOnly_LegacyPath(t *testing.T) {
 }
 
 func TestSetSecretFromRead_ClearsOnWriteOnlyPath(t *testing.T) {
-	r := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"mysql_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"mysql_password_wo": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				WriteOnly: true,
-			},
-			"mysql_password_wo_version": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-		},
-	}
-
-	d := r.Data(nil)
+	d := writeOnlyTestResource().Data(nil)
 	if err := d.Set("mysql_password_wo_version", 2); err != nil {
 		t.Fatal(err)
 	}
@@ -94,25 +69,7 @@ func TestSetSecretFromRead_ClearsOnWriteOnlyPath(t *testing.T) {
 }
 
 func TestSetSecretFromRead_SetsOnLegacyPath(t *testing.T) {
-	r := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"mysql_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"mysql_password_wo": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				WriteOnly: true,
-			},
-			"mysql_password_wo_version": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-		},
-	}
-
-	d := r.Data(nil)
+	d := writeOnlyTestResource().Data(nil)
 	if err := SetSecretFromRead(d, "mysql_password", "mysql_password_wo", "mysql_password_wo_version", "from-api"); err != nil {
 		t.Fatal(err)
 	}
@@ -123,21 +80,7 @@ func TestSetSecretFromRead_SetsOnLegacyPath(t *testing.T) {
 
 // Refresh/import with empty raw config must fall back to the legacy value.
 func TestEffectiveSecretValue_EmptyRawConfigFallsBack(t *testing.T) {
-	r := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"tls_certificate": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"tls_certificate_wo": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				WriteOnly: true,
-			},
-		},
-	}
-
-	d := r.Data(nil)
+	d := writeOnlyTestResource().Data(nil)
 	if err := d.Set("tls_certificate", "legacy-cert"); err != nil {
 		t.Fatal(err)
 	}

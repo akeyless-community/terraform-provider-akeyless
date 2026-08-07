@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Verify direct login values, environment fallbacks, and missing-value errors.
+// Verify Framework authentication environment fallbacks.
 
 func newProviderResourceData(t *testing.T, raw map[string]interface{}) *schema.ResourceData {
 	t.Helper()
