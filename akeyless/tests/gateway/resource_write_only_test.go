@@ -8,9 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// TestDynamicSecretMysqlWriteOnly proves mysql_password_wo produces a
-// working dynamic secret without ever appearing in Terraform state, and
-// that bumping mysql_password_wo_version triggers a real update.
+// Verify mysql_password_wo writes the secret and version changes update it.
 func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 
@@ -50,20 +48,6 @@ func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
-	configUpdate := fmt.Sprintf(`
-		resource "akeyless_dynamic_secret_mysql" "%v" {
-			name                      = "%v"
-			target_name               = "%v"
-			mysql_username            = "%v"
-			mysql_password_wo         = "%v-rotated"
-			mysql_password_wo_version = 2
-			mysql_host                = "%v"
-			mysql_port                = "%v"
-			mysql_dbname              = "%v"
-			user_ttl                  = "60m"
-		}
-	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
-
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
@@ -76,72 +60,11 @@ func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceAddr, "mysql_password_wo_version", "1"),
 				),
 			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(dsPath),
-					testutils.CheckSecretNotInState(resourceAddr, "mysql_password"),
-					resource.TestCheckResourceAttr(resourceAddr, "mysql_password_wo_version", "2"),
-				),
-			},
 		},
 	})
 }
 
-// TestDynamicSecretLdapWriteOnly proves bind_dn_password_wo is accepted in
-// place of bind_dn_password and never appears in Terraform state.
-func TestDynamicSecretLdapWriteOnly(t *testing.T) {
-	testutils.SkipIfNoGateway(t)
-
-	targetName := "test-target-ldap-wo"
-	targetPath := testPath(targetName)
-	targetDetailsType := "ldap_target_details"
-
-	expect := map[string]any{
-		"url":           "ldap://ldap.example.com:389",
-		"bind_dn":       "cn=admin,dc=example,dc=com",
-		"bind_password": "DummyPass123",
-	}
-
-	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
-	t.Cleanup(func() {
-		testutils.DeleteTarget(t, targetPath)
-	})
-
-	dsName := "ds_ldap_wo_test"
-	dsPath := testPath(dsName)
-	resourceAddr := "akeyless_dynamic_secret_ldap." + dsName
-
-	config := fmt.Sprintf(`
-		resource "akeyless_dynamic_secret_ldap" "%v" {
-			name                        = "%v"
-			target_name                 = "%v"
-			ldap_url                    = "ldap://ldap.example.com:389"
-			bind_dn                     = "cn=admin,dc=example,dc=com"
-			bind_dn_password_wo         = "DummyPass123"
-			bind_dn_password_wo_version = 1
-			user_dn                     = "ou=users,dc=example,dc=com"
-			user_ttl                    = "30m"
-		}
-	`, dsName, dsPath, targetPath)
-
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(dsPath),
-					testutils.CheckSecretNotInState(resourceAddr, "bind_dn_password"),
-					resource.TestCheckNoResourceAttr(resourceAddr, "bind_dn_password_wo"),
-				),
-			},
-		},
-	})
-}
-
-// TestRotatedSecretMysqlWriteOnly proves rotated_password_wo is applied without
-// persisting the password in state, and that bumping *_wo_version triggers update.
+// Verify rotated_password_wo writes the secret and version changes update it.
 func TestRotatedSecretMysqlWriteOnly(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 

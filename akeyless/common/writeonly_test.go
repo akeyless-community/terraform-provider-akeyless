@@ -121,8 +121,7 @@ func TestSetSecretFromRead_SetsOnLegacyPath(t *testing.T) {
 	}
 }
 
-// TestEffectiveSecretValue_EmptyRawConfigFallsBack covers refresh/import
-// paths where GetRawConfigAt reports Empty Raw Config — must not error.
+// Refresh/import with empty raw config must fall back to the legacy value.
 func TestEffectiveSecretValue_EmptyRawConfigFallsBack(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{

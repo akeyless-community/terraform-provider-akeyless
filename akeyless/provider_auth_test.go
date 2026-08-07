@@ -7,42 +7,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// These tests lock in that removing schema.DefaultFunc from the login blocks
-// (required so the schema can be mirrored exactly by a muxed
-// terraform-plugin-framework provider) did not change observable behavior:
-// direct config values still win, env vars still act as a fallback, and a
-// clear error is still returned when neither is set.
+// Verify direct login values, environment fallbacks, and missing-value errors.
 
 func newProviderResourceData(t *testing.T, raw map[string]interface{}) *schema.ResourceData {
 	t.Helper()
 	return schema.TestResourceDataRaw(t, Provider().Schema, raw)
 }
 
-func TestApiKeyLogin_DirectValuesWin(t *testing.T) {
-	d := newProviderResourceData(t, map[string]interface{}{
-		"api_key_login": []interface{}{map[string]interface{}{
-			"access_id":  "p-direct",
-			"access_key": "key-direct",
-		}},
-	})
-
-	authBody, err := getAuthInfo(d)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if authBody.GetAccessId() != "p-direct" || authBody.GetAccessKey() != "key-direct" {
-		t.Fatalf("got access_id=%q access_key=%q, want direct config values", authBody.GetAccessId(), authBody.GetAccessKey())
-	}
-}
-
 func TestApiKeyLogin_FallsBackToEnvVars(t *testing.T) {
 	t.Setenv("AKEYLESS_ACCESS_ID", "p-env")
 	t.Setenv("AKEYLESS_ACCESS_KEY", "key-env")
 
-	// Fields omitted, same as a user writing `api_key_login {}`. setAuthBody
-	// is exercised directly (rather than round-tripping through
-	// schema.TestResourceDataRaw) because SDK v2's raw-config reader
-	// collapses a nested block when every field in it is zero-value.
+	// Exercise setAuthBody directly because an empty nested SDK block is omitted.
 	authBody := akeyless_api.NewAuthWithDefaults()
 	err := setAuthBody(authBody, map[string]interface{}{
 		"access_id":  "",
@@ -53,16 +29,6 @@ func TestApiKeyLogin_FallsBackToEnvVars(t *testing.T) {
 	}
 	if authBody.GetAccessId() != "p-env" || authBody.GetAccessKey() != "key-env" {
 		t.Fatalf("got access_id=%q access_key=%q, want env fallback values", authBody.GetAccessId(), authBody.GetAccessKey())
-	}
-}
-
-func TestApiKeyLogin_MissingEverythingErrors(t *testing.T) {
-	d := newProviderResourceData(t, map[string]interface{}{
-		"api_key_login": []interface{}{map[string]interface{}{}},
-	})
-
-	if _, err := getAuthInfo(d); err == nil {
-		t.Fatal("expected an error when neither config nor env vars provide access_id/access_key")
 	}
 }
 

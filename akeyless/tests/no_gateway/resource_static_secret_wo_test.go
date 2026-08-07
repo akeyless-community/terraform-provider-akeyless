@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-// checkSecretValueRemotely fails unless the secret at path holds exactly
-// wantValue in Akeyless, proving a write-only argument was actually applied.
+// checkSecretValueRemotely verifies the value stored in Akeyless.
 func checkSecretValueRemotely(path, wantValue string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		client, token, err := testutils.GetClient()
@@ -38,10 +37,7 @@ func checkSecretValueRemotely(path, wantValue string) resource.TestCheckFunc {
 	}
 }
 
-// TestStaticSecretWriteOnly proves that value_wo is applied to Akeyless the
-// same way as value, while never being persisted in the Terraform state:
-// bumping value_wo_version on an unrelated update must not be required, and
-// the resource's "value" state attribute stays empty throughout.
+// Verify value_wo writes the secret and keeps it out of state.
 func TestStaticSecretWriteOnly(t *testing.T) {
 	t.Parallel()
 

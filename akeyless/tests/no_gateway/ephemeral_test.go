@@ -8,12 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// TestStaticSecretEphemeral opens an ephemeral static secret and feeds its
-// value into another secret via value_wo — proving Open works and the secret
-// never lands in state as a data source.
-//
-// Two steps are required: ephemeral Open runs during plan, so the source
-// item must already exist before the ephemeral block is introduced.
+// Verify ephemeral static-secret values can be consumed without state storage.
 func TestStaticSecretEphemeral(t *testing.T) {
 	t.Parallel()
 

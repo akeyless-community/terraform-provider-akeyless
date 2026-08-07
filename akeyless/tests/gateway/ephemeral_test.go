@@ -8,12 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// TestDynamicSecretEphemeral opens ephemeral dynamic-secret creds and writes
-// them into a static secret via value_wo — proving Open works without a data
-// source landing the value in state.
-//
-// Two steps are required: ephemeral Open runs during plan, so the dynamic
-// secret must already exist before the ephemeral block is introduced.
+// Verify ephemeral dynamic-secret values can be consumed without state storage.
 func TestDynamicSecretEphemeral(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 

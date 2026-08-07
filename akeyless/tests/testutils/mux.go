@@ -16,8 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-// NewMuxProtoV6ProviderFactories returns the muxed SDK+Framework provider
-// used for ephemeral-resource acceptance tests.
+// NewMuxProtoV6ProviderFactories returns the SDK+Framework test provider.
 func NewMuxProtoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
 	return map[string]func() (tfprotov6.ProviderServer, error){
 		"akeyless": func() (tfprotov6.ProviderServer, error) {
@@ -40,9 +39,7 @@ func NewMuxProtoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServe
 	}
 }
 
-// CheckSecretNotInState asserts that a sensitive attribute is not persisted
-// as a usable secret value. Accepts both omitted and empty string, since TF
-// 1.11+ may nullify cleared optional attributes after write-only Read().
+// CheckSecretNotInState accepts omitted or empty secret attributes.
 func CheckSecretNotInState(addr, attr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[addr]
