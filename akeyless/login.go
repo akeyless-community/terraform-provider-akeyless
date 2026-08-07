@@ -5,14 +5,14 @@ import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 type loginType string
 
 const (
-	ApiKeyLogin  = "api_key_login"
-	AwsIAMLogin  = "aws_iam_login"
-	GcpIAMLogin  = "gcp_login"
-	AzureADLogin = "azure_ad_login"
-	JwtLogin     = "jwt_login"
-	EmailLogin   = "email_login"
-	UidLogin     = "uid_login"
-	CertLogin    = "cert_login"
+	ApiKeyLogin  loginType = "api_key_login"
+	AwsIAMLogin  loginType = "aws_iam_login"
+	GcpIAMLogin  loginType = "gcp_login"
+	AzureADLogin loginType = "azure_ad_login"
+	JwtLogin     loginType = "jwt_login"
+	EmailLogin   loginType = "email_login"
+	UidLogin     loginType = "uid_login"
+	CertLogin    loginType = "cert_login"
 )
 
 var apiKeyLoginSchema = &schema.Schema{

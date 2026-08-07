@@ -210,7 +210,7 @@ func authenticate(ctx context.Context, cfg providerModel) (*akeyless.ApiClient, 
 		return nil, fmt.Errorf("api_key_login block may appear only once")
 	}
 	if len(cfg.APIKeyLogin) == 1 {
-		return akeyless.NewApiClient(ctx, gw, akeyless.ApiKeyLogin, map[string]interface{}{
+		return akeyless.NewApiClient(ctx, gw, string(akeyless.ApiKeyLogin), map[string]interface{}{
 			"access_id":  strVal(cfg.APIKeyLogin[0].AccessID),
 			"access_key": strVal(cfg.APIKeyLogin[0].AccessKey),
 		})
@@ -219,7 +219,7 @@ func authenticate(ctx context.Context, cfg providerModel) (*akeyless.ApiClient, 
 		return nil, fmt.Errorf("email_login block may appear only once")
 	}
 	if len(cfg.EmailLogin) == 1 {
-		return akeyless.NewApiClient(ctx, gw, akeyless.EmailLogin, map[string]interface{}{
+		return akeyless.NewApiClient(ctx, gw, string(akeyless.EmailLogin), map[string]interface{}{
 			"admin_email":    strVal(cfg.EmailLogin[0].AdminEmail),
 			"admin_password": strVal(cfg.EmailLogin[0].AdminPassword),
 		})
@@ -228,7 +228,7 @@ func authenticate(ctx context.Context, cfg providerModel) (*akeyless.ApiClient, 
 		return nil, fmt.Errorf("aws_iam_login block may appear only once")
 	}
 	if len(cfg.AwsIamLogin) == 1 {
-		return akeyless.NewApiClient(ctx, gw, akeyless.AwsIAMLogin, map[string]interface{}{
+		return akeyless.NewApiClient(ctx, gw, string(akeyless.AwsIAMLogin), map[string]interface{}{
 			"access_id": strVal(cfg.AwsIamLogin[0].AccessID),
 		})
 	}
@@ -236,7 +236,7 @@ func authenticate(ctx context.Context, cfg providerModel) (*akeyless.ApiClient, 
 		return nil, fmt.Errorf("gcp_login block may appear only once")
 	}
 	if len(cfg.GcpLogin) == 1 {
-		return akeyless.NewApiClient(ctx, gw, akeyless.GcpIAMLogin, map[string]interface{}{
+		return akeyless.NewApiClient(ctx, gw, string(akeyless.GcpIAMLogin), map[string]interface{}{
 			"access_id": strVal(cfg.GcpLogin[0].AccessID),
 			"audience":  strVal(cfg.GcpLogin[0].Audience),
 		})
@@ -245,7 +245,7 @@ func authenticate(ctx context.Context, cfg providerModel) (*akeyless.ApiClient, 
 		return nil, fmt.Errorf("azure_ad_login block may appear only once")
 	}
 	if len(cfg.AzureAdLogin) == 1 {
-		return akeyless.NewApiClient(ctx, gw, akeyless.AzureADLogin, map[string]interface{}{
+		return akeyless.NewApiClient(ctx, gw, string(akeyless.AzureADLogin), map[string]interface{}{
 			"access_id": strVal(cfg.AzureAdLogin[0].AccessID),
 		})
 	}
@@ -253,7 +253,7 @@ func authenticate(ctx context.Context, cfg providerModel) (*akeyless.ApiClient, 
 		return nil, fmt.Errorf("jwt_login block may appear only once")
 	}
 	if len(cfg.JwtLogin) == 1 {
-		return akeyless.NewApiClient(ctx, gw, akeyless.JwtLogin, map[string]interface{}{
+		return akeyless.NewApiClient(ctx, gw, string(akeyless.JwtLogin), map[string]interface{}{
 			"access_id": strVal(cfg.JwtLogin[0].AccessID),
 			"jwt":       strVal(cfg.JwtLogin[0].JWT),
 		})
@@ -262,7 +262,7 @@ func authenticate(ctx context.Context, cfg providerModel) (*akeyless.ApiClient, 
 		return nil, fmt.Errorf("uid_login block may appear only once")
 	}
 	if len(cfg.UidLogin) == 1 {
-		return akeyless.NewApiClient(ctx, gw, akeyless.UidLogin, map[string]interface{}{
+		return akeyless.NewApiClient(ctx, gw, string(akeyless.UidLogin), map[string]interface{}{
 			"access_id": strVal(cfg.UidLogin[0].AccessID),
 			"uid_token": strVal(cfg.UidLogin[0].UIDToken),
 		})
@@ -271,7 +271,7 @@ func authenticate(ctx context.Context, cfg providerModel) (*akeyless.ApiClient, 
 		return nil, fmt.Errorf("cert_login block may appear only once")
 	}
 	if len(cfg.CertLogin) == 1 {
-		return akeyless.NewApiClient(ctx, gw, akeyless.CertLogin, map[string]interface{}{
+		return akeyless.NewApiClient(ctx, gw, string(akeyless.CertLogin), map[string]interface{}{
 			"access_id":      strVal(cfg.CertLogin[0].AccessID),
 			"cert_file_name": strVal(cfg.CertLogin[0].CertFileName),
 			"cert_data":      strVal(cfg.CertLogin[0].CertData),
@@ -281,7 +281,7 @@ func authenticate(ctx context.Context, cfg providerModel) (*akeyless.ApiClient, 
 	}
 
 	if os.Getenv("AKEYLESS_ACCESS_ID") != "" && os.Getenv("AKEYLESS_ACCESS_KEY") != "" {
-		return akeyless.NewApiClient(ctx, gw, akeyless.ApiKeyLogin, map[string]interface{}{
+		return akeyless.NewApiClient(ctx, gw, string(akeyless.ApiKeyLogin), map[string]interface{}{
 			"access_id":  "",
 			"access_key": "",
 		})
@@ -305,7 +305,6 @@ func (p *Provider) EphemeralResources(_ context.Context) []func() fwephemeral.Ep
 	return []func() fwephemeral.EphemeralResource{
 		ephemeral.NewDynamicSecret,
 		ephemeral.NewStaticSecret,
-		ephemeral.NewSecret,
 		ephemeral.NewRotatedSecret,
 		ephemeral.NewCertificate,
 		ephemeral.NewPKICertificate,

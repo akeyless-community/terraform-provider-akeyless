@@ -267,11 +267,7 @@ func extractTokenFromInput(tokenLogin []interface{}) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("wrong login detais")
 	}
-	token := withEnvFallback(login["token"].(string), "AKEYLESS_AUTH_TOKEN")
-	if token == "" {
-		return "", fmt.Errorf("token is required (set it directly or via AKEYLESS_AUTH_TOKEN)")
-	}
-	return token, nil
+	return login["token"].(string), nil
 }
 
 // withEnvFallback returns val if non-empty, otherwise the value of the given
@@ -532,10 +528,6 @@ func getProviderClient(_ context.Context, d *schema.ResourceData) *akeyless_api.
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
 		HTTPClient:    httpClient,
 	}).V2Api
-}
-
-func resolveApiGatewayAddress(d *schema.ResourceData) string {
-	return d.Get("api_gateway_address").(string)
 }
 
 type retryTransport struct {

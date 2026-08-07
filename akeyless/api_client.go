@@ -17,8 +17,8 @@ type ApiClient struct {
 	Token  string
 }
 
-// ResolveGateway applies config → AKEYLESS_GATEWAY → public API fallback.
-func ResolveGateway(apiGateway string) string {
+// resolveGateway applies config → AKEYLESS_GATEWAY → public API fallback.
+func resolveGateway(apiGateway string) string {
 	if apiGateway == "" {
 		apiGateway = os.Getenv("AKEYLESS_GATEWAY")
 	}
@@ -28,11 +28,11 @@ func ResolveGateway(apiGateway string) string {
 	return apiGateway
 }
 
-// NewV2Api builds an unauthenticated V2 API client pointed at apiGateway.
-func NewV2Api(apiGateway string) *akeyless_api.V2ApiService {
+// newV2Api builds an unauthenticated V2 API client pointed at apiGateway.
+func newV2Api(apiGateway string) *akeyless_api.V2ApiService {
 	return akeyless_api.NewAPIClient(&akeyless_api.Configuration{
 		Servers: []akeyless_api.ServerConfiguration{{
-			URL: ResolveGateway(apiGateway),
+			URL: resolveGateway(apiGateway),
 		}},
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
 		HTTPClient:    &http.Client{Transport: &retryTransport{base: http.DefaultTransport, retries: 3}},
@@ -45,14 +45,14 @@ func NewApiClientWithToken(apiGateway, token string) (*ApiClient, error) {
 	if token == "" {
 		return nil, fmt.Errorf("token is required (set it directly or via AKEYLESS_AUTH_TOKEN)")
 	}
-	return &ApiClient{Client: NewV2Api(apiGateway), Token: token}, nil
+	return &ApiClient{Client: newV2Api(apiGateway), Token: token}, nil
 }
 
 // NewApiClient authenticates with the given login block and returns a client.
 // loginAttrs must be the same map shape used by the SDK login schemas
 // (e.g. {"access_id": "...", "access_key": "..."} for api_key_login).
 func NewApiClient(ctx context.Context, apiGateway string, authType string, loginAttrs map[string]interface{}) (*ApiClient, error) {
-	client := NewV2Api(apiGateway)
+	client := newV2Api(apiGateway)
 	authBody := akeyless_api.NewAuthWithDefaults()
 	if err := setAuthBody(authBody, loginAttrs, loginType(authType)); err != nil {
 		return nil, err
