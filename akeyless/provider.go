@@ -30,7 +30,6 @@ func Provider() *schema.Provider {
 			"api_gateway_address": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_GATEWAY", publicApi),
 				Description: "Origin URL of the API Gateway server. This is a URL with a scheme, a hostname and a port.",
 			},
 			"api_key_login":  apiKeyLoginSchema,
@@ -522,12 +521,23 @@ func getProviderClient(_ context.Context, d *schema.ResourceData) *akeyless_api.
 	return akeyless_api.NewAPIClient(&akeyless_api.Configuration{
 		Servers: []akeyless_api.ServerConfiguration{
 			{
-				URL: d.Get("api_gateway_address").(string),
+				URL: resolveApiGatewayAddress(d),
 			},
 		},
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
 		HTTPClient:    httpClient,
 	}).V2Api
+}
+
+func resolveApiGatewayAddress(d *schema.ResourceData) string {
+	apiGwAddress := d.Get("api_gateway_address").(string)
+	if apiGwAddress == "" {
+		apiGwAddress = os.Getenv("AKEYLESS_GATEWAY")
+	}
+	if apiGwAddress == "" {
+		apiGwAddress = publicApi
+	}
+	return apiGwAddress
 }
 
 type retryTransport struct {

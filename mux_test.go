@@ -22,11 +22,14 @@ func TestMuxServerSchemaParity(t *testing.T) {
 	if err != nil {
 		t.Fatalf("upgrade sdk server: %v", err)
 	}
-	_, err = tf6muxserver.NewMuxServer(ctx,
+	mux, err := tf6muxserver.NewMuxServer(ctx,
 		func() tfprotov6.ProviderServer { return upgraded },
 		providerserver.NewProtocol6(fwprovider.New()),
 	)
 	if err != nil {
 		t.Fatalf("mux server: %v", err)
+	}
+	if _, err = mux.ProviderServer().GetProviderSchema(ctx, &tfprotov6.GetProviderSchemaRequest{}); err != nil {
+		t.Fatalf("provider schema: %v", err)
 	}
 }
