@@ -664,6 +664,105 @@ func TestRoleResourceAndAssocAuthMethod(t *testing.T) {
 	})
 }
 
+// TestAssocRoleAmForceNewOnRoleNameChange verifies that changing role_name
+// (ForceNew) destroys and recreates the association, including when one role
+// path has a leading slash and the other does not.
+func TestAssocRoleAmForceNewOnRoleNameChange(t *testing.T) {
+	authMethodPath := testPath("test_am_assoc_force_new")
+	role1Path := "/" + testPath("test_role1_with_slash")
+	role2Path := testPath("test_role2_no_slash")
+
+	testutils.DeleteRole(role1Path)
+	testutils.DeleteRole(role2Path)
+	testutils.DeleteAuthMethod(authMethodPath, "api_key")
+	defer testutils.DeleteRole(role1Path)
+	defer testutils.DeleteRole(role2Path)
+	defer testutils.DeleteAuthMethod(authMethodPath, "api_key")
+
+	configForRole := func(assocRolePath string) string {
+		return fmt.Sprintf(`
+		resource "akeyless_auth_method_api_key" "am" {
+			name = "%v"
+		}
+		resource "akeyless_role" "role1" {
+			name = "%v"
+			rules {
+				capability = ["read"]
+				path       = "%v"
+				rule_type  = "item-rule"
+			}
+		}
+		resource "akeyless_role" "role2" {
+			name = "%v"
+			rules {
+				capability = ["read"]
+				path       = "%v"
+				rule_type  = "item-rule"
+			}
+		}
+		resource "akeyless_associate_role_auth_method" "assoc" {
+			am_name   = akeyless_auth_method_api_key.am.name
+			role_name = "%v"
+			sub_claims = {
+				"groups" = "admins"
+			}
+			depends_on = [
+				akeyless_auth_method_api_key.am,
+				akeyless_role.role1,
+				akeyless_role.role2,
+			]
+		}
+	`, authMethodPath, role1Path, RULE_PATH, role2Path, RULE_PATH, assocRolePath)
+	}
+
+	var assocIDAfterRole1 string
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: configForRole(role1Path),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_associate_role_auth_method.assoc", "role_name", role1Path),
+					testutils.CheckAssocExistsOnRole(t, role1Path, authMethodPath),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["akeyless_associate_role_auth_method.assoc"]
+						if !ok {
+							return fmt.Errorf("assoc resource not found in state")
+						}
+						assocIDAfterRole1 = rs.Primary.ID
+						if assocIDAfterRole1 == "" {
+							return fmt.Errorf("assoc id is empty after create")
+						}
+						return nil
+					},
+				),
+			},
+			{
+				Config: configForRole(role2Path),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_associate_role_auth_method.assoc", "role_name", role2Path),
+					testutils.CheckAssocExistsOnRole(t, role2Path, authMethodPath),
+					testutils.CheckAssocAbsentOnRole(t, role1Path),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["akeyless_associate_role_auth_method.assoc"]
+						if !ok {
+							return fmt.Errorf("assoc resource not found in state")
+						}
+						if rs.Primary.ID == "" {
+							return fmt.Errorf("assoc id is empty after recreate")
+						}
+						if rs.Primary.ID == assocIDAfterRole1 {
+							return fmt.Errorf("expected destroy+create (new assoc id), got same id %s", assocIDAfterRole1)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
 func TestRoleResourceWithFewAssocs(t *testing.T) {
 	resourceName := "test_role_few_assocs"
 	rolePath := testPath(resourceName)

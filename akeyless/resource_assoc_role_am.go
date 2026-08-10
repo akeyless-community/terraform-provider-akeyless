@@ -27,14 +27,18 @@ func resourceAssocRoleAm() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"role_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The role to associate",
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "The role to associate",
+				ForceNew:         true,
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"am_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The auth method to associate",
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "The auth method to associate",
+				ForceNew:         true,
+				DiffSuppressFunc: common.DiffSuppressOnLeadingSlash,
 			},
 			"sub_claims": {
 				Type:        schema.TypeMap,
@@ -148,16 +152,12 @@ func resourceAssocRoleAmRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceAssocRoleAmUpdate(d *schema.ResourceData, m interface{}) error {
 
-	err := validateAssocRoleAmUpdateParams(d)
-	if err != nil {
-		return fmt.Errorf("can't update association: %v", err)
-	}
-
 	provider := m.(*providerMeta)
 	client := *provider.client
 	token := *provider.token
 
 	ctx := context.Background()
+
 	subClaims := d.Get("sub_claims").(map[string]interface{})
 	sc := make(map[string]string, len(subClaims))
 	for k, v := range subClaims {
@@ -359,13 +359,4 @@ func getAssocImportParams(d *schema.ResourceData) (*AssocParams, error) {
 func isAssocId(s string) bool {
 	// e.g. ass-abcdef123456fedcba
 	return strings.HasPrefix(s, "ass-") && len(s) == 24
-}
-
-// every resource_associate_role_auth_method can relate to exactly 1 assoc.
-// updating its role_name or am_name meaning destroy and re-create the resource.
-// therefore only sub_claims and case_sensitive are able to update.
-// if you wish to update role_name or am_name, destroy the resource first.
-func validateAssocRoleAmUpdateParams(d *schema.ResourceData) error {
-	paramsMustNotUpdate := []string{"role_name", "am_name"}
-	return common.GetErrorOnUpdateParam(d, paramsMustNotUpdate)
 }
