@@ -21,15 +21,16 @@ func NewMuxProtoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServe
 	return map[string]func() (tfprotov6.ProviderServer, error){
 		"akeyless": func() (tfprotov6.ProviderServer, error) {
 			ctx := context.Background()
+			sdkProvider := akeyless.Provider()
 			upgraded, err := tf5to6server.UpgradeServer(ctx, func() tfprotov5.ProviderServer {
-				return schema.NewGRPCProviderServer(akeyless.Provider())
+				return schema.NewGRPCProviderServer(sdkProvider)
 			})
 			if err != nil {
 				return nil, err
 			}
 			mux, err := tf6muxserver.NewMuxServer(ctx,
 				func() tfprotov6.ProviderServer { return upgraded },
-				providerserver.NewProtocol6(fwprovider.New()),
+				providerserver.NewProtocol6(fwprovider.New(sdkProvider)),
 			)
 			if err != nil {
 				return nil, err

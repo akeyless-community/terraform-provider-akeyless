@@ -25,7 +25,8 @@ const publicApi = "https://api.akeyless.io"
 
 // Provider returns Akeyless Terraform provider
 func Provider() *schema.Provider {
-	return &schema.Provider{
+	meta := &providerMeta{}
+	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_gateway_address": {
 				Type:        schema.TypeString,
@@ -42,8 +43,9 @@ func Provider() *schema.Provider {
 			"cert_login":     certLoginSchema,
 			"token_login":    tokenLoginSchema,
 		},
-		//ConfigureFunc: configureProvider,
-		ConfigureContextFunc: configureProvider,
+		ConfigureContextFunc: func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+			return configureProvider(ctx, d, meta)
+		},
 		ResourcesMap: map[string]*schema.Resource{
 			"akeyless_account_custom_field":                                      resourceAccountCustomField(),
 			"akeyless_account_settings":                                          resourceAccountSettings(),
@@ -245,6 +247,8 @@ func Provider() *schema.Provider {
 			"akeyless_detokenize":               dataSourceDetokenize(),
 		},
 	}
+	provider.SetMeta(meta)
+	return provider
 }
 
 func getProviderToken(ctx context.Context, d *schema.ResourceData, client *akeyless_api.V2ApiService) (string, error) {
@@ -435,6 +439,13 @@ type providerMeta struct {
 	token  *string
 }
 
+func (m *providerMeta) ApiClient() *ApiClient {
+	if m == nil || m.client == nil || m.token == nil {
+		return nil
+	}
+	return &ApiClient{Client: m.client, Token: *m.token}
+}
+
 func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, error) {
 
 	apiKeyLogin := d.Get("api_key_login").([]interface{})
@@ -586,7 +597,7 @@ func isTransientConnError(err error) bool {
 		strings.Contains(msg, "connection refused")
 }
 
-func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func configureProvider(ctx context.Context, d *schema.ResourceData, meta *providerMeta) (interface{}, diag.Diagnostics) {
 	var diagnostic diag.Diagnostics
 
 	client := getProviderClient(ctx, d)
@@ -595,5 +606,7 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	if err != nil {
 		diagnostic = diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error()}}
 	}
-	return &providerMeta{client: client, token: &token}, diagnostic
+	meta.client = client
+	meta.token = &token
+	return meta, diagnostic
 }

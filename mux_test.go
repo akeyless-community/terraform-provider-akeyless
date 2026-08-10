@@ -16,20 +16,27 @@ import (
 
 func TestMuxServerSchemaParity(t *testing.T) {
 	ctx := context.Background()
+	sdkProvider := akeyless.Provider()
 	upgraded, err := tf5to6server.UpgradeServer(ctx, func() tfprotov5.ProviderServer {
-		return schema.NewGRPCProviderServer(akeyless.Provider())
+		return schema.NewGRPCProviderServer(sdkProvider)
 	})
 	if err != nil {
 		t.Fatalf("upgrade sdk server: %v", err)
 	}
 	mux, err := tf6muxserver.NewMuxServer(ctx,
 		func() tfprotov6.ProviderServer { return upgraded },
-		providerserver.NewProtocol6(fwprovider.New()),
+		providerserver.NewProtocol6(fwprovider.New(sdkProvider)),
 	)
 	if err != nil {
 		t.Fatalf("mux server: %v", err)
 	}
-	if _, err = mux.ProviderServer().GetProviderSchema(ctx, &tfprotov6.GetProviderSchemaRequest{}); err != nil {
+	resp, err := mux.ProviderServer().GetProviderSchema(ctx, &tfprotov6.GetProviderSchemaRequest{})
+	if err != nil {
 		t.Fatalf("provider schema: %v", err)
+	}
+	for _, diagnostic := range resp.Diagnostics {
+		if diagnostic.Severity == tfprotov6.DiagnosticSeverityError {
+			t.Fatalf("provider schema diagnostic: %s", diagnostic.Summary)
+		}
 	}
 }

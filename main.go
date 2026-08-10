@@ -26,8 +26,9 @@ func main() {
 
 	ctx := context.Background()
 
+	sdkProvider := akeyless.Provider()
 	upgradedSdkServer, err := tf5to6server.UpgradeServer(ctx, func() tfprotov5.ProviderServer {
-		return schema.NewGRPCProviderServer(akeyless.Provider())
+		return schema.NewGRPCProviderServer(sdkProvider)
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -35,7 +36,7 @@ func main() {
 
 	providers := []func() tfprotov6.ProviderServer{
 		func() tfprotov6.ProviderServer { return upgradedSdkServer },
-		providerserver.NewProtocol6(fwprovider.New()),
+		providerserver.NewProtocol6(fwprovider.New(sdkProvider)),
 	}
 
 	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
