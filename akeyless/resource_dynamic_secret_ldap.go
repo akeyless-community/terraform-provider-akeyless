@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretLdap() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceDynamicSecretLdap() *schema.Resource {
 		Delete:      resourceDynamicSecretLdapDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretLdapImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("bind_dn_password"), cty.GetAttrPath("bind_dn_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -53,6 +58,19 @@ func resourceDynamicSecretLdap() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Bind DN Password",
+			},
+			"bind_dn_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"bind_dn_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "Bind DN Password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.",
+			},
+			"bind_dn_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"bind_dn_password_wo"},
+				Description:  "Version trigger for bind_dn_password_wo. Increment to update the password.",
 			},
 			"custom_username_template": {
 				Type:        schema.TypeString,
@@ -199,7 +217,10 @@ func resourceDynamicSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	tags := common.ExpandStringList(tagsSet.List())
 	providerType := d.Get("provider_type").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword := d.Get("bind_dn_password").(string)
+	bindDnPassword, err := common.EffectiveSecretValue(d, "bind_dn_password", "bind_dn_password_wo")
+	if err != nil {
+		return err
+	}
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	externalUsername := d.Get("external_username").(string)
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
@@ -372,7 +393,10 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	tags := common.ExpandStringList(tagsSet.List())
 	providerType := d.Get("provider_type").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword := d.Get("bind_dn_password").(string)
+	bindDnPassword, err := common.SecretValueForUpdate(d, "bind_dn_password", "bind_dn_password_wo")
+	if err != nil {
+		return err
+	}
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	externalUsername := d.Get("external_username").(string)
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
@@ -408,7 +432,7 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProviderType, providerType)
 	common.GetAkeylessPtr(&body.BindDn, bindDn)
-	common.GetAkeylessPtr(&body.BindDnPassword, bindDnPassword)
+	common.SetOptionalString(&body.BindDnPassword, bindDnPassword)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.ExternalUsername, externalUsername)
 	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)

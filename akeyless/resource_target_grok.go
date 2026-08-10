@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGrokTarget() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceGrokTarget() *schema.Resource {
 		Delete:      resourceGrokTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGrokTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,6 +38,19 @@ func resourceGrokTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "API key for Grok",
+			},
+			"api_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "API key for Grok (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+			},
+			"api_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the key.",
 			},
 			"grok_url": {
 				Type:        schema.TypeString,
@@ -81,9 +99,13 @@ func resourceGrokTargetCreate(d *schema.ResourceData, m interface{}) error {
 	token := *provider.token
 	ctx := context.Background()
 	name := d.Get("name").(string)
+	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 
 	body := akeyless_api.TargetCreateGrok{Name: name, Token: &token}
-	common.GetAkeylessPtr(&body.ApiKey, d.Get("api_key").(string))
+	common.GetAkeylessPtr(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.GrokUrl, d.Get("grok_url").(string))
 	common.GetAkeylessPtr(&body.TeamId, d.Get("team_id").(string))
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
@@ -112,7 +134,7 @@ func resourceGrokTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 	if rOut.Value != nil && rOut.Value.GrokTargetDetails != nil {
 		if rOut.Value.GrokTargetDetails.ApiKey != nil {
-			if err = d.Set("api_key", *rOut.Value.GrokTargetDetails.ApiKey); err != nil {
+			if err = common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *rOut.Value.GrokTargetDetails.ApiKey); err != nil {
 				return err
 			}
 		}
@@ -154,9 +176,13 @@ func resourceGrokTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	token := *provider.token
 	ctx := context.Background()
 	name := d.Get("name").(string)
+	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 
 	body := akeyless_api.TargetUpdateGrok{Name: name, Token: &token}
-	common.GetAkeylessPtr(&body.ApiKey, d.Get("api_key").(string))
+	common.SetOptionalString(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.GrokUrl, d.Get("grok_url").(string))
 	common.GetAkeylessPtr(&body.TeamId, d.Get("team_id").(string))
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))

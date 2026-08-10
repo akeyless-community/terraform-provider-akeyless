@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretOracle() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceDynamicSecretOracle() *schema.Resource {
 		Delete:      resourceDynamicSecretOracleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretOracleImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("oracle_password"), cty.GetAttrPath("oracle_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -46,6 +51,19 @@ func resourceDynamicSecretOracle() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Oracle Password",
+			},
+			"oracle_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"oracle_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "Oracle Password (write-only, not stored in state). Requires Terraform 1.11+. Bump oracle_password_wo_version to change it.",
+			},
+			"oracle_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"oracle_password_wo"},
+				Description:  "Version trigger for oracle_password_wo. Increment to update the value.",
 			},
 			"oracle_host": {
 				Type:        schema.TypeString,
@@ -173,7 +191,10 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	targetName := d.Get("target_name").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 	oracleUsername := d.Get("oracle_username").(string)
-	oraclePassword := d.Get("oracle_password").(string)
+	oraclePassword, err := common.EffectiveSecretValue(d, "oracle_password", "oracle_password_wo")
+	if err != nil {
+		return err
+	}
 	oracleHost := d.Get("oracle_host").(string)
 	oraclePort := d.Get("oracle_port").(string)
 	oracleScreationStatements := d.Get("oracle_creation_statements").(string)
@@ -305,7 +326,7 @@ func resourceDynamicSecretOracleRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.DbPwd != nil {
-		err = d.Set("oracle_password", *rOut.DbPwd)
+		err = common.SetSecretFromRead(d, "oracle_password", "oracle_password_wo", "oracle_password_wo_version", *rOut.DbPwd)
 		if err != nil {
 			return err
 		}
@@ -404,7 +425,10 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	targetName := d.Get("target_name").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 	oracleUsername := d.Get("oracle_username").(string)
-	oraclePassword := d.Get("oracle_password").(string)
+	oraclePassword, err := common.SecretValueForUpdate(d, "oracle_password", "oracle_password_wo")
+	if err != nil {
+		return err
+	}
 	oracleHost := d.Get("oracle_host").(string)
 	oraclePort := d.Get("oracle_port").(string)
 	oracleScreationStatements := d.Get("oracle_creation_statements").(string)
@@ -435,7 +459,7 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.OracleServiceName, oracleServiceName)
 	common.GetAkeylessPtr(&body.OracleUsername, oracleUsername)
-	common.GetAkeylessPtr(&body.OraclePassword, oraclePassword)
+	common.SetOptionalString(&body.OraclePassword, oraclePassword)
 	common.GetAkeylessPtr(&body.OracleHost, oracleHost)
 	common.GetAkeylessPtr(&body.OraclePort, oraclePort)
 	common.GetAkeylessPtr(&body.OracleScreationStatements, oracleScreationStatements)

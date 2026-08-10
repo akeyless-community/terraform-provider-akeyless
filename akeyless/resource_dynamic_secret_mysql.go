@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretMysql() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceDynamicSecretMysql() *schema.Resource {
 		Delete:      resourceDynamicSecretMysqlDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretMysqlImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mysql_password"), cty.GetAttrPath("mysql_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -47,6 +52,19 @@ func resourceDynamicSecretMysql() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "MySQL password",
+			},
+			"mysql_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mysql_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "MySQL password (write-only, not stored in state). Requires Terraform 1.11+. Bump mysql_password_wo_version to change it.",
+			},
+			"mysql_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mysql_password_wo"},
+				Description:  "Version trigger for mysql_password_wo. Increment to update the password.",
 			},
 			"mysql_host": {
 				Type:        schema.TypeString,
@@ -203,7 +221,10 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mysqlDbname := d.Get("mysql_dbname").(string)
 	mysqlUsername := d.Get("mysql_username").(string)
-	mysqlPassword := d.Get("mysql_password").(string)
+	mysqlPassword, err := common.EffectiveSecretValue(d, "mysql_password", "mysql_password_wo")
+	if err != nil {
+		return err
+	}
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
 	creationStatements := d.Get("mysql_creation_statements").(string)
@@ -347,7 +368,7 @@ func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.DbPwd != nil {
-		err = d.Set("mysql_password", *rOut.DbPwd)
+		err = common.SetSecretFromRead(d, "mysql_password", "mysql_password_wo", "mysql_password_wo_version", *rOut.DbPwd)
 		if err != nil {
 			return err
 		}
@@ -449,7 +470,10 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mysqlDbname := d.Get("mysql_dbname").(string)
 	mysqlUsername := d.Get("mysql_username").(string)
-	mysqlPassword := d.Get("mysql_password").(string)
+	mysqlPassword, err := common.SecretValueForUpdate(d, "mysql_password", "mysql_password_wo")
+	if err != nil {
+		return err
+	}
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
 	creationStatements := d.Get("mysql_creation_statements").(string)
@@ -486,7 +510,7 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.MysqlDbname, mysqlDbname)
 	common.GetAkeylessPtr(&body.MysqlUsername, mysqlUsername)
-	common.GetAkeylessPtr(&body.MysqlPassword, mysqlPassword)
+	common.SetOptionalString(&body.MysqlPassword, mysqlPassword)
 	common.GetAkeylessPtr(&body.MysqlHost, mysqlHost)
 	common.GetAkeylessPtr(&body.MysqlPort, mysqlPort)
 	common.GetAkeylessPtr(&body.MysqlScreationStatements, creationStatements)

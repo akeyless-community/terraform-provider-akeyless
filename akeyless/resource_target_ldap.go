@@ -5,7 +5,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceLdapTarget() *schema.Resource {
@@ -17,6 +19,9 @@ func resourceLdapTarget() *schema.Resource {
 		Delete:      resourceLdapTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceLdapTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("bind_dn_password"), cty.GetAttrPath("bind_dn_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,6 +45,19 @@ func resourceLdapTarget() *schema.Resource {
 				Required:    true,
 				Sensitive:   true,
 				Description: "Bind DN Password",
+			},
+			"bind_dn_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"bind_dn_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "bind_dn_password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.",
+			},
+			"bind_dn_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"bind_dn_password_wo"},
+				Description:  "Version trigger for bind_dn_password_wo. Increment to update the value.",
 			},
 			"ldap_ca_cert": {
 				Type:        schema.TypeString,
@@ -91,7 +109,10 @@ func resourceLdapTargetCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	ldapUrl := d.Get("ldap_url").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword := d.Get("bind_dn_password").(string)
+	bindDnPassword, err := common.EffectiveSecretValue(d, "bind_dn_password", "bind_dn_password_wo")
+	if err != nil {
+		return err
+	}
 	ldapCaCert := d.Get("ldap_ca_cert").(string)
 	serverType := d.Get("server_type").(string)
 	tokenExpiration := d.Get("token_expiration").(string)
@@ -159,7 +180,7 @@ func resourceLdapTargetRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if targetDetails.LdapTargetDetails.LdapBindPassword != nil {
-				err := d.Set("bind_dn_password", *targetDetails.LdapTargetDetails.LdapBindPassword)
+				err := common.SetSecretFromRead(d, "bind_dn_password", "bind_dn_password_wo", "bind_dn_password_wo_version", *targetDetails.LdapTargetDetails.LdapBindPassword)
 				if err != nil {
 					return err
 				}
@@ -205,7 +226,10 @@ func resourceLdapTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	ldapUrl := d.Get("ldap_url").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword := d.Get("bind_dn_password").(string)
+	bindDnPassword, err := common.RequiredSecretValueForUpdate(d, "bind_dn_password", "bind_dn_password_wo")
+	if err != nil {
+		return err
+	}
 	ldapCaCert := d.Get("ldap_ca_cert").(string)
 	serverType := d.Get("server_type").(string)
 	tokenExpiration := d.Get("token_expiration").(string)

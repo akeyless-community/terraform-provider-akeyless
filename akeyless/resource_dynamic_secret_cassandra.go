@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretCassandra() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 		Delete:      resourceDynamicSecretCassandraDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretCassandraImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("cassandra_password"), cty.GetAttrPath("cassandra_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -46,6 +51,19 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Cassandra superuser password",
+			},
+			"cassandra_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"cassandra_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "Cassandra Password (write-only, not stored in state). Requires Terraform 1.11+. Bump cassandra_password_wo_version to change it.",
+			},
+			"cassandra_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"cassandra_password_wo"},
+				Description:  "Version trigger for cassandra_password_wo. Increment to update the value.",
 			},
 			"cassandra_port": {
 				Type:        schema.TypeString,
@@ -141,7 +159,10 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	targetName := d.Get("target_name").(string)
 	cassandraHosts := d.Get("cassandra_hosts").(string)
 	cassandraUsername := d.Get("cassandra_username").(string)
-	cassandraPassword := d.Get("cassandra_password").(string)
+	cassandraPassword, err := common.EffectiveSecretValue(d, "cassandra_password", "cassandra_password_wo")
+	if err != nil {
+		return err
+	}
 	cassandraPort := d.Get("cassandra_port").(string)
 	creationStatements := d.Get("cassandra_creation_statements").(string)
 	ssl := d.Get("ssl").(bool)
@@ -266,7 +287,7 @@ func resourceDynamicSecretCassandraRead(d *schema.ResourceData, m interface{}) e
 		}
 	}
 	if rOut.DbPwd != nil {
-		err = d.Set("cassandra_password", *rOut.DbPwd)
+		err = common.SetSecretFromRead(d, "cassandra_password", "cassandra_password_wo", "cassandra_password_wo_version", *rOut.DbPwd)
 		if err != nil {
 			return err
 		}
@@ -336,7 +357,10 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	targetName := d.Get("target_name").(string)
 	cassandraHosts := d.Get("cassandra_hosts").(string)
 	cassandraUsername := d.Get("cassandra_username").(string)
-	cassandraPassword := d.Get("cassandra_password").(string)
+	cassandraPassword, err := common.SecretValueForUpdate(d, "cassandra_password", "cassandra_password_wo")
+	if err != nil {
+		return err
+	}
 	cassandraPort := d.Get("cassandra_port").(string)
 	creationStatements := d.Get("cassandra_creation_statements").(string)
 	ssl := d.Get("ssl").(bool)
@@ -360,7 +384,7 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.CassandraHosts, cassandraHosts)
 	common.GetAkeylessPtr(&body.CassandraUsername, cassandraUsername)
-	common.GetAkeylessPtr(&body.CassandraPassword, cassandraPassword)
+	common.SetOptionalString(&body.CassandraPassword, cassandraPassword)
 	common.GetAkeylessPtr(&body.CassandraPort, cassandraPort)
 	common.GetAkeylessPtr(&body.CassandraCreationStatements, creationStatements)
 	common.GetAkeylessPtr(&body.Ssl, ssl)

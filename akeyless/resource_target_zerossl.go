@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceZerosslTarget() *schema.Resource {
@@ -18,6 +20,10 @@ func resourceZerosslTarget() *schema.Resource {
 		Delete:      resourceZerosslTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceZerosslTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("imap_password"), cty.GetAttrPath("imap_password_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -32,6 +38,19 @@ func resourceZerosslTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "API Key of the ZeroSSLTarget account",
 			},
+			"api_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+			},
+			"api_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
+			},
 			"imap_username": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -42,6 +61,19 @@ func resourceZerosslTarget() *schema.Resource {
 				Required:    true,
 				Sensitive:   true,
 				Description: "Password to access the IMAP service",
+			},
+			"imap_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"imap_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "imap_password (write-only, not stored in state). Requires Terraform 1.11+. Bump imap_password_wo_version to change it.",
+			},
+			"imap_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"imap_password_wo"},
+				Description:  "Version trigger for imap_password_wo. Increment to update the value.",
 			},
 			"imap_fqdn": {
 				Type:        schema.TypeString,
@@ -98,9 +130,15 @@ func resourceZerosslTargetCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
+	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 	imapUsername := d.Get("imap_username").(string)
-	imapPassword := d.Get("imap_password").(string)
+	imapPassword, err := common.EffectiveSecretValue(d, "imap_password", "imap_password_wo")
+	if err != nil {
+		return err
+	}
 	imapFqdn := d.Get("imap_fqdn").(string)
 	imapTargetEmail := d.Get("imap_target_email").(string)
 	imapPort := d.Get("imap_port").(string)
@@ -157,7 +195,7 @@ func resourceZerosslTargetRead(d *schema.ResourceData, m interface{}) error {
 		targetDetails := *rOut.Value
 
 		if targetDetails.ZerosslTargetDetails.ApiKey != nil {
-			err := d.Set("api_key", *targetDetails.ZerosslTargetDetails.ApiKey)
+			err := common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *targetDetails.ZerosslTargetDetails.ApiKey)
 			if err != nil {
 				return err
 			}
@@ -178,7 +216,7 @@ func resourceZerosslTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if targetDetails.ZerosslTargetDetails.ImapPassword != nil {
-			err := d.Set("imap_password", *targetDetails.ZerosslTargetDetails.ImapPassword)
+			err := common.SetSecretFromRead(d, "imap_password", "imap_password_wo", "imap_password_wo_version", *targetDetails.ZerosslTargetDetails.ImapPassword)
 			if err != nil {
 				return err
 			}
@@ -232,9 +270,15 @@ func resourceZerosslTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
+	apiKey, err := common.RequiredSecretValueForUpdate(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 	imapUsername := d.Get("imap_username").(string)
-	imapPassword := d.Get("imap_password").(string)
+	imapPassword, err := common.RequiredSecretValueForUpdate(d, "imap_password", "imap_password_wo")
+	if err != nil {
+		return err
+	}
 	imapFqdn := d.Get("imap_fqdn").(string)
 	imapTargetEmail := d.Get("imap_target_email").(string)
 	imapPort := d.Get("imap_port").(string)

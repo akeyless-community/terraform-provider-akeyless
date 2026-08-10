@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceBedrockTarget() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceBedrockTarget() *schema.Resource {
 		Delete:      resourceBedrockTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceBedrockTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,6 +38,19 @@ func resourceBedrockTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "API key for Bedrock",
+			},
+			"api_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "API key for Bedrock (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+			},
+			"api_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"bedrock_url": {
 				Type:        schema.TypeString,
@@ -77,7 +95,10 @@ func resourceBedrockTargetCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
+	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 	bedrockUrl := d.Get("bedrock_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -119,7 +140,7 @@ func resourceBedrockTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	if rOut.Value != nil && rOut.Value.BedrockTargetDetails != nil {
 		if rOut.Value.BedrockTargetDetails.ApiKey != nil {
-			if err = d.Set("api_key", *rOut.Value.BedrockTargetDetails.ApiKey); err != nil {
+			if err = common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *rOut.Value.BedrockTargetDetails.ApiKey); err != nil {
 				return err
 			}
 		}
@@ -158,7 +179,10 @@ func resourceBedrockTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
+	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 	bedrockUrl := d.Get("bedrock_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -167,7 +191,7 @@ func resourceBedrockTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.TargetUpdateBedrock{Name: name, Token: &token}
-	common.GetAkeylessPtr(&body.ApiKey, apiKey)
+	common.SetOptionalString(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.BedrockUrl, bedrockUrl)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)

@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretMongo() *schema.Resource {
@@ -19,6 +21,10 @@ func resourceDynamicSecretMongo() *schema.Resource {
 		Delete:      resourceDynamicSecretMongoDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretMongoImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mongodb_password"), cty.GetAttrPath("mongodb_password_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mongodb_atlas_api_private_key"), cty.GetAttrPath("mongodb_atlas_api_private_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -59,6 +65,19 @@ func resourceDynamicSecretMongo() *schema.Resource {
 				Sensitive:   true,
 				Description: "MongoDB server password. You will prompted to provide a password if it will not appear in CLI parameters",
 			},
+			"mongodb_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mongodb_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "MongoDB server password (write-only, not stored in state). Requires Terraform 1.11+. Bump mongodb_password_wo_version to change it.",
+			},
+			"mongodb_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mongodb_password_wo"},
+				Description:  "Version trigger for mongodb_password_wo. Increment to update the password.",
+			},
 			"mongodb_host_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -89,6 +108,19 @@ func resourceDynamicSecretMongo() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "MongoDB Atlas private key",
+			},
+			"mongodb_atlas_api_private_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mongodb_atlas_api_private_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "MongoDB Atlas private key (write-only, not stored in state). Requires Terraform 1.11+. Bump mongodb_atlas_api_private_key_wo_version to change it.",
+			},
+			"mongodb_atlas_api_private_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mongodb_atlas_api_private_key_wo"},
+				Description:  "Version trigger for mongodb_atlas_api_private_key_wo. Increment to update the password.",
 			},
 			"mongodb_custom_data": {
 				Type:        schema.TypeString,
@@ -212,13 +244,19 @@ func resourceDynamicSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	mongodbRoles := d.Get("mongodb_roles").(string)
 	mongodbServerUri := d.Get("mongodb_server_uri").(string)
 	mongodbUsername := d.Get("mongodb_username").(string)
-	mongodbPassword := d.Get("mongodb_password").(string)
+	mongodbPassword, err := common.EffectiveSecretValue(d, "mongodb_password", "mongodb_password_wo")
+	if err != nil {
+		return err
+	}
 	mongodbHostPort := d.Get("mongodb_host_port").(string)
 	mongodbDefaultAuthDb := d.Get("mongodb_default_auth_db").(string)
 	mongodbUriOptions := d.Get("mongodb_uri_options").(string)
 	mongodbAtlasProjectId := d.Get("mongodb_atlas_project_id").(string)
 	mongodbAtlasApiPublicKey := d.Get("mongodb_atlas_api_public_key").(string)
-	mongodbAtlasApiPrivateKey := d.Get("mongodb_atlas_api_private_key").(string)
+	mongodbAtlasApiPrivateKey, err := common.EffectiveSecretValue(d, "mongodb_atlas_api_private_key", "mongodb_atlas_api_private_key_wo")
+	if err != nil {
+		return err
+	}
 	mongodbCustomData := d.Get("mongodb_custom_data").(string)
 	mongodbScopes := d.Get("mongodb_scopes").(string)
 	passwordLength := d.Get("password_length").(string)
@@ -324,7 +362,7 @@ func resourceDynamicSecretMongoRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.MongodbPassword != nil {
-		err = d.Set("mongodb_password", *rOut.MongodbPassword)
+		err = common.SetSecretFromRead(d, "mongodb_password", "mongodb_password_wo", "mongodb_password_wo_version", *rOut.MongodbPassword)
 		if err != nil {
 			return err
 		}
@@ -360,7 +398,7 @@ func resourceDynamicSecretMongoRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.MongodbAtlasApiPrivateKey != nil {
-		err = d.Set("mongodb_atlas_api_private_key", *rOut.MongodbAtlasApiPrivateKey)
+		err = common.SetSecretFromRead(d, "mongodb_atlas_api_private_key", "mongodb_atlas_api_private_key_wo", "mongodb_atlas_api_private_key_wo_version", *rOut.MongodbAtlasApiPrivateKey)
 		if err != nil {
 			return err
 		}
@@ -478,13 +516,19 @@ func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	mongodbRoles := d.Get("mongodb_roles").(string)
 	mongodbServerUri := d.Get("mongodb_server_uri").(string)
 	mongodbUsername := d.Get("mongodb_username").(string)
-	mongodbPassword := d.Get("mongodb_password").(string)
+	mongodbPassword, err := common.SecretValueForUpdate(d, "mongodb_password", "mongodb_password_wo")
+	if err != nil {
+		return err
+	}
 	mongodbHostPort := d.Get("mongodb_host_port").(string)
 	mongodbDefaultAuthDb := d.Get("mongodb_default_auth_db").(string)
 	mongodbUriOptions := d.Get("mongodb_uri_options").(string)
 	mongodbAtlasProjectId := d.Get("mongodb_atlas_project_id").(string)
 	mongodbAtlasApiPublicKey := d.Get("mongodb_atlas_api_public_key").(string)
-	mongodbAtlasApiPrivateKey := d.Get("mongodb_atlas_api_private_key").(string)
+	mongodbAtlasApiPrivateKey, err := common.SecretValueForUpdate(d, "mongodb_atlas_api_private_key", "mongodb_atlas_api_private_key_wo")
+	if err != nil {
+		return err
+	}
 	mongodbCustomData := d.Get("mongodb_custom_data").(string)
 	mongodbScopes := d.Get("mongodb_scopes").(string)
 	passwordLength := d.Get("password_length").(string)
@@ -521,13 +565,13 @@ func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MongodbRoles, mongodbRoles)
 	common.GetAkeylessPtr(&body.MongodbServerUri, mongodbServerUri)
 	common.GetAkeylessPtr(&body.MongodbUsername, mongodbUsername)
-	common.GetAkeylessPtr(&body.MongodbPassword, mongodbPassword)
+	common.SetOptionalString(&body.MongodbPassword, mongodbPassword)
 	common.GetAkeylessPtr(&body.MongodbHostPort, mongodbHostPort)
 	common.GetAkeylessPtr(&body.MongodbDefaultAuthDb, mongodbDefaultAuthDb)
 	common.GetAkeylessPtr(&body.MongodbUriOptions, mongodbUriOptions)
 	common.GetAkeylessPtr(&body.MongodbAtlasProjectId, mongodbAtlasProjectId)
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPublicKey, mongodbAtlasApiPublicKey)
-	common.GetAkeylessPtr(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
+	common.SetOptionalString(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
 	common.GetAkeylessPtr(&body.MongodbCustomData, mongodbCustomData)
 	common.GetAkeylessPtr(&body.MongodbScopes, mongodbScopes)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)

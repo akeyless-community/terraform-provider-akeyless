@@ -8,7 +8,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretRdp() *schema.Resource {
@@ -20,6 +22,9 @@ func resourceDynamicSecretRdp() *schema.Resource {
 		Delete:      resourceDynamicSecretRdpDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretRdpImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("rdp_admin_pwd"), cty.GetAttrPath("rdp_admin_pwd_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -52,6 +57,19 @@ func resourceDynamicSecretRdp() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "RDP Admin password",
+			},
+			"rdp_admin_pwd_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"rdp_admin_pwd_wo_version"},
+				WriteOnly:    true,
+				Description:  "rdp_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump rdp_admin_pwd_wo_version to change it.",
+			},
+			"rdp_admin_pwd_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"rdp_admin_pwd_wo"},
+				Description:  "Version trigger for rdp_admin_pwd_wo. Increment to update the value.",
 			},
 			"rdp_host_port": {
 				Type:        schema.TypeString,
@@ -200,7 +218,10 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 	rdpUserGroups := d.Get("rdp_user_groups").(string)
 	rdpHostName := d.Get("rdp_host_name").(string)
 	rdpAdminName := d.Get("rdp_admin_name").(string)
-	rdpAdminPwd := d.Get("rdp_admin_pwd").(string)
+	rdpAdminPwd, err := common.EffectiveSecretValue(d, "rdp_admin_pwd", "rdp_admin_pwd_wo")
+	if err != nil {
+		return err
+	}
 	rdpHostPort := d.Get("rdp_host_port").(string)
 	fixedUserOnly := d.Get("fixed_user_only").(string)
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
@@ -337,7 +358,7 @@ func resourceDynamicSecretRdpRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.AdminPwd != nil {
-		err = d.Set("rdp_admin_pwd", *rOut.AdminPwd)
+		err = common.SetSecretFromRead(d, "rdp_admin_pwd", "rdp_admin_pwd_wo", "rdp_admin_pwd_wo_version", *rOut.AdminPwd)
 		if err != nil {
 			return err
 		}
@@ -419,7 +440,10 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	rdpUserGroups := d.Get("rdp_user_groups").(string)
 	rdpHostName := d.Get("rdp_host_name").(string)
 	rdpAdminName := d.Get("rdp_admin_name").(string)
-	rdpAdminPwd := d.Get("rdp_admin_pwd").(string)
+	rdpAdminPwd, err := common.SecretValueForUpdate(d, "rdp_admin_pwd", "rdp_admin_pwd_wo")
+	if err != nil {
+		return err
+	}
 	rdpHostPort := d.Get("rdp_host_port").(string)
 	fixedUserOnly := d.Get("fixed_user_only").(string)
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
@@ -458,7 +482,7 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RdpUserGroups, rdpUserGroups)
 	common.GetAkeylessPtr(&body.RdpHostName, rdpHostName)
 	common.GetAkeylessPtr(&body.RdpAdminName, rdpAdminName)
-	common.GetAkeylessPtr(&body.RdpAdminPwd, rdpAdminPwd)
+	common.SetOptionalString(&body.RdpAdminPwd, rdpAdminPwd)
 	common.GetAkeylessPtr(&body.RdpHostPort, rdpHostPort)
 	common.GetAkeylessPtr(&body.FixedUserOnly, fixedUserOnly)
 	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)

@@ -7,7 +7,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretGitlab() *schema.Resource {
@@ -19,6 +21,10 @@ func resourceDynamicSecretGitlab() *schema.Resource {
 		Delete:      resourceDynamicSecretGitlabDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretGitlabImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gitlab_access_token"), cty.GetAttrPath("gitlab_access_token_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gitlab_certificate"), cty.GetAttrPath("gitlab_certificate_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -70,11 +76,37 @@ func resourceDynamicSecretGitlab() *schema.Resource {
 				Sensitive:   true,
 				Description: "Gitlab access token",
 			},
+			"gitlab_access_token_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"gitlab_access_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "Gitlab access token (write-only, not stored in state). Requires Terraform 1.11+. Bump gitlab_access_token_wo_version to change it.",
+			},
+			"gitlab_access_token_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"gitlab_access_token_wo"},
+				Description:  "Version trigger for gitlab_access_token_wo. Increment to update the password.",
+			},
 			"gitlab_certificate": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Gitlab tls certificate (base64 encoded)",
+			},
+			"gitlab_certificate_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"gitlab_certificate_wo_version"},
+				WriteOnly:    true,
+				Description:  "Gitlab tls certificate (base64 encoded) (write-only, not stored in state). Requires Terraform 1.11+. Bump gitlab_certificate_wo_version to change it.",
+			},
+			"gitlab_certificate_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"gitlab_certificate_wo"},
+				Description:  "Version trigger for gitlab_certificate_wo. Increment to update the password.",
 			},
 			"gitlab_url": {
 				Type:        schema.TypeString,
@@ -123,8 +155,14 @@ func resourceDynamicSecretGitlabCreate(d *schema.ResourceData, m interface{}) er
 	gitlabRole := d.Get("gitlab_role").(string)
 	gitlabTokenScopes := d.Get("gitlab_token_scopes").(string)
 	ttl := d.Get("ttl").(string)
-	gitlabAccessToken := d.Get("gitlab_access_token").(string)
-	gitlabCertificate := d.Get("gitlab_certificate").(string)
+	gitlabAccessToken, err := common.EffectiveSecretValue(d, "gitlab_access_token", "gitlab_access_token_wo")
+	if err != nil {
+		return err
+	}
+	gitlabCertificate, err := common.EffectiveSecretValue(d, "gitlab_certificate", "gitlab_certificate_wo")
+	if err != nil {
+		return err
+	}
 	gitlabUrl := d.Get("gitlab_url").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -198,13 +236,13 @@ func resourceDynamicSecretGitlabRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.GitlabAccessToken != nil {
-		err = d.Set("gitlab_access_token", *rOut.GitlabAccessToken)
+		err = common.SetSecretFromRead(d, "gitlab_access_token", "gitlab_access_token_wo", "gitlab_access_token_wo_version", *rOut.GitlabAccessToken)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.GitlabCertificate != nil {
-		err = d.Set("gitlab_certificate", *rOut.GitlabCertificate)
+		err = common.SetSecretFromRead(d, "gitlab_certificate", "gitlab_certificate_wo", "gitlab_certificate_wo_version", *rOut.GitlabCertificate)
 		if err != nil {
 			return err
 		}
@@ -298,8 +336,14 @@ func resourceDynamicSecretGitlabUpdate(d *schema.ResourceData, m interface{}) er
 	gitlabRole := d.Get("gitlab_role").(string)
 	gitlabTokenScopes := d.Get("gitlab_token_scopes").(string)
 	ttl := d.Get("ttl").(string)
-	gitlabAccessToken := d.Get("gitlab_access_token").(string)
-	gitlabCertificate := d.Get("gitlab_certificate").(string)
+	gitlabAccessToken, err := common.SecretValueForUpdate(d, "gitlab_access_token", "gitlab_access_token_wo")
+	if err != nil {
+		return err
+	}
+	gitlabCertificate, err := common.SecretValueForUpdate(d, "gitlab_certificate", "gitlab_certificate_wo")
+	if err != nil {
+		return err
+	}
 	gitlabUrl := d.Get("gitlab_url").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -318,8 +362,8 @@ func resourceDynamicSecretGitlabUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.GitlabRole, gitlabRole)
 	common.GetAkeylessPtr(&body.GitlabTokenScopes, gitlabTokenScopes)
 	common.GetAkeylessPtr(&body.Ttl, ttl)
-	common.GetAkeylessPtr(&body.GitlabAccessToken, gitlabAccessToken)
-	common.GetAkeylessPtr(&body.GitlabCertificate, gitlabCertificate)
+	common.SetOptionalString(&body.GitlabAccessToken, gitlabAccessToken)
+	common.SetOptionalString(&body.GitlabCertificate, gitlabCertificate)
 	common.GetAkeylessPtr(&body.GitlabUrl, gitlabUrl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.Description, description)

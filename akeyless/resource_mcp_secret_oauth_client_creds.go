@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceMcpSecretOAuthClientCreds() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceMcpSecretOAuthClientCreds() *schema.Resource {
 		Delete:      resourceMcpSecretDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceMcpSecretImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("oauth_client_secret"), cty.GetAttrPath("oauth_client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -42,6 +47,19 @@ func resourceMcpSecretOAuthClientCreds() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "OAuth client secret",
+			},
+			"oauth_client_secret_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"oauth_client_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "oauth_client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump oauth_client_secret_wo_version to change it.",
+			},
+			"oauth_client_secret_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"oauth_client_secret_wo"},
+				Description:  "Version trigger for oauth_client_secret_wo. Increment to update the value.",
 			},
 			"oauth_token_url": {
 				Type:        schema.TypeString,
@@ -123,7 +141,11 @@ func resourceMcpSecretOAuthClientCredsCreate(d *schema.ResourceData, m interface
 	}
 	common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
 	common.GetAkeylessPtr(&body.OauthClientId, d.Get("oauth_client_id").(string))
-	common.GetAkeylessPtr(&body.OauthClientSecret, d.Get("oauth_client_secret").(string))
+	oauthClientSecret, err := common.EffectiveSecretValue(d, "oauth_client_secret", "oauth_client_secret_wo")
+	if err != nil {
+		return err
+	}
+	common.GetAkeylessPtr(&body.OauthClientSecret, oauthClientSecret)
 	common.GetAkeylessPtr(&body.OauthTokenUrl, d.Get("oauth_token_url").(string))
 	common.GetAkeylessPtr(&body.OauthScopes, expandOptionalStringList(d, "oauth_scopes"))
 	common.GetAkeylessPtr(&body.ProtectionKey, d.Get("protection_key").(string))
@@ -164,14 +186,18 @@ func resourceMcpSecretOAuthClientCredsUpdate(d *schema.ResourceData, m interface
 	ctx := context.Background()
 	name := d.Id()
 
-	if d.HasChanges("url", "oauth_client_id", "oauth_client_secret", "oauth_token_url", "oauth_scopes", "protection_key", "keep_prev_version", "input_rule", "output_rule") {
+	if d.HasChanges("url", "oauth_client_id", "oauth_client_secret", "oauth_token_url", "oauth_scopes", "protection_key", "keep_prev_version", "input_rule", "output_rule", "oauth_client_secret_wo_version") {
 		body := akeyless_api.UpdateMcpSecretOAuthClientCreds{
 			Name:  name,
 			Token: &token,
 		}
 		common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
 		common.GetAkeylessPtr(&body.OauthClientId, d.Get("oauth_client_id").(string))
-		common.GetAkeylessPtr(&body.OauthClientSecret, d.Get("oauth_client_secret").(string))
+		oauthClientSecret, err := common.SecretValueForUpdate(d, "oauth_client_secret", "oauth_client_secret_wo")
+		if err != nil {
+			return err
+		}
+		common.SetOptionalString(&body.OauthClientSecret, oauthClientSecret)
 		common.GetAkeylessPtr(&body.OauthTokenUrl, d.Get("oauth_token_url").(string))
 		common.GetAkeylessPtr(&body.OauthScopes, expandOptionalStringList(d, "oauth_scopes"))
 		common.GetAkeylessPtr(&body.Key, d.Get("protection_key").(string))

@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretGithub() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceDynamicSecretGithub() *schema.Resource {
 		Delete:      resourceDynamicSecretGithubDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretGithubImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("github_app_private_key"), cty.GetAttrPath("github_app_private_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,6 +78,19 @@ func resourceDynamicSecretGithub() *schema.Resource {
 				Optional:    true,
 				Description: "App private key",
 			},
+			"github_app_private_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"github_app_private_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.",
+			},
+			"github_app_private_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"github_app_private_key_wo"},
+				Description:  "Version trigger for github_app_private_key_wo. Increment to update the value.",
+			},
 			"github_base_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -123,7 +141,10 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	installationRepository := d.Get("installation_repository").(string)
 	targetName := d.Get("target_name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey := d.Get("github_app_private_key").(string)
+	githubAppPrivateKey, err := common.EffectiveSecretValue(d, "github_app_private_key", "github_app_private_key_wo")
+	if err != nil {
+		return err
+	}
 	githubBaseUrl := d.Get("github_base_url").(string)
 	tokenPermissionsSet := d.Get("token_permissions").(*schema.Set)
 	tokenPermissions := common.ExpandStringList(tokenPermissionsSet.List())
@@ -212,7 +233,7 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.GithubAppPrivateKey != nil {
-		err = d.Set("github_app_private_key", *rOut.GithubAppPrivateKey)
+		err = common.SetSecretFromRead(d, "github_app_private_key", "github_app_private_key_wo", "github_app_private_key_wo_version", *rOut.GithubAppPrivateKey)
 		if err != nil {
 			return err
 		}
@@ -321,7 +342,10 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	installationRepository := d.Get("installation_repository").(string)
 	targetName := d.Get("target_name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey := d.Get("github_app_private_key").(string)
+	githubAppPrivateKey, err := common.SecretValueForUpdate(d, "github_app_private_key", "github_app_private_key_wo")
+	if err != nil {
+		return err
+	}
 	githubBaseUrl := d.Get("github_base_url").(string)
 	tokenPermissionsSet := d.Get("token_permissions").(*schema.Set)
 	tokenPermissions := common.ExpandStringList(tokenPermissionsSet.List())
@@ -342,7 +366,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.InstallationRepository, installationRepository)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
-	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
+	common.SetOptionalString(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)

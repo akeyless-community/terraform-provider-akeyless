@@ -5,7 +5,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGlobalsignAtlasTarget() *schema.Resource {
@@ -17,6 +19,12 @@ func resourceGlobalsignAtlasTarget() *schema.Resource {
 		Delete:      resourceGlobalsignAtlasTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGlobalsignAtlasTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mtls_cert_data_base64"), cty.GetAttrPath("mtls_cert_data_base64_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_secret"), cty.GetAttrPath("api_secret_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mtls_key_data_base64"), cty.GetAttrPath("mtls_key_data_base64_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -30,22 +38,74 @@ func resourceGlobalsignAtlasTarget() *schema.Resource {
 				Required:    true,
 				Description: "API Key of the GlobalSign Atlas account",
 			},
+			"api_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+			},
+			"api_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
+			},
 			"api_secret": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
 				Description: "API Secret of the GlobalSign Atlas account",
 			},
+			"api_secret_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "API Secret of the GlobalSign Atlas account (write-only, not stored in state). Requires Terraform 1.11+. Bump api_secret_wo_version to change it.",
+			},
+			"api_secret_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_secret_wo"},
+				Description:  "Version trigger for api_secret_wo. Increment to update the API secret.",
+			},
 			"mtls_cert_data_base64": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Mutual TLS Certificate contents of the GlobalSign Atlas account encoded in base64",
+			},
+			"mtls_cert_data_base64_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mtls_cert_data_base64_wo_version"},
+				WriteOnly:    true,
+				Description:  "mtls_cert_data_base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump mtls_cert_data_base64_wo_version to change it.",
+			},
+			"mtls_cert_data_base64_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mtls_cert_data_base64_wo"},
+				Description:  "Version trigger for mtls_cert_data_base64_wo. Increment to update the value.",
 			},
 			"mtls_key_data_base64": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Mutual TLS Key contents of the GlobalSign Atlas account encoded in base64",
+			},
+			"mtls_key_data_base64_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mtls_key_data_base64_wo_version"},
+				WriteOnly:    true,
+				Description:  "Mutual TLS Key contents of the GlobalSign Atlas account encoded in base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump mtls_key_data_base64_wo_version to change it.",
+			},
+			"mtls_key_data_base64_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mtls_key_data_base64_wo"},
+				Description:  "Version trigger for mtls_key_data_base64_wo. Increment to update the value.",
 			},
 			"timeout": {
 				Type:             schema.TypeString,
@@ -86,10 +146,22 @@ func resourceGlobalsignAtlasTargetCreate(d *schema.ResourceData, m interface{}) 
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
-	apiSecret := d.Get("api_secret").(string)
-	mtlsCertDataBase64 := d.Get("mtls_cert_data_base64").(string)
-	mtlsKeyDataBase64 := d.Get("mtls_key_data_base64").(string)
+	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
+	apiSecret, err := common.EffectiveSecretValue(d, "api_secret", "api_secret_wo")
+	if err != nil {
+		return err
+	}
+	mtlsCertDataBase64, err := common.EffectiveSecretValue(d, "mtls_cert_data_base64", "mtls_cert_data_base64_wo")
+	if err != nil {
+		return err
+	}
+	mtlsKeyDataBase64, err := common.EffectiveSecretValue(d, "mtls_key_data_base64", "mtls_key_data_base64_wo")
+	if err != nil {
+		return err
+	}
 	timeout := d.Get("timeout").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
@@ -142,25 +214,25 @@ func resourceGlobalsignAtlasTargetRead(d *schema.ResourceData, m interface{}) er
 
 		if targetDetails.GlobalsignAtlasTargetDetails != nil {
 			if targetDetails.GlobalsignAtlasTargetDetails.ApiKey != nil {
-				err := d.Set("api_key", *targetDetails.GlobalsignAtlasTargetDetails.ApiKey)
+				err := common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *targetDetails.GlobalsignAtlasTargetDetails.ApiKey)
 				if err != nil {
 					return err
 				}
 			}
 			if targetDetails.GlobalsignAtlasTargetDetails.ApiSecret != nil {
-				err := d.Set("api_secret", *targetDetails.GlobalsignAtlasTargetDetails.ApiSecret)
+				err := common.SetSecretFromRead(d, "api_secret", "api_secret_wo", "api_secret_wo_version", *targetDetails.GlobalsignAtlasTargetDetails.ApiSecret)
 				if err != nil {
 					return err
 				}
 			}
 			if targetDetails.GlobalsignAtlasTargetDetails.MtlsCert != nil {
-				err := d.Set("mtls_cert_data_base64", *targetDetails.GlobalsignAtlasTargetDetails.MtlsCert)
+				err := common.SetSecretFromRead(d, "mtls_cert_data_base64", "mtls_cert_data_base64_wo", "mtls_cert_data_base64_wo_version", *targetDetails.GlobalsignAtlasTargetDetails.MtlsCert)
 				if err != nil {
 					return err
 				}
 			}
 			if targetDetails.GlobalsignAtlasTargetDetails.MtlsKey != nil {
-				err := d.Set("mtls_key_data_base64", *targetDetails.GlobalsignAtlasTargetDetails.MtlsKey)
+				err := common.SetSecretFromRead(d, "mtls_key_data_base64", "mtls_key_data_base64_wo", "mtls_key_data_base64_wo_version", *targetDetails.GlobalsignAtlasTargetDetails.MtlsKey)
 				if err != nil {
 					return err
 				}
@@ -205,10 +277,22 @@ func resourceGlobalsignAtlasTargetUpdate(d *schema.ResourceData, m interface{}) 
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey := d.Get("api_key").(string)
-	apiSecret := d.Get("api_secret").(string)
-	mtlsCertDataBase64 := d.Get("mtls_cert_data_base64").(string)
-	mtlsKeyDataBase64 := d.Get("mtls_key_data_base64").(string)
+	apiKey, err := common.RequiredSecretValueForUpdate(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
+	apiSecret, err := common.RequiredSecretValueForUpdate(d, "api_secret", "api_secret_wo")
+	if err != nil {
+		return err
+	}
+	mtlsCertDataBase64, err := common.SecretValueForUpdate(d, "mtls_cert_data_base64", "mtls_cert_data_base64_wo")
+	if err != nil {
+		return err
+	}
+	mtlsKeyDataBase64, err := common.SecretValueForUpdate(d, "mtls_key_data_base64", "mtls_key_data_base64_wo")
+	if err != nil {
+		return err
+	}
 	timeout := d.Get("timeout").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
@@ -221,8 +305,8 @@ func resourceGlobalsignAtlasTargetUpdate(d *schema.ResourceData, m interface{}) 
 		ApiSecret: apiSecret,
 		Token:     &token,
 	}
-	common.GetAkeylessPtr(&body.MtlsCertDataBase64, mtlsCertDataBase64)
-	common.GetAkeylessPtr(&body.MtlsKeyDataBase64, mtlsKeyDataBase64)
+	common.SetOptionalString(&body.MtlsCertDataBase64, mtlsCertDataBase64)
+	common.SetOptionalString(&body.MtlsKeyDataBase64, mtlsKeyDataBase64)
 	common.GetAkeylessPtr(&body.Timeout, timeout)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

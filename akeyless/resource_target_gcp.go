@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGcpTarget() *schema.Resource {
@@ -18,6 +20,9 @@ func resourceGcpTarget() *schema.Resource {
 		Delete:      resourceGcpTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGcpTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gcp_key"), cty.GetAttrPath("gcp_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -37,6 +42,19 @@ func resourceGcpTarget() *schema.Resource {
 				Sensitive:   true,
 				Optional:    true,
 				Description: "Base64-encoded service account private key text",
+			},
+			"gcp_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"gcp_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.",
+			},
+			"gcp_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"gcp_key_wo"},
+				Description:  "Version trigger for gcp_key_wo. Increment to update the value.",
 			},
 			"use_gw_cloud_identity": {
 				Type:        schema.TypeBool,
@@ -77,7 +95,10 @@ func resourceGcpTargetCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	gcpKey := d.Get("gcp_key").(string)
+	gcpKey, err := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
+	if err != nil {
+		return err
+	}
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
@@ -130,7 +151,7 @@ func resourceGcpTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if rOut.Value.GcpTargetDetails.GcpServiceAccountKey != nil {
-			err = d.Set("gcp_key", *rOut.Value.GcpTargetDetails.GcpServiceAccountKeyBase64)
+			err = common.SetSecretFromRead(d, "gcp_key", "gcp_key_wo", "gcp_key_wo_version", *rOut.Value.GcpTargetDetails.GcpServiceAccountKeyBase64)
 			if err != nil {
 				return err
 			}
@@ -170,7 +191,10 @@ func resourceGcpTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	gcpKey := d.Get("gcp_key").(string)
+	gcpKey, err := common.SecretValueForUpdate(d, "gcp_key", "gcp_key_wo")
+	if err != nil {
+		return err
+	}
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
@@ -181,7 +205,7 @@ func resourceGcpTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
+	common.SetOptionalString(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

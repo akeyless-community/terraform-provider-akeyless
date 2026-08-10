@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceSalesforceTarget() *schema.Resource {
@@ -18,6 +20,13 @@ func resourceSalesforceTarget() *schema.Resource {
 		Delete:      resourceSalesforceTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSalesforceTargetImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("ca_cert_data"), cty.GetAttrPath("ca_cert_data_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("app_private_key_data"), cty.GetAttrPath("app_private_key_data_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("security_token"), cty.GetAttrPath("security_token_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("client_secret"), cty.GetAttrPath("client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -52,11 +61,37 @@ func resourceSalesforceTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "Client secret of the oauth2 app to use for connecting to Salesforce (required for password flow)",
 			},
+			"client_secret_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"client_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
+			},
+			"client_secret_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"client_secret_wo"},
+				Description:  "Version trigger for client_secret_wo. Increment to update the value.",
+			},
 			"password": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "The password of the user attached to the oauth2 app used for connecting to Salesforce (required for user-password flow)",
+			},
+			"password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"password_wo_version"},
+				WriteOnly:    true,
+				Description:  "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+			},
+			"password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
+				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"security_token": {
 				Type:        schema.TypeString,
@@ -64,16 +99,55 @@ func resourceSalesforceTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "The security token of the user attached to the oauth2 app used for connecting to Salesforce  (required for user-password flow)",
 			},
+			"security_token_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"security_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "security_token (write-only, not stored in state). Requires Terraform 1.11+. Bump security_token_wo_version to change it.",
+			},
+			"security_token_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"security_token_wo"},
+				Description:  "Version trigger for security_token_wo. Increment to update the value.",
+			},
 			"app_private_key_data": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Base64 encoded PEM of the connected app private key (relevant for JWT auth only)",
 			},
+			"app_private_key_data_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"app_private_key_data_wo_version"},
+				WriteOnly:    true,
+				Description:  "app_private_key_data (write-only, not stored in state). Requires Terraform 1.11+. Bump app_private_key_data_wo_version to change it.",
+			},
+			"app_private_key_data_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"app_private_key_data_wo"},
+				Description:  "Version trigger for app_private_key_data_wo. Increment to update the value.",
+			},
 			"ca_cert_data": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Base64 encoded PEM cert to use when uploading a new key to Salesforce",
+			},
+			"ca_cert_data_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"ca_cert_data_wo_version"},
+				WriteOnly:    true,
+				Description:  "ca_cert_data (write-only, not stored in state). Requires Terraform 1.11+. Bump ca_cert_data_wo_version to change it.",
+			},
+			"ca_cert_data_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"ca_cert_data_wo"},
+				Description:  "Version trigger for ca_cert_data_wo. Increment to update the value.",
 			},
 			"ca_cert_name": {
 				Type:        schema.TypeString,
@@ -116,11 +190,26 @@ func resourceSalesforceTargetCreate(d *schema.ResourceData, m interface{}) error
 	clientId := d.Get("client_id").(string)
 	email := d.Get("email").(string)
 	tenantUrl := d.Get("tenant_url").(string)
-	clientSecret := d.Get("client_secret").(string)
-	password := d.Get("password").(string)
-	securityToken := d.Get("security_token").(string)
-	appPrivateKeyData := d.Get("app_private_key_data").(string)
-	caCertData := d.Get("ca_cert_data").(string)
+	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
+	if err != nil {
+		return err
+	}
+	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	if err != nil {
+		return err
+	}
+	securityToken, err := common.EffectiveSecretValue(d, "security_token", "security_token_wo")
+	if err != nil {
+		return err
+	}
+	appPrivateKeyData, err := common.EffectiveSecretValue(d, "app_private_key_data", "app_private_key_data_wo")
+	if err != nil {
+		return err
+	}
+	caCertData, err := common.EffectiveSecretValue(d, "ca_cert_data", "ca_cert_data_wo")
+	if err != nil {
+		return err
+	}
 	caCertName := d.Get("ca_cert_name").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
@@ -204,19 +293,19 @@ func resourceSalesforceTargetRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if targetDetails.SalesforceTargetDetails.ClientSecret != nil {
-				err := d.Set("client_secret", *targetDetails.SalesforceTargetDetails.ClientSecret)
+				err := common.SetSecretFromRead(d, "client_secret", "client_secret_wo", "client_secret_wo_version", *targetDetails.SalesforceTargetDetails.ClientSecret)
 				if err != nil {
 					return err
 				}
 			}
 			if targetDetails.SalesforceTargetDetails.Password != nil {
-				err := d.Set("password", *targetDetails.SalesforceTargetDetails.Password)
+				err := common.SetSecretFromRead(d, "password", "password_wo", "password_wo_version", *targetDetails.SalesforceTargetDetails.Password)
 				if err != nil {
 					return err
 				}
 			}
 			if targetDetails.SalesforceTargetDetails.SecurityToken != nil {
-				err := d.Set("security_token", *targetDetails.SalesforceTargetDetails.SecurityToken)
+				err := common.SetSecretFromRead(d, "security_token", "security_token_wo", "security_token_wo_version", *targetDetails.SalesforceTargetDetails.SecurityToken)
 				if err != nil {
 					return err
 				}
@@ -265,11 +354,26 @@ func resourceSalesforceTargetUpdate(d *schema.ResourceData, m interface{}) error
 	clientId := d.Get("client_id").(string)
 	email := d.Get("email").(string)
 	tenantUrl := d.Get("tenant_url").(string)
-	clientSecret := d.Get("client_secret").(string)
-	password := d.Get("password").(string)
-	securityToken := d.Get("security_token").(string)
-	appPrivateKeyData := d.Get("app_private_key_data").(string)
-	caCertData := d.Get("ca_cert_data").(string)
+	clientSecret, err := common.SecretValueForUpdate(d, "client_secret", "client_secret_wo")
+	if err != nil {
+		return err
+	}
+	password, err := common.SecretValueForUpdate(d, "password", "password_wo")
+	if err != nil {
+		return err
+	}
+	securityToken, err := common.SecretValueForUpdate(d, "security_token", "security_token_wo")
+	if err != nil {
+		return err
+	}
+	appPrivateKeyData, err := common.SecretValueForUpdate(d, "app_private_key_data", "app_private_key_data_wo")
+	if err != nil {
+		return err
+	}
+	caCertData, err := common.SecretValueForUpdate(d, "ca_cert_data", "ca_cert_data_wo")
+	if err != nil {
+		return err
+	}
 	caCertName := d.Get("ca_cert_name").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
@@ -284,11 +388,11 @@ func resourceSalesforceTargetUpdate(d *schema.ResourceData, m interface{}) error
 		TenantUrl: tenantUrl,
 		Token:     &token,
 	}
-	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
-	common.GetAkeylessPtr(&body.Password, password)
-	common.GetAkeylessPtr(&body.SecurityToken, securityToken)
-	common.GetAkeylessPtr(&body.AppPrivateKeyData, appPrivateKeyData)
-	common.GetAkeylessPtr(&body.CaCertData, caCertData)
+	common.SetOptionalString(&body.ClientSecret, clientSecret)
+	common.SetOptionalString(&body.Password, password)
+	common.SetOptionalString(&body.SecurityToken, securityToken)
+	common.SetOptionalString(&body.AppPrivateKeyData, appPrivateKeyData)
+	common.SetOptionalString(&body.CaCertData, caCertData)
 	common.GetAkeylessPtr(&body.CaCertName, caCertName)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

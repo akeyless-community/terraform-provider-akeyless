@@ -6,7 +6,9 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceRotatedSecretSnowflake() *schema.Resource {
@@ -18,6 +20,10 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 		Delete:      resourceRotatedSecretSnowflakeDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRotatedSecretSnowflakeImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("rotated_password"), cty.GetAttrPath("rotated_password_wo")),
+			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("private_key"), cty.GetAttrPath("private_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -58,6 +64,19 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "rotated-username password (relevant only for rotator-type=password)",
+			},
+			"rotated_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
+			},
+			"rotated_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo"},
+				Description:  "Version trigger for rotated_password_wo. Increment to update the value.",
 			},
 			"auto_rotate": {
 				Type:        schema.TypeString,
@@ -127,6 +146,19 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 				Sensitive:   true,
 				Description: "RSA Private key (base64 encoded) to rotate (relevant only for rotator-type=key)",
 			},
+			"private_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"private_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "RSA Private key (base64 encoded) to rotate (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_wo_version to change it.",
+			},
+			"private_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"private_key_wo"},
+				Description:  "Version trigger for private_key_wo. Increment to update the value.",
+			},
 			"private_key_file_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -168,7 +200,10 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword := d.Get("rotated_password").(string)
+	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
+	if err != nil {
+		return err
+	}
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
 	itemCustomFields := make(map[string]string)
@@ -176,7 +211,10 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 		itemCustomFields[k] = v.(string)
 	}
 	maxVersions := d.Get("max_versions").(string)
-	privateKey := d.Get("private_key").(string)
+	privateKey, err := common.EffectiveSecretValue(d, "private_key", "private_key_wo")
+	if err != nil {
+		return err
+	}
 	privateKeyFileName := d.Get("private_key_file_name").(string)
 	rotationEventInList := d.Get("rotation_event_in").([]interface{})
 	rotationEventIn := common.ExpandStringList(rotationEventInList)
@@ -354,7 +392,7 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 					}
 				}
 				if password, ok := value["password"]; ok {
-					err := d.Set("rotated_password", password.(string))
+					err := common.SetSecretFromRead(d, "rotated_password", "rotated_password_wo", "rotated_password_wo_version", password.(string))
 					if err != nil {
 						return err
 					}
@@ -393,7 +431,10 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword := d.Get("rotated_password").(string)
+	rotatedPassword, err := common.SecretValueForUpdate(d, "rotated_password", "rotated_password_wo")
+	if err != nil {
+		return err
+	}
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
@@ -403,7 +444,10 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 		itemCustomFields[k] = v.(string)
 	}
 	maxVersions := d.Get("max_versions").(string)
-	privateKey := d.Get("private_key").(string)
+	privateKey, err := common.SecretValueForUpdate(d, "private_key", "private_key_wo")
+	if err != nil {
+		return err
+	}
 	privateKeyFileName := d.Get("private_key_file_name").(string)
 	rotationEventInList := d.Get("rotation_event_in").([]interface{})
 	rotationEventIn := common.ExpandStringList(rotationEventInList)
@@ -430,7 +474,7 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
-	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
+	common.SetOptionalString(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
@@ -438,7 +482,7 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.ItemCustomFields, itemCustomFields)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
-	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
+	common.SetOptionalString(&body.PrivateKey, privateKey)
 	common.GetAkeylessPtr(&body.PrivateKeyFileName, privateKeyFileName)
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
