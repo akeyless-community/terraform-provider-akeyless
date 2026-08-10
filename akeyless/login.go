@@ -110,8 +110,9 @@ var emailLoginSchema = &schema.Schema{
 				Optional: true,
 			},
 			"admin_password": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 		},
 	},

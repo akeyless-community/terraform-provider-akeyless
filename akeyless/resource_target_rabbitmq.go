@@ -46,6 +46,7 @@ func resourceRabbitmqTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"rabbitmq_server_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "rabbitmq_server_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_server_password_wo_version to change it.",
 			},

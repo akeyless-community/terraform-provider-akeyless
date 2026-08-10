@@ -108,6 +108,7 @@ func resourceDynamicSecretPing() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"ping_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "ping_password (write-only, not stored in state). Requires Terraform 1.11+. Bump ping_password_wo_version to change it.",
 			},

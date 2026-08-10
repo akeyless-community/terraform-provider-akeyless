@@ -13,7 +13,14 @@ import (
 // callers should treat that as "WO not present" and fall back.
 func writeOnlyRaw(d *schema.ResourceData, woField string) (string, bool) {
 	raw, diags := d.GetRawConfigAt(cty.GetAttrPath(woField))
-	if diags.HasError() || raw.IsNull() {
+	if diags.HasError() {
+		return "", false
+	}
+	return rawString(raw)
+}
+
+func rawString(raw cty.Value) (string, bool) {
+	if raw.IsNull() || !raw.IsKnown() || raw.Type() != cty.String {
 		return "", false
 	}
 	return raw.AsString(), true

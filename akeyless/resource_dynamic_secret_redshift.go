@@ -56,6 +56,7 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"redshift_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "redshift_password (write-only, not stored in state). Requires Terraform 1.11+. Bump redshift_password_wo_version to change it.",
 			},

@@ -45,6 +45,7 @@ func resourceDockerhubTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"dockerhub_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "Password for docker repository (write-only, not stored in state). Requires Terraform 1.11+. Bump dockerhub_password_wo_version to change it.",
 			},

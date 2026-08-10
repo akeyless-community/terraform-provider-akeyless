@@ -57,6 +57,7 @@ func resourceDynamicSecretAzure() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"azure_client_secret_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "Azure Client Secret (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_client_secret_wo_version to change it.",
 			},

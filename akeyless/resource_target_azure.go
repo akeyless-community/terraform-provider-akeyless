@@ -53,6 +53,7 @@ func resourceAzureTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"client_secret_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
 			},

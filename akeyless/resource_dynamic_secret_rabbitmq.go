@@ -70,6 +70,7 @@ func resourceDynamicSecretRabbitmq() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"rabbitmq_admin_pwd_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "rabbitmq_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_admin_pwd_wo_version to change it.",
 			},

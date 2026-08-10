@@ -46,6 +46,7 @@ func resourceGithubTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"github_app_private_key_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.",
 			},

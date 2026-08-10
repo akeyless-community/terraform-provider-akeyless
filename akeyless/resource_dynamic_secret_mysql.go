@@ -57,6 +57,7 @@ func resourceDynamicSecretMysql() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"mysql_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "MySQL password (write-only, not stored in state). Requires Terraform 1.11+. Bump mysql_password_wo_version to change it.",
 			},

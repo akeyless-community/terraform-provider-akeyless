@@ -52,6 +52,7 @@ func resourceMcpSecretOAuthClientCreds() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"oauth_client_secret_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "oauth_client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump oauth_client_secret_wo_version to change it.",
 			},

@@ -57,6 +57,7 @@ func resourceDynamicSecretMssql() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"mssql_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "MSSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump mssql_password_wo_version to change it.",
 			},

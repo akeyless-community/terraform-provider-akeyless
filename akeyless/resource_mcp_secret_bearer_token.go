@@ -47,6 +47,7 @@ func resourceMcpSecretBearerToken() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"bearer_token_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "bearer_token (write-only, not stored in state). Requires Terraform 1.11+. Bump bearer_token_wo_version to change it.",
 			},

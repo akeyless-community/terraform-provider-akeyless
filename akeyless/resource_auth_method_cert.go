@@ -77,6 +77,7 @@ func resourceAuthMethodCert() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"certificate_data_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "certificate_data (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_data_wo_version to change it.",
 			},

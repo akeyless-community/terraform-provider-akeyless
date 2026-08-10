@@ -46,6 +46,7 @@ func resourceHashiVaultTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"vault_token_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "Vault access token with sufficient permissions (write-only, not stored in state). Requires Terraform 1.11+. Bump vault_token_wo_version to change it.",
 			},

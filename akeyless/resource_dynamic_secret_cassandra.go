@@ -56,6 +56,7 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"cassandra_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "Cassandra Password (write-only, not stored in state). Requires Terraform 1.11+. Bump cassandra_password_wo_version to change it.",
 			},

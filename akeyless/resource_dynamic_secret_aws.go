@@ -52,6 +52,7 @@ func resourceDynamicSecretAws() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"aws_access_secret_key_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "Access Secret Key (write-only, not stored in state). Requires Terraform 1.11+. Bump aws_access_secret_key_wo_version to change it.",
 			},

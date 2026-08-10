@@ -87,7 +87,7 @@ func (p *Provider) Schema(_ context.Context, _ provider.SchemaRequest, resp *pro
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"admin_email":    schema.StringAttribute{Optional: true},
-						"admin_password": schema.StringAttribute{Optional: true},
+						"admin_password": schema.StringAttribute{Optional: true, Sensitive: true},
 					},
 				},
 			},

@@ -63,6 +63,7 @@ func resourceDynamicSecretChef() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"chef_server_key_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "Server key (write-only, not stored in state). Requires Terraform 1.11+. Bump chef_server_key_wo_version to change it.",
 			},

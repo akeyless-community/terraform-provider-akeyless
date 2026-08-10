@@ -68,6 +68,7 @@ func resourceRotatedSecretHanaDb() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"rotated_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
 			},

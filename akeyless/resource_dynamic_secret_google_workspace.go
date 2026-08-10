@@ -52,6 +52,7 @@ func resourceDynamicSecretGoogleWorkspace() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"gcp_key_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.",
 			},

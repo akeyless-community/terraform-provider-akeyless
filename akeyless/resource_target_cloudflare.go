@@ -46,6 +46,7 @@ func resourceCloudflareTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"api_token_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "Cloudflare API token (write-only, not stored in state). Requires Terraform 1.11+. Bump api_token_wo_version to change it.",
 			},

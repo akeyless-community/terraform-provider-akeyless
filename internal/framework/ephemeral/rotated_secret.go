@@ -3,6 +3,7 @@ package ephemeral
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
@@ -76,8 +77,11 @@ func (r *rotatedSecretEphemeral) Open(ctx context.Context, req ephemeral.OpenReq
 
 	rOut, _, err := r.client.Client.GetRotatedSecretValue(ctx).Body(body).Execute()
 	if err != nil {
-		resp.Diagnostics.AddError("Get rotated secret failed", err.Error())
-		return
+		var apiErr akeyless_api.GenericOpenAPIError
+		if !errors.As(err, &apiErr) || json.Unmarshal(apiErr.Body(), &rOut) != nil {
+			resp.Diagnostics.AddError("Get rotated secret failed", err.Error())
+			return
+		}
 	}
 	b, err := json.Marshal(rOut)
 	if err != nil {

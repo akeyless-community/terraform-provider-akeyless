@@ -40,6 +40,7 @@ func resourceGeminiTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"api_key_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "API key for Gemini (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
 			},

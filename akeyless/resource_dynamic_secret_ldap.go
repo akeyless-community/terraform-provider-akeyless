@@ -63,6 +63,7 @@ func resourceDynamicSecretLdap() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"bind_dn_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "Bind DN Password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.",
 			},

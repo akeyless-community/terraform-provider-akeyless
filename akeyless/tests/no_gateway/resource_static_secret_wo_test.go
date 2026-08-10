@@ -45,6 +45,13 @@ func TestStaticSecretWriteOnly(t *testing.T) {
 	secretPath := testPath(secretName)
 	resourceAddr := "akeyless_static_secret." + secretName
 
+	configLegacy := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path  = "%v"
+			value = "legacy-secret"
+		}
+	`, secretName, secretPath)
+
 	config := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
 			path             = "%v"
@@ -65,6 +72,10 @@ func TestStaticSecretWriteOnly(t *testing.T) {
 		ProviderFactories: providerFactories,
 		CheckDestroy:      checkStaticSecretDestroyed,
 		Steps: []resource.TestStep{
+			{
+				Config: configLegacy,
+				Check:  checkSecretValueRemotely(secretPath, "legacy-secret"),
+			},
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(

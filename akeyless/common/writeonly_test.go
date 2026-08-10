@@ -3,6 +3,7 @@ package common
 import (
 	"testing"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -105,6 +106,12 @@ func TestSecretValueForUpdate_PreservesLegacyValue(t *testing.T) {
 	}
 	if value == nil || *value != "legacy-secret" {
 		t.Fatalf("expected legacy value, got %v", value)
+	}
+}
+
+func TestRawString_UnknownValue(t *testing.T) {
+	if _, ok := rawString(cty.UnknownVal(cty.String)); ok {
+		t.Fatal("expected unknown value to be ignored")
 	}
 }
 

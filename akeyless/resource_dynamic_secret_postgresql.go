@@ -56,6 +56,7 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"postgresql_password_wo_version"},
+				Sensitive:    true,
 				WriteOnly:    true,
 				Description:  "PostgreSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump postgresql_password_wo_version to change it.",
 			},
