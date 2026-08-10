@@ -60,15 +60,17 @@ func resourceDynamicSecretChef() *schema.Resource {
 				Description: "Server key",
 			},
 			"chef_server_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Server key (write-only, not stored in state). Requires Terraform 1.11+. Bump chef_server_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"chef_server_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "Server key (write-only, not stored in state). Requires Terraform 1.11+. Bump chef_server_key_wo_version to change it.",
 			},
 			"chef_server_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for chef_server_key_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"chef_server_key_wo"},
+				Description:  "Version trigger for chef_server_key_wo. Increment to update the password.",
 			},
 			"chef_server_url": {
 				Type:        schema.TypeString,
@@ -310,7 +312,7 @@ func resourceDynamicSecretChefUpdate(d *schema.ResourceData, m interface{}) erro
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	chefOrgs := d.Get("chef_orgs").(string)
-	chefServerKey, err := common.EffectiveSecretValue(d, "chef_server_key", "chef_server_key_wo")
+	chefServerKey, err := common.SecretValueForUpdate(d, "chef_server_key", "chef_server_key_wo")
 	if err != nil {
 		return err
 	}
@@ -333,7 +335,7 @@ func resourceDynamicSecretChefUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ChefOrgs, chefOrgs)
-	common.GetAkeylessPtr(&body.ChefServerKey, chefServerKey)
+	common.SetOptionalString(&body.ChefServerKey, chefServerKey)
 	common.GetAkeylessPtr(&body.ChefServerUrl, chefServerUrl)
 	common.GetAkeylessPtr(&body.ChefServerUsername, chefServerUsername)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)

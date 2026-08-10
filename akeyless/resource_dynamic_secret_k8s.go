@@ -50,15 +50,17 @@ func resourceDynamicSecretK8s() *schema.Resource {
 				Description: "K8S cluster CA certificate",
 			},
 			"k8s_cluster_ca_cert_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "K8S cluster CA certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_ca_cert_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"k8s_cluster_ca_cert_wo_version"},
+				WriteOnly:    true,
+				Description:  "K8S cluster CA certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_ca_cert_wo_version to change it.",
 			},
 			"k8s_cluster_ca_cert_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for k8s_cluster_ca_cert_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"k8s_cluster_ca_cert_wo"},
+				Description:  "Version trigger for k8s_cluster_ca_cert_wo. Increment to update the password.",
 			},
 			"k8s_cluster_token": {
 				Type:        schema.TypeString,
@@ -67,15 +69,17 @@ func resourceDynamicSecretK8s() *schema.Resource {
 				Description: "K8S cluster Bearer token",
 			},
 			"k8s_cluster_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "K8S cluster Bearer token (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"k8s_cluster_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "K8S cluster Bearer token (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_token_wo_version to change it.",
 			},
 			"k8s_cluster_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for k8s_cluster_token_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"k8s_cluster_token_wo"},
+				Description:  "Version trigger for k8s_cluster_token_wo. Increment to update the password.",
 			},
 			"k8s_cluster_name": {
 				Type:        schema.TypeString,
@@ -495,11 +499,11 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
-	k8sClusterCaCert, err := common.EffectiveSecretValue(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
+	k8sClusterCaCert, err := common.SecretValueForUpdate(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
 	if err != nil {
 		return err
 	}
-	k8sClusterToken, err := common.EffectiveSecretValue(d, "k8s_cluster_token", "k8s_cluster_token_wo")
+	k8sClusterToken, err := common.SecretValueForUpdate(d, "k8s_cluster_token", "k8s_cluster_token_wo")
 	if err != nil {
 		return err
 	}
@@ -544,8 +548,8 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.K8sClusterEndpoint, k8sClusterEndpoint)
-	common.GetAkeylessPtr(&body.K8sClusterCaCert, k8sClusterCaCert)
-	common.GetAkeylessPtr(&body.K8sClusterToken, k8sClusterToken)
+	common.SetOptionalString(&body.K8sClusterCaCert, k8sClusterCaCert)
+	common.SetOptionalString(&body.K8sClusterToken, k8sClusterToken)
 	common.GetAkeylessPtr(&body.K8sClusterName, k8sClusterName)
 	common.GetAkeylessPtr(&body.K8sServiceAccount, k8sServiceAccount)
 	common.GetAkeylessPtr(&body.K8sNamespace, k8sNamespace)

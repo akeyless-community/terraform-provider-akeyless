@@ -39,15 +39,17 @@ func resourceGlobalsignAtlasTarget() *schema.Resource {
 				Description: "API Key of the GlobalSign Atlas account",
 			},
 			"api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
 			},
 			"api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"api_secret": {
 				Type:        schema.TypeString,
@@ -56,15 +58,17 @@ func resourceGlobalsignAtlasTarget() *schema.Resource {
 				Description: "API Secret of the GlobalSign Atlas account",
 			},
 			"api_secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "API Secret of the GlobalSign Atlas account (write-only, not stored in state). Requires Terraform 1.11+. Bump api_secret_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "API Secret of the GlobalSign Atlas account (write-only, not stored in state). Requires Terraform 1.11+. Bump api_secret_wo_version to change it.",
 			},
 			"api_secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_secret_wo. Increment to update the API secret.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_secret_wo"},
+				Description:  "Version trigger for api_secret_wo. Increment to update the API secret.",
 			},
 			"mtls_cert_data_base64": {
 				Type:        schema.TypeString,
@@ -72,15 +76,17 @@ func resourceGlobalsignAtlasTarget() *schema.Resource {
 				Description: "Mutual TLS Certificate contents of the GlobalSign Atlas account encoded in base64",
 			},
 			"mtls_cert_data_base64_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "mtls_cert_data_base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump mtls_cert_data_base64_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mtls_cert_data_base64_wo_version"},
+				WriteOnly:    true,
+				Description:  "mtls_cert_data_base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump mtls_cert_data_base64_wo_version to change it.",
 			},
 			"mtls_cert_data_base64_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for mtls_cert_data_base64_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mtls_cert_data_base64_wo"},
+				Description:  "Version trigger for mtls_cert_data_base64_wo. Increment to update the value.",
 			},
 			"mtls_key_data_base64": {
 				Type:        schema.TypeString,
@@ -89,15 +95,17 @@ func resourceGlobalsignAtlasTarget() *schema.Resource {
 				Description: "Mutual TLS Key contents of the GlobalSign Atlas account encoded in base64",
 			},
 			"mtls_key_data_base64_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Mutual TLS Key contents of the GlobalSign Atlas account encoded in base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump mtls_key_data_base64_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mtls_key_data_base64_wo_version"},
+				WriteOnly:    true,
+				Description:  "Mutual TLS Key contents of the GlobalSign Atlas account encoded in base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump mtls_key_data_base64_wo_version to change it.",
 			},
 			"mtls_key_data_base64_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for mtls_key_data_base64_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mtls_key_data_base64_wo"},
+				Description:  "Version trigger for mtls_key_data_base64_wo. Increment to update the value.",
 			},
 			"timeout": {
 				Type:             schema.TypeString,
@@ -269,19 +277,19 @@ func resourceGlobalsignAtlasTargetUpdate(d *schema.ResourceData, m interface{}) 
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	apiKey, err := common.RequiredSecretValueForUpdate(d, "api_key", "api_key_wo")
 	if err != nil {
 		return err
 	}
-	apiSecret, err := common.EffectiveSecretValue(d, "api_secret", "api_secret_wo")
+	apiSecret, err := common.RequiredSecretValueForUpdate(d, "api_secret", "api_secret_wo")
 	if err != nil {
 		return err
 	}
-	mtlsCertDataBase64, err := common.EffectiveSecretValue(d, "mtls_cert_data_base64", "mtls_cert_data_base64_wo")
+	mtlsCertDataBase64, err := common.SecretValueForUpdate(d, "mtls_cert_data_base64", "mtls_cert_data_base64_wo")
 	if err != nil {
 		return err
 	}
-	mtlsKeyDataBase64, err := common.EffectiveSecretValue(d, "mtls_key_data_base64", "mtls_key_data_base64_wo")
+	mtlsKeyDataBase64, err := common.SecretValueForUpdate(d, "mtls_key_data_base64", "mtls_key_data_base64_wo")
 	if err != nil {
 		return err
 	}
@@ -297,8 +305,8 @@ func resourceGlobalsignAtlasTargetUpdate(d *schema.ResourceData, m interface{}) 
 		ApiSecret: apiSecret,
 		Token:     &token,
 	}
-	common.GetAkeylessPtr(&body.MtlsCertDataBase64, mtlsCertDataBase64)
-	common.GetAkeylessPtr(&body.MtlsKeyDataBase64, mtlsKeyDataBase64)
+	common.SetOptionalString(&body.MtlsCertDataBase64, mtlsCertDataBase64)
+	common.SetOptionalString(&body.MtlsKeyDataBase64, mtlsKeyDataBase64)
 	common.GetAkeylessPtr(&body.Timeout, timeout)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

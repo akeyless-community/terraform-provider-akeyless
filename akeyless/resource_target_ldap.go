@@ -47,15 +47,17 @@ func resourceLdapTarget() *schema.Resource {
 				Description: "Bind DN Password",
 			},
 			"bind_dn_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "bind_dn_password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"bind_dn_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "bind_dn_password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.",
 			},
 			"bind_dn_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for bind_dn_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"bind_dn_password_wo"},
+				Description:  "Version trigger for bind_dn_password_wo. Increment to update the value.",
 			},
 			"ldap_ca_cert": {
 				Type:        schema.TypeString,
@@ -224,7 +226,7 @@ func resourceLdapTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	ldapUrl := d.Get("ldap_url").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword, err := common.EffectiveSecretValue(d, "bind_dn_password", "bind_dn_password_wo")
+	bindDnPassword, err := common.RequiredSecretValueForUpdate(d, "bind_dn_password", "bind_dn_password_wo")
 	if err != nil {
 		return err
 	}

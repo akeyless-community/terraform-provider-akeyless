@@ -45,15 +45,17 @@ func resourceOktaTarget() *schema.Resource {
 				Description: "Okta API token",
 			},
 			"api_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Okta API token (write-only, not stored in state). Requires Terraform 1.11+. Bump api_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "Okta API token (write-only, not stored in state). Requires Terraform 1.11+. Bump api_token_wo_version to change it.",
 			},
 			"api_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_token_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_token_wo"},
+				Description:  "Version trigger for api_token_wo. Increment to update the value.",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -162,13 +164,13 @@ func resourceOktaTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	token := *provider.token
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiToken, err := common.EffectiveSecretValue(d, "api_token", "api_token_wo")
+	apiToken, err := common.SecretValueForUpdate(d, "api_token", "api_token_wo")
 	if err != nil {
 		return err
 	}
 	body := akeyless_api.TargetUpdateOkta{Name: name, Token: &token}
 	common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
-	common.GetAkeylessPtr(&body.ApiToken, apiToken)
+	common.SetOptionalString(&body.ApiToken, apiToken)
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
 	common.GetAkeylessPtr(&body.Key, d.Get("key").(string))
 	common.GetAkeylessPtr(&body.MaxVersions, d.Get("max_versions").(string))

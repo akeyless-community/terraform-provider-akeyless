@@ -48,15 +48,17 @@ func resourceEksTarget() *schema.Resource {
 				Description: "EKS cluster CA certificate",
 			},
 			"eks_cluster_ca_cert_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "EKS cluster CA certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_cluster_ca_cert_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"eks_cluster_ca_cert_wo_version"},
+				WriteOnly:    true,
+				Description:  "EKS cluster CA certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_cluster_ca_cert_wo_version to change it.",
 			},
 			"eks_cluster_ca_cert_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for eks_cluster_ca_cert_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"eks_cluster_ca_cert_wo"},
+				Description:  "Version trigger for eks_cluster_ca_cert_wo. Increment to update the value.",
 			},
 			"eks_access_key_id": {
 				Type:        schema.TypeString,
@@ -70,15 +72,17 @@ func resourceEksTarget() *schema.Resource {
 				Description: "Secret Access Key",
 			},
 			"eks_secret_access_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Secret Access Key (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_secret_access_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"eks_secret_access_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "Secret Access Key (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_secret_access_key_wo_version to change it.",
 			},
 			"eks_secret_access_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for eks_secret_access_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"eks_secret_access_key_wo"},
+				Description:  "Version trigger for eks_secret_access_key_wo. Increment to update the value.",
 			},
 			"use_gw_cloud_identity": {
 				Type:        schema.TypeBool,
@@ -256,12 +260,12 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
 	eksClusterEndpoint := d.Get("eks_cluster_endpoint").(string)
-	eksClusterCaCert, err := common.EffectiveSecretValue(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
+	eksClusterCaCert, err := common.RequiredSecretValueForUpdate(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
 	if err != nil {
 		return err
 	}
 	eksAccessKeyId := d.Get("eks_access_key_id").(string)
-	eksSecretAccessKey, err := common.EffectiveSecretValue(d, "eks_secret_access_key", "eks_secret_access_key_wo")
+	eksSecretAccessKey, err := common.RequiredSecretValueForUpdate(d, "eks_secret_access_key", "eks_secret_access_key_wo")
 	if err != nil {
 		return err
 	}

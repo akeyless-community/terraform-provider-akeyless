@@ -47,15 +47,17 @@ func resourcePingTarget() *schema.Resource {
 				Description: "Ping Federate privileged user password",
 			},
 			"password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"password_wo_version"},
+				WriteOnly:    true,
+				Description:  "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
 			},
 			"password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
+				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"administrative_port": {
 				Type:        schema.TypeString,
@@ -223,7 +225,7 @@ func resourcePingTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	pingUrl := d.Get("ping_url").(string)
 	privilegedUser := d.Get("privileged_user").(string)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	password, err := common.SecretValueForUpdate(d, "password", "password_wo")
 	if err != nil {
 		return err
 	}
@@ -240,7 +242,7 @@ func resourcePingTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.PingUrl, pingUrl)
 	common.GetAkeylessPtr(&body.PrivilegedUser, privilegedUser)
-	common.GetAkeylessPtr(&body.Password, password)
+	common.SetOptionalString(&body.Password, password)
 	common.GetAkeylessPtr(&body.AdministrativePort, administrativePort)
 	common.GetAkeylessPtr(&body.AuthorizationPort, authorizationPort)
 	common.GetAkeylessPtr(&body.Key, key)

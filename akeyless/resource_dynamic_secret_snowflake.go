@@ -57,15 +57,17 @@ func resourceDynamicSecretSnowflake() *schema.Resource {
 				Description: "Database Password",
 			},
 			"account_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "account_password (write-only, not stored in state). Requires Terraform 1.11+. Bump account_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"account_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "account_password (write-only, not stored in state). Requires Terraform 1.11+. Bump account_password_wo_version to change it.",
 			},
 			"account_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for account_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"account_password_wo"},
+				Description:  "Version trigger for account_password_wo. Increment to update the value.",
 			},
 			"account_username": {
 				Type:        schema.TypeString,
@@ -117,15 +119,17 @@ func resourceDynamicSecretSnowflake() *schema.Resource {
 				Description: "RSA Private key (base64 encoded)",
 			},
 			"private_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"private_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_wo_version to change it.",
 			},
 			"private_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for private_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"private_key_wo"},
+				Description:  "Version trigger for private_key_wo. Increment to update the value.",
 			},
 			"private_key_passphrase": {
 				Type:        schema.TypeString,
@@ -134,15 +138,17 @@ func resourceDynamicSecretSnowflake() *schema.Resource {
 				Description: "The Private key passphrase",
 			},
 			"private_key_passphrase_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "private_key_passphrase (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_passphrase_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"private_key_passphrase_wo_version"},
+				WriteOnly:    true,
+				Description:  "private_key_passphrase (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_passphrase_wo_version to change it.",
 			},
 			"private_key_passphrase_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for private_key_passphrase_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"private_key_passphrase_wo"},
+				Description:  "Version trigger for private_key_passphrase_wo. Increment to update the value.",
 			},
 			"role": {
 				Type:        schema.TypeString,
@@ -339,7 +345,7 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	account := d.Get("account").(string)
-	accountPassword, err := common.EffectiveSecretValue(d, "account_password", "account_password_wo")
+	accountPassword, err := common.SecretValueForUpdate(d, "account_password", "account_password_wo")
 	if err != nil {
 		return err
 	}
@@ -351,11 +357,11 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
-	privateKey, err := common.EffectiveSecretValue(d, "private_key", "private_key_wo")
+	privateKey, err := common.SecretValueForUpdate(d, "private_key", "private_key_wo")
 	if err != nil {
 		return err
 	}
-	privateKeyPassphrase, err := common.EffectiveSecretValue(d, "private_key_passphrase", "private_key_passphrase_wo")
+	privateKeyPassphrase, err := common.SecretValueForUpdate(d, "private_key_passphrase", "private_key_passphrase_wo")
 	if err != nil {
 		return err
 	}
@@ -372,7 +378,7 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.Account, account)
-	common.GetAkeylessPtr(&body.AccountPassword, accountPassword)
+	common.SetOptionalString(&body.AccountPassword, accountPassword)
 	common.GetAkeylessPtr(&body.AccountUsername, accountUsername)
 	common.GetAkeylessPtr(&body.AuthMode, authMode)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
@@ -381,8 +387,8 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
-	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
-	common.GetAkeylessPtr(&body.PrivateKeyPassphrase, privateKeyPassphrase)
+	common.SetOptionalString(&body.PrivateKey, privateKey)
+	common.SetOptionalString(&body.PrivateKeyPassphrase, privateKeyPassphrase)
 	common.GetAkeylessPtr(&body.Role, role)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)

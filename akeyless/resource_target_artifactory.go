@@ -46,15 +46,17 @@ func resourceArtifactoryTarget() *schema.Resource {
 				Description: "Artifactory Admin password",
 			},
 			"artifactory_admin_pwd_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "artifactory_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump artifactory_admin_pwd_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"artifactory_admin_pwd_wo_version"},
+				WriteOnly:    true,
+				Description:  "artifactory_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump artifactory_admin_pwd_wo_version to change it.",
 			},
 			"artifactory_admin_pwd_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for artifactory_admin_pwd_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"artifactory_admin_pwd_wo"},
+				Description:  "Version trigger for artifactory_admin_pwd_wo. Increment to update the value.",
 			},
 			"key": {
 				Type:        schema.TypeString,
@@ -183,7 +185,7 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	name := d.Get("name").(string)
 	baseUrl := d.Get("base_url").(string)
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
-	artifactoryAdminPwd, err := common.EffectiveSecretValue(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
+	artifactoryAdminPwd, err := common.RequiredSecretValueForUpdate(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
 	if err != nil {
 		return err
 	}

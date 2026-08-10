@@ -70,15 +70,17 @@ func resourceRotatedSecretAzure() *schema.Resource {
 				Description: "API key to rotate (relevant only for rotator-type=api-key)",
 			},
 			"api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
 			},
 			"api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"storage_account_key_name": {
 				Type:        schema.TypeString,
@@ -523,7 +525,7 @@ func resourceRotatedSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	tags := common.ExpandStringList(tagsSet.List())
 	appId := d.Get("app_id").(string)
 	apiId := d.Get("api_id").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
 	if err != nil {
 		return err
 	}
@@ -571,7 +573,7 @@ func resourceRotatedSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.ApplicationId, appId)
 	common.GetAkeylessPtr(&body.ApiId, apiId)
-	common.GetAkeylessPtr(&body.ApiKey, apiKey)
+	common.SetOptionalString(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.StorageAccountKeyName, storageAccountKeyName)
 	common.GetAkeylessPtr(&body.Username, username)
 	common.GetAkeylessPtr(&body.Description, description)

@@ -53,15 +53,17 @@ func resourceDynamicSecretPostgresql() *schema.Resource {
 				Description: "PostgreSQL Password",
 			},
 			"postgresql_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "PostgreSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump postgresql_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"postgresql_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "PostgreSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump postgresql_password_wo_version to change it.",
 			},
 			"postgresql_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for postgresql_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"postgresql_password_wo"},
+				Description:  "Version trigger for postgresql_password_wo. Increment to update the value.",
 			},
 			"postgresql_host": {
 				Type:        schema.TypeString,
@@ -455,7 +457,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	targetName := d.Get("target_name").(string)
 	postgresqlDbName := d.Get("postgresql_db_name").(string)
 	postgresqlUsername := d.Get("postgresql_username").(string)
-	postgresqlPassword, err := common.EffectiveSecretValue(d, "postgresql_password", "postgresql_password_wo")
+	postgresqlPassword, err := common.SecretValueForUpdate(d, "postgresql_password", "postgresql_password_wo")
 	if err != nil {
 		return err
 	}
@@ -493,7 +495,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.PostgresqlDbName, postgresqlDbName)
 	common.GetAkeylessPtr(&body.PostgresqlUsername, postgresqlUsername)
-	common.GetAkeylessPtr(&body.PostgresqlPassword, postgresqlPassword)
+	common.SetOptionalString(&body.PostgresqlPassword, postgresqlPassword)
 	common.GetAkeylessPtr(&body.PostgresqlHost, postgresqlHost)
 	common.GetAkeylessPtr(&body.PostgresqlPort, postgresqlPort)
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)

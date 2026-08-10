@@ -49,15 +49,17 @@ func resourceDynamicSecretGoogleWorkspace() *schema.Resource {
 				Description: "Base64-encoded service account private key text",
 			},
 			"gcp_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"gcp_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.",
 			},
 			"gcp_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for gcp_key_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"gcp_key_wo"},
+				Description:  "Version trigger for gcp_key_wo. Increment to update the password.",
 			},
 			"group_email": {
 				Type:        schema.TypeString,
@@ -363,7 +365,7 @@ func resourceDynamicSecretGoogleWorkspaceUpdate(d *schema.ResourceData, m interf
 	name := d.Get("name").(string)
 	accessMode := d.Get("access_mode").(string)
 	adminEmail := d.Get("admin_email").(string)
-	gcpKey, err := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
+	gcpKey, err := common.SecretValueForUpdate(d, "gcp_key", "gcp_key_wo")
 	if err != nil {
 		return err
 	}
@@ -392,7 +394,7 @@ func resourceDynamicSecretGoogleWorkspaceUpdate(d *schema.ResourceData, m interf
 		AdminEmail: adminEmail,
 		Token:      &token,
 	}
-	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
+	common.SetOptionalString(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.GroupEmail, groupEmail)
 	common.GetAkeylessPtr(&body.GroupRole, groupRole)
 	common.GetAkeylessPtr(&body.RoleName, roleName)

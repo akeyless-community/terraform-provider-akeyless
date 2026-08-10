@@ -54,15 +54,17 @@ func resourceDynamicSecretMssql() *schema.Resource {
 				Description: "MSSQL Password",
 			},
 			"mssql_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "MSSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump mssql_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mssql_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "MSSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump mssql_password_wo_version to change it.",
 			},
 			"mssql_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for mssql_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mssql_password_wo"},
+				Description:  "Version trigger for mssql_password_wo. Increment to update the value.",
 			},
 			"mssql_host": {
 				Type:        schema.TypeString,
@@ -437,7 +439,7 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mssqlDbname := d.Get("mssql_dbname").(string)
 	mssqlUsername := d.Get("mssql_username").(string)
-	mssqlPassword, err := common.EffectiveSecretValue(d, "mssql_password", "mssql_password_wo")
+	mssqlPassword, err := common.SecretValueForUpdate(d, "mssql_password", "mssql_password_wo")
 	if err != nil {
 		return err
 	}
@@ -479,7 +481,7 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.MssqlDbname, mssqlDbname)
 	common.GetAkeylessPtr(&body.MssqlUsername, mssqlUsername)
-	common.GetAkeylessPtr(&body.MssqlPassword, mssqlPassword)
+	common.SetOptionalString(&body.MssqlPassword, mssqlPassword)
 	common.GetAkeylessPtr(&body.MssqlHost, mssqlHost)
 	common.GetAkeylessPtr(&body.MssqlPort, mssqlPort)
 	common.GetAkeylessPtr(&body.MssqlCreateStatements, mssqlCreateStatements)

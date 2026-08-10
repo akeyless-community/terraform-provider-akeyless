@@ -65,15 +65,17 @@ func resourceRotatedSecretAws() *schema.Resource {
 				Description: "API key to rotate (relevant only for rotator-type=api-key)",
 			},
 			"api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
 			},
 			"api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"grace_rotation": {
 				Type:        schema.TypeString,
@@ -499,7 +501,7 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	apiId := d.Get("api_id").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
 	if err != nil {
 		return err
 	}
@@ -542,7 +544,7 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.ApiId, apiId)
-	common.GetAkeylessPtr(&body.ApiKey, apiKey)
+	common.SetOptionalString(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.GraceRotation, graceRotation)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)

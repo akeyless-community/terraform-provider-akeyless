@@ -78,6 +78,47 @@ func TestSetSecretFromRead_SetsOnLegacyPath(t *testing.T) {
 	}
 }
 
+func TestSecretValueForUpdate_OmitsMissingWriteOnlyValue(t *testing.T) {
+	d := writeOnlyTestResource().Data(nil)
+	if err := d.Set("mysql_password_wo_version", 1); err != nil {
+		t.Fatal(err)
+	}
+
+	value, err := SecretValueForUpdate(d, "mysql_password", "mysql_password_wo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value != nil {
+		t.Fatalf("expected nil value, got %q", *value)
+	}
+}
+
+func TestSecretValueForUpdate_PreservesLegacyValue(t *testing.T) {
+	d := writeOnlyTestResource().Data(nil)
+	if err := d.Set("mysql_password", "legacy-secret"); err != nil {
+		t.Fatal(err)
+	}
+
+	value, err := SecretValueForUpdate(d, "mysql_password", "mysql_password_wo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value == nil || *value != "legacy-secret" {
+		t.Fatalf("expected legacy value, got %v", value)
+	}
+}
+
+func TestRequiredSecretValueForUpdate_RejectsMissingWriteOnlyValue(t *testing.T) {
+	d := writeOnlyTestResource().Data(nil)
+	if err := d.Set("mysql_password_wo_version", 1); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := RequiredSecretValueForUpdate(d, "mysql_password", "mysql_password_wo"); err == nil {
+		t.Fatal("expected error for missing write-only value")
+	}
+}
+
 // Refresh/import with empty raw config must fall back to the legacy value.
 func TestEffectiveSecretValue_EmptyRawConfigFallsBack(t *testing.T) {
 	d := writeOnlyTestResource().Data(nil)

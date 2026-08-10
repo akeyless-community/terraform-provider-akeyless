@@ -43,15 +43,17 @@ func resourceCloudflareTarget() *schema.Resource {
 				Description: "Cloudflare API token",
 			},
 			"api_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Cloudflare API token (write-only, not stored in state). Requires Terraform 1.11+. Bump api_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "Cloudflare API token (write-only, not stored in state). Requires Terraform 1.11+. Bump api_token_wo_version to change it.",
 			},
 			"api_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_token_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_token_wo"},
+				Description:  "Version trigger for api_token_wo. Increment to update the value.",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -181,7 +183,7 @@ func resourceCloudflareTargetUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accountID := d.Get("account_id").(string)
-	apiToken, err := common.EffectiveSecretValue(d, "api_token", "api_token_wo")
+	apiToken, err := common.SecretValueForUpdate(d, "api_token", "api_token_wo")
 	if err != nil {
 		return err
 	}
@@ -195,7 +197,7 @@ func resourceCloudflareTargetUpdate(d *schema.ResourceData, m interface{}) error
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.AccountId, accountID)
-	common.GetAkeylessPtr(&body.ApiToken, apiToken)
+	common.SetOptionalString(&body.ApiToken, apiToken)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)

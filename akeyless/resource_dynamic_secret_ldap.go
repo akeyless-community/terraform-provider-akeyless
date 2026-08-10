@@ -60,15 +60,17 @@ func resourceDynamicSecretLdap() *schema.Resource {
 				Description: "Bind DN Password",
 			},
 			"bind_dn_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Bind DN Password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"bind_dn_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "Bind DN Password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.",
 			},
 			"bind_dn_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for bind_dn_password_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"bind_dn_password_wo"},
+				Description:  "Version trigger for bind_dn_password_wo. Increment to update the password.",
 			},
 			"custom_username_template": {
 				Type:        schema.TypeString,
@@ -391,7 +393,7 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	tags := common.ExpandStringList(tagsSet.List())
 	providerType := d.Get("provider_type").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword, err := common.EffectiveSecretValue(d, "bind_dn_password", "bind_dn_password_wo")
+	bindDnPassword, err := common.SecretValueForUpdate(d, "bind_dn_password", "bind_dn_password_wo")
 	if err != nil {
 		return err
 	}
@@ -430,7 +432,7 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProviderType, providerType)
 	common.GetAkeylessPtr(&body.BindDn, bindDn)
-	common.GetAkeylessPtr(&body.BindDnPassword, bindDnPassword)
+	common.SetOptionalString(&body.BindDnPassword, bindDnPassword)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.ExternalUsername, externalUsername)
 	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)

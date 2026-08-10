@@ -66,15 +66,17 @@ func resourceDynamicSecretRedis() *schema.Resource {
 				Description: "Redis Password",
 			},
 			"password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"password_wo_version"},
+				WriteOnly:    true,
+				Description:  "Password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
 			},
 			"password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
+				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"password_length": {
 				Type:        schema.TypeString,
@@ -305,7 +307,7 @@ func resourceDynamicSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	aclRules := d.Get("acl_rules").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	host := d.Get("host").(string)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	password, err := common.SecretValueForUpdate(d, "password", "password_wo")
 	if err != nil {
 		return err
 	}
@@ -330,7 +332,7 @@ func resourceDynamicSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.AclRules, aclRules)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Host, host)
-	common.GetAkeylessPtr(&body.Password, password)
+	common.SetOptionalString(&body.Password, password)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)

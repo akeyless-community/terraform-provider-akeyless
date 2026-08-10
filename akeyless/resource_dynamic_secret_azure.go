@@ -54,15 +54,17 @@ func resourceDynamicSecretAzure() *schema.Resource {
 				Description: "Azure Client Secret",
 			},
 			"azure_client_secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Azure Client Secret (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_client_secret_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"azure_client_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "Azure Client Secret (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_client_secret_wo_version to change it.",
 			},
 			"azure_client_secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for azure_client_secret_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"azure_client_secret_wo"},
+				Description:  "Version trigger for azure_client_secret_wo. Increment to update the password.",
 			},
 			"user_portal_access": {
 				Type:        schema.TypeBool,
@@ -463,7 +465,7 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	azureTenantId := d.Get("azure_tenant_id").(string)
 	azureClientId := d.Get("azure_client_id").(string)
-	azureClientSecret, err := common.EffectiveSecretValue(d, "azure_client_secret", "azure_client_secret_wo")
+	azureClientSecret, err := common.SecretValueForUpdate(d, "azure_client_secret", "azure_client_secret_wo")
 	if err != nil {
 		return err
 	}
@@ -499,7 +501,7 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.AzureTenantId, azureTenantId)
 	common.GetAkeylessPtr(&body.AzureClientId, azureClientId)
-	common.GetAkeylessPtr(&body.AzureClientSecret, azureClientSecret)
+	common.SetOptionalString(&body.AzureClientSecret, azureClientSecret)
 	common.GetAkeylessPtr(&body.UserPortalAccess, userPortalAccess)
 	common.GetAkeylessPtr(&body.UserProgrammaticAccess, userProgrammaticAccess)
 	common.GetAkeylessPtr(&body.AppObjId, appObjId)

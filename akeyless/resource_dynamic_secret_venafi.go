@@ -111,15 +111,17 @@ func resourceDynamicSecretVenafi() *schema.Resource {
 				Description: "Venafi Access Token to use to access the TPP environment (Relevant when using TPP)",
 			},
 			"venafi_access_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "venafi_access_token (write-only, not stored in state). Requires Terraform 1.11+. Bump venafi_access_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"venafi_access_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "venafi_access_token (write-only, not stored in state). Requires Terraform 1.11+. Bump venafi_access_token_wo_version to change it.",
 			},
 			"venafi_access_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for venafi_access_token_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"venafi_access_token_wo"},
+				Description:  "Version trigger for venafi_access_token_wo. Increment to update the value.",
 			},
 			"venafi_api_key": {
 				Type:        schema.TypeString,
@@ -128,15 +130,17 @@ func resourceDynamicSecretVenafi() *schema.Resource {
 				Description: "Venafi API key",
 			},
 			"venafi_api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "venafi_api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump venafi_api_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"venafi_api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "venafi_api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump venafi_api_key_wo_version to change it.",
 			},
 			"venafi_api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for venafi_api_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"venafi_api_key_wo"},
+				Description:  "Version trigger for venafi_api_key_wo. Increment to update the value.",
 			},
 			"venafi_baseurl": {
 				Type:        schema.TypeString,
@@ -156,15 +160,17 @@ func resourceDynamicSecretVenafi() *schema.Resource {
 				Description: "Venafi Refresh Token to use when the Access Token is expired (Relevant when using TPP)",
 			},
 			"venafi_refresh_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "venafi_refresh_token (write-only, not stored in state). Requires Terraform 1.11+. Bump venafi_refresh_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"venafi_refresh_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "venafi_refresh_token (write-only, not stored in state). Requires Terraform 1.11+. Bump venafi_refresh_token_wo_version to change it.",
 			},
 			"venafi_refresh_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for venafi_refresh_token_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"venafi_refresh_token_wo"},
+				Description:  "Version trigger for venafi_refresh_token_wo. Increment to update the value.",
 			},
 			"venafi_use_tpp": {
 				Type:        schema.TypeBool,
@@ -374,17 +380,17 @@ func resourceDynamicSecretVenafiUpdate(d *schema.ResourceData, m interface{}) er
 	storePrivateKey := d.Get("store_private_key").(bool)
 	targetName := d.Get("target_name").(string)
 	userTtl := d.Get("user_ttl").(string)
-	venafiAccessToken, err := common.EffectiveSecretValue(d, "venafi_access_token", "venafi_access_token_wo")
+	venafiAccessToken, err := common.SecretValueForUpdate(d, "venafi_access_token", "venafi_access_token_wo")
 	if err != nil {
 		return err
 	}
-	venafiApiKey, err := common.EffectiveSecretValue(d, "venafi_api_key", "venafi_api_key_wo")
+	venafiApiKey, err := common.SecretValueForUpdate(d, "venafi_api_key", "venafi_api_key_wo")
 	if err != nil {
 		return err
 	}
 	venafiBaseurl := d.Get("venafi_baseurl").(string)
 	venafiClientId := d.Get("venafi_client_id").(string)
-	venafiRefreshToken, err := common.EffectiveSecretValue(d, "venafi_refresh_token", "venafi_refresh_token_wo")
+	venafiRefreshToken, err := common.SecretValueForUpdate(d, "venafi_refresh_token", "venafi_refresh_token_wo")
 	if err != nil {
 		return err
 	}
@@ -410,11 +416,11 @@ func resourceDynamicSecretVenafiUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.StorePrivateKey, storePrivateKey)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
-	common.GetAkeylessPtr(&body.VenafiAccessToken, venafiAccessToken)
-	common.GetAkeylessPtr(&body.VenafiApiKey, venafiApiKey)
+	common.SetOptionalString(&body.VenafiAccessToken, venafiAccessToken)
+	common.SetOptionalString(&body.VenafiApiKey, venafiApiKey)
 	common.GetAkeylessPtr(&body.VenafiBaseurl, venafiBaseurl)
 	common.GetAkeylessPtr(&body.VenafiClientId, venafiClientId)
-	common.GetAkeylessPtr(&body.VenafiRefreshToken, venafiRefreshToken)
+	common.SetOptionalString(&body.VenafiRefreshToken, venafiRefreshToken)
 	common.GetAkeylessPtr(&body.VenafiUseTpp, venafiUseTpp)
 	common.GetAkeylessPtr(&body.VenafiZone, venafiZone)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)

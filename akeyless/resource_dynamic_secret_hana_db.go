@@ -71,15 +71,17 @@ func resourceDynamicSecretHanaDb() *schema.Resource {
 				Description: "HanaDb Password",
 			},
 			"hanadb_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "HanaDb Password (write-only, not stored in state). Requires Terraform 1.11+. Bump hanadb_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"hanadb_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "HanaDb Password (write-only, not stored in state). Requires Terraform 1.11+. Bump hanadb_password_wo_version to change it.",
 			},
 			"hanadb_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for hanadb_password_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"hanadb_password_wo"},
+				Description:  "Version trigger for hanadb_password_wo. Increment to update the password.",
 			},
 			"hanadb_port": {
 				Type:        schema.TypeString,
@@ -350,7 +352,7 @@ func resourceDynamicSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	hanaDbname := d.Get("hana_dbname").(string)
 	hanadbCreateStatements := d.Get("hanadb_create_statements").(string)
 	hanadbHost := d.Get("hanadb_host").(string)
-	hanadbPassword, err := common.EffectiveSecretValue(d, "hanadb_password", "hanadb_password_wo")
+	hanadbPassword, err := common.SecretValueForUpdate(d, "hanadb_password", "hanadb_password_wo")
 	if err != nil {
 		return err
 	}
@@ -382,7 +384,7 @@ func resourceDynamicSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.HanaDbname, hanaDbname)
 	common.GetAkeylessPtr(&body.HanadbCreateStatements, hanadbCreateStatements)
 	common.GetAkeylessPtr(&body.HanadbHost, hanadbHost)
-	common.GetAkeylessPtr(&body.HanadbPassword, hanadbPassword)
+	common.SetOptionalString(&body.HanadbPassword, hanadbPassword)
 	common.GetAkeylessPtr(&body.HanadbPort, hanadbPort)
 	common.GetAkeylessPtr(&body.HanadbRevocationStatements, hanadbRevocationStatements)
 	common.GetAkeylessPtr(&body.HanadbUsername, hanadbUsername)

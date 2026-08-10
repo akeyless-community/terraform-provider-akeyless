@@ -72,15 +72,17 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Description: "Client Secret",
 			},
 			"client_secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"client_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
 			},
 			"client_secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for client_secret_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"client_secret_wo"},
+				Description:  "Version trigger for client_secret_wo. Increment to update the value.",
 			},
 			"unique_identifier": {
 				Type:        schema.TypeString,
@@ -433,7 +435,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	jwtTtl := d.Get("jwt_ttl").(int)
 	issuer := d.Get("issuer").(string)
 	clientId := d.Get("client_id").(string)
-	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
+	clientSecret, err := common.SecretValueForUpdate(d, "client_secret", "client_secret_wo")
 	if err != nil {
 		return err
 	}
@@ -470,7 +472,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.Issuer, issuer)
 	common.GetAkeylessPtr(&body.ClientId, clientId)
-	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
+	common.SetOptionalString(&body.ClientSecret, clientSecret)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
 	common.GetAkeylessPtr(&body.RequiredScopes, requiredScopes)
 	common.GetAkeylessPtr(&body.RequiredScopesPrefix, requiredScopesPrefix)

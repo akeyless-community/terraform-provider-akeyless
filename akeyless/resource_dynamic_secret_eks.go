@@ -55,15 +55,17 @@ func resourceDynamicSecretEks() *schema.Resource {
 				Description: "EKS Cluster certificate. Base 64 encoded certificate.",
 			},
 			"eks_cluster_ca_cert_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "EKS Cluster certificate. Base 64 encoded certificate. (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_cluster_ca_cert_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"eks_cluster_ca_cert_wo_version"},
+				WriteOnly:    true,
+				Description:  "EKS Cluster certificate. Base 64 encoded certificate. (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_cluster_ca_cert_wo_version to change it.",
 			},
 			"eks_cluster_ca_cert_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for eks_cluster_ca_cert_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"eks_cluster_ca_cert_wo"},
+				Description:  "Version trigger for eks_cluster_ca_cert_wo. Increment to update the password.",
 			},
 			"eks_access_key_id": {
 				Type:        schema.TypeString,
@@ -77,15 +79,17 @@ func resourceDynamicSecretEks() *schema.Resource {
 				Description: "EKS Secret Access Key",
 			},
 			"eks_secret_access_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "EKS Secret Access Key (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_secret_access_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"eks_secret_access_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "EKS Secret Access Key (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_secret_access_key_wo_version to change it.",
 			},
 			"eks_secret_access_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for eks_secret_access_key_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"eks_secret_access_key_wo"},
+				Description:  "Version trigger for eks_secret_access_key_wo. Increment to update the password.",
 			},
 			"eks_region": {
 				Type:        schema.TypeString,
@@ -388,12 +392,12 @@ func resourceDynamicSecretEksUpdate(d *schema.ResourceData, m interface{}) error
 	targetName := d.Get("target_name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
 	eksClusterEndpoint := d.Get("eks_cluster_endpoint").(string)
-	eksClusterCaCert, err := common.EffectiveSecretValue(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
+	eksClusterCaCert, err := common.SecretValueForUpdate(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
 	if err != nil {
 		return err
 	}
 	eksAccessKeyId := d.Get("eks_access_key_id").(string)
-	eksSecretAccessKey, err := common.EffectiveSecretValue(d, "eks_secret_access_key", "eks_secret_access_key_wo")
+	eksSecretAccessKey, err := common.SecretValueForUpdate(d, "eks_secret_access_key", "eks_secret_access_key_wo")
 	if err != nil {
 		return err
 	}
@@ -427,9 +431,9 @@ func resourceDynamicSecretEksUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.EksClusterName, eksClusterName)
 	common.GetAkeylessPtr(&body.EksClusterEndpoint, eksClusterEndpoint)
-	common.GetAkeylessPtr(&body.EksClusterCaCert, eksClusterCaCert)
+	common.SetOptionalString(&body.EksClusterCaCert, eksClusterCaCert)
 	common.GetAkeylessPtr(&body.EksAccessKeyId, eksAccessKeyId)
-	common.GetAkeylessPtr(&body.EksSecretAccessKey, eksSecretAccessKey)
+	common.SetOptionalString(&body.EksSecretAccessKey, eksSecretAccessKey)
 	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
 	common.GetAkeylessPtr(&body.EksAssumeRole, eksAssumeRole)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)

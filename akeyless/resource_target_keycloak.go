@@ -55,15 +55,17 @@ func resourceKeycloakTarget() *schema.Resource {
 				Description: "Keycloak client secret",
 			},
 			"client_secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Keycloak client secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"client_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "Keycloak client secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
 			},
 			"client_secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for client_secret_wo. Increment to update the secret.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"client_secret_wo"},
+				Description:  "Version trigger for client_secret_wo. Increment to update the secret.",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -186,7 +188,7 @@ func resourceKeycloakTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	token := *provider.token
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
+	clientSecret, err := common.SecretValueForUpdate(d, "client_secret", "client_secret_wo")
 	if err != nil {
 		return err
 	}
@@ -195,7 +197,7 @@ func resourceKeycloakTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
 	common.GetAkeylessPtr(&body.Realm, d.Get("realm").(string))
 	common.GetAkeylessPtr(&body.ClientId, d.Get("client_id").(string))
-	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
+	common.SetOptionalString(&body.ClientSecret, clientSecret)
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
 	common.GetAkeylessPtr(&body.Key, d.Get("key").(string))
 	common.GetAkeylessPtr(&body.MaxVersions, d.Get("max_versions").(string))

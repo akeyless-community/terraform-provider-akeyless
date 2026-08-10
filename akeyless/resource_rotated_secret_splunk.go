@@ -111,15 +111,17 @@ func resourceRotatedSecretSplunk() *schema.Resource {
 				Description: "Rotated-username password (relevant only for rotator-type=password)",
 			},
 			"rotated_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Rotated-username password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "Rotated-username password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
 			},
 			"rotated_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for rotated_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo"},
+				Description:  "Version trigger for rotated_password_wo. Increment to update the value.",
 			},
 			"hec_token": {
 				Type:        schema.TypeString,
@@ -128,15 +130,17 @@ func resourceRotatedSecretSplunk() *schema.Resource {
 				Description: "Current Splunk HEC token value to store (relevant only for rotator-type=hec-token)",
 			},
 			"hec_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Current Splunk HEC token value to store (write-only, not stored in state). Requires Terraform 1.11+. Bump hec_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"hec_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "Current Splunk HEC token value to store (write-only, not stored in state). Requires Terraform 1.11+. Bump hec_token_wo_version to change it.",
 			},
 			"hec_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for hec_token_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"hec_token_wo"},
+				Description:  "Version trigger for hec_token_wo. Increment to update the value.",
 			},
 			"hec_token_name": {
 				Type:        schema.TypeString,
@@ -150,15 +154,17 @@ func resourceRotatedSecretSplunk() *schema.Resource {
 				Description: "Current Splunk authentication token to store (relevant only for rotator-type=token)",
 			},
 			"splunk_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Current Splunk authentication token to store (write-only, not stored in state). Requires Terraform 1.11+. Bump splunk_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"splunk_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "Current Splunk authentication token to store (write-only, not stored in state). Requires Terraform 1.11+. Bump splunk_token_wo_version to change it.",
 			},
 			"splunk_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for splunk_token_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"splunk_token_wo"},
+				Description:  "Version trigger for splunk_token_wo. Increment to update the value.",
 			},
 			"token_owner": {
 				Type:        schema.TypeString,
@@ -517,11 +523,11 @@ func resourceRotatedSecretSplunkUpdate(d *schema.ResourceData, m interface{}) er
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	// rotatedUsername := d.Get("rotated_username").(string)
 	// rotatedPassword := d.Get("rotated_password").(string)
-	hecToken, err := common.EffectiveSecretValue(d, "hec_token", "hec_token_wo")
+	hecToken, err := common.SecretValueForUpdate(d, "hec_token", "hec_token_wo")
 	if err != nil {
 		return err
 	}
-	splunkToken, err := common.EffectiveSecretValue(d, "splunk_token", "splunk_token_wo")
+	splunkToken, err := common.SecretValueForUpdate(d, "splunk_token", "splunk_token_wo")
 	if err != nil {
 		return err
 	}
@@ -563,8 +569,8 @@ func resourceRotatedSecretSplunkUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
 	// common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername) // needs to be added to the API first
 	// common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword) // needs to be added to the API first
-	common.GetAkeylessPtr(&body.HecToken, hecToken)
-	common.GetAkeylessPtr(&body.SplunkToken, splunkToken)
+	common.SetOptionalString(&body.HecToken, hecToken)
+	common.SetOptionalString(&body.SplunkToken, splunkToken)
 	common.GetAkeylessPtr(&body.TokenOwner, tokenOwner)
 	common.GetAkeylessPtr(&body.Audience, audience)
 	common.GetAkeylessPtr(&body.ExpirationDate, expirationDate)

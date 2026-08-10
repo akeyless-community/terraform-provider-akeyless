@@ -42,15 +42,17 @@ func resourceDockerhubTarget() *schema.Resource {
 				Description: "Password for docker repository",
 			},
 			"dockerhub_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Password for docker repository (write-only, not stored in state). Requires Terraform 1.11+. Bump dockerhub_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"dockerhub_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "Password for docker repository (write-only, not stored in state). Requires Terraform 1.11+. Bump dockerhub_password_wo_version to change it.",
 			},
 			"dockerhub_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for dockerhub_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"dockerhub_password_wo"},
+				Description:  "Version trigger for dockerhub_password_wo. Increment to update the value.",
 			},
 			"key": {
 				Type:        schema.TypeString,
@@ -181,7 +183,7 @@ func resourceDockerhubTargetUpdate(d *schema.ResourceData, m interface{}) error 
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	dockerhubUsername := d.Get("dockerhub_username").(string)
-	dockerhubPassword, err := common.EffectiveSecretValue(d, "dockerhub_password", "dockerhub_password_wo")
+	dockerhubPassword, err := common.SecretValueForUpdate(d, "dockerhub_password", "dockerhub_password_wo")
 	if err != nil {
 		return err
 	}
@@ -195,7 +197,7 @@ func resourceDockerhubTargetUpdate(d *schema.ResourceData, m interface{}) error 
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.DockerhubUsername, dockerhubUsername)
-	common.GetAkeylessPtr(&body.DockerhubPassword, dockerhubPassword)
+	common.SetOptionalString(&body.DockerhubPassword, dockerhubPassword)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)

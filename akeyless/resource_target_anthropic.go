@@ -40,15 +40,17 @@ func resourceAnthropicTarget() *schema.Resource {
 				Description: "API key for Anthropic",
 			},
 			"api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "API key for Anthropic (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "API key for Anthropic (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
 			},
 			"api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"anthropic_url": {
 				Type:        schema.TypeString,
@@ -177,7 +179,7 @@ func resourceAnthropicTargetUpdate(d *schema.ResourceData, m interface{}) error 
 	ctx := context.Background()
 
 	name := d.Get("name").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
 	if err != nil {
 		return err
 	}
@@ -189,7 +191,7 @@ func resourceAnthropicTargetUpdate(d *schema.ResourceData, m interface{}) error 
 	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.TargetUpdateAnthropic{Name: name, Token: &token}
-	common.GetAkeylessPtr(&body.ApiKey, apiKey)
+	common.SetOptionalString(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.AnthropicUrl, anthropicUrl)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)

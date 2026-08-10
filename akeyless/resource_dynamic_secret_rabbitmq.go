@@ -67,15 +67,17 @@ func resourceDynamicSecretRabbitmq() *schema.Resource {
 				Description: "RabbitMQ Admin password",
 			},
 			"rabbitmq_admin_pwd_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "rabbitmq_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_admin_pwd_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"rabbitmq_admin_pwd_wo_version"},
+				WriteOnly:    true,
+				Description:  "rabbitmq_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_admin_pwd_wo_version to change it.",
 			},
 			"rabbitmq_admin_pwd_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for rabbitmq_admin_pwd_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"rabbitmq_admin_pwd_wo"},
+				Description:  "Version trigger for rabbitmq_admin_pwd_wo. Increment to update the value.",
 			},
 			"rabbitmq_admin_user": {
 				Type:        schema.TypeString,
@@ -340,7 +342,7 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
-	rabbitmqAdminPwd, err := common.EffectiveSecretValue(d, "rabbitmq_admin_pwd", "rabbitmq_admin_pwd_wo")
+	rabbitmqAdminPwd, err := common.SecretValueForUpdate(d, "rabbitmq_admin_pwd", "rabbitmq_admin_pwd_wo")
 	if err != nil {
 		return err
 	}
@@ -370,7 +372,7 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
-	common.GetAkeylessPtr(&body.RabbitmqAdminPwd, rabbitmqAdminPwd)
+	common.SetOptionalString(&body.RabbitmqAdminPwd, rabbitmqAdminPwd)
 	common.GetAkeylessPtr(&body.RabbitmqAdminUser, rabbitmqAdminUser)
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.RabbitmqUserConfPermission, rabbitmqUserConfPermission)

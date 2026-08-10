@@ -104,15 +104,17 @@ func resourceRotatedSecretOpenAI() *schema.Resource {
 				Description: "Admin API key value to rotate (relevant only for rotator-type=api-key)",
 			},
 			"api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Admin API key value to rotate (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "Admin API key value to rotate (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
 			},
 			"api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"api_key_id": {
 				Type:        schema.TypeString,
@@ -405,7 +407,7 @@ func resourceRotatedSecretOpenAIUpdate(d *schema.ResourceData, m interface{}) er
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
 	if err != nil {
 		return err
 	}
@@ -443,7 +445,7 @@ func resourceRotatedSecretOpenAIUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
-	common.GetAkeylessPtr(&body.ApiKey, apiKey)
+	common.SetOptionalString(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.ApiKeyId, apiKeyId)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)

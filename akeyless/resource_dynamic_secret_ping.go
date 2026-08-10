@@ -105,15 +105,17 @@ func resourceDynamicSecretPing() *schema.Resource {
 				Description: "Ping Federate privileged user password",
 			},
 			"ping_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "ping_password (write-only, not stored in state). Requires Terraform 1.11+. Bump ping_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"ping_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "ping_password (write-only, not stored in state). Requires Terraform 1.11+. Bump ping_password_wo_version to change it.",
 			},
 			"ping_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for ping_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"ping_password_wo"},
+				Description:  "Version trigger for ping_password_wo. Increment to update the value.",
 			},
 			"ping_privileged_user": {
 				Type:        schema.TypeString,
@@ -346,7 +348,7 @@ func resourceDynamicSecretPingUpdate(d *schema.ResourceData, m interface{}) erro
 	pingIssuerDn := d.Get("ping_issuer_dn").(string)
 	pingJwks := d.Get("ping_jwks").(string)
 	pingJwksUrl := d.Get("ping_jwks_url").(string)
-	pingPassword, err := common.EffectiveSecretValue(d, "ping_password", "ping_password_wo")
+	pingPassword, err := common.SecretValueForUpdate(d, "ping_password", "ping_password_wo")
 	if err != nil {
 		return err
 	}
@@ -378,7 +380,7 @@ func resourceDynamicSecretPingUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.PingIssuerDn, pingIssuerDn)
 	common.GetAkeylessPtr(&body.PingJwks, pingJwks)
 	common.GetAkeylessPtr(&body.PingJwksUrl, pingJwksUrl)
-	common.GetAkeylessPtr(&body.PingPassword, pingPassword)
+	common.SetOptionalString(&body.PingPassword, pingPassword)
 	common.GetAkeylessPtr(&body.PingPrivilegedUser, pingPrivilegedUser)
 	common.GetAkeylessPtr(&body.PingRedirectUris, pingRedirectUris)
 	common.GetAkeylessPtr(&body.PingRestrictedScopes, pingRestrictedScopes)

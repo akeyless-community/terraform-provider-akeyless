@@ -44,15 +44,17 @@ func resourceGcpTarget() *schema.Resource {
 				Description: "Base64-encoded service account private key text",
 			},
 			"gcp_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"gcp_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.",
 			},
 			"gcp_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for gcp_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"gcp_key_wo"},
+				Description:  "Version trigger for gcp_key_wo. Increment to update the value.",
 			},
 			"use_gw_cloud_identity": {
 				Type:        schema.TypeBool,
@@ -189,7 +191,7 @@ func resourceGcpTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	gcpKey, err := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
+	gcpKey, err := common.SecretValueForUpdate(d, "gcp_key", "gcp_key_wo")
 	if err != nil {
 		return err
 	}
@@ -203,7 +205,7 @@ func resourceGcpTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
+	common.SetOptionalString(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

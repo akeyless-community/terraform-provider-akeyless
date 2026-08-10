@@ -50,15 +50,17 @@ func resourceDynamicSecretDockerhub() *schema.Resource {
 				Description: "DockerhubPassword is either the user's password access token to manage the repository",
 			},
 			"dockerhub_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "DockerhubPassword (write-only, not stored in state). Requires Terraform 1.11+. Bump dockerhub_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"dockerhub_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "DockerhubPassword (write-only, not stored in state). Requires Terraform 1.11+. Bump dockerhub_password_wo_version to change it.",
 			},
 			"dockerhub_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for dockerhub_password_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"dockerhub_password_wo"},
+				Description:  "Version trigger for dockerhub_password_wo. Increment to update the password.",
 			},
 			"dockerhub_token_scopes": {
 				Type:        schema.TypeString,
@@ -234,7 +236,7 @@ func resourceDynamicSecretDockerhubUpdate(d *schema.ResourceData, m interface{})
 	deleteProtection := d.Get("delete_protection").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	dockerhubPassword, err := common.EffectiveSecretValue(d, "dockerhub_password", "dockerhub_password_wo")
+	dockerhubPassword, err := common.SecretValueForUpdate(d, "dockerhub_password", "dockerhub_password_wo")
 	if err != nil {
 		return err
 	}
@@ -251,7 +253,7 @@ func resourceDynamicSecretDockerhubUpdate(d *schema.ResourceData, m interface{})
 	}
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tags)
-	common.GetAkeylessPtr(&body.DockerhubPassword, dockerhubPassword)
+	common.SetOptionalString(&body.DockerhubPassword, dockerhubPassword)
 	common.GetAkeylessPtr(&body.DockerhubTokenScopes, dockerhubTokenScopes)
 	common.GetAkeylessPtr(&body.DockerhubUsername, dockerhubUsername)
 	common.GetAkeylessPtr(&body.TargetName, targetName)

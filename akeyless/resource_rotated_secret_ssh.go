@@ -66,15 +66,17 @@ func resourceRotatedSecretSsh() *schema.Resource {
 				Description: "rotated-username password (relevant only for rotator-type=password)",
 			},
 			"rotated_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
 			},
 			"rotated_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for rotated_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo"},
+				Description:  "Version trigger for rotated_password_wo. Increment to update the value.",
 			},
 			"rotator_custom_cmd": {
 				Type:        schema.TypeString,
@@ -143,15 +145,17 @@ func resourceRotatedSecretSsh() *schema.Resource {
 				Description: "Private key file contents encoded using base64",
 			},
 			"key_data_base64_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "key_data_base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump key_data_base64_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"key_data_base64_wo_version"},
+				WriteOnly:    true,
+				Description:  "key_data_base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump key_data_base64_wo_version to change it.",
 			},
 			"key_data_base64_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for key_data_base64_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"key_data_base64_wo"},
+				Description:  "Version trigger for key_data_base64_wo. Increment to update the value.",
 			},
 			"max_versions": {
 				Type:        schema.TypeString,
@@ -521,7 +525,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
+	rotatedPassword, err := common.SecretValueForUpdate(d, "rotated_password", "rotated_password_wo")
 	if err != nil {
 		return err
 	}
@@ -534,7 +538,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	for k, v := range itemCustomFieldsMap {
 		itemCustomFields[k] = v.(string)
 	}
-	keyDataBase64, err := common.EffectiveSecretValue(d, "key_data_base64", "key_data_base64_wo")
+	keyDataBase64, err := common.SecretValueForUpdate(d, "key_data_base64", "key_data_base64_wo")
 	if err != nil {
 		return err
 	}
@@ -585,7 +589,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.RotatorCustomCmd, rotatorCustomCmd)
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
-	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
+	common.SetOptionalString(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
@@ -594,7 +598,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	if len(itemCustomFields) > 0 {
 		body.ItemCustomFields = &itemCustomFields
 	}
-	common.GetAkeylessPtr(&body.KeyDataBase64, keyDataBase64)
+	common.SetOptionalString(&body.KeyDataBase64, keyDataBase64)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.PublicKeyRemotePath, publicKeyRemotePath)
 	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)

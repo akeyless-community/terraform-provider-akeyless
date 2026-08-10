@@ -67,15 +67,17 @@ func resourceDbTarget() *schema.Resource {
 				Description: "Database password",
 			},
 			"pwd_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Database password (write-only, not stored in state). Requires Terraform 1.11+. Bump pwd_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"pwd_wo_version"},
+				WriteOnly:    true,
+				Description:  "Database password (write-only, not stored in state). Requires Terraform 1.11+. Bump pwd_wo_version to change it.",
 			},
 			"pwd_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for pwd_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"pwd_wo"},
+				Description:  "Version trigger for pwd_wo. Increment to update the value.",
 			},
 			"port": {
 				Type:        schema.TypeString,
@@ -125,15 +127,17 @@ func resourceDbTarget() *schema.Resource {
 				Description: "Content of the client certificate (PEM format) in a Base64 format",
 			},
 			"client_certificate_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Content of the client certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump client_certificate_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"client_certificate_wo_version"},
+				WriteOnly:    true,
+				Description:  "Content of the client certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump client_certificate_wo_version to change it.",
 			},
 			"client_certificate_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for client_certificate_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"client_certificate_wo"},
+				Description:  "Version trigger for client_certificate_wo. Increment to update the value.",
 			},
 			"client_private_key": {
 				Type:        schema.TypeString,
@@ -142,15 +146,17 @@ func resourceDbTarget() *schema.Resource {
 				Description: "Content of the client private key (PEM format) in a Base64 format",
 			},
 			"client_private_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Content of the client private key (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump client_private_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"client_private_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "Content of the client private key (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump client_private_key_wo_version to change it.",
 			},
 			"client_private_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for client_private_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"client_private_key_wo"},
+				Description:  "Version trigger for client_private_key_wo. Increment to update the value.",
 			},
 			"client_key_passphrase": {
 				Type:        schema.TypeString,
@@ -159,15 +165,17 @@ func resourceDbTarget() *schema.Resource {
 				Description: "Passphrase for the client private key",
 			},
 			"client_key_passphrase_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Passphrase for the client private key (write-only, not stored in state). Requires Terraform 1.11+. Bump client_key_passphrase_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"client_key_passphrase_wo_version"},
+				WriteOnly:    true,
+				Description:  "Passphrase for the client private key (write-only, not stored in state). Requires Terraform 1.11+. Bump client_key_passphrase_wo_version to change it.",
 			},
 			"client_key_passphrase_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for client_key_passphrase_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"client_key_passphrase_wo"},
+				Description:  "Version trigger for client_key_passphrase_wo. Increment to update the value.",
 			},
 			"snowflake_account": {
 				Type:        schema.TypeString,
@@ -181,15 +189,17 @@ func resourceDbTarget() *schema.Resource {
 				Description: "RSA Private key (base64 encoded)",
 			},
 			"snowflake_api_private_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "RSA Private key (base64 encoded) (write-only, not stored in state). Requires Terraform 1.11+. Bump snowflake_api_private_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"snowflake_api_private_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "RSA Private key (base64 encoded) (write-only, not stored in state). Requires Terraform 1.11+. Bump snowflake_api_private_key_wo_version to change it.",
 			},
 			"snowflake_api_private_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for snowflake_api_private_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"snowflake_api_private_key_wo"},
+				Description:  "Version trigger for snowflake_api_private_key_wo. Increment to update the value.",
 			},
 			"snowflake_api_private_key_password": {
 				Type:        schema.TypeString,
@@ -198,15 +208,17 @@ func resourceDbTarget() *schema.Resource {
 				Description: "The Private key passphrase",
 			},
 			"snowflake_api_private_key_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "The Private key passphrase (write-only, not stored in state). Requires Terraform 1.11+. Bump snowflake_api_private_key_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"snowflake_api_private_key_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "The Private key passphrase (write-only, not stored in state). Requires Terraform 1.11+. Bump snowflake_api_private_key_password_wo_version to change it.",
 			},
 			"snowflake_api_private_key_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for snowflake_api_private_key_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"snowflake_api_private_key_password_wo"},
+				Description:  "Version trigger for snowflake_api_private_key_password_wo. Increment to update the value.",
 			},
 			"mongodb_atlas": {
 				Type:        schema.TypeBool,
@@ -240,15 +252,17 @@ func resourceDbTarget() *schema.Resource {
 				Description: "MongoDB Atlas private key",
 			},
 			"mongodb_atlas_api_private_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "MongoDB Atlas private key (write-only, not stored in state). Requires Terraform 1.11+. Bump mongodb_atlas_api_private_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mongodb_atlas_api_private_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "MongoDB Atlas private key (write-only, not stored in state). Requires Terraform 1.11+. Bump mongodb_atlas_api_private_key_wo_version to change it.",
 			},
 			"mongodb_atlas_api_private_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for mongodb_atlas_api_private_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mongodb_atlas_api_private_key_wo"},
+				Description:  "Version trigger for mongodb_atlas_api_private_key_wo. Increment to update the value.",
 			},
 			"oracle_service_name": {
 				Type:        schema.TypeString,
@@ -267,15 +281,17 @@ func resourceDbTarget() *schema.Resource {
 				Description: "Oracle wallet p12 file data in base64",
 			},
 			"oracle_wallet_p12_file_data_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Oracle wallet p12 file data in base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump oracle_wallet_p12_file_data_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"oracle_wallet_p12_file_data_wo_version"},
+				WriteOnly:    true,
+				Description:  "Oracle wallet p12 file data in base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump oracle_wallet_p12_file_data_wo_version to change it.",
 			},
 			"oracle_wallet_p12_file_data_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for oracle_wallet_p12_file_data_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"oracle_wallet_p12_file_data_wo"},
+				Description:  "Version trigger for oracle_wallet_p12_file_data_wo. Increment to update the value.",
 			},
 			"oracle_wallet_sso_file_data": {
 				Type:        schema.TypeString,
@@ -294,15 +310,17 @@ func resourceDbTarget() *schema.Resource {
 				Description: "(Optional) Client secret (relevant for \"cloud-service-provider\" only)",
 			},
 			"azure_client_secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "(Optional) Client secret (relevant for \"cloud-service-provider\" only) (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_client_secret_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"azure_client_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "(Optional) Client secret (relevant for \"cloud-service-provider\" only) (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_client_secret_wo_version to change it.",
 			},
 			"azure_client_secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for azure_client_secret_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"azure_client_secret_wo"},
+				Description:  "Version trigger for azure_client_secret_wo. Increment to update the value.",
 			},
 			"azure_tenant_id": {
 				Type:        schema.TypeString,
@@ -739,7 +757,7 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	connectionType := d.Get("connection_type").(string)
 	userName := d.Get("user_name").(string)
 	host := d.Get("host").(string)
-	pwd, err := common.EffectiveSecretValue(d, "pwd", "pwd_wo")
+	pwd, err := common.SecretValueForUpdate(d, "pwd", "pwd_wo")
 	if err != nil {
 		return err
 	}
@@ -751,24 +769,24 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	sslCertificate := d.Get("ssl_certificate").(string)
 	skipServerNameValidation := d.Get("skip_server_name_validation").(string)
 	enableMTLS := d.Get("enable_mtls").(bool)
-	clientCertificate, err := common.EffectiveSecretValue(d, "client_certificate", "client_certificate_wo")
+	clientCertificate, err := common.SecretValueForUpdate(d, "client_certificate", "client_certificate_wo")
 	if err != nil {
 		return err
 	}
-	clientPrivateKey, err := common.EffectiveSecretValue(d, "client_private_key", "client_private_key_wo")
+	clientPrivateKey, err := common.SecretValueForUpdate(d, "client_private_key", "client_private_key_wo")
 	if err != nil {
 		return err
 	}
-	clientKeyPassphrase, err := common.EffectiveSecretValue(d, "client_key_passphrase", "client_key_passphrase_wo")
+	clientKeyPassphrase, err := common.SecretValueForUpdate(d, "client_key_passphrase", "client_key_passphrase_wo")
 	if err != nil {
 		return err
 	}
 	snowflakeAccount := d.Get("snowflake_account").(string)
-	snowflakeApiPrivateKey, err := common.EffectiveSecretValue(d, "snowflake_api_private_key", "snowflake_api_private_key_wo")
+	snowflakeApiPrivateKey, err := common.SecretValueForUpdate(d, "snowflake_api_private_key", "snowflake_api_private_key_wo")
 	if err != nil {
 		return err
 	}
-	snowflakeApiPrivateKeyPassword, err := common.EffectiveSecretValue(d, "snowflake_api_private_key_password", "snowflake_api_private_key_password_wo")
+	snowflakeApiPrivateKeyPassword, err := common.SecretValueForUpdate(d, "snowflake_api_private_key_password", "snowflake_api_private_key_password_wo")
 	if err != nil {
 		return err
 	}
@@ -777,19 +795,19 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	mongodbUriOptions := d.Get("mongodb_uri_options").(string)
 	mongodbAtlasProjectId := d.Get("mongodb_atlas_project_id").(string)
 	mongodbAtlasApiPublicKey := d.Get("mongodb_atlas_api_public_key").(string)
-	mongodbAtlasApiPrivateKey, err := common.EffectiveSecretValue(d, "mongodb_atlas_api_private_key", "mongodb_atlas_api_private_key_wo")
+	mongodbAtlasApiPrivateKey, err := common.SecretValueForUpdate(d, "mongodb_atlas_api_private_key", "mongodb_atlas_api_private_key_wo")
 	if err != nil {
 		return err
 	}
 	oracleServiceName := d.Get("oracle_service_name").(string)
 	oracleWalletLoginType := d.Get("oracle_wallet_login_type").(string)
-	oracleWalletP12FileData, err := common.EffectiveSecretValue(d, "oracle_wallet_p12_file_data", "oracle_wallet_p12_file_data_wo")
+	oracleWalletP12FileData, err := common.SecretValueForUpdate(d, "oracle_wallet_p12_file_data", "oracle_wallet_p12_file_data_wo")
 	if err != nil {
 		return err
 	}
 	oracleWalletSsoFileData := d.Get("oracle_wallet_sso_file_data").(string)
 	azureClientId := d.Get("azure_client_id").(string)
-	azureClientSecret, err := common.EffectiveSecretValue(d, "azure_client_secret", "azure_client_secret_wo")
+	azureClientSecret, err := common.SecretValueForUpdate(d, "azure_client_secret", "azure_client_secret_wo")
 	if err != nil {
 		return err
 	}
@@ -809,7 +827,7 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.UserName, userName)
 	common.GetAkeylessPtr(&body.Host, host)
-	common.GetAkeylessPtr(&body.Pwd, pwd)
+	common.SetOptionalString(&body.Pwd, pwd)
 	common.GetAkeylessPtr(&body.Port, port)
 	common.GetAkeylessPtr(&body.DbName, dbName)
 	common.GetAkeylessPtr(&body.DbServerCertificates, dbServerCertificates)
@@ -818,24 +836,24 @@ func resourceDbTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.SslCertificate, sslCertificate)
 	common.GetAkeylessPtr(&body.SkipServerNameValidation, skipServerNameValidation)
 	common.GetAkeylessPtr(&body.EnableMtls, enableMTLS)
-	common.GetAkeylessPtr(&body.ClientCertificate, clientCertificate)
-	common.GetAkeylessPtr(&body.ClientPrivateKey, clientPrivateKey)
-	common.GetAkeylessPtr(&body.ClientKeyPassphrase, clientKeyPassphrase)
+	common.SetOptionalString(&body.ClientCertificate, clientCertificate)
+	common.SetOptionalString(&body.ClientPrivateKey, clientPrivateKey)
+	common.SetOptionalString(&body.ClientKeyPassphrase, clientKeyPassphrase)
 	common.GetAkeylessPtr(&body.SnowflakeAccount, snowflakeAccount)
-	common.GetAkeylessPtr(&body.SnowflakeApiPrivateKey, snowflakeApiPrivateKey)
-	common.GetAkeylessPtr(&body.SnowflakeApiPrivateKeyPassword, snowflakeApiPrivateKeyPassword)
+	common.SetOptionalString(&body.SnowflakeApiPrivateKey, snowflakeApiPrivateKey)
+	common.SetOptionalString(&body.SnowflakeApiPrivateKeyPassword, snowflakeApiPrivateKeyPassword)
 	common.GetAkeylessPtr(&body.MongodbAtlas, mongodbAtlas)
 	common.GetAkeylessPtr(&body.MongodbDefaultAuthDb, mongodbDefaultAuthDb)
 	common.GetAkeylessPtr(&body.MongodbUriOptions, mongodbUriOptions)
 	common.GetAkeylessPtr(&body.MongodbAtlasProjectId, mongodbAtlasProjectId)
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPublicKey, mongodbAtlasApiPublicKey)
-	common.GetAkeylessPtr(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
+	common.SetOptionalString(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
 	common.GetAkeylessPtr(&body.OracleServiceName, oracleServiceName)
 	common.GetAkeylessPtr(&body.OracleWalletLoginType, oracleWalletLoginType)
-	common.GetAkeylessPtr(&body.OracleWalletP12FileData, oracleWalletP12FileData)
+	common.SetOptionalString(&body.OracleWalletP12FileData, oracleWalletP12FileData)
 	common.GetAkeylessPtr(&body.OracleWalletSsoFileData, oracleWalletSsoFileData)
 	common.GetAkeylessPtr(&body.AzureClientId, azureClientId)
-	common.GetAkeylessPtr(&body.AzureClientSecret, azureClientSecret)
+	common.SetOptionalString(&body.AzureClientSecret, azureClientSecret)
 	common.GetAkeylessPtr(&body.AzureTenantId, azureTenantId)
 	common.GetAkeylessPtr(&body.CloudServiceProvider, cloudServiceProvider)
 	common.GetAkeylessPtr(&body.ClusterMode, clusterMode)

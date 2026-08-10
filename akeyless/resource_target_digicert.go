@@ -60,15 +60,17 @@ func resourceDigicertTarget() *schema.Resource {
 				Description: "External Account Binding HMAC key (required for ACME account bootstrap on create)",
 			},
 			"eab_hmac_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "External Account Binding HMAC key (required for ACME account bootstrap on create) (write-only, not stored in state). Requires Terraform 1.11+. Bump eab_hmac_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"eab_hmac_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "External Account Binding HMAC key (required for ACME account bootstrap on create) (write-only, not stored in state). Requires Terraform 1.11+. Bump eab_hmac_key_wo_version to change it.",
 			},
 			"eab_hmac_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for eab_hmac_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"eab_hmac_key_wo"},
+				Description:  "Version trigger for eab_hmac_key_wo. Increment to update the value.",
 			},
 			"eab_key_id": {
 				Type:        schema.TypeString,
@@ -303,7 +305,7 @@ func resourceDigicertTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	acmeChallenge := d.Get("acme_challenge").(string)
 	digicertUrl := d.Get("digicert_url").(string)
 	dnsTargetCreds := d.Get("dns_target_creds").(string)
-	eabHmacKey, err := common.EffectiveSecretValue(d, "eab_hmac_key", "eab_hmac_key_wo")
+	eabHmacKey, err := common.SecretValueForUpdate(d, "eab_hmac_key", "eab_hmac_key_wo")
 	if err != nil {
 		return err
 	}
@@ -326,7 +328,7 @@ func resourceDigicertTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AcmeChallenge, acmeChallenge)
 	common.GetAkeylessPtr(&body.DigicertUrl, digicertUrl)
 	common.GetAkeylessPtr(&body.DnsTargetCreds, dnsTargetCreds)
-	common.GetAkeylessPtr(&body.EabHmacKey, eabHmacKey)
+	common.SetOptionalString(&body.EabHmacKey, eabHmacKey)
 	common.GetAkeylessPtr(&body.EabKeyId, eabKeyId)
 	common.GetAkeylessPtr(&body.GcpProject, gcpProject)
 	common.GetAkeylessPtr(&body.HostedZone, hostedZone)

@@ -59,15 +59,17 @@ func resourceDynamicSecretRdp() *schema.Resource {
 				Description: "RDP Admin password",
 			},
 			"rdp_admin_pwd_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "rdp_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump rdp_admin_pwd_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"rdp_admin_pwd_wo_version"},
+				WriteOnly:    true,
+				Description:  "rdp_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump rdp_admin_pwd_wo_version to change it.",
 			},
 			"rdp_admin_pwd_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for rdp_admin_pwd_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"rdp_admin_pwd_wo"},
+				Description:  "Version trigger for rdp_admin_pwd_wo. Increment to update the value.",
 			},
 			"rdp_host_port": {
 				Type:        schema.TypeString,
@@ -438,7 +440,7 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	rdpUserGroups := d.Get("rdp_user_groups").(string)
 	rdpHostName := d.Get("rdp_host_name").(string)
 	rdpAdminName := d.Get("rdp_admin_name").(string)
-	rdpAdminPwd, err := common.EffectiveSecretValue(d, "rdp_admin_pwd", "rdp_admin_pwd_wo")
+	rdpAdminPwd, err := common.SecretValueForUpdate(d, "rdp_admin_pwd", "rdp_admin_pwd_wo")
 	if err != nil {
 		return err
 	}
@@ -480,7 +482,7 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RdpUserGroups, rdpUserGroups)
 	common.GetAkeylessPtr(&body.RdpHostName, rdpHostName)
 	common.GetAkeylessPtr(&body.RdpAdminName, rdpAdminName)
-	common.GetAkeylessPtr(&body.RdpAdminPwd, rdpAdminPwd)
+	common.SetOptionalString(&body.RdpAdminPwd, rdpAdminPwd)
 	common.GetAkeylessPtr(&body.RdpHostPort, rdpHostPort)
 	common.GetAkeylessPtr(&body.FixedUserOnly, fixedUserOnly)
 	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)

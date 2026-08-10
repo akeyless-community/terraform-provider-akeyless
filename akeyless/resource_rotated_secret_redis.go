@@ -65,15 +65,17 @@ func resourceRotatedSecretRedis() *schema.Resource {
 				Description: "rotated-username password (relevant only for rotator-type=password)",
 			},
 			"rotated_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
 			},
 			"rotated_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for rotated_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo"},
+				Description:  "Version trigger for rotated_password_wo. Increment to update the value.",
 			},
 			"auto_rotate": {
 				Type:        schema.TypeString,
@@ -400,7 +402,7 @@ func resourceRotatedSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
+	rotatedPassword, err := common.SecretValueForUpdate(d, "rotated_password", "rotated_password_wo")
 	if err != nil {
 		return err
 	}
@@ -434,7 +436,7 @@ func resourceRotatedSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
-	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
+	common.SetOptionalString(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)

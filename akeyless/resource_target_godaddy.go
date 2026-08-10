@@ -39,15 +39,17 @@ func resourceGodaddyTarget() *schema.Resource {
 				Description: "Key of the api credentials to the Godaddy account",
 			},
 			"api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Key of the api credentials to the Godaddy account (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "Key of the api credentials to the Godaddy account (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
 			},
 			"api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_key_wo. Increment to update the key.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the key.",
 			},
 			"secret": {
 				Type:        schema.TypeString,
@@ -56,15 +58,17 @@ func resourceGodaddyTarget() *schema.Resource {
 				Description: "Secret of the api credentials to the Godaddy account",
 			},
 			"secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Secret of the api credentials to the Godaddy account (write-only, not stored in state). Requires Terraform 1.11+. Bump secret_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "Secret of the api credentials to the Godaddy account (write-only, not stored in state). Requires Terraform 1.11+. Bump secret_wo_version to change it.",
 			},
 			"secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for secret_wo. Increment to update the secret.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"secret_wo"},
+				Description:  "Version trigger for secret_wo. Increment to update the secret.",
 			},
 			"imap_fqdn": {
 				Type:        schema.TypeString,
@@ -83,15 +87,17 @@ func resourceGodaddyTarget() *schema.Resource {
 				Description: "ImapPassword to access the IMAP service",
 			},
 			"imap_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "ImapPassword to access the IMAP service (write-only, not stored in state). Requires Terraform 1.11+. Bump imap_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"imap_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "ImapPassword to access the IMAP service (write-only, not stored in state). Requires Terraform 1.11+. Bump imap_password_wo_version to change it.",
 			},
 			"imap_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for imap_password_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"imap_password_wo"},
+				Description:  "Version trigger for imap_password_wo. Increment to update the password.",
 			},
 			"imap_port": {
 				Type:        schema.TypeString,
@@ -306,17 +312,17 @@ func resourceGodaddyTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	apiKey, err := common.RequiredSecretValueForUpdate(d, "api_key", "api_key_wo")
 	if err != nil {
 		return err
 	}
-	secret, err := common.EffectiveSecretValue(d, "secret", "secret_wo")
+	secret, err := common.RequiredSecretValueForUpdate(d, "secret", "secret_wo")
 	if err != nil {
 		return err
 	}
 	imapFqdn := d.Get("imap_fqdn").(string)
 	imapUsername := d.Get("imap_username").(string)
-	imapPassword, err := common.EffectiveSecretValue(d, "imap_password", "imap_password_wo")
+	imapPassword, err := common.RequiredSecretValueForUpdate(d, "imap_password", "imap_password_wo")
 	if err != nil {
 		return err
 	}

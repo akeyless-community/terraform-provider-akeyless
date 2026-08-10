@@ -1,6 +1,8 @@
 package common
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -29,6 +31,56 @@ func EffectiveSecretValue(d *schema.ResourceData, field, woField string) (string
 		return v, nil
 	}
 	return d.Get(field).(string), nil
+}
+
+// SecretValueForUpdate returns nil when a write-only value was previously used
+// but is unavailable in the current configuration. Callers must then omit the
+// secret from the update request to avoid replacing it with an empty string.
+func SecretValueForUpdate(d *schema.ResourceData, field, woField string) (*string, error) {
+	if value, ok := writeOnlyRaw(d, woField); ok {
+		return &value, nil
+	}
+
+	versionField := woField + "_version"
+	if UsingWriteOnly(d, woField, versionField) || writeOnlyVersionWasRemoved(d, versionField) {
+		return nil, nil
+	}
+
+	value := d.Get(field).(string)
+	return &value, nil
+}
+
+// RequiredSecretValueForUpdate returns an error rather than sending an empty
+// secret when an API request cannot omit its secret field.
+func RequiredSecretValueForUpdate(d *schema.ResourceData, field, woField string) (string, error) {
+	value, err := SecretValueForUpdate(d, field, woField)
+	if err != nil {
+		return "", err
+	}
+	if value == nil {
+		return "", fmt.Errorf("%s must be set when updating a write-only secret", woField)
+	}
+	return *value, nil
+}
+
+func writeOnlyVersionWasRemoved(d *schema.ResourceData, versionField string) bool {
+	old, current := d.GetChange(versionField)
+	oldVersion, oldOK := old.(int)
+	currentVersion, currentOK := current.(int)
+	return oldOK && currentOK && oldVersion != 0 && currentVersion == 0
+}
+
+// SetOptionalString sets string and *string API request fields when available.
+func SetOptionalString(destination interface{}, value *string) {
+	if value == nil {
+		return
+	}
+	switch destination := destination.(type) {
+	case *string:
+		*destination = *value
+	case **string:
+		*destination = value
+	}
 }
 
 // UsingWriteOnly reports whether the practitioner opted into the write-only

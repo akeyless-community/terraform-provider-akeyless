@@ -50,15 +50,17 @@ func resourceWindowsTarget() *schema.Resource {
 				Description: "Privileged user password",
 			},
 			"password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"password_wo_version"},
+				WriteOnly:    true,
+				Description:  "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
 			},
 			"password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
+				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"domain": {
 				Type:        schema.TypeString,
@@ -84,15 +86,17 @@ func resourceWindowsTarget() *schema.Resource {
 				Description: "SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)",
 			},
 			"certificate_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"certificate_wo_version"},
+				WriteOnly:    true,
+				Description:  "certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_wo_version to change it.",
 			},
 			"certificate_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for certificate_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"certificate_wo"},
+				Description:  "Version trigger for certificate_wo. Increment to update the value.",
 			},
 			"key": {
 				Type:        schema.TypeString,
@@ -282,14 +286,14 @@ func resourceWindowsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	hostname := d.Get("hostname").(string)
 	username := d.Get("username").(string)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	password, err := common.RequiredSecretValueForUpdate(d, "password", "password_wo")
 	if err != nil {
 		return err
 	}
 	domain := d.Get("domain").(string)
 	port := d.Get("port").(string)
 	useTls := d.Get("use_tls").(string)
-	certificate, err := common.EffectiveSecretValue(d, "certificate", "certificate_wo")
+	certificate, err := common.SecretValueForUpdate(d, "certificate", "certificate_wo")
 	if err != nil {
 		return err
 	}
@@ -310,7 +314,7 @@ func resourceWindowsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Domain, domain)
 	common.GetAkeylessPtr(&body.Port, port)
 	common.GetAkeylessPtr(&body.UseTls, useTls)
-	common.GetAkeylessPtr(&body.Certificate, certificate)
+	common.SetOptionalString(&body.Certificate, certificate)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.ConnectionType, connectionType)

@@ -53,15 +53,17 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 				Description: "Cassandra superuser password",
 			},
 			"cassandra_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Cassandra Password (write-only, not stored in state). Requires Terraform 1.11+. Bump cassandra_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"cassandra_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "Cassandra Password (write-only, not stored in state). Requires Terraform 1.11+. Bump cassandra_password_wo_version to change it.",
 			},
 			"cassandra_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for cassandra_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"cassandra_password_wo"},
+				Description:  "Version trigger for cassandra_password_wo. Increment to update the value.",
 			},
 			"cassandra_port": {
 				Type:        schema.TypeString,
@@ -355,7 +357,7 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	targetName := d.Get("target_name").(string)
 	cassandraHosts := d.Get("cassandra_hosts").(string)
 	cassandraUsername := d.Get("cassandra_username").(string)
-	cassandraPassword, err := common.EffectiveSecretValue(d, "cassandra_password", "cassandra_password_wo")
+	cassandraPassword, err := common.SecretValueForUpdate(d, "cassandra_password", "cassandra_password_wo")
 	if err != nil {
 		return err
 	}
@@ -382,7 +384,7 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.CassandraHosts, cassandraHosts)
 	common.GetAkeylessPtr(&body.CassandraUsername, cassandraUsername)
-	common.GetAkeylessPtr(&body.CassandraPassword, cassandraPassword)
+	common.SetOptionalString(&body.CassandraPassword, cassandraPassword)
 	common.GetAkeylessPtr(&body.CassandraPort, cassandraPort)
 	common.GetAkeylessPtr(&body.CassandraCreationStatements, creationStatements)
 	common.GetAkeylessPtr(&body.Ssl, ssl)

@@ -43,15 +43,17 @@ func resourceGithubTarget() *schema.Resource {
 				Description: "App private key",
 			},
 			"github_app_private_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"github_app_private_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.",
 			},
 			"github_app_private_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for github_app_private_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"github_app_private_key_wo"},
+				Description:  "Version trigger for github_app_private_key_wo. Increment to update the value.",
 			},
 			"github_base_url": {
 				Type:        schema.TypeString,
@@ -187,7 +189,7 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey, err := common.EffectiveSecretValue(d, "github_app_private_key", "github_app_private_key_wo")
+	githubAppPrivateKey, err := common.SecretValueForUpdate(d, "github_app_private_key", "github_app_private_key_wo")
 	if err != nil {
 		return err
 	}
@@ -203,7 +205,7 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
-	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
+	common.SetOptionalString(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)

@@ -62,15 +62,17 @@ func resourceSalesforceTarget() *schema.Resource {
 				Description: "Client secret of the oauth2 app to use for connecting to Salesforce (required for password flow)",
 			},
 			"client_secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"client_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
 			},
 			"client_secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for client_secret_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"client_secret_wo"},
+				Description:  "Version trigger for client_secret_wo. Increment to update the value.",
 			},
 			"password": {
 				Type:        schema.TypeString,
@@ -79,15 +81,17 @@ func resourceSalesforceTarget() *schema.Resource {
 				Description: "The password of the user attached to the oauth2 app used for connecting to Salesforce (required for user-password flow)",
 			},
 			"password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"password_wo_version"},
+				WriteOnly:    true,
+				Description:  "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
 			},
 			"password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
+				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"security_token": {
 				Type:        schema.TypeString,
@@ -96,15 +100,17 @@ func resourceSalesforceTarget() *schema.Resource {
 				Description: "The security token of the user attached to the oauth2 app used for connecting to Salesforce  (required for user-password flow)",
 			},
 			"security_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "security_token (write-only, not stored in state). Requires Terraform 1.11+. Bump security_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"security_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "security_token (write-only, not stored in state). Requires Terraform 1.11+. Bump security_token_wo_version to change it.",
 			},
 			"security_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for security_token_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"security_token_wo"},
+				Description:  "Version trigger for security_token_wo. Increment to update the value.",
 			},
 			"app_private_key_data": {
 				Type:        schema.TypeString,
@@ -113,15 +119,17 @@ func resourceSalesforceTarget() *schema.Resource {
 				Description: "Base64 encoded PEM of the connected app private key (relevant for JWT auth only)",
 			},
 			"app_private_key_data_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "app_private_key_data (write-only, not stored in state). Requires Terraform 1.11+. Bump app_private_key_data_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"app_private_key_data_wo_version"},
+				WriteOnly:    true,
+				Description:  "app_private_key_data (write-only, not stored in state). Requires Terraform 1.11+. Bump app_private_key_data_wo_version to change it.",
 			},
 			"app_private_key_data_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for app_private_key_data_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"app_private_key_data_wo"},
+				Description:  "Version trigger for app_private_key_data_wo. Increment to update the value.",
 			},
 			"ca_cert_data": {
 				Type:        schema.TypeString,
@@ -129,15 +137,17 @@ func resourceSalesforceTarget() *schema.Resource {
 				Description: "Base64 encoded PEM cert to use when uploading a new key to Salesforce",
 			},
 			"ca_cert_data_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "ca_cert_data (write-only, not stored in state). Requires Terraform 1.11+. Bump ca_cert_data_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"ca_cert_data_wo_version"},
+				WriteOnly:    true,
+				Description:  "ca_cert_data (write-only, not stored in state). Requires Terraform 1.11+. Bump ca_cert_data_wo_version to change it.",
 			},
 			"ca_cert_data_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for ca_cert_data_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"ca_cert_data_wo"},
+				Description:  "Version trigger for ca_cert_data_wo. Increment to update the value.",
 			},
 			"ca_cert_name": {
 				Type:        schema.TypeString,
@@ -344,23 +354,23 @@ func resourceSalesforceTargetUpdate(d *schema.ResourceData, m interface{}) error
 	clientId := d.Get("client_id").(string)
 	email := d.Get("email").(string)
 	tenantUrl := d.Get("tenant_url").(string)
-	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
+	clientSecret, err := common.SecretValueForUpdate(d, "client_secret", "client_secret_wo")
 	if err != nil {
 		return err
 	}
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	password, err := common.SecretValueForUpdate(d, "password", "password_wo")
 	if err != nil {
 		return err
 	}
-	securityToken, err := common.EffectiveSecretValue(d, "security_token", "security_token_wo")
+	securityToken, err := common.SecretValueForUpdate(d, "security_token", "security_token_wo")
 	if err != nil {
 		return err
 	}
-	appPrivateKeyData, err := common.EffectiveSecretValue(d, "app_private_key_data", "app_private_key_data_wo")
+	appPrivateKeyData, err := common.SecretValueForUpdate(d, "app_private_key_data", "app_private_key_data_wo")
 	if err != nil {
 		return err
 	}
-	caCertData, err := common.EffectiveSecretValue(d, "ca_cert_data", "ca_cert_data_wo")
+	caCertData, err := common.SecretValueForUpdate(d, "ca_cert_data", "ca_cert_data_wo")
 	if err != nil {
 		return err
 	}
@@ -378,11 +388,11 @@ func resourceSalesforceTargetUpdate(d *schema.ResourceData, m interface{}) error
 		TenantUrl: tenantUrl,
 		Token:     &token,
 	}
-	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
-	common.GetAkeylessPtr(&body.Password, password)
-	common.GetAkeylessPtr(&body.SecurityToken, securityToken)
-	common.GetAkeylessPtr(&body.AppPrivateKeyData, appPrivateKeyData)
-	common.GetAkeylessPtr(&body.CaCertData, caCertData)
+	common.SetOptionalString(&body.ClientSecret, clientSecret)
+	common.SetOptionalString(&body.Password, password)
+	common.SetOptionalString(&body.SecurityToken, securityToken)
+	common.SetOptionalString(&body.AppPrivateKeyData, appPrivateKeyData)
+	common.SetOptionalString(&body.CaCertData, caCertData)
 	common.GetAkeylessPtr(&body.CaCertName, caCertName)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

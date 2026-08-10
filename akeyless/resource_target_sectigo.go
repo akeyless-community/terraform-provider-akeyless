@@ -57,15 +57,17 @@ func resourceSectigoTarget() *schema.Resource {
 				Description: "Password for Sectigo account",
 			},
 			"password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"password_wo_version"},
+				WriteOnly:    true,
+				Description:  "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
 			},
 			"password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
+				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"username": {
 				Type:        schema.TypeString,
@@ -245,7 +247,7 @@ func resourceSectigoTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	customerUri := d.Get("customer_uri").(string)
 	externalRequester := d.Get("external_requester").(string)
 	organizationId := d.Get("organization_id").(int)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	password, err := common.RequiredSecretValueForUpdate(d, "password", "password_wo")
 	if err != nil {
 		return err
 	}

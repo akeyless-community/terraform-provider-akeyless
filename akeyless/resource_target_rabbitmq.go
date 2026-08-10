@@ -43,15 +43,17 @@ func resourceRabbitmqTarget() *schema.Resource {
 				Description: "RabbitMQ server password",
 			},
 			"rabbitmq_server_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "rabbitmq_server_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_server_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"rabbitmq_server_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "rabbitmq_server_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_server_password_wo_version to change it.",
 			},
 			"rabbitmq_server_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for rabbitmq_server_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"rabbitmq_server_password_wo"},
+				Description:  "Version trigger for rabbitmq_server_password_wo. Increment to update the value.",
 			},
 			"rabbitmq_server_uri": {
 				Type:        schema.TypeString,
@@ -184,7 +186,7 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	rabbitmqServerUser := d.Get("rabbitmq_server_user").(string)
-	rabbitmqServerPassword, err := common.EffectiveSecretValue(d, "rabbitmq_server_password", "rabbitmq_server_password_wo")
+	rabbitmqServerPassword, err := common.SecretValueForUpdate(d, "rabbitmq_server_password", "rabbitmq_server_password_wo")
 	if err != nil {
 		return err
 	}
@@ -199,7 +201,7 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.RabbitmqServerUser, rabbitmqServerUser)
-	common.GetAkeylessPtr(&body.RabbitmqServerPassword, rabbitmqServerPassword)
+	common.SetOptionalString(&body.RabbitmqServerPassword, rabbitmqServerPassword)
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

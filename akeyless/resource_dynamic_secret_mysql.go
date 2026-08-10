@@ -54,15 +54,17 @@ func resourceDynamicSecretMysql() *schema.Resource {
 				Description: "MySQL password",
 			},
 			"mysql_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "MySQL password (write-only, not stored in state). Requires Terraform 1.11+. Bump mysql_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"mysql_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "MySQL password (write-only, not stored in state). Requires Terraform 1.11+. Bump mysql_password_wo_version to change it.",
 			},
 			"mysql_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for mysql_password_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"mysql_password_wo"},
+				Description:  "Version trigger for mysql_password_wo. Increment to update the password.",
 			},
 			"mysql_host": {
 				Type:        schema.TypeString,
@@ -468,7 +470,7 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mysqlDbname := d.Get("mysql_dbname").(string)
 	mysqlUsername := d.Get("mysql_username").(string)
-	mysqlPassword, err := common.EffectiveSecretValue(d, "mysql_password", "mysql_password_wo")
+	mysqlPassword, err := common.SecretValueForUpdate(d, "mysql_password", "mysql_password_wo")
 	if err != nil {
 		return err
 	}
@@ -508,7 +510,7 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.MysqlDbname, mysqlDbname)
 	common.GetAkeylessPtr(&body.MysqlUsername, mysqlUsername)
-	common.GetAkeylessPtr(&body.MysqlPassword, mysqlPassword)
+	common.SetOptionalString(&body.MysqlPassword, mysqlPassword)
 	common.GetAkeylessPtr(&body.MysqlHost, mysqlHost)
 	common.GetAkeylessPtr(&body.MysqlPort, mysqlPort)
 	common.GetAkeylessPtr(&body.MysqlScreationStatements, creationStatements)

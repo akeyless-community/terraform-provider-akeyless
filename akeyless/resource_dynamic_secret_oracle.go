@@ -53,15 +53,17 @@ func resourceDynamicSecretOracle() *schema.Resource {
 				Description: "Oracle Password",
 			},
 			"oracle_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Oracle Password (write-only, not stored in state). Requires Terraform 1.11+. Bump oracle_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"oracle_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "Oracle Password (write-only, not stored in state). Requires Terraform 1.11+. Bump oracle_password_wo_version to change it.",
 			},
 			"oracle_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for oracle_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"oracle_password_wo"},
+				Description:  "Version trigger for oracle_password_wo. Increment to update the value.",
 			},
 			"oracle_host": {
 				Type:        schema.TypeString,
@@ -423,7 +425,7 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	targetName := d.Get("target_name").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 	oracleUsername := d.Get("oracle_username").(string)
-	oraclePassword, err := common.EffectiveSecretValue(d, "oracle_password", "oracle_password_wo")
+	oraclePassword, err := common.SecretValueForUpdate(d, "oracle_password", "oracle_password_wo")
 	if err != nil {
 		return err
 	}
@@ -457,7 +459,7 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.OracleServiceName, oracleServiceName)
 	common.GetAkeylessPtr(&body.OracleUsername, oracleUsername)
-	common.GetAkeylessPtr(&body.OraclePassword, oraclePassword)
+	common.SetOptionalString(&body.OraclePassword, oraclePassword)
 	common.GetAkeylessPtr(&body.OracleHost, oracleHost)
 	common.GetAkeylessPtr(&body.OraclePort, oraclePort)
 	common.GetAkeylessPtr(&body.OracleScreationStatements, oracleScreationStatements)

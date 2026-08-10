@@ -74,15 +74,17 @@ func resourceAuthMethodCert() *schema.Resource {
 				Description: "The certificate data in base64, if no file was provided",
 			},
 			"certificate_data_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "certificate_data (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_data_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"certificate_data_wo_version"},
+				WriteOnly:    true,
+				Description:  "certificate_data (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_data_wo_version to change it.",
 			},
 			"certificate_data_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for certificate_data_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"certificate_data_wo"},
+				Description:  "Version trigger for certificate_data_wo. Increment to update the value.",
 			},
 			"bound_common_names": {
 				Type:        schema.TypeSet,
@@ -468,7 +470,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	gwBoundIps := common.ExpandStringList(gwBoundIpsSet.List())
 	forceSubClaims := d.Get("force_sub_claims").(bool)
 	jwtTtl := d.Get("jwt_ttl").(int)
-	certificateData, err := common.EffectiveSecretValue(d, "certificate_data", "certificate_data_wo")
+	certificateData, err := common.SecretValueForUpdate(d, "certificate_data", "certificate_data_wo")
 	if err != nil {
 		return err
 	}
@@ -508,7 +510,7 @@ func resourceAuthMethodCertUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ForceSubClaims, forceSubClaims)
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
-	common.GetAkeylessPtr(&body.CertificateData, certificateData)
+	common.SetOptionalString(&body.CertificateData, certificateData)
 	common.GetAkeylessPtr(&body.BoundCommonNames, boundCommonNames)
 	common.GetAkeylessPtr(&body.BoundDnsSans, boundDnsSans)
 	common.GetAkeylessPtr(&body.BoundEmailSans, boundEmailSans)

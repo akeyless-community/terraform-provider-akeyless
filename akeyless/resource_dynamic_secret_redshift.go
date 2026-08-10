@@ -53,15 +53,17 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 				Description: "Redshift Password",
 			},
 			"redshift_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "redshift_password (write-only, not stored in state). Requires Terraform 1.11+. Bump redshift_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"redshift_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "redshift_password (write-only, not stored in state). Requires Terraform 1.11+. Bump redshift_password_wo_version to change it.",
 			},
 			"redshift_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for redshift_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"redshift_password_wo"},
+				Description:  "Version trigger for redshift_password_wo. Increment to update the value.",
 			},
 			"redshift_host": {
 				Type:        schema.TypeString,
@@ -392,7 +394,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	targetName := d.Get("target_name").(string)
 	redshiftDbName := d.Get("redshift_db_name").(string)
 	redshiftUsername := d.Get("redshift_username").(string)
-	redshiftPassword, err := common.EffectiveSecretValue(d, "redshift_password", "redshift_password_wo")
+	redshiftPassword, err := common.SecretValueForUpdate(d, "redshift_password", "redshift_password_wo")
 	if err != nil {
 		return err
 	}
@@ -422,7 +424,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.RedshiftDbName, redshiftDbName)
 	common.GetAkeylessPtr(&body.RedshiftUsername, redshiftUsername)
-	common.GetAkeylessPtr(&body.RedshiftPassword, redshiftPassword)
+	common.SetOptionalString(&body.RedshiftPassword, redshiftPassword)
 	common.GetAkeylessPtr(&body.RedshiftHost, redshiftHost)
 	common.GetAkeylessPtr(&body.RedshiftPort, redshiftPort)
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)

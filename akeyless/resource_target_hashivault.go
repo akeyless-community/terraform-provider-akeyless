@@ -43,15 +43,17 @@ func resourceHashiVaultTarget() *schema.Resource {
 				Description: "Vault access token with sufficient permissions",
 			},
 			"vault_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Vault access token with sufficient permissions (write-only, not stored in state). Requires Terraform 1.11+. Bump vault_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"vault_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "Vault access token with sufficient permissions (write-only, not stored in state). Requires Terraform 1.11+. Bump vault_token_wo_version to change it.",
 			},
 			"vault_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for vault_token_wo. Increment to update the token.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"vault_token_wo"},
+				Description:  "Version trigger for vault_token_wo. Increment to update the token.",
 			},
 			"namespace": {
 				Type:        schema.TypeSet,
@@ -199,7 +201,7 @@ func resourceHashiVaultTargetUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	hashiUrl := d.Get("hashi_url").(string)
-	vaultToken, err := common.EffectiveSecretValue(d, "vault_token", "vault_token_wo")
+	vaultToken, err := common.SecretValueForUpdate(d, "vault_token", "vault_token_wo")
 	if err != nil {
 		return err
 	}
@@ -215,7 +217,7 @@ func resourceHashiVaultTargetUpdate(d *schema.ResourceData, m interface{}) error
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.HashiUrl, hashiUrl)
-	common.GetAkeylessPtr(&body.VaultToken, vaultToken)
+	common.SetOptionalString(&body.VaultToken, vaultToken)
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

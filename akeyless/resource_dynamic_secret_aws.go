@@ -49,15 +49,17 @@ func resourceDynamicSecretAws() *schema.Resource {
 				Description: "Access Secret Key",
 			},
 			"aws_access_secret_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "Access Secret Key (write-only, not stored in state). Requires Terraform 1.11+. Bump aws_access_secret_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"aws_access_secret_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "Access Secret Key (write-only, not stored in state). Requires Terraform 1.11+. Bump aws_access_secret_key_wo_version to change it.",
 			},
 			"aws_access_secret_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for aws_access_secret_key_wo. Increment to update the password.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"aws_access_secret_key_wo"},
+				Description:  "Version trigger for aws_access_secret_key_wo. Increment to update the password.",
 			},
 			"access_mode": {
 				Type:        schema.TypeString,
@@ -545,7 +547,7 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	awsAccessKeyId := d.Get("aws_access_key_id").(string)
-	awsAccessSecretKey, err := common.EffectiveSecretValue(d, "aws_access_secret_key", "aws_access_secret_key_wo")
+	awsAccessSecretKey, err := common.SecretValueForUpdate(d, "aws_access_secret_key", "aws_access_secret_key_wo")
 	if err != nil {
 		return err
 	}
@@ -594,7 +596,7 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.AwsAccessKeyId, awsAccessKeyId)
-	common.GetAkeylessPtr(&body.AwsAccessSecretKey, awsAccessSecretKey)
+	common.SetOptionalString(&body.AwsAccessSecretKey, awsAccessSecretKey)
 	common.GetAkeylessPtr(&body.AccessMode, accessMode)
 	common.GetAkeylessPtr(&body.Region, region)
 	common.GetAkeylessPtr(&body.AwsUserPolicies, awsUserPolicies)

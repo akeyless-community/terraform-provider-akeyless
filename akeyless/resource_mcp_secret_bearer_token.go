@@ -44,15 +44,17 @@ func resourceMcpSecretBearerToken() *schema.Resource {
 				Description: "Bearer token value",
 			},
 			"bearer_token_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "bearer_token (write-only, not stored in state). Requires Terraform 1.11+. Bump bearer_token_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"bearer_token_wo_version"},
+				WriteOnly:    true,
+				Description:  "bearer_token (write-only, not stored in state). Requires Terraform 1.11+. Bump bearer_token_wo_version to change it.",
 			},
 			"bearer_token_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for bearer_token_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"bearer_token_wo"},
+				Description:  "Version trigger for bearer_token_wo. Increment to update the value.",
 			},
 			"accessibility": {
 				Type:        schema.TypeString,
@@ -174,11 +176,11 @@ func resourceMcpSecretBearerTokenUpdate(d *schema.ResourceData, m interface{}) e
 			Token: &token,
 		}
 		common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
-		bearerToken, err := common.EffectiveSecretValue(d, "bearer_token", "bearer_token_wo")
+		bearerToken, err := common.SecretValueForUpdate(d, "bearer_token", "bearer_token_wo")
 		if err != nil {
 			return err
 		}
-		common.GetAkeylessPtr(&body.BearerToken, bearerToken)
+		common.SetOptionalString(&body.BearerToken, bearerToken)
 		common.GetAkeylessPtr(&body.Key, d.Get("protection_key").(string))
 		common.GetAkeylessPtr(&body.KeepPrevVersion, d.Get("keep_prev_version").(string))
 		common.GetAkeylessPtr(&body.InputRule, expandOptionalStringList(d, "input_rule"))

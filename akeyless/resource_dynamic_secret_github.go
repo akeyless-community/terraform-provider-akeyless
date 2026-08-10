@@ -79,15 +79,17 @@ func resourceDynamicSecretGithub() *schema.Resource {
 				Description: "App private key",
 			},
 			"github_app_private_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"github_app_private_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.",
 			},
 			"github_app_private_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for github_app_private_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"github_app_private_key_wo"},
+				Description:  "Version trigger for github_app_private_key_wo. Increment to update the value.",
 			},
 			"github_base_url": {
 				Type:        schema.TypeString,
@@ -340,7 +342,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	installationRepository := d.Get("installation_repository").(string)
 	targetName := d.Get("target_name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey, err := common.EffectiveSecretValue(d, "github_app_private_key", "github_app_private_key_wo")
+	githubAppPrivateKey, err := common.SecretValueForUpdate(d, "github_app_private_key", "github_app_private_key_wo")
 	if err != nil {
 		return err
 	}
@@ -364,7 +366,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.InstallationRepository, installationRepository)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
-	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
+	common.SetOptionalString(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)

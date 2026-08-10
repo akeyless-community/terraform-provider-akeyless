@@ -58,15 +58,17 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "The secret content.",
 			},
 			"value_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "The secret content (write-only, not stored in state). Requires Terraform 1.11+. Bump value_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"value_wo_version"},
+				WriteOnly:    true,
+				Description:  "The secret content (write-only, not stored in state). Requires Terraform 1.11+. Bump value_wo_version to change it.",
 			},
 			"value_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for value_wo. Increment to update the secret value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"value_wo"},
+				Description:  "Version trigger for value_wo. Increment to update the secret value.",
 			},
 			"format": {
 				Type:        schema.TypeString,
@@ -93,15 +95,17 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "Password value (relevant only for type 'password')",
 			},
 			"password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"password_wo_version"},
+				WriteOnly:    true,
+				Description:  "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
 			},
 			"password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
+				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"username": {
 				Type:        schema.TypeString,
@@ -511,7 +515,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	}
 
 	if d.HasChanges("value", "value_wo_version", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field", "password_wo_version") {
-		value, err := common.EffectiveSecretValue(d, "value", "value_wo")
+		value, err := common.RequiredSecretValueForUpdate(d, "value", "value_wo")
 		if err != nil {
 			return err
 		}
@@ -522,7 +526,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 		injectUrlSet := d.Get("inject_url").(*schema.Set)
 		injectUrl := common.ExpandStringList(injectUrlSet.List())
 		username := d.Get("username").(string)
-		password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+		password, err := common.SecretValueForUpdate(d, "password", "password_wo")
 		if err != nil {
 			return err
 		}
@@ -540,7 +544,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 		common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 		common.GetAkeylessPtr(&body.InjectUrl, injectUrl)
 		common.GetAkeylessPtr(&body.Username, username)
-		common.GetAkeylessPtr(&body.Password, password)
+		common.SetOptionalString(&body.Password, password)
 		if len(customField) > 0 {
 			common.GetAkeylessPtr(&body.CustomField, customField)
 		}

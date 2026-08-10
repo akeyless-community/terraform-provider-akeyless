@@ -42,15 +42,17 @@ func resourceCertificate() *schema.Resource {
 				Description: "Content of the certificate in a Base64 format.",
 			},
 			"certificate_data_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "certificate_data (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_data_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"certificate_data_wo_version"},
+				WriteOnly:    true,
+				Description:  "certificate_data (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_data_wo_version to change it.",
 			},
 			"certificate_data_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for certificate_data_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"certificate_data_wo"},
+				Description:  "Version trigger for certificate_data_wo. Increment to update the value.",
 			},
 			"format": {
 				Type:        schema.TypeString,
@@ -65,15 +67,17 @@ func resourceCertificate() *schema.Resource {
 				Description: "Content of the certificate's private key in a Base64 format.",
 			},
 			"key_data_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "key_data (write-only, not stored in state). Requires Terraform 1.11+. Bump key_data_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"key_data_wo_version"},
+				WriteOnly:    true,
+				Description:  "key_data (write-only, not stored in state). Requires Terraform 1.11+. Bump key_data_wo_version to change it.",
 			},
 			"key_data_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for key_data_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"key_data_wo"},
+				Description:  "Version trigger for key_data_wo. Increment to update the value.",
 			},
 			"expiration_event_in": {
 				Type:        schema.TypeSet,
@@ -273,12 +277,12 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	certificateData, err := common.EffectiveSecretValue(d, "certificate_data", "certificate_data_wo")
+	certificateData, err := common.SecretValueForUpdate(d, "certificate_data", "certificate_data_wo")
 	if err != nil {
 		return err
 	}
 	format := d.Get("format").(string)
-	keyData, err := common.EffectiveSecretValue(d, "key_data", "key_data_wo")
+	keyData, err := common.SecretValueForUpdate(d, "key_data", "key_data_wo")
 	if err != nil {
 		return err
 	}
@@ -295,9 +299,9 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.GetAkeylessPtr(&body.CertificateData, certificateData)
+	common.SetOptionalString(&body.CertificateData, certificateData)
 	common.GetAkeylessPtr(&body.Format, format)
-	common.GetAkeylessPtr(&body.KeyData, keyData)
+	common.SetOptionalString(&body.KeyData, keyData)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)

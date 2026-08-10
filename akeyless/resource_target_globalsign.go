@@ -43,15 +43,17 @@ func resourceGlobalsignTarget() *schema.Resource {
 				Description: "Password of the GlobalSign GCC account",
 			},
 			"password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"password_wo_version"},
+				WriteOnly:    true,
+				Description:  "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
 			},
 			"password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
+				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"profile_id": {
 				Type:        schema.TypeString,
@@ -263,7 +265,7 @@ func resourceGlobalsignTargetUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	username := d.Get("username").(string)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
+	password, err := common.RequiredSecretValueForUpdate(d, "password", "password_wo")
 	if err != nil {
 		return err
 	}

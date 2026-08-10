@@ -39,15 +39,17 @@ func resourceZerosslTarget() *schema.Resource {
 				Description: "API Key of the ZeroSSLTarget account",
 			},
 			"api_key_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				WriteOnly:    true,
+				Description:  "api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
 			},
 			"api_key_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for api_key_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"imap_username": {
 				Type:        schema.TypeString,
@@ -61,15 +63,17 @@ func resourceZerosslTarget() *schema.Resource {
 				Description: "Password to access the IMAP service",
 			},
 			"imap_password_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "imap_password (write-only, not stored in state). Requires Terraform 1.11+. Bump imap_password_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"imap_password_wo_version"},
+				WriteOnly:    true,
+				Description:  "imap_password (write-only, not stored in state). Requires Terraform 1.11+. Bump imap_password_wo_version to change it.",
 			},
 			"imap_password_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for imap_password_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"imap_password_wo"},
+				Description:  "Version trigger for imap_password_wo. Increment to update the value.",
 			},
 			"imap_fqdn": {
 				Type:        schema.TypeString,
@@ -266,12 +270,12 @@ func resourceZerosslTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
+	apiKey, err := common.RequiredSecretValueForUpdate(d, "api_key", "api_key_wo")
 	if err != nil {
 		return err
 	}
 	imapUsername := d.Get("imap_username").(string)
-	imapPassword, err := common.EffectiveSecretValue(d, "imap_password", "imap_password_wo")
+	imapPassword, err := common.RequiredSecretValueForUpdate(d, "imap_password", "imap_password_wo")
 	if err != nil {
 		return err
 	}

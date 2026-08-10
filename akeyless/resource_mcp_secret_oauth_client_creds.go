@@ -49,15 +49,17 @@ func resourceMcpSecretOAuthClientCreds() *schema.Resource {
 				Description: "OAuth client secret",
 			},
 			"oauth_client_secret_wo": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				WriteOnly:   true,
-				Description: "oauth_client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump oauth_client_secret_wo_version to change it.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"oauth_client_secret_wo_version"},
+				WriteOnly:    true,
+				Description:  "oauth_client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump oauth_client_secret_wo_version to change it.",
 			},
 			"oauth_client_secret_wo_version": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Version trigger for oauth_client_secret_wo. Increment to update the value.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"oauth_client_secret_wo"},
+				Description:  "Version trigger for oauth_client_secret_wo. Increment to update the value.",
 			},
 			"oauth_token_url": {
 				Type:        schema.TypeString,
@@ -191,11 +193,11 @@ func resourceMcpSecretOAuthClientCredsUpdate(d *schema.ResourceData, m interface
 		}
 		common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
 		common.GetAkeylessPtr(&body.OauthClientId, d.Get("oauth_client_id").(string))
-		oauthClientSecret, err := common.EffectiveSecretValue(d, "oauth_client_secret", "oauth_client_secret_wo")
+		oauthClientSecret, err := common.SecretValueForUpdate(d, "oauth_client_secret", "oauth_client_secret_wo")
 		if err != nil {
 			return err
 		}
-		common.GetAkeylessPtr(&body.OauthClientSecret, oauthClientSecret)
+		common.SetOptionalString(&body.OauthClientSecret, oauthClientSecret)
 		common.GetAkeylessPtr(&body.OauthTokenUrl, d.Get("oauth_token_url").(string))
 		common.GetAkeylessPtr(&body.OauthScopes, expandOptionalStringList(d, "oauth_scopes"))
 		common.GetAkeylessPtr(&body.Key, d.Get("protection_key").(string))
