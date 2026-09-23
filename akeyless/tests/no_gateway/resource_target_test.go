@@ -449,6 +449,8 @@ func TestTargetGkeResource(t *testing.T) {
 }
 
 func TestTargetGlobalSignResource(t *testing.T) {
+	t.Skip("GlobalSign target creation requires valid external GlobalSign credentials")
+
 	targetName := "globalsign_target1"
 	targetPath := testPath(targetName)
 
