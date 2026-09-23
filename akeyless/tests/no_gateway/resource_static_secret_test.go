@@ -136,6 +136,7 @@ func TestStaticPasswordResource(t *testing.T) {
 			username 			= "user"
 			password 			= "abc"
 			inject_url 			= ["http://abc.com"]
+			secure_access_enable = "true"
 			secure_access_url	= "http://abc.com"
 			custom_field		= {
 				"groups"  = "admins1",
@@ -157,6 +158,7 @@ func TestStaticPasswordResource(t *testing.T) {
 			username 			= "user2"
 			password 			= "def"
 			inject_url 			= ["http://abc.com", "http://def.com"]
+			secure_access_enable = "true"
 			secure_access_url	= "http://abc.com"
 			custom_field		= {
 				"groups"  = "admins2",
@@ -174,6 +176,7 @@ func TestStaticPasswordResource(t *testing.T) {
 			username 			= "user2"
 			password 			= "def"
 			inject_url 			= ["http://abc.com", "http://def.com"]
+			secure_access_enable = "true"
 			secure_access_url	= "http://abc.com"
 			delete_protection  	= "false"
 		}

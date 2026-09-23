@@ -18,6 +18,7 @@ func TestCertificateDiscoveryResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_certificate_discovery" "%v" {
 			hosts                = "127.0.0.1"
+			exclude_hosts        = "10.0.0.1"
 			port_ranges          = "443"
 			target_location      = "%v"
 			expiration_event_in  = ["30", "10"]
@@ -42,6 +43,7 @@ func TestCertificateDiscoveryResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "hosts", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_hosts", "10.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "port_ranges", "443"),
 					resource.TestCheckResourceAttr(resourceName, "target_location", folder),
 					resource.TestCheckResourceAttr(resourceName, "expiration_event_in.#", "2"),
