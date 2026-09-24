@@ -80,6 +80,9 @@ func TestTargetAwsResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "lock_on_read", "true"),
+					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "lock_ttl", "5"),
+					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "rotate_on_unlock", "true"),
 					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "description", "test aws target"),
 					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "region", "us-west-2"),
 				),
@@ -88,6 +91,9 @@ func TestTargetAwsResource(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "lock_on_read", "false"),
+					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "lock_ttl", "10"),
+					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "rotate_on_unlock", "false"),
 					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "description", "updated aws target"),
 					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "region", "eu-west-1"),
 				),

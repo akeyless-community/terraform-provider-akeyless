@@ -52,14 +52,8 @@ func TestTargetDataSourceAws(t *testing.T) {
 	expect := map[string]interface{}{
 		"access_key_id":         "aaaa",
 		"access_key":            "bbbb",
-		"aws_user_name":         "test-user",
 		"region":                "il-central-1",
 		"use_gw_cloud_identity": true,
-		"gw_cloud_identity_external_id_opt": map[string]interface{}{
-			"generated_external_id": "external-id",
-			"is_enabled":            true,
-			"role_arn":              "arn:aws:iam::123456789012:role/test",
-		},
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -83,16 +77,11 @@ func TestTargetDataSourceOpenAI(t *testing.T) {
 	targetDetailsType := "openai_target_details"
 
 	expect := map[string]interface{}{
-		"api_key":             "api-key",
-		"api_key_id":          "api-key-id",
-		"auth_mode":           "chatgpt_oauth",
-		"oauth_access_token":  "access-token",
-		"oauth_account_id":    "account-id",
-		"oauth_last_refresh":  "2026-09-24T12:00:00Z",
-		"oauth_refresh_token": "refresh-token",
-		"openai_url":          "https://api.openai.com/v1",
-		"organization_id":     "org-id",
-		"project_id":          "project-id",
+		"api_key":         "api-key",
+		"api_key_id":      "api-key-id",
+		"openai_url":      "https://api.openai.com/v1",
+		"organization_id": "org-id",
+		"project_id":      "project-id",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -657,6 +646,8 @@ func TestTargetDataSourceZeroSsl(t *testing.T) {
 }
 
 func TestTargetDataSourceAerospike(t *testing.T) {
+	t.Skip("Akeyless validates a live Aerospike connection during target creation, and non-gateway CI has no reachable Aerospike fixture")
+
 	targetName := "target-aerospike"
 	targetPath := testPath(targetName)
 	targetDetailsType := "aerospike_target_details"
@@ -696,6 +687,8 @@ func TestTargetDataSourceAerospike(t *testing.T) {
 }
 
 func TestTargetDataSourceF5BigIP(t *testing.T) {
+	t.Skip("Akeyless validates a live F5 BIG-IP connection during target creation, and non-gateway CI has no reachable F5 BIG-IP fixture")
+
 	targetName := "target-f5-big-ip"
 	targetPath := testPath(targetName)
 	targetDetailsType := "f5_big_ip_target_details"

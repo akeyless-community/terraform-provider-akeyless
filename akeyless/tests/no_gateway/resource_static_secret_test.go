@@ -61,6 +61,7 @@ func TestStaticResource(t *testing.T) {
 			path 				= "%v"
 			value 				= "{\"secret value\":\"abc\"}"
 			format 				= "json"
+			provider_type		= "generic"
 			max_versions		= "5"
 			tags 				= ["t1", "t2"]
 			description 		= "aaaa"
@@ -70,6 +71,7 @@ func TestStaticResource(t *testing.T) {
 			accessibility 		= "regular"
 			multiline_value 	= false
 			change_event 		= "true"
+			ara_enabled                     = true
 			enable_agentic_runtime_authority = true
 			enable_ai_quorum                 = true
 			lock_on_read                      = "true"
@@ -81,9 +83,11 @@ func TestStaticResource(t *testing.T) {
 		resource "akeyless_static_secret" "%v" {
 			path 						= "%v"
 			value 						= "value2"
+			provider_type				= "generic"
 			secure_access_enable 		= "false"
 			secure_access_web_browsing 	= "true"
 			secure_access_url 			= "http://abc.com"
+			ara_enabled                     = false
 			enable_agentic_runtime_authority = false
 			enable_ai_quorum                 = false
 			lock_on_read                      = "false"
@@ -122,6 +126,8 @@ func TestStaticResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "change_event", "true"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "lock_on_read", "true"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "lock_ttl", "15"),
 				),
 			},
 			{
@@ -131,6 +137,9 @@ func TestStaticResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "description", "bbbb"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_ai_quorum", "false"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "lock_on_read", "false"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "lock_ttl", "30"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "rotate_on_unlock", "true"),
 				),
 			},
 			{

@@ -250,6 +250,8 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 			ad_targets_path_template = "terraform-tests/migrations/ad/Targets/create/{{COMPUTER_NAME}}/{{USERNAME}}"
 			ad_targets_type     = "ssh"
 			ad_ssh_port         = "22"
+			enable_password_policy = "true"
+			skip_dry_run          = "true"
 		}
 	`, name, migrationName, targetName)
 
@@ -270,10 +272,31 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 			ad_auto_rotate      = "true"
 			ad_rotation_interval = 7
 			ad_rotation_hour     = 3
+			enable_password_policy = "false"
+			skip_dry_run          = "false"
 		}
 	`, name, migrationName, targetName)
 
-	testMigrationResource(t, config, configUpdate)
+	resourceName := "akeyless_gateway_migration_active_directory." + name
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "enable_password_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "enable_password_policy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
+				),
+			},
+		},
+	})
 }
 
 func TestGatewayMigrationServerInventory(t *testing.T) {

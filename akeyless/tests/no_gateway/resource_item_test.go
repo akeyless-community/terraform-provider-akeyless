@@ -223,12 +223,14 @@ func TestPkiResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(itemPath),
+					resource.TestCheckResourceAttr("akeyless_pki_cert_issuer."+name, "split_certificate_chain", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(itemPath),
+					resource.TestCheckResourceAttr("akeyless_pki_cert_issuer."+name, "split_certificate_chain", "false"),
 				),
 			},
 		},
@@ -407,6 +409,8 @@ func TestCsrDataSource(t *testing.T) {
 			ip_addresses      = "192.168.0.1,192.168.0.2"
 			uri_sans          = "uri1.com,uri2.com"
 			split_level       = 2
+			ext_key_usage     = "clientauth"
+			key_usage         = "DigitalSignature,KeyEncipherment"
 		}
 
 		output "csr" {
@@ -424,7 +428,9 @@ func TestCertificateDataSource(t *testing.T) {
 	defer testutils.DeleteItem(t, certificatePath)
 	config := fmt.Sprintf(`
 		data "akeyless_certificate" "test_certificate" {
-			name	= "%v"
+			name                = "%v"
+			include_private_key = true
+			leaf_only           = true
 		}
 
 		output "certificate" {

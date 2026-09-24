@@ -813,6 +813,88 @@ func CheckItemExistsRemotely(path string) resource.TestCheckFunc {
 	}
 }
 
+func CheckDynamicSecretAgenticFieldsRemotely(path string, enabled, quorum, skipDryRun bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, token, err := GetClient()
+		if err != nil {
+			return err
+		}
+
+		item, _, err := client.DynamicSecretGet(context.Background()).Body(akeyless_api.DynamicSecretGet{
+			Name:  path,
+			Token: &token,
+		}).Execute()
+		if err != nil {
+			return err
+		}
+		if item.AgenticRules == nil || item.AgenticRules.Enabled == nil || *item.AgenticRules.Enabled != enabled {
+			return fmt.Errorf("dynamic secret %s enable_agentic_runtime_authority does not match", path)
+		}
+		if item.AgenticRules.QuorumEnabled == nil || *item.AgenticRules.QuorumEnabled != quorum {
+			return fmt.Errorf("dynamic secret %s enable_ai_quorum does not match", path)
+		}
+		if item.SkipDryRun == nil || *item.SkipDryRun != skipDryRun {
+			return fmt.Errorf("dynamic secret %s skip_dry_run does not match", path)
+		}
+		return nil
+	}
+}
+
+func CheckMcpSecretAgenticFieldsRemotely(path string, enabled, quorum bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, token, err := GetClient()
+		if err != nil {
+			return err
+		}
+
+		item, _, err := client.DescribeItem(context.Background()).Body(akeyless_api.DescribeItem{
+			Name:  path,
+			Token: &token,
+		}).Execute()
+		if err != nil {
+			return err
+		}
+		if item.ItemGeneralInfo == nil || item.ItemGeneralInfo.AgenticRules == nil ||
+			item.ItemGeneralInfo.AgenticRules.Enabled == nil || *item.ItemGeneralInfo.AgenticRules.Enabled != enabled ||
+			item.ItemGeneralInfo.AgenticRules.QuorumEnabled == nil || *item.ItemGeneralInfo.AgenticRules.QuorumEnabled != quorum {
+			return fmt.Errorf("MCP secret %s agentic fields do not match", path)
+		}
+		return nil
+	}
+}
+
+func CheckRotatedSecretReadFieldsRemotely(path string, lockOnRead, rotateOnUnlock bool, lockTTL int64, enabled, quorum bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, token, err := GetClient()
+		if err != nil {
+			return err
+		}
+
+		item, _, err := client.DescribeItem(context.Background()).Body(akeyless_api.DescribeItem{
+			Name:  path,
+			Token: &token,
+		}).Execute()
+		if err != nil {
+			return err
+		}
+		if item.ItemGeneralInfo == nil {
+			return fmt.Errorf("rotated secret %s does not include general information", path)
+		}
+
+		info := item.ItemGeneralInfo
+		if info.LockOnRead == nil || *info.LockOnRead != lockOnRead ||
+			info.LockTtl == nil || *info.LockTtl != lockTTL ||
+			info.RotateOnUnlock == nil || *info.RotateOnUnlock != rotateOnUnlock {
+			return fmt.Errorf("rotated secret %s lock fields do not match", path)
+		}
+		if info.AgenticRules == nil || info.AgenticRules.Enabled == nil || *info.AgenticRules.Enabled != enabled ||
+			info.AgenticRules.QuorumEnabled == nil || *info.AgenticRules.QuorumEnabled != quorum {
+			return fmt.Errorf("rotated secret %s agentic fields do not match", path)
+		}
+		return nil
+	}
+}
+
 func CheckFolderExistsRemotely(folder string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client, token, err := GetClient()

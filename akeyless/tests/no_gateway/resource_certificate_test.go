@@ -53,6 +53,8 @@ func TestCertificateResource(t *testing.T) {
 			description 		= "certificate description"
 			keep_prev_version	= "true"
 			delete_protection  	= "true"
+			include_private_key = true
+			leaf_only           = true
 		}
 	`, certificateName, certificatePath, cert, keyData)
 
@@ -76,6 +78,8 @@ func TestCertificateResource(t *testing.T) {
 			expiration_event_in = ["20"]
 			description 		= "updated certificate description again"
 			delete_protection  	= "false"
+			include_private_key = true
+			leaf_only           = true
 		}
 	`, certificateName, certificatePath, cert2, keyData2)
 

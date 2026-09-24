@@ -153,33 +153,6 @@ func resourceGrokTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	itemOut, _, err := client.DescribeItem(ctx).Body(akeyless_api.DescribeItem{Name: path, Token: &token}).Execute()
-	if err != nil {
-		return err
-	}
-	if itemOut.ItemGeneralInfo != nil {
-		info := itemOut.ItemGeneralInfo
-		if info.LockOnRead != nil {
-			if err := d.Set("lock_on_read", strconv.FormatBool(*info.LockOnRead)); err != nil {
-				return err
-			}
-		}
-		if info.LockTtl != nil {
-			if err := d.Set("lock_ttl", strconv.FormatInt(*info.LockTtl, 10)); err != nil {
-				return err
-			}
-		}
-		if info.RotateOnUnlock != nil {
-			if err := d.Set("rotate_on_unlock", strconv.FormatBool(*info.RotateOnUnlock)); err != nil {
-				return err
-			}
-		} else if info.PendingRotateOnUnlock != nil {
-			if err := d.Set("rotate_on_unlock", strconv.FormatBool(*info.PendingRotateOnUnlock)); err != nil {
-				return err
-			}
-		}
-	}
-
 	d.SetId(path)
 	return nil
 }

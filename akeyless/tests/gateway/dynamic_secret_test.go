@@ -100,6 +100,10 @@ func TestDynamicSecretAws(t *testing.T) {
 			password_length               = "16"
 			input_rule                    = ["name=in1,rule=validate input"]
 			output_rule                   = ["name=out1,rule=mask output"]
+			ara_enabled                   = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum              = true
+			skip_dry_run                  = true
 			delete_protection             = "false"
 			description                   = "test dynamic secret"
 			enable_admin_rotation         = false
@@ -127,6 +131,10 @@ func TestDynamicSecretAws(t *testing.T) {
 			password_length               = "20"
 			input_rule                    = ["name=in1,rule=validate input updated"]
 			output_rule                   = ["name=out1,rule=mask output updated"]
+			ara_enabled                   = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum              = false
+			skip_dry_run                  = false
 			description                   = "updated test dynamic secret"
 			enable_admin_rotation         = false
 			admin_rotation_interval_days  = 10
@@ -148,7 +156,12 @@ func TestDynamicSecretAws(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
+					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, true, true, true),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "16"),
+					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
@@ -159,7 +172,12 @@ func TestDynamicSecretAws(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
+					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, false, false, false),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
+					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
@@ -282,24 +300,59 @@ func TestDynamicSecretCustom(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_custom" "%v" {
-			name             = "%v"
-			create_sync_url  = "https://webhook.example.com/create"
-			revoke_sync_url  = "https://webhook.example.com/revoke"
-			user_ttl         = "30m"
+			name                             = "%v"
+			create_sync_url                  = "https://webhook.example.com/create"
+			revoke_sync_url                  = "https://webhook.example.com/revoke"
+			user_ttl                         = "30m"
+			ara_enabled                      = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum                 = true
+			skip_dry_run                     = true
 		}
 	`, dsName, dsPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_custom" "%v" {
-			name             = "%v"
-			create_sync_url  = "https://webhook.example.com/create"
-			revoke_sync_url  = "https://webhook.example.com/revoke"
-			user_ttl         = "60m"
-			tags             = ["test1", "test2"]
+			name                             = "%v"
+			create_sync_url                  = "https://webhook.example.com/create"
+			revoke_sync_url                  = "https://webhook.example.com/revoke"
+			user_ttl                         = "60m"
+			ara_enabled                      = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum                 = false
+			skip_dry_run                     = false
+			tags                             = ["test1", "test2"]
 		}
 	`, dsName, dsPath)
 
-	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
+	resourceName := "akeyless_dynamic_secret_custom." + dsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, true, true, true),
+					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, false, false, false),
+					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
+				),
+			},
+		},
+	})
 }
 
 func TestDynamicSecretDockerhub(t *testing.T) {
@@ -963,32 +1016,67 @@ func TestDynamicSecretMysql(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_mysql" "%v" {
-			name           = "%v"
-			target_name    = "%v"
-			mysql_username = "%v"
-			mysql_password = "%v"
-			mysql_host     = "%v"
-			mysql_port     = "%v"
-			mysql_dbname   = "%v"
-			user_ttl       = "30m"
+			name                             = "%v"
+			target_name                      = "%v"
+			mysql_username                   = "%v"
+			mysql_password                   = "%v"
+			mysql_host                       = "%v"
+			mysql_port                       = "%v"
+			mysql_dbname                     = "%v"
+			user_ttl                         = "30m"
+			ara_enabled                      = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum                 = true
+			skip_dry_run                     = true
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_mysql" "%v" {
-			name           = "%v"
-			target_name    = "%v"
-			mysql_username = "%v"
-			mysql_password = "%v"
-			mysql_host     = "%v"
-			mysql_port     = "%v"
-			mysql_dbname   = "%v"
-			user_ttl       = "60m"
-			tags           = ["test1", "test2"]
+			name                             = "%v"
+			target_name                      = "%v"
+			mysql_username                   = "%v"
+			mysql_password                   = "%v"
+			mysql_host                       = "%v"
+			mysql_port                       = "%v"
+			mysql_dbname                     = "%v"
+			user_ttl                         = "60m"
+			ara_enabled                      = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum                 = false
+			skip_dry_run                     = false
+			tags                             = ["test1", "test2"]
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
-	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
+	resourceName := "akeyless_dynamic_secret_mysql." + dsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, true, true, true),
+					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, false, false, false),
+					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
+				),
+			},
+		},
+	})
 }
 
 func TestDynamicSecretOpenai(t *testing.T) {
@@ -1659,6 +1747,10 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 30
 			input_rule   = ["name=in1,rule=validate input"]
 			output_rule  = ["name=out1,rule=mask output"]
+			ara_enabled                     = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum                 = true
+			skip_dry_run                    = true
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1669,6 +1761,10 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 60
 			input_rule   = ["name=in1,rule=validate input updated"]
 			output_rule  = ["name=out1,rule=mask output updated"]
+			ara_enabled                     = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum                 = false
+			skip_dry_run                    = false
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1736,6 +1832,8 @@ func TestDynamicSecretAerospike(t *testing.T) {
 			target_name     = akeyless_target_aerospike.target.name
 			aerospike_roles = ["read"]
 			user_ttl        = "30m"
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum = true
 			skip_dry_run    = true
 		}
 	`, targetPath, name, path)
@@ -1753,9 +1851,36 @@ func TestDynamicSecretAerospike(t *testing.T) {
 			target_name     = akeyless_target_aerospike.target.name
 			aerospike_roles = ["read", "write"]
 			user_ttl        = "60m"
-			skip_dry_run    = true
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum = false
+			skip_dry_run    = false
 		}
 	`, targetPath, name, path)
 
-	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
+	resourceName := "akeyless_dynamic_secret_aerospike." + name
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(path),
+					testutils.CheckDynamicSecretAgenticFieldsRemotely(path, true, true, true),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(path),
+					testutils.CheckDynamicSecretAgenticFieldsRemotely(path, false, false, false),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
+				),
+			},
+		},
+	})
 }
