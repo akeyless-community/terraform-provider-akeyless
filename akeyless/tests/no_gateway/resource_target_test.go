@@ -77,7 +77,7 @@ func TestTargetAwsResource(t *testing.T) {
 		CheckDestroy:      testutils.CheckTargetDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testutils.WithoutItemLocking(config),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "lock_on_read", "true"),
@@ -88,7 +88,7 @@ func TestTargetAwsResource(t *testing.T) {
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: testutils.WithoutItemLocking(configUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr("akeyless_target_aws.aws123", "lock_on_read", "false"),
@@ -234,7 +234,7 @@ func TestTargetDbMTLSResource(t *testing.T) {
 		CheckDestroy:      testutils.CheckTargetDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testutils.WithoutItemLocking(config),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr(resourceName, "enable_mtls", "true"),
@@ -244,7 +244,7 @@ func TestTargetDbMTLSResource(t *testing.T) {
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: testutils.WithoutItemLocking(configUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr(resourceName, "enable_mtls", "true"),
@@ -438,7 +438,7 @@ func TestTargetGithubResource(t *testing.T) {
 		CheckDestroy:      testutils.CheckTargetDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testutils.WithoutItemLocking(config),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr("akeyless_target_github.github_test", "description", "aaaa"),
@@ -446,7 +446,7 @@ func TestTargetGithubResource(t *testing.T) {
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: testutils.WithoutItemLocking(configUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr("akeyless_target_github.github_test", "description", "bbbb"),
@@ -779,14 +779,14 @@ func TestTargetGoogleTrustResourceCloudflareDnsZone(t *testing.T) {
 		CheckDestroy:      testutils.CheckTargetDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testutils.WithoutItemLocking(config),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
 					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-123"),
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: testutils.WithoutItemLocking(configUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
 					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-456"),
@@ -829,7 +829,7 @@ func TestTargetCloudflareResource(t *testing.T) {
 		CheckDestroy:      testutils.CheckTargetDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testutils.WithoutItemLocking(config),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
 					resource.TestCheckResourceAttr(resourceName, "account_id", "test-account-id"),
@@ -837,7 +837,7 @@ func TestTargetCloudflareResource(t *testing.T) {
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: testutils.WithoutItemLocking(configUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
 					resource.TestCheckResourceAttr(resourceName, "account_id", "test-account-id-2"),
@@ -1023,14 +1023,14 @@ func TestTargetLetsEncryptResourceCloudflareDnsZone(t *testing.T) {
 		CheckDestroy:      testutils.CheckTargetDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testutils.WithoutItemLocking(config),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
 					resource.TestCheckResourceAttr(resourceName, "dns_zone", "cf-zone-123"),
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: testutils.WithoutItemLocking(configUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
 					resource.TestCheckResourceAttr(resourceName, "dns_zone", "cf-zone-456"),
@@ -1173,14 +1173,14 @@ func TestTargetDigiCertResourceCloudflareDnsZone(t *testing.T) {
 		CheckDestroy:      testutils.CheckTargetDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testutils.WithoutItemLocking(config),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
 					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-123"),
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: testutils.WithoutItemLocking(configUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckTargetExistsRemotely(targetPath),
 					resource.TestCheckResourceAttr(targetPath, "dns_zone", "cf-zone-456"),

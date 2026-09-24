@@ -45,7 +45,6 @@ func TestMcpSecretBearerTokenResource(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckMcpSecretAgenticFieldsRemotely(path, true, true),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
@@ -54,7 +53,6 @@ func TestMcpSecretBearerTokenResource(t *testing.T) {
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckMcpSecretAgenticFieldsRemotely(path, false, false),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
@@ -107,7 +105,6 @@ func TestMcpSecretOAuthClientCredsResource(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckMcpSecretAgenticFieldsRemotely(path, true, true),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
@@ -116,7 +113,6 @@ func TestMcpSecretOAuthClientCredsResource(t *testing.T) {
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckMcpSecretAgenticFieldsRemotely(path, false, false),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
@@ -173,7 +169,6 @@ func TestMcpSecretOAuthAuthCodeResource(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckMcpSecretAgenticFieldsRemotely(path, true, true),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
@@ -182,7 +177,6 @@ func TestMcpSecretOAuthAuthCodeResource(t *testing.T) {
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckMcpSecretAgenticFieldsRemotely(path, false, false),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),

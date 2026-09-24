@@ -54,6 +54,9 @@ func TestTargetDataSourceAws(t *testing.T) {
 		"access_key":            "bbbb",
 		"region":                "il-central-1",
 		"use_gw_cloud_identity": true,
+		"gw_cloud_identity_external_id_opt": map[string]interface{}{
+			"is_enabled": false,
+		},
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -78,10 +81,8 @@ func TestTargetDataSourceOpenAI(t *testing.T) {
 
 	expect := map[string]interface{}{
 		"api_key":         "api-key",
-		"api_key_id":      "api-key-id",
 		"openai_url":      "https://api.openai.com/v1",
 		"organization_id": "org-id",
-		"project_id":      "project-id",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)

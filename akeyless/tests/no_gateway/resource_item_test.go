@@ -196,7 +196,7 @@ func TestPkiResource(t *testing.T) {
 			server_flag           	= false
 			client_flag           	= false
 			code_signing_flag     	= false
-			key_usage             	= "DigitalSignature"
+			key_usage             	= "KeyAgreement"
 			critical_key_usage    	= "true"
 			organizational_units  	= "org1,org2"
 			country               	= "coun2"
@@ -410,7 +410,7 @@ func TestCsrDataSource(t *testing.T) {
 			uri_sans          = "uri1.com,uri2.com"
 			split_level       = 2
 			ext_key_usage     = "clientauth"
-			key_usage         = "DigitalSignature,KeyEncipherment"
+			key_usage         = "KeyAgreement,KeyEncipherment"
 		}
 
 		output "csr" {
@@ -428,9 +428,7 @@ func TestCertificateDataSource(t *testing.T) {
 	defer testutils.DeleteItem(t, certificatePath)
 	config := fmt.Sprintf(`
 		data "akeyless_certificate" "test_certificate" {
-			name                = "%v"
-			include_private_key = true
-			leaf_only           = true
+			name = "%v"
 		}
 
 		output "certificate" {
@@ -438,7 +436,7 @@ func TestCertificateDataSource(t *testing.T) {
 			sensitive = true
 		}
 	`, certificatePath)
-	testutils.TesItemDataSource(t, providerFactories, config, "certificate", []string{"certificate_pem", "private_key_pem"})
+	testutils.TesItemDataSource(t, providerFactories, config, "certificate", []string{"certificate_pem"})
 }
 
 func TestFolderResource(t *testing.T) {

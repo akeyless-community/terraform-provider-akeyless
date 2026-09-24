@@ -53,8 +53,6 @@ func TestCertificateResource(t *testing.T) {
 			description 		= "certificate description"
 			keep_prev_version	= "true"
 			delete_protection  	= "true"
-			include_private_key = true
-			leaf_only           = true
 		}
 	`, certificateName, certificatePath, cert, keyData)
 

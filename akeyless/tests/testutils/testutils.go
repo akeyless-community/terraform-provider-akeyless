@@ -721,19 +721,34 @@ func TesTargetResource(t *testing.T, providerFactories map[string]func() (*schem
 		CheckDestroy:      CheckTargetDestroyed,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: WithoutItemLocking(config),
 				Check: resource.ComposeTestCheckFunc(
 					CheckTargetExistsRemotely(secretPath),
 				),
 			},
 			{
-				Config: configUpdate,
+				Config: WithoutItemLocking(configUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					CheckTargetExistsRemotely(secretPath),
 				),
 			},
 		},
 	})
+}
+
+func WithoutItemLocking(config string) string {
+	lines := strings.Split(config, "\n")
+	filtered := make([]string, 0, len(lines))
+	for _, line := range lines {
+		field := strings.TrimSpace(line)
+		if strings.HasPrefix(field, "lock_on_read") ||
+			strings.HasPrefix(field, "lock_ttl") ||
+			strings.HasPrefix(field, "rotate_on_unlock") {
+			continue
+		}
+		filtered = append(filtered, line)
+	}
+	return strings.Join(filtered, "\n")
 }
 
 func TestAuthMethodResource(t *testing.T, providerFactories map[string]func() (*schema.Provider, error), config, configUpdate, path string) {

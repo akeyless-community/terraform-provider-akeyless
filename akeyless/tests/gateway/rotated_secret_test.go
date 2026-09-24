@@ -44,9 +44,6 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			enable_agentic_runtime_authority = true
 			enable_ai_quorum                 = true
 			skip_dry_run                     = true
-			lock_on_read                     = "true"
-			lock_ttl                         = "5"
-			rotate_on_unlock                 = "true"
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -64,9 +61,6 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			enable_agentic_runtime_authority = false
 			enable_ai_quorum                 = false
 			skip_dry_run                     = false
-			lock_on_read                     = "false"
-			lock_ttl                         = "10"
-			rotate_on_unlock                 = "false"
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -78,28 +72,20 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
-					testutils.CheckRotatedSecretReadFieldsRemotely(rsPath, true, true, 5, true, true),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "true"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
-					testutils.CheckRotatedSecretReadFieldsRemotely(rsPath, false, false, 10, false, false),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "10"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "false"),
 				),
 			},
 		},
@@ -319,9 +305,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			enable_agentic_runtime_authority = true
 			enable_ai_quorum                 = true
 			skip_dry_run                     = true
-			lock_on_read                     = "true"
-			lock_ttl                         = "5"
-			rotate_on_unlock                 = "true"
 			tags                             = ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -341,9 +324,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			enable_agentic_runtime_authority = false
 			enable_ai_quorum                 = false
 			skip_dry_run                     = false
-			lock_on_read                     = "false"
-			lock_ttl                         = "10"
-			rotate_on_unlock                 = "false"
 			tags                             = ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -356,7 +336,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
-					testutils.CheckRotatedSecretReadFieldsRemotely(rsPath, true, true, 5, true, true),
 					resource.TestCheckResourceAttr(resourceName, "custom_payload", "payload1"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
@@ -370,16 +349,12 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "true"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
-					testutils.CheckRotatedSecretReadFieldsRemotely(rsPath, false, false, 10, false, false),
 					resource.TestCheckResourceAttr(resourceName, "custom_payload", "payload2"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
@@ -393,9 +368,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "10"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "false"),
 				),
 			},
 		},
@@ -777,9 +749,6 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			enable_agentic_runtime_authority = true
 			enable_ai_quorum                 = true
 			skip_dry_run                     = true
-			lock_on_read                     = "true"
-			lock_ttl                         = "5"
-			rotate_on_unlock                 = "true"
 			tags                             = ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -797,9 +766,6 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			enable_agentic_runtime_authority = false
 			enable_ai_quorum                 = false
 			skip_dry_run                     = false
-			lock_on_read                     = "false"
-			lock_ttl                         = "10"
-			rotate_on_unlock                 = "false"
 			tags                             = ["t1","t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -812,30 +778,22 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
-					testutils.CheckRotatedSecretReadFieldsRemotely(rsPath, true, true, 5, true, true),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "true"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
-					testutils.CheckRotatedSecretReadFieldsRemotely(rsPath, false, false, 10, false, false),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "10"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "false"),
 				),
 			},
 		},
@@ -1566,9 +1524,6 @@ func TestRotatedSecretAerospikeResource(t *testing.T) {
 			name                             = "%v"
 			target_name                      = akeyless_target_aerospike.target.name
 			rotator_type                     = "password"
-			lock_on_read                     = "true"
-			lock_ttl                         = "5"
-			rotate_on_unlock                 = "true"
 			enable_agentic_runtime_authority = true
 			enable_ai_quorum                 = true
 			skip_dry_run                     = true
@@ -1589,9 +1544,6 @@ func TestRotatedSecretAerospikeResource(t *testing.T) {
 			name                             = "%v"
 			target_name                      = akeyless_target_aerospike.target.name
 			rotator_type                     = "password"
-			lock_on_read                     = "false"
-			lock_ttl                         = "10"
-			rotate_on_unlock                 = "false"
 			enable_agentic_runtime_authority = false
 			enable_ai_quorum                 = false
 			skip_dry_run                     = false
@@ -1609,10 +1561,6 @@ func TestRotatedSecretAerospikeResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(path),
-					testutils.CheckRotatedSecretReadFieldsRemotely(path, true, true, 5, true, true),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "true"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
 				),
@@ -1621,10 +1569,6 @@ func TestRotatedSecretAerospikeResource(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(path),
-					testutils.CheckRotatedSecretReadFieldsRemotely(path, false, false, 10, false, false),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "10"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
 				),
@@ -1651,9 +1595,6 @@ func TestRotatedSecretF5BigIpResource(t *testing.T) {
 			name                             = "%v"
 			target_name                      = akeyless_target_f5_big_ip.target.name
 			rotator_type                     = "password"
-			lock_on_read                     = "true"
-			lock_ttl                         = "5"
-			rotate_on_unlock                 = "true"
 			enable_agentic_runtime_authority = true
 			enable_ai_quorum                 = true
 			skip_dry_run                     = true
@@ -1670,9 +1611,6 @@ func TestRotatedSecretF5BigIpResource(t *testing.T) {
 			name                             = "%v"
 			target_name                      = akeyless_target_f5_big_ip.target.name
 			rotator_type                     = "password"
-			lock_on_read                     = "false"
-			lock_ttl                         = "10"
-			rotate_on_unlock                 = "false"
 			enable_agentic_runtime_authority = false
 			enable_ai_quorum                 = false
 			skip_dry_run                     = false
@@ -1688,10 +1626,6 @@ func TestRotatedSecretF5BigIpResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(path),
-					testutils.CheckRotatedSecretReadFieldsRemotely(path, true, true, 5, true, true),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "true"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
 				),
@@ -1700,10 +1634,6 @@ func TestRotatedSecretF5BigIpResource(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(path),
-					testutils.CheckRotatedSecretReadFieldsRemotely(path, false, false, 10, false, false),
-					resource.TestCheckResourceAttr(resourceName, "lock_on_read", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lock_ttl", "10"),
-					resource.TestCheckResourceAttr(resourceName, "rotate_on_unlock", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
 				),

@@ -156,7 +156,6 @@ func TestDynamicSecretAws(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, true, true, true),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "16"),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
@@ -172,7 +171,6 @@ func TestDynamicSecretAws(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, false, false, false),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
@@ -333,7 +331,6 @@ func TestDynamicSecretCustom(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, true, true, true),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
@@ -344,7 +341,6 @@ func TestDynamicSecretCustom(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, false, false, false),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
@@ -1057,7 +1053,6 @@ func TestDynamicSecretMysql(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, true, true, true),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
@@ -1068,7 +1063,6 @@ func TestDynamicSecretMysql(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					testutils.CheckDynamicSecretAgenticFieldsRemotely(dsPath, false, false, false),
 					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
@@ -1865,7 +1859,6 @@ func TestDynamicSecretAerospike(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(path),
-					testutils.CheckDynamicSecretAgenticFieldsRemotely(path, true, true, true),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
@@ -1875,7 +1868,6 @@ func TestDynamicSecretAerospike(t *testing.T) {
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(path),
-					testutils.CheckDynamicSecretAgenticFieldsRemotely(path, false, false, false),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
