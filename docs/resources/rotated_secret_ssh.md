@@ -23,20 +23,29 @@ Ssh rotated secret resource
 
 ### Optional
 
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `authentication_credentials` (String) The credentials to connect with use-self-creds/use-target-creds
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
+- `host_provider` (String) Host provider type [explicit/target]
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
-- `key_data_base64` (String) Private key file contents encoded using base64
+- `key_algorithm` (String) Key algorithm to generate when no private key is supplied
+- `key_data_base64` (String, Sensitive) Private key file contents encoded using base64
+- `lock_on_read` (String) Lock after read
+- `lock_ttl` (String) Lock TTL
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
+- `provider_type` (String) Provider type
 - `public_key_remote_path` (String) The path to the public key that will be rotated on the server
 - `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]
+- `rotate_on_unlock` (String) Rotate after unlock
 - `rotated_password` (String) rotated-username password (relevant only for rotator-type=password)
 - `rotated_username` (String) username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password)
 - `rotation_event_in` (List of String) How many days before the rotation of the item would you like to be notified
@@ -47,11 +56,14 @@ Ssh rotated secret resource
 - `secure_access_allow_external_user` (Boolean) Allow providing external user for a domain users
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
+- `secure_access_enforce_hosts_restriction` (Boolean) Enforce connections only to allowed SRA hosts
 - `secure_access_host` (List of String) Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)
 - `secure_access_rdp_domain` (String) Default domain name server. i.e. microsoft.com
 - `secure_access_rdp_user` (String) Override the RDP Domain username
+- `secure_access_ssh_creds` (String) SSH credential type [password/private-key]
 - `secure_access_ssh_user` (String) Override the SSH username as indicated in SSH Certificate Issuer
 - `secure_access_target_type` (String) Specify target type. Options are ssh or rdp
+- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 
 ### Read-Only

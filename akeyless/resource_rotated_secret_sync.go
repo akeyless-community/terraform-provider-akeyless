@@ -50,6 +50,21 @@ func resourceRotatedSecretSync() *schema.Resource {
 				Optional:    true,
 				Description: "JQ expression to filter or transform the secret value",
 			},
+			"environments": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GitHub environments to sync",
+			},
+			"repositories": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GitHub repositories to sync",
+			},
+			"gcp_project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCP project ID to sync",
+			},
 			"delete_remote": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -76,6 +91,9 @@ func resourceRotatedSecretSyncCreate(d *schema.ResourceData, m any) error {
 	remoteSecretName := d.Get("remote_secret_name").(string)
 	namespace := d.Get("namespace").(string)
 	filterSecretValue := d.Get("filter_secret_value").(string)
+	environments := d.Get("environments").(string)
+	repositories := d.Get("repositories").(string)
+	gcpProjectID := d.Get("gcp_project_id").(string)
 	deleteRemote := d.Get("delete_remote").(bool)
 
 	body := akeyless_api.RotatedSecretSync{
@@ -86,6 +104,9 @@ func resourceRotatedSecretSyncCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.RemoteSecretName, remoteSecretName)
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.FilterSecretValue, filterSecretValue)
+	common.GetAkeylessPtr(&body.Environments, environments)
+	common.GetAkeylessPtr(&body.Repositories, repositories)
+	common.GetAkeylessPtr(&body.GcpProjectId, gcpProjectID)
 	common.GetAkeylessPtr(&body.DeleteRemote, deleteRemote)
 
 	_, resp, err := client.RotatedSecretSync(ctx).Body(body).Execute()
@@ -122,7 +143,7 @@ func resourceRotatedSecretSyncRead(d *schema.ResourceData, m any) error {
 	}
 
 	if rOut.UscSyncAssociatedItems != nil {
-		namespace, filterSecretValue, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
+		namespace, filterSecretValue, environments, repositories, gcpProjectID, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
 		if !exists {
 			return fmt.Errorf("rotated secret sync not found for rotated secret name: %s, usc name: %s, remote secret name: %s", rsName, uscName, remoteSecretName)
 		}
@@ -134,6 +155,18 @@ func resourceRotatedSecretSyncRead(d *schema.ResourceData, m any) error {
 		if err != nil {
 			return err
 		}
+		err = d.Set("environments", environments)
+		if err != nil {
+			return err
+		}
+		err = d.Set("repositories", repositories)
+		if err != nil {
+			return err
+		}
+		err = d.Set("gcp_project_id", gcpProjectID)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(buildRsUscSyncId(rsName, uscName, remoteSecretName))
@@ -142,7 +175,7 @@ func resourceRotatedSecretSyncRead(d *schema.ResourceData, m any) error {
 }
 
 func resourceRotatedSecretSyncUpdate(d *schema.ResourceData, m any) error {
-	return nil
+	return resourceRotatedSecretSyncCreate(d, m)
 }
 
 func resourceRotatedSecretSyncDelete(d *schema.ResourceData, m any) error {
@@ -199,7 +232,7 @@ func resourceRotatedSecretSyncImport(d *schema.ResourceData, m any) ([]*schema.R
 	}
 
 	if rOut.UscSyncAssociatedItems != nil {
-		namespace, filterSecretValue, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
+		namespace, filterSecretValue, environments, repositories, gcpProjectID, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
 		if !exists {
 			return nil, fmt.Errorf("rotated secret sync not found for rotated secret name: %s, usc name: %s, remote secret name: %s", rsName, uscName, remoteSecretName)
 		}
@@ -208,6 +241,18 @@ func resourceRotatedSecretSyncImport(d *schema.ResourceData, m any) ([]*schema.R
 			return nil, err
 		}
 		err = d.Set("filter_secret_value", filterSecretValue)
+		if err != nil {
+			return nil, err
+		}
+		err = d.Set("environments", environments)
+		if err != nil {
+			return nil, err
+		}
+		err = d.Set("repositories", repositories)
+		if err != nil {
+			return nil, err
+		}
+		err = d.Set("gcp_project_id", gcpProjectID)
 		if err != nil {
 			return nil, err
 		}

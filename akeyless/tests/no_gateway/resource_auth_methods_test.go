@@ -607,6 +607,7 @@ func TestAuthMethodOidcResource(t *testing.T) {
 			allowed_redirect_uri 	= ["https://localhost/callback"]
 			audience 				= "test-audience"
 			subclaims_delimiters 	= [","]
+			gateway_url 			= "https://gateway.example.com:8000"
 		}
 	`, name, path)
 	configUpdate := fmt.Sprintf(`
@@ -626,6 +627,7 @@ func TestAuthMethodOidcResource(t *testing.T) {
 			allowed_redirect_uri 	= ["https://localhost/callback", "https://localhost/callback2"]
 			audience 				= "test-audience-updated"
 			subclaims_delimiters 	= [",", ";"]
+			gateway_url 			= "https://gateway-updated.example.com:8000"
 		}
 	`, name, path)
 
@@ -644,6 +646,7 @@ func TestAuthMethodOidcResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_auth_method_oidc."+name, "allowed_redirect_uri.0", "https://localhost/callback"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_oidc."+name, "audience", "test-audience"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_oidc."+name, "subclaims_delimiters.0", ","),
+					resource.TestCheckResourceAttr("akeyless_auth_method_oidc."+name, "gateway_url", "https://gateway.example.com:8000"),
 					resource.TestCheckResourceAttrSet("akeyless_auth_method_oidc."+name, "access_id"),
 				),
 			},
@@ -658,6 +661,7 @@ func TestAuthMethodOidcResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_auth_method_oidc."+name, "allowed_redirect_uri.#", "2"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_oidc."+name, "audience", "test-audience-updated"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_oidc."+name, "subclaims_delimiters.#", "2"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_oidc."+name, "gateway_url", "https://gateway-updated.example.com:8000"),
 					resource.TestCheckResourceAttrSet("akeyless_auth_method_oidc."+name, "access_id"),
 				),
 			},
@@ -690,6 +694,7 @@ func TestAuthMethodSAMLResource(t *testing.T) {
 			allowed_redirect_uri 	= ["https://localhost/callback"]
 			subclaims_delimiters 	= [","]
 			use_dedicated_saml_urls = true
+			gateway_url 			= "https://gateway.example.com:8000"
 		}
 	`, name, path)
 
@@ -707,6 +712,7 @@ func TestAuthMethodSAMLResource(t *testing.T) {
 			allowed_redirect_uri 	= ["https://localhost/callback", "https://localhost/callback2"]
 			subclaims_delimiters 	= [",", ";"]
 			use_dedicated_saml_urls = false
+			gateway_url 			= "https://gateway-updated.example.com:8000"
 		}
 	`, name, path)
 
@@ -726,6 +732,7 @@ func TestAuthMethodSAMLResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "allowed_redirect_uri.0", "https://localhost/callback"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "subclaims_delimiters.0", ","),
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "use_dedicated_saml_urls", "true"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "gateway_url", "https://gateway.example.com:8000"),
 					resource.TestCheckResourceAttrSet("akeyless_auth_method_saml."+name, "access_id"),
 				),
 			},
@@ -740,6 +747,7 @@ func TestAuthMethodSAMLResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "allowed_redirect_uri.#", "2"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "subclaims_delimiters.#", "2"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "use_dedicated_saml_urls", "false"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_saml."+name, "gateway_url", "https://gateway-updated.example.com:8000"),
 					resource.TestCheckResourceAttrSet("akeyless_auth_method_saml."+name, "access_id"),
 				),
 			},

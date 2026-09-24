@@ -23,19 +23,25 @@ Ldap rotated secret resource
 
 ### Optional
 
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `authentication_credentials` (String) The credentials to connect with use-self-creds/use-target-creds
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `host_provider` (String) Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access of ssh cert issuer, ldap rotated secret and ldap dynamic secret
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `lock_on_read` (String) Lock after read
+- `lock_ttl` (String) Lock TTL
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]
+- `rotate_on_unlock` (String) Rotate after unlock
 - `rotated_password` (String) rotated-username password (relevant only for rotator-type=ldap)
 - `rotated_username` (String) username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=ldap)
 - `rotation_event_in` (List of String) How many days before the rotation of the item would you like to be notified
@@ -43,12 +49,14 @@ Ldap rotated secret resource
 - `rotation_interval` (String) The number of days to wait between every automatic key rotation (1-365)
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
+- `secure_access_enforce_hosts_restriction` (Boolean) Enforce connections only to allowed SRA hosts
 - `secure_access_host` (List of String) Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)
 - `secure_access_rdp_domain` (String) Default domain name server. i.e. microsoft.com
 - `secure_access_url` (String) Destination URL to inject secrets
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
+- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target` (List of String) A list of linked targets to be associated, Relevant only for Secure Remote Access for ssh cert issuer, ldap rotated secret and ldap dynamic secret, To specify multiple targets use argument multiple times
 - `user_attribute` (String) LDAP User Attribute, Default value "cn"

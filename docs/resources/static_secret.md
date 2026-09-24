@@ -46,24 +46,33 @@ resource "akeyless_static_secret" "secret" {
 ### Optional
 
 - `accessibility` (String) For personal password manager
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `change_event` (String) Trigger an event when a secret value changed [true/false] (Relevant only for Static Secret)
 - `custom_field` (Map of String, Sensitive) Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')
 - `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `description` (String) Description of the object
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `format` (String) Secret format [text/json/key-value] (relevant only for type 'generic')
+- `host_provider` (String) Host provider type for Secure Remote Access [explicit/target]
 - `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `inject_url` (Set of String) List of URLs associated with the item (relevant only for type 'password')
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
+- `lock_on_read` (String) Lock this secret after each successful value read [true/false]
+- `lock_ttl` (String) Lock TTL in minutes
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `multiline_value` (Boolean) The provided value is a multiline value (separated by '
 ')
 - `output_rule` (List of String) Password output rule definitions
 - `password` (String, Sensitive) Password value (relevant only for type 'password')
 - `protection_key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `provider_type` (String) Provider type
+- `rotate_on_unlock` (String) Rotate this secret after it is unlocked [true/false]
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_enforce_hosts_restriction` (Boolean) Enforce connections only to allowed SRA hosts
 - `secure_access_gateway` (String) Secure Remote Access Gateway
 - `secure_access_host` (Set of String) Target servers for connections., For multiple values repeat this flag.
 - `secure_access_rdp_user` (String) Remote Desktop Username
@@ -74,6 +83,7 @@ resource "akeyless_static_secret" "secret" {
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target` (Set of String) Targets associated with this Secure Remote Access item
 - `type` (String) Secret type [generic/password]
 - `username` (String) Username value (relevant only for type 'password')
 - `value` (String, Sensitive) The secret content.

@@ -48,6 +48,22 @@ func resourceUsc() *schema.Resource {
 				Optional:    true,
 				Description: "GCP Project ID (Relevant only for GCP targets)",
 			},
+			"gcp_folder_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCP Folder ID (Relevant only for GCP targets with folder scope)",
+			},
+			"gcp_organization_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCP Organization ID (Relevant only for GCP targets with folder or organization scope)",
+			},
+			"gcp_scope": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "GCP USC scope [project/folder/organization]. Defaults to project when empty",
+			},
 			"gcp_sm_regions": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -102,6 +118,9 @@ func resourceUscCreate(d *schema.ResourceData, m any) error {
 	azureKvName := d.Get("azure_kv_name").(string)
 	k8sNamespace := d.Get("k8s_namespace").(string)
 	gcpProjectId := d.Get("gcp_project_id").(string)
+	gcpFolderID := d.Get("gcp_folder_id").(string)
+	gcpOrganizationID := d.Get("gcp_organization_id").(string)
+	gcpScope := d.Get("gcp_scope").(string)
 	gcpSmRegions := d.Get("gcp_sm_regions").(string)
 	uscPrefix := d.Get("usc_prefix").(string)
 	usePrefixAsFilter := d.Get("use_prefix_as_filter").(string)
@@ -118,6 +137,9 @@ func resourceUscCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.AzureKvName, azureKvName)
 	common.GetAkeylessPtr(&body.K8sNamespace, k8sNamespace)
 	common.GetAkeylessPtr(&body.GcpProjectId, gcpProjectId)
+	common.GetAkeylessPtr(&body.GcpFolderId, gcpFolderID)
+	common.GetAkeylessPtr(&body.GcpOrganizationId, gcpOrganizationID)
+	common.GetAkeylessPtr(&body.GcpScope, gcpScope)
 	common.GetAkeylessPtr(&body.GcpSmRegions, gcpSmRegions)
 	common.GetAkeylessPtr(&body.UscPrefix, uscPrefix)
 	common.GetAkeylessPtr(&body.UsePrefixAsFilter, usePrefixAsFilter)
@@ -213,6 +235,24 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 				}
 				if gcpProjectId, ok := attr["gcp_project_id"]; ok {
 					err := d.Set("gcp_project_id", gcpProjectId)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpFolderID, ok := attr["gcp_folder_id"]; ok {
+					err := d.Set("gcp_folder_id", gcpFolderID)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpOrganizationID, ok := attr["gcp_organization_id"]; ok {
+					err := d.Set("gcp_organization_id", gcpOrganizationID)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpScope, ok := attr["gcp_scope"]; ok {
+					err := d.Set("gcp_scope", gcpScope)
 					if err != nil {
 						return err
 					}
@@ -346,6 +386,9 @@ func validateUscUpdateParams(d *schema.ResourceData) error {
 		"azure_kv_name",
 		"k8s_namespace",
 		"gcp_project_id",
+		"gcp_folder_id",
+		"gcp_organization_id",
+		"gcp_scope",
 		"gcp_sm_regions",
 		"usc_prefix",
 		"use_prefix_as_filter",

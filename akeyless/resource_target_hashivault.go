@@ -2,6 +2,7 @@ package akeyless
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -20,6 +21,10 @@ func resourceHashiVaultTarget() *schema.Resource {
 			State: resourceHashiVaultTargetImport,
 		},
 		Schema: map[string]*schema.Schema{
+			"lock_on_read":     {Type: schema.TypeString, Optional: true, Description: "Lock after read"},
+			"lock_ttl":         {Type: schema.TypeString, Optional: true, Description: "Lock TTL in minutes"},
+			"rotate_on_unlock": {Type: schema.TypeString, Optional: true, Description: "Rotate after unlock"},
+
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -94,6 +99,10 @@ func resourceHashiVaultTargetCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 
+	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
+	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
+	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
+
 	_, resp, err := client.CreateHashiVaultTarget(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("failed to create target", resp, err)
@@ -167,6 +176,33 @@ func resourceHashiVaultTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	itemOut, _, err := client.DescribeItem(ctx).Body(akeyless_api.DescribeItem{Name: path, Token: &token}).Execute()
+	if err != nil {
+		return err
+	}
+	if itemOut.ItemGeneralInfo != nil {
+		info := itemOut.ItemGeneralInfo
+		if info.LockOnRead != nil {
+			if err := d.Set("lock_on_read", strconv.FormatBool(*info.LockOnRead)); err != nil {
+				return err
+			}
+		}
+		if info.LockTtl != nil {
+			if err := d.Set("lock_ttl", strconv.FormatInt(*info.LockTtl, 10)); err != nil {
+				return err
+			}
+		}
+		if info.RotateOnUnlock != nil {
+			if err := d.Set("rotate_on_unlock", strconv.FormatBool(*info.RotateOnUnlock)); err != nil {
+				return err
+			}
+		} else if info.PendingRotateOnUnlock != nil {
+			if err := d.Set("rotate_on_unlock", strconv.FormatBool(*info.PendingRotateOnUnlock)); err != nil {
+				return err
+			}
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -199,6 +235,10 @@ func resourceHashiVaultTargetUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+
+	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
+	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
+	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.UpdateHashiVaultTarget(ctx).Body(body).Execute()
 	if err != nil {

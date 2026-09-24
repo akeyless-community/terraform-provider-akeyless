@@ -123,7 +123,13 @@ func resourceRotatedSecretSsh() *schema.Resource {
 			"key_data_base64": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Private key file contents encoded using base64",
+			},
+			"key_algorithm": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Key algorithm to generate when no private key is supplied",
 			},
 			"max_versions": {
 				Type:        schema.TypeString,
@@ -193,12 +199,50 @@ func resourceRotatedSecretSsh() *schema.Resource {
 				Optional:    true,
 				Description: "Specify target type. Options are ssh or rdp",
 			},
+			"secure_access_ssh_creds": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "SSH credential type [password/private-key]",
+			},
 			"keep_prev_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
-		},
+			"host_provider": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Host provider type [explicit/target]",
+			},
+			"provider_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Provider type",
+			},
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			},
+			"lock_on_read": {
+				Type: schema.TypeString, Optional: true, Description: "Lock after read",
+			},
+			"lock_ttl": {
+				Type: schema.TypeString, Optional: true, Description: "Lock TTL",
+			},
+			"rotate_on_unlock": {
+				Type: schema.TypeString, Optional: true, Description: "Rotate after unlock",
+			},
+			"secure_access_enforce_hosts_restriction": {
+				Type: schema.TypeBool, Optional: true, Description: "Enforce connections only to allowed SRA hosts",
+			}},
 	}
 }
 
@@ -232,6 +276,7 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 		itemCustomFields[k] = v.(string)
 	}
 	keyDataBase64 := d.Get("key_data_base64").(string)
+	keyAlgorithm := d.Get("key_algorithm").(string)
 	maxVersions := d.Get("max_versions").(string)
 	publicKeyRemotePath := d.Get("public_key_remote_path").(string)
 	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
@@ -253,6 +298,9 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
 	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
 	secureAccessTargetType := d.Get("secure_access_target_type").(string)
+	secureAccessSshCreds := d.Get("secure_access_ssh_creds").(string)
+	hostProvider := d.Get("host_provider").(string)
+	providerType := d.Get("provider_type").(string)
 
 	body := akeyless_api.RotatedSecretCreateSsh{
 		Name:        name,
@@ -278,6 +326,7 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 		body.ItemCustomFields = &itemCustomFields
 	}
 	common.GetAkeylessPtr(&body.KeyDataBase64, keyDataBase64)
+	common.GetAkeylessPtr(&body.KeyAlgorithm, keyAlgorithm)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.PublicKeyRemotePath, publicKeyRemotePath)
 	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
@@ -295,7 +344,34 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
 	common.GetAkeylessPtr(&body.SecureAccessTargetType, secureAccessTargetType)
+	common.GetAkeylessPtr(&body.SecureAccessSshCreds, secureAccessSshCreds)
+	common.GetAkeylessPtr(&body.HostProvider, hostProvider)
+	common.GetAkeylessPtr(&body.ProviderType, providerType)
 
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
+	if value, ok := d.GetOkExists("skip_dry_run"); ok {
+		common.GetAkeylessPtr(&body.SkipDryRun, value)
+	}
+	if value, ok := d.GetOk("lock_on_read"); ok {
+		common.GetAkeylessPtr(&body.LockOnRead, value)
+	}
+	if value, ok := d.GetOk("lock_ttl"); ok {
+		common.GetAkeylessPtr(&body.LockTtl, value)
+	}
+	if value, ok := d.GetOk("rotate_on_unlock"); ok {
+		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
+	}
+	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
+		common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, value)
+	}
 	_, resp, err := client.RotatedSecretCreateSsh(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create rotated secret", resp, err)
@@ -404,6 +480,12 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
+		if rsd.KeyAlgorithm != nil {
+			err = d.Set("key_algorithm", *rsd.KeyAlgorithm)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	if itemOut.ItemCustomFieldsDetails != nil {
@@ -457,6 +539,26 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	if itemOut.ItemGeneralInfo.LockOnRead != nil {
+		if err = d.Set("lock_on_read", strconv.FormatBool(*itemOut.ItemGeneralInfo.LockOnRead)); err != nil {
+			return err
+		}
+	}
+	if itemOut.ItemGeneralInfo.LockTtl != nil {
+		if err = d.Set("lock_ttl", strconv.FormatInt(*itemOut.ItemGeneralInfo.LockTtl, 10)); err != nil {
+			return err
+		}
+	}
+	if itemOut.ItemGeneralInfo.RotateOnUnlock != nil {
+		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.RotateOnUnlock)); err != nil {
+			return err
+		}
+	} else if itemOut.ItemGeneralInfo.PendingRotateOnUnlock != nil {
+		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.PendingRotateOnUnlock)); err != nil {
+			return err
+		}
+	}
+
 	if err = setAgenticRulesReadFields(d, itemOut.ItemGeneralInfo.AgenticRules); err != nil {
 		return err
 	}
@@ -498,6 +600,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 		itemCustomFields[k] = v.(string)
 	}
 	keyDataBase64 := d.Get("key_data_base64").(string)
+	keyAlgorithm := d.Get("key_algorithm").(string)
 	maxVersions := d.Get("max_versions").(string)
 	publicKeyRemotePath := d.Get("public_key_remote_path").(string)
 	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)
@@ -519,6 +622,9 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
 	secureAccessSshUser := d.Get("secure_access_ssh_user").(string)
 	secureAccessTargetType := d.Get("secure_access_target_type").(string)
+	secureAccessSshCreds := d.Get("secure_access_ssh_creds").(string)
+	hostProvider := d.Get("host_provider").(string)
+	providerType := d.Get("provider_type").(string)
 	keepPrevVersion := d.Get("keep_prev_version").(string)
 	rotatorType := d.Get("rotator_type").(string)
 
@@ -555,6 +661,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 		body.ItemCustomFields = &itemCustomFields
 	}
 	common.GetAkeylessPtr(&body.KeyDataBase64, keyDataBase64)
+	common.GetAkeylessPtr(&body.KeyAlgorithm, keyAlgorithm)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.PublicKeyRemotePath, publicKeyRemotePath)
 	common.GetAkeylessPtr(&body.RotateAfterDisconnect, rotateAfterDisconnect)
@@ -572,8 +679,35 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
 	common.GetAkeylessPtr(&body.SecureAccessTargetType, secureAccessTargetType)
+	common.GetAkeylessPtr(&body.SecureAccessSshCreds, secureAccessSshCreds)
+	common.GetAkeylessPtr(&body.HostProvider, hostProvider)
+	common.GetAkeylessPtr(&body.ProviderType, providerType)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
+	if value, ok := d.GetOkExists("skip_dry_run"); ok {
+		common.GetAkeylessPtr(&body.SkipDryRun, value)
+	}
+	if value, ok := d.GetOk("lock_on_read"); ok {
+		common.GetAkeylessPtr(&body.LockOnRead, value)
+	}
+	if value, ok := d.GetOk("lock_ttl"); ok {
+		common.GetAkeylessPtr(&body.LockTtl, value)
+	}
+	if value, ok := d.GetOk("rotate_on_unlock"); ok {
+		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
+	}
+	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
+		common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, value)
+	}
 	_, resp, err := client.RotatedSecretUpdateSsh(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update rotated secret", resp, err)

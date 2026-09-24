@@ -161,6 +161,9 @@ func resourceDynamicSecretAerospikeRead(d *schema.ResourceData, m interface{}) e
 	if err := setAgenticRulesReadFields(d, out.AgenticRules); err != nil {
 		return err
 	}
+	if err := setDynamicSecretSkipDryRunReadField(d, out.SkipDryRun); err != nil {
+		return err
+	}
 	return nil
 }
 

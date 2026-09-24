@@ -40,6 +40,26 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "For personal password manager",
 				Default:     "regular",
 			},
+			"provider_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Provider type",
+			},
+			"ara_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable AI Quorum",
+			},
 			"change_event": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -90,14 +110,12 @@ func resourceStaticSecret() *schema.Resource {
 			"input_rule": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				ForceNew:    true,
 				Description: "Password input rule definitions",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"output_rule": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				ForceNew:    true,
 				Description: "Password output rule definitions",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
@@ -215,6 +233,37 @@ func resourceStaticSecret() *schema.Resource {
 				Optional:    true,
 				Description: "Web-Proxy via Akeyless's Secure Remote Access (SRA)",
 			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed SRA hosts",
+			},
+			"host_provider": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Host provider type for Secure Remote Access [explicit/target]",
+			},
+			"target": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Targets associated with this Secure Remote Access item",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"lock_on_read": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Lock this secret after each successful value read [true/false]",
+			},
+			"lock_ttl": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Lock TTL in minutes",
+			},
+			"rotate_on_unlock": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Rotate this secret after it is unlocked [true/false]",
+			},
 		},
 	}
 }
@@ -229,6 +278,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	value := d.Get("value").(string)
 	format := d.Get("format").(string)
 	accessibility := d.Get("accessibility").(string)
+	providerType := d.Get("provider_type").(string)
 	changeEvent := d.Get("change_event").(string)
 	injectUrlSet := d.Get("inject_url").(*schema.Set)
 	injectUrl := common.ExpandStringList(injectUrlSet.List())
@@ -254,6 +304,11 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	secureAccessGateway := d.Get("secure_access_gateway").(string)
 	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
 	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
+	hostProvider := d.Get("host_provider").(string)
+	targetSet := d.Get("target").(*schema.Set)
+	targets := common.ExpandStringList(targetSet.List())
+	lockOnRead := d.Get("lock_on_read").(string)
+	lockTtl := d.Get("lock_ttl").(string)
 
 	tags := d.Get("tags").(*schema.Set)
 	tagsList := common.ExpandStringList(tags.List())
@@ -272,6 +327,7 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Tags, tagsList)
 
 	common.GetAkeylessPtr(&body.Accessibility, accessibility)
+	common.GetAkeylessPtr(&body.ProviderType, providerType)
 	common.GetAkeylessPtr(&body.ChangeEvent, changeEvent)
 	common.GetAkeylessPtr(&body.Format, format)
 	common.GetAkeylessPtr(&body.InjectUrl, injectUrl)
@@ -294,10 +350,38 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.SecureAccessGateway, secureAccessGateway)
 	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
+	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
+		common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, value)
+	}
+	common.GetAkeylessPtr(&body.HostProvider, hostProvider)
+	common.GetAkeylessPtr(&body.Target, targets)
+	common.GetAkeylessPtr(&body.LockOnRead, lockOnRead)
+	common.GetAkeylessPtr(&body.LockTtl, lockTtl)
 
 	_, resp, err := client.CreateSecret(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create Secret", resp, err)
+	}
+	if rotateOnUnlock := d.Get("rotate_on_unlock").(string); rotateOnUnlock != "" {
+		updateBody := akeyless_api.UpdateItem{
+			Name:  path,
+			Token: &token,
+		}
+		common.GetAkeylessPtr(&updateBody.RotateOnUnlock, rotateOnUnlock)
+
+		_, resp, err = client.UpdateItem(ctx).Body(updateBody).Execute()
+		if err != nil {
+			return common.HandleError("can't update Secret", resp, err)
+		}
 	}
 
 	item := akeyless_api.DescribeItem{
@@ -417,6 +501,21 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 				}
 			}
 		}
+		if info.LockOnRead != nil {
+			if err := d.Set("lock_on_read", strconv.FormatBool(*info.LockOnRead)); err != nil {
+				return err
+			}
+		}
+		if info.LockTtl != nil {
+			if err := d.Set("lock_ttl", strconv.FormatInt(*info.LockTtl, 10)); err != nil {
+				return err
+			}
+		}
+		if info.RotateOnUnlock != nil {
+			if err := d.Set("rotate_on_unlock", strconv.FormatBool(*info.RotateOnUnlock)); err != nil {
+				return err
+			}
+		}
 	}
 
 	value := gsvOut[path]
@@ -514,6 +613,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	tagsList := common.ExpandStringList(tags.List())
 	description := d.Get("description").(string)
 	changeEvent := d.Get("change_event").(string)
+	providerType := d.Get("provider_type").(string)
 
 	secureAccessHost := d.Get("secure_access_host").(*schema.Set)
 	secureAccessHostList := common.ExpandStringList(secureAccessHost.List())
@@ -529,6 +629,12 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	secureAccessGateway := d.Get("secure_access_gateway").(string)
 	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
 	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
+	hostProvider := d.Get("host_provider").(string)
+	targetSet := d.Get("target").(*schema.Set)
+	targets := common.ExpandStringList(targetSet.List())
+	lockOnRead := d.Get("lock_on_read").(string)
+	lockTtl := d.Get("lock_ttl").(string)
+	rotateOnUnlock := d.Get("rotate_on_unlock").(string)
 
 	bodyItem := akeyless_api.UpdateItem{
 		Name:    path,
@@ -548,6 +654,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 
 	common.GetAkeylessPtr(&bodyItem.Description, description)
 	common.GetAkeylessPtr(&bodyItem.ChangeEvent, changeEvent)
+	common.GetAkeylessPtr(&bodyItem.ProviderType, providerType)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessEnable, secureAccessEnable)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCreds, secureAccessSshCreds)
@@ -562,6 +669,25 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&bodyItem.SecureAccessGateway, secureAccessGateway)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessWebProxy, secureAccessWebProxy)
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&bodyItem.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&bodyItem.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&bodyItem.EnableAiQuorum, value)
+	}
+	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
+		common.GetAkeylessPtr(&bodyItem.SecureAccessEnforceHostsRestriction, value)
+	}
+	common.GetAkeylessPtr(&bodyItem.HostProvider, hostProvider)
+	common.GetAkeylessPtr(&bodyItem.Target, targets)
+	common.GetAkeylessPtr(&bodyItem.LockOnRead, lockOnRead)
+	common.GetAkeylessPtr(&bodyItem.LockTtl, lockTtl)
+	common.GetAkeylessPtr(&bodyItem.RotateOnUnlock, rotateOnUnlock)
+	common.GetAkeylessPtr(&bodyItem.InputRule, expandOptionalStringList(d, "input_rule"))
+	common.GetAkeylessPtr(&bodyItem.OutputRule, expandOptionalStringList(d, "output_rule"))
 
 	_, resp, err := client.UpdateItem(ctx).Body(bodyItem).Execute()
 	if err != nil {

@@ -150,6 +150,21 @@ func resourceRotatedSecretF5BigIp() *schema.Resource {
 				Description: "How many days before rotation to send a notification",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"ara_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable AI Quorum",
+			},
 			"skip_dry_run": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -214,6 +229,15 @@ func resourceRotatedSecretF5BigIpCreate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.UseLowerLetters, d.Get("use_lower_letters").(string))
 	common.GetAkeylessPtr(&body.UseNumbers, d.Get("use_numbers").(string))
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, d.Get("use_special_characters").(string))
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
 	tags := common.ExpandStringList(d.Get("tags").(*schema.Set).List())
 	if len(tags) > 0 {
 		body.Tags = tags
@@ -402,6 +426,15 @@ func resourceRotatedSecretF5BigIpUpdate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.UseLowerLetters, d.Get("use_lower_letters").(string))
 	common.GetAkeylessPtr(&body.UseNumbers, d.Get("use_numbers").(string))
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, d.Get("use_special_characters").(string))
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
 	itemCustomFields := common.ExpandStringMap(d.Get("item_custom_fields").(map[string]interface{}))
 	body.ItemCustomFields = &itemCustomFields
 

@@ -3,6 +3,7 @@ package akeyless
 
 import (
 	"context"
+	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -20,6 +21,10 @@ func resourceK8sTarget() *schema.Resource {
 			State: resourceK8sTargetImport,
 		},
 		Schema: map[string]*schema.Schema{
+			"lock_on_read":     {Type: schema.TypeString, Optional: true, Description: "Lock after read"},
+			"lock_ttl":         {Type: schema.TypeString, Optional: true, Description: "Lock TTL in minutes"},
+			"rotate_on_unlock": {Type: schema.TypeString, Optional: true, Description: "Rotate after unlock"},
+
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -131,6 +136,10 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 		body.UseGwServiceAccount = &useGwServiceAccount
 	}
 
+	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
+	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
+	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
+
 	_, resp, err := client.TargetCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create Target", resp, err)
@@ -224,6 +233,33 @@ func resourceK8sTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	itemOut, _, err := client.DescribeItem(ctx).Body(akeyless_api.DescribeItem{Name: path, Token: &token}).Execute()
+	if err != nil {
+		return err
+	}
+	if itemOut.ItemGeneralInfo != nil {
+		info := itemOut.ItemGeneralInfo
+		if info.LockOnRead != nil {
+			if err := d.Set("lock_on_read", strconv.FormatBool(*info.LockOnRead)); err != nil {
+				return err
+			}
+		}
+		if info.LockTtl != nil {
+			if err := d.Set("lock_ttl", strconv.FormatInt(*info.LockTtl, 10)); err != nil {
+				return err
+			}
+		}
+		if info.RotateOnUnlock != nil {
+			if err := d.Set("rotate_on_unlock", strconv.FormatBool(*info.RotateOnUnlock)); err != nil {
+				return err
+			}
+		} else if info.PendingRotateOnUnlock != nil {
+			if err := d.Set("rotate_on_unlock", strconv.FormatBool(*info.PendingRotateOnUnlock)); err != nil {
+				return err
+			}
+		}
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -267,6 +303,10 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	if d.HasChange("use_gw_service_account") {
 		body.UseGwServiceAccount = &useGwServiceAccount
 	}
+
+	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
+	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
+	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {

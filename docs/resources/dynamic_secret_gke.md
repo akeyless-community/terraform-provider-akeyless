@@ -21,8 +21,11 @@ Google Kubernetes Engine (GKE) dynamic secret resource
 
 ### Optional
 
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `encryption_key_name` (String) Dynamic producer encryption key
 - `gke_account_key` (String) GKE Service Account key file path
 - `gke_cluster_cert` (String) GKE cluster CA certificate
@@ -37,6 +40,7 @@ Google Kubernetes Engine (GKE) dynamic secret resource
 - `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL

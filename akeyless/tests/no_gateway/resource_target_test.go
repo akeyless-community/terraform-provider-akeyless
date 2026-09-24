@@ -17,6 +17,9 @@ func TestTargetArtifactoryResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_artifactory" "%v" {
 			name = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			base_url     = "XXXXXXX"
 			artifactory_admin_name = "rgergetghergerg"
 			artifactory_admin_pwd = "ddddd"
@@ -26,6 +29,9 @@ func TestTargetArtifactoryResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_artifactory" "%v" {
 			name = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			base_url     = "dfffff"
 			artifactory_admin_name = "rgergddetghergerg"
 			artifactory_admin_pwd = "ddddd"
@@ -41,6 +47,9 @@ func TestTargetAwsResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_aws" "%v" {
 			name 			= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			access_key_id 	= "XXXXXXX"
   			access_key 		= "rgergetghergerg"
 			description 	= "test aws target"
@@ -52,6 +61,9 @@ func TestTargetAwsResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_aws" "%v" {
 			name 			= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			access_key_id 	= "YYYYYYY"
   			access_key 		= "0I/sdgfvfsgs/sdfrgrfv"
 			description 	= "updated aws target"
@@ -96,6 +108,9 @@ func TestTargetAzureResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_azure" "%v" {
 			name = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			client_id     = "dcdcdc"
 			tenant_id = "rgergetghergerg" 
 			client_secret = "dmkdcnkdc"
@@ -105,6 +120,9 @@ func TestTargetAzureResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_azure" "%v" {
 			name = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			client_id     = "dcdcddfrfc"
 			tenant_id = "rgergetgheergerg" 
 			client_secret = "dmkdcnkdc"
@@ -123,6 +141,9 @@ func TestTargetDbResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 						 = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			db_type     				 = "mysql"
 			user_name 					 = "user1"
 			pwd 						 = "pwd1"
@@ -137,6 +158,9 @@ func TestTargetDbResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 						 = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			db_type     				 = "mysql"
 			user_name 					 = "user2"
 			pwd 						 = "pwd2"
@@ -162,6 +186,9 @@ func TestTargetDbMTLSResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			db_type     		= "mysql"
 			user_name 			= "user1"
 			pwd 				= "pwd1"
@@ -179,6 +206,9 @@ func TestTargetDbMTLSResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			db_type     		= "mysql"
 			user_name 			= "user2"
 			pwd 				= "pwd2"
@@ -228,6 +258,9 @@ func TestTargetDbOracleResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			db_type     		= "oracle"
 			user_name 			= "user1"
 			pwd 				= "pwd1"
@@ -240,6 +273,9 @@ func TestTargetDbOracleResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_db" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			db_type     		= "oracle"
 			user_name 			= "user2"
 			pwd 				= "pwd2"
@@ -259,6 +295,9 @@ func TestTargetDockerhubResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_dockerhub" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			dockerhub_username 	= "testuser"
 			dockerhub_password 	= "testpass"
 			description 		= "Test Dockerhub target"
@@ -268,6 +307,9 @@ func TestTargetDockerhubResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_dockerhub" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			dockerhub_username 	= "testuser2"
 			dockerhub_password 	= "testpass2"
 			description 		= "Updated Dockerhub target"
@@ -284,6 +326,9 @@ func TestTargetEksResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_eks" "%v" {
 			name 					= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			eks_cluster_name     	= "aaaa1"
 			eks_cluster_endpoint 	= "https://www.test1.com"
 			eks_cluster_ca_cert 	= "YmxhYmxh"
@@ -302,6 +347,9 @@ func TestTargetGcpResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gcp" "%v" {
 			name 			= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			gcp_sa_email	= "a@a.aa"
 			gcp_key 		= "YmxhYmxh"
 		}
@@ -310,6 +358,9 @@ func TestTargetGcpResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_gcp" "%v" {
 			name 			= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			gcp_sa_email	= "b@b.bb"
 			gcp_key 		= "YmxpYmxp"
 		}
@@ -325,6 +376,9 @@ func TestTargetGeminiResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gemini" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			api_key 			= "test-api-key"
 			description 		= "Test Gemini target"
 		}
@@ -333,6 +387,9 @@ func TestTargetGeminiResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_gemini" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			api_key 			= "test-api-key2"
 			description 		= "Updated Gemini target"
 		}
@@ -347,6 +404,9 @@ func TestTargetGithubResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_github" "%v" {
 			name 					= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			github_app_id 			= "1234"
 			github_app_private_key 	= "abcd"
 			description 			= "aaaa"
@@ -357,6 +417,9 @@ func TestTargetGithubResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_github" "%v" {
 			name 					= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			github_app_id 			= "5678"
 			github_app_private_key 	= "efgh"
 			description				= "bbbb"
@@ -400,6 +463,9 @@ func TestTargetGitlabResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gitlab" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			gitlab_access_token = "aaaaa"
 			gitlab_certificate  = "1234"
 			description 		= "eeeee"
@@ -410,6 +476,9 @@ func TestTargetGitlabResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_gitlab" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			gitlab_access_token = "bbbbb"
   			gitlab_certificate  = "5678"
 			description			= "ddddd"
@@ -426,6 +495,9 @@ func TestTargetGkeResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_gke" "%v" {
 			name = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			gke_service_account_email	= "a@a.aa"
 			gke_cluster_endpoint 		= "https://akaka.com"
 			gke_cluster_cert 			= "YmxhYmxh"
@@ -437,6 +509,9 @@ func TestTargetGkeResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_gke" "%v" {
 			name = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			gke_service_account_email	= "b@b.bb"
 			gke_cluster_endpoint 		= "https://akakad.com"
 			gke_cluster_cert 			= "YmxpYmxp"
@@ -457,6 +532,9 @@ func TestTargetGlobalSignResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_globalsign" "%v" {
 			name              	= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			timeout             = "1m0s"
 			username            = "user1"
 			password            = "pass1"
@@ -472,6 +550,9 @@ func TestTargetGlobalSignResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_globalsign" "%v" {
 			name              	= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			timeout             = "2m30s"
 			username            = "user2"
 			password            = "pass2"
@@ -496,6 +577,9 @@ func TestTargetGlobalSignAtlasResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_globalsign_atlas" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			api_key 			= "test-api-key"
 			api_secret 			= "test-api-secret"
 			mtls_cert_data_base64 = "%v"
@@ -507,6 +591,9 @@ func TestTargetGlobalSignAtlasResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_globalsign_atlas" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			api_key 			= "test-api-key2"
 			api_secret 			= "test-api-secret2"
 			mtls_cert_data_base64 = "%v"
@@ -525,6 +612,9 @@ func TestTargetGodaddyResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_godaddy" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			api_key 			= "test-api-key"
 			secret 				= "test-api-secret"
 			imap_username 		= "imap@example.com"
@@ -537,6 +627,9 @@ func TestTargetGodaddyResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_godaddy" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			api_key 			= "test-api-key2"
 			secret 				= "test-api-secret2"
 			imap_username 		= "imap2@example.com"
@@ -577,6 +670,9 @@ func TestTargetGoogleTrustResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_google_trust" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			email 				= "test@example.com"
 			eab_key_id 			= "%v"
 			eab_hmac_key 		= "%v"
@@ -591,6 +687,9 @@ func TestTargetGoogleTrustResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_google_trust" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			email 				= "updated@example.com"
 			eab_key_id 			= "%v"
 			eab_hmac_key 		= "%v"
@@ -620,12 +719,18 @@ func TestTargetGoogleTrustResourceCloudflareDnsZone(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_cloudflare" "%v" {
 			name        = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			account_id  = "test-account-id"
 			api_token   = "test-api-token"
 		}
 
 		resource "akeyless_target_google_trust" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			email 				= "test@example.com"
 			eab_key_id 			= "%v"
 			eab_hmac_key 		= "%v"
@@ -640,12 +745,18 @@ func TestTargetGoogleTrustResourceCloudflareDnsZone(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_cloudflare" "%v" {
 			name        = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			account_id  = "test-account-id"
 			api_token   = "test-api-token"
 		}
 
 		resource "akeyless_target_google_trust" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			email 				= "updated@example.com"
 			eab_key_id 			= "%v"
 			eab_hmac_key 		= "%v"
@@ -686,6 +797,9 @@ func TestTargetCloudflareResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_cloudflare" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			account_id 			= "test-account-id"
 			api_token 			= "test-api-token"
 			description 		= "Test Cloudflare target"
@@ -695,6 +809,9 @@ func TestTargetCloudflareResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_cloudflare" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			account_id 			= "test-account-id-2"
 			api_token 			= "test-api-token-2"
 			description 		= "Updated Cloudflare target"
@@ -732,6 +849,9 @@ func TestTargetK8sResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_k8s" "%v" {
 			name 					= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			k8s_cluster_endpoint	= "https://www.test1.com"
 			k8s_cluster_ca_cert 	= "YmxhYmxh"
 			k8s_cluster_token 		= "YmxhYmxh"
@@ -741,6 +861,9 @@ func TestTargetK8sResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_k8s" "%v" {
 			name 					= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			k8s_cluster_endpoint 	= "https://akakad.com"
 			k8s_cluster_ca_cert 	= "YmxpYmxp"
 			k8s_cluster_token 		= "YmxpYmxp"
@@ -758,6 +881,9 @@ func TestTargetLdapResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_ldap" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			ldap_url 			= "ldap://ldap.example.com"
 			bind_dn 			= "cn=admin,dc=example,dc=com"
 			bind_dn_password 	= "password"
@@ -768,6 +894,9 @@ func TestTargetLdapResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_ldap" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			ldap_url 			= "ldap://ldap2.example.com"
 			bind_dn 			= "cn=admin2,dc=example,dc=com"
 			bind_dn_password 	= "password2"
@@ -800,6 +929,9 @@ func TestTargetLetsEncryptResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_lets_encrypt" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			email 				= "test@example.com"
 			dns_target_creds 	= "%v"
 			lets_encrypt_url 	= "staging"
@@ -811,6 +943,9 @@ func TestTargetLetsEncryptResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_lets_encrypt" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			email 				= "updated@example.com"
 			dns_target_creds 	= "%v"
 			lets_encrypt_url 	= "production"
@@ -831,12 +966,18 @@ func TestTargetLetsEncryptResourceCloudflareDnsZone(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_cloudflare" "%v" {
 			name        = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			account_id  = "test-account-id"
 			api_token   = "test-api-token"
 		}
 
 		resource "akeyless_target_lets_encrypt" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			email 				= "test@example.com"
 			dns_target_creds 	= akeyless_target_cloudflare.%v.name
 			dns_zone 			= "cf-zone-123"
@@ -849,12 +990,18 @@ func TestTargetLetsEncryptResourceCloudflareDnsZone(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_cloudflare" "%v" {
 			name        = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			account_id  = "test-account-id"
 			api_token   = "test-api-token"
 		}
 
 		resource "akeyless_target_lets_encrypt" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			email 				= "updated@example.com"
 			dns_target_creds 	= akeyless_target_cloudflare.%v.name
 			dns_zone 			= "cf-zone-456"
@@ -915,6 +1062,9 @@ func TestTargetDigiCertResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_digicert" "%v" {
 			name             = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			email            = "test@example.com"
 			acme_challenge   = "dns"
 			digicert_url     = "us-demo"
@@ -930,6 +1080,9 @@ func TestTargetDigiCertResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_digicert" "%v" {
 			name             = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			email            = "updated@example.com"
 			digicert_url     = "eu-demo"
 			dns_target_creds = "%v"
@@ -959,12 +1112,18 @@ func TestTargetDigiCertResourceCloudflareDnsZone(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_cloudflare" "%v" {
 			name        = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			account_id  = "test-account-id"
 			api_token   = "test-api-token"
 		}
 
 		resource "akeyless_target_digicert" "%v" {
 			name             = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			email            = "test@example.com"
 			acme_challenge   = "dns"
 			digicert_url     = "us-demo"
@@ -980,12 +1139,18 @@ func TestTargetDigiCertResourceCloudflareDnsZone(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_cloudflare" "%v" {
 			name        = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			account_id  = "test-account-id"
 			api_token   = "test-api-token"
 		}
 
 		resource "akeyless_target_digicert" "%v" {
 			name             = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			email            = "updated@example.com"
 			digicert_url     = "eu-demo"
 			dns_target_creds = akeyless_target_cloudflare.%v.name
@@ -1026,6 +1191,9 @@ func TestTargetLinkedResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_linked" "%v" {
 			name 					= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			hosts	= "www.test1.com;test,aaa.com;fff"
 			type 		= "mysql"
 			description = "aaa"
@@ -1035,6 +1203,9 @@ func TestTargetLinkedResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_linked" "%v" {
 			name 					= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			hosts	= "aaa.com;fff,www.test1.com;test"
 			type 		= "mssql"
 			description = "bbb"
@@ -1044,6 +1215,9 @@ func TestTargetLinkedResource(t *testing.T) {
 	configUpdate2 := fmt.Sprintf(`
 		resource "akeyless_target_linked" "%v" {
 			name 					= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			hosts	= "aaa.com;fff,"
 			type 		= "mssql"
 			description = "bbb"
@@ -1053,6 +1227,9 @@ func TestTargetLinkedResource(t *testing.T) {
 	configUpdate3 := fmt.Sprintf(`
 		resource "akeyless_target_linked" "%v" {
 			name 					= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			hosts	= "aaa.com;fff,www.test3.com;"
 			type 		= "mssql"
 			description = "bbb"
@@ -1062,6 +1239,9 @@ func TestTargetLinkedResource(t *testing.T) {
 	configUpdate4 := fmt.Sprintf(`
 		resource "akeyless_target_linked" "%v" {
 			name 					= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			hosts	= "aaa.com;fff,www.test4"
 			type 		= "mssql"
 			description = "bbb"
@@ -1071,6 +1251,9 @@ func TestTargetLinkedResource(t *testing.T) {
 	configUpdate5 := fmt.Sprintf(`
 		resource "akeyless_target_linked" "%v" {
 			name 					= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			hosts	= "aaa.com;fff,www.test4;"
 			type 		= "mssql"
 			description = "bbb"
@@ -1088,6 +1271,9 @@ func TestTargetOpenaiResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
 			name                = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			api_key             = "test-api-key-1"
 			openai_url          = "https://api.openai.com"
 			description         = "Test OpenAI target"
@@ -1097,6 +1283,9 @@ func TestTargetOpenaiResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
 			name                = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			api_key             = "test-api-key-2"
 			openai_url          = "https://api.openai.com"
 			description         = "Updated OpenAI target"
@@ -1113,6 +1302,9 @@ func TestTargetPingResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_ping" "%v" {
 			name 					= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			ping_url 				= "https://8.8.8.8"
 			administrative_port 	= "9999"
 			authorization_port 		= "9031"
@@ -1125,6 +1317,9 @@ func TestTargetPingResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_ping" "%v" {
 			name 					= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			ping_url 				= "https://1.1.1.1:443"
 			administrative_port 	= "9998"
 			authorization_port 		= "9032"
@@ -1144,6 +1339,9 @@ func TestTargetRabbitmqResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_rabbit" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			rabbitmq_server_uri = "amqp://localhost:5672"
 			rabbitmq_server_user = "guest"
 			rabbitmq_server_password = "guest"
@@ -1154,6 +1352,9 @@ func TestTargetRabbitmqResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_rabbit" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			rabbitmq_server_uri = "amqp://localhost:5673"
 			rabbitmq_server_user = "admin"
 			rabbitmq_server_password = "admin"
@@ -1171,6 +1372,9 @@ func TestTargetSalesforceResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_salesforce" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			auth_flow 			= "user-password"
 			client_id 			= "test-client-id"
 			client_secret 		= "test-client-secret"
@@ -1185,6 +1389,9 @@ func TestTargetSalesforceResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_salesforce" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			auth_flow 			= "user-password"
 			client_id 			= "test-client-id2"
 			client_secret 		= "test-client-secret2"
@@ -1206,6 +1413,9 @@ func TestTargetSectigoResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_sectigo" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			username 			= "testuser"
 			password 			= "testpass"
 			customer_uri 		= "https://sectigo.example.com"
@@ -1219,6 +1429,9 @@ func TestTargetSectigoResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_sectigo" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			username 			= "testuser2"
 			password 			= "testpass2"
 			customer_uri 		= "https://sectigo2.example.com"
@@ -1241,6 +1454,9 @@ func TestTargetSplunkResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_splunk" "%v" {
 			name 				= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			url 				= "https://splunk.example.com:8089"
 			username 			= "user1"
 			password 			= "test-password"
@@ -1253,6 +1469,9 @@ func TestTargetSplunkResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_splunk" "%v" {
 			name 				= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			url 				= "https://splunk.example.com:8089"
 			username 			= "user2"
 			splunk_token 		= "test-token"
@@ -1271,6 +1490,9 @@ func TestTargetSshResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_ssh" "%v" {
 			name = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			host     = "XXXXXXX"
 			port = "22"
 			ssh_username = "fff"
@@ -1281,6 +1503,9 @@ func TestTargetSshResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_ssh" "%v" {
 			name = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			host  = "YYYYYYY"
 			port = "23"
 			ssh_username = "fff"
@@ -1297,6 +1522,9 @@ func TestTargetWebResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_web" "%v" {
 			name 		= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			url     	= "dfcefkmk"
 			description = "rgergetghergerg"
 		}
@@ -1305,6 +1533,9 @@ func TestTargetWebResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_web" "%v" {
 			name 		= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			url     	= "YYYYYYY"
 			description = "0I/sdgfvfsgs/sdfrgrfv"
 		}
@@ -1319,6 +1550,9 @@ func TestTargetWindowsResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_windows" "%v" {
        		name        = "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
        		hostname    = "127.0.0.1"
        		username    = "admin"
        		password    = "password"
@@ -1330,6 +1564,9 @@ func TestTargetWindowsResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_windows" "%v" {
        		name        = "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
        		hostname    = "127.0.0.2"
        		username    = "superadmin"
        		password    = "mypassword"
@@ -1348,6 +1585,9 @@ func TestTargetZeroSslResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_zerossl" "%v" {
 			name              	= "%v"
+			lock_on_read     = "true"
+			lock_ttl         = "5"
+			rotate_on_unlock = "true"
 			api_key           	= "api_key1"
 			timeout           	= "1m0s"
 			imap_username     	= "user1"
@@ -1361,6 +1601,9 @@ func TestTargetZeroSslResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_zerossl" "%v" {
 			name              	= "%v"
+			lock_on_read     = "false"
+			lock_ttl         = "10"
+			rotate_on_unlock = "false"
 			api_key           	= "api_key2"
 			timeout           	= "2m30s"
 			imap_username     	= "user2"

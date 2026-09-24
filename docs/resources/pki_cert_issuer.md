@@ -62,6 +62,7 @@ PKI Cert Issuer  resource
 - `scheduled_renew` (Number) Number of days before expiration to renew certificates
 - `server_flag` (Boolean) If set, certificates will be flagged for server auth use
 - `signer_key_name` (String) A key to sign the certificate with, required in Private CA mode
+- `split_certificate_chain` (Boolean) Separate the leaf certificate from the certificate chain
 - `street_address` (String) A comma-separated list of street addresses that will be set in the issued certificate
 - `tags` (Set of String) List of the tags attached to this key
 

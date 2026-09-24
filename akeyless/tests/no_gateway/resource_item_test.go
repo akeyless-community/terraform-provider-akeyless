@@ -170,6 +170,7 @@ func TestPkiResource(t *testing.T) {
 			basic_constraints       = "critical,CA:true,pathlen:0"
 			enable_acme             = false
 			max_path_len          	= 0
+			split_certificate_chain = true
 			expiration_event_in   	= ["1"]
 			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value2\"],\"1.2.3.4.6\":[\"value3\",\"value4\"]}"
 			allow_copy_ext_from_csr = true
@@ -207,6 +208,7 @@ func TestPkiResource(t *testing.T) {
 			basic_constraints       = "CA:false"
 			enable_acme             = false
 			max_path_len          	= 0
+			split_certificate_chain = false
 			expiration_event_in   	= []
 			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value5\"]}"
 			allow_copy_ext_from_csr = false

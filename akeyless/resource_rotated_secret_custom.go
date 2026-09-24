@@ -212,7 +212,40 @@ func resourceRotatedSecretCustom() *schema.Resource {
 				Optional:    true,
 				Description: "Password must contain special characters [true/false]",
 			},
-		},
+			"host_provider": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Host provider type [explicit/target]",
+			},
+			"provider_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Provider type",
+			},
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			},
+			"lock_on_read": {
+				Type: schema.TypeString, Optional: true, Description: "Lock after read",
+			},
+			"lock_ttl": {
+				Type: schema.TypeString, Optional: true, Description: "Lock TTL",
+			},
+			"rotate_on_unlock": {
+				Type: schema.TypeString, Optional: true, Description: "Rotate after unlock",
+			},
+			"secure_access_enforce_hosts_restriction": {
+				Type: schema.TypeBool, Optional: true, Description: "Enforce connections only to allowed SRA hosts",
+			}},
 	}
 }
 
@@ -260,6 +293,8 @@ func resourceRotatedSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	useLowerLetters := d.Get("use_lower_letters").(string)
 	useNumbers := d.Get("use_numbers").(string)
 	useSpecialCharacters := d.Get("use_special_characters").(string)
+	hostProvider := d.Get("host_provider").(string)
+	providerType := d.Get("provider_type").(string)
 
 	body := akeyless_api.RotatedSecretCreateCustom{
 		Name:       name,
@@ -307,7 +342,32 @@ func resourceRotatedSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
 	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
-
+	common.GetAkeylessPtr(&body.HostProvider, hostProvider)
+	common.GetAkeylessPtr(&body.ProviderType, providerType)
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
+	if value, ok := d.GetOkExists("skip_dry_run"); ok {
+		common.GetAkeylessPtr(&body.SkipDryRun, value)
+	}
+	if value, ok := d.GetOk("lock_on_read"); ok {
+		common.GetAkeylessPtr(&body.LockOnRead, value)
+	}
+	if value, ok := d.GetOk("lock_ttl"); ok {
+		common.GetAkeylessPtr(&body.LockTtl, value)
+	}
+	if value, ok := d.GetOk("rotate_on_unlock"); ok {
+		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
+	}
+	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
+		common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, value)
+	}
 	_, resp, err := client.RotatedSecretCreateCustom(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create rotated secret", resp, err)
@@ -428,6 +488,26 @@ func resourceRotatedSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
+	if itemOut.ItemGeneralInfo.LockOnRead != nil {
+		if err = d.Set("lock_on_read", strconv.FormatBool(*itemOut.ItemGeneralInfo.LockOnRead)); err != nil {
+			return err
+		}
+	}
+	if itemOut.ItemGeneralInfo.LockTtl != nil {
+		if err = d.Set("lock_ttl", strconv.FormatInt(*itemOut.ItemGeneralInfo.LockTtl, 10)); err != nil {
+			return err
+		}
+	}
+	if itemOut.ItemGeneralInfo.RotateOnUnlock != nil {
+		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.RotateOnUnlock)); err != nil {
+			return err
+		}
+	} else if itemOut.ItemGeneralInfo.PendingRotateOnUnlock != nil {
+		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.PendingRotateOnUnlock)); err != nil {
+			return err
+		}
+	}
+
 	if err = setAgenticRulesReadFields(d, itemOut.ItemGeneralInfo.AgenticRules); err != nil {
 		return err
 	}
@@ -485,6 +565,8 @@ func resourceRotatedSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	useLowerLetters := d.Get("use_lower_letters").(string)
 	useNumbers := d.Get("use_numbers").(string)
 	useSpecialCharacters := d.Get("use_special_characters").(string)
+	hostProvider := d.Get("host_provider").(string)
+	providerType := d.Get("provider_type").(string)
 
 	body := akeyless_api.RotatedSecretUpdateCustom{
 		Name:    name,
@@ -542,7 +624,32 @@ func resourceRotatedSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
 	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
-
+	common.GetAkeylessPtr(&body.HostProvider, hostProvider)
+	common.GetAkeylessPtr(&body.ProviderType, providerType)
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
+	if value, ok := d.GetOkExists("skip_dry_run"); ok {
+		common.GetAkeylessPtr(&body.SkipDryRun, value)
+	}
+	if value, ok := d.GetOk("lock_on_read"); ok {
+		common.GetAkeylessPtr(&body.LockOnRead, value)
+	}
+	if value, ok := d.GetOk("lock_ttl"); ok {
+		common.GetAkeylessPtr(&body.LockTtl, value)
+	}
+	if value, ok := d.GetOk("rotate_on_unlock"); ok {
+		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
+	}
+	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
+		common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, value)
+	}
 	_, resp, err := client.RotatedSecretUpdateCustom(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update rotated secret", resp, err)

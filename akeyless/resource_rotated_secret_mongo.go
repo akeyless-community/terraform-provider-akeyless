@@ -165,7 +165,28 @@ func resourceRotatedSecretMongo() *schema.Resource {
 				Description: "Enable Web Secure Remote Access",
 				Default:     false,
 			},
-		},
+
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			},
+			"lock_on_read": {
+				Type: schema.TypeString, Optional: true, Description: "Lock after read",
+			},
+			"lock_ttl": {
+				Type: schema.TypeString, Optional: true, Description: "Lock TTL",
+			},
+			"rotate_on_unlock": {
+				Type: schema.TypeString, Optional: true, Description: "Rotate after unlock",
+			}},
 	}
 }
 
@@ -246,6 +267,27 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 		body.SecureAccessHost = secureAccessHost
 	}
 
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
+	if value, ok := d.GetOkExists("skip_dry_run"); ok {
+		common.GetAkeylessPtr(&body.SkipDryRun, value)
+	}
+	if value, ok := d.GetOk("lock_on_read"); ok {
+		common.GetAkeylessPtr(&body.LockOnRead, value)
+	}
+	if value, ok := d.GetOk("lock_ttl"); ok {
+		common.GetAkeylessPtr(&body.LockTtl, value)
+	}
+	if value, ok := d.GetOk("rotate_on_unlock"); ok {
+		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
+	}
 	_, resp, err := client.RotatedSecretCreateMongodb(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create rotated secret", resp, err)
@@ -445,6 +487,26 @@ func resourceRotatedSecretMongoRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 
+	if itemOut.ItemGeneralInfo.LockOnRead != nil {
+		if err = d.Set("lock_on_read", strconv.FormatBool(*itemOut.ItemGeneralInfo.LockOnRead)); err != nil {
+			return err
+		}
+	}
+	if itemOut.ItemGeneralInfo.LockTtl != nil {
+		if err = d.Set("lock_ttl", strconv.FormatInt(*itemOut.ItemGeneralInfo.LockTtl, 10)); err != nil {
+			return err
+		}
+	}
+	if itemOut.ItemGeneralInfo.RotateOnUnlock != nil {
+		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.RotateOnUnlock)); err != nil {
+			return err
+		}
+	} else if itemOut.ItemGeneralInfo.PendingRotateOnUnlock != nil {
+		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.PendingRotateOnUnlock)); err != nil {
+			return err
+		}
+	}
+
 	if err = setAgenticRulesReadFields(d, itemOut.ItemGeneralInfo.AgenticRules); err != nil {
 		return err
 	}
@@ -543,6 +605,27 @@ func resourceRotatedSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 		body.SecureAccessHost = secureAccessHost
 	}
 
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
+	if value, ok := d.GetOkExists("skip_dry_run"); ok {
+		common.GetAkeylessPtr(&body.SkipDryRun, value)
+	}
+	if value, ok := d.GetOk("lock_on_read"); ok {
+		common.GetAkeylessPtr(&body.LockOnRead, value)
+	}
+	if value, ok := d.GetOk("lock_ttl"); ok {
+		common.GetAkeylessPtr(&body.LockTtl, value)
+	}
+	if value, ok := d.GetOk("rotate_on_unlock"); ok {
+		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
+	}
 	_, resp, err := client.RotatedSecretUpdateMongodb(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update rotated secret", resp, err)

@@ -41,6 +41,22 @@ func dataSourceCertificate() *schema.Resource {
 				Sensitive:   true,
 				Description: "The private key value in pem format",
 			},
+			"include_private_key": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Include the private key in the certificate value response",
+			},
+			"leaf_only": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Return only the leaf certificate",
+			},
+			"password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Password for the certificate private key",
+			},
 		},
 	}
 }
@@ -54,6 +70,9 @@ func dataSourceGetCertificateValueRead(d *schema.ResourceData, m interface{}) er
 	name := d.Get("name").(string)
 	version := d.Get("version").(int)
 	ignoreCache := d.Get("ignore_cache").(string)
+	includePrivateKey := d.Get("include_private_key").(bool)
+	leafOnly := d.Get("leaf_only").(bool)
+	password := d.Get("password").(string)
 
 	body := akeyless_api.GetCertificateValue{
 		Token: &token,
@@ -61,6 +80,15 @@ func dataSourceGetCertificateValueRead(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.Name, name)
 	common.GetAkeylessPtr(&body.Version, version)
 	common.GetAkeylessPtr(&body.IgnoreCache, ignoreCache)
+	if _, ok := d.GetOkExists("include_private_key"); ok {
+		common.GetAkeylessPtr(&body.IncludePrivateKey, includePrivateKey)
+	}
+	if _, ok := d.GetOkExists("leaf_only"); ok {
+		common.GetAkeylessPtr(&body.LeafOnly, leafOnly)
+	}
+	if _, ok := d.GetOk("password"); ok {
+		common.GetAkeylessPtr(&body.Password, password)
+	}
 
 	rOut, res, err := client.GetCertificateValue(ctx).Body(body).Execute()
 	if err != nil {

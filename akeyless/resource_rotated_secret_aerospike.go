@@ -67,6 +67,11 @@ func resourceRotatedSecretAerospikeWrite(d *schema.ResourceData, m interface{}, 
 	set := func(dst interface{}, key string) { common.GetAkeylessPtr(dst, d.Get(key)) }
 	if update {
 		b := akeyless_api.RotatedSecretUpdateAerospike{Name: name, Token: &token, InputRule: input, OutputRule: output}
+		add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
+		if err == nil {
+			b.AddTag = add
+			b.RmTag = remove
+		}
 		set(&b.AuthenticationCredentials, "authentication_credentials")
 		set(&b.AutoRotate, "auto_rotate")
 		set(&b.Description, "description")
@@ -91,7 +96,7 @@ func resourceRotatedSecretAerospikeWrite(d *schema.ResourceData, m interface{}, 
 		set(&b.EnableAgenticRuntimeAuthority, "enable_agentic_runtime_authority")
 		set(&b.EnableAiQuorum, "enable_ai_quorum")
 		set(&b.SkipDryRun, "skip_dry_run")
-		b.RotationEventIn, b.AddTag = events, tags
+		b.RotationEventIn = events
 		b.ItemCustomFields = &custom
 		_, resp, err := client.RotatedSecretUpdateAerospike(context.Background()).Body(b).Execute()
 		if err != nil {

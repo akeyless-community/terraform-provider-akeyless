@@ -25,8 +25,11 @@ HashiCorp Vault Target resource
 - `hashi_url` (String) HashiCorp Vault API URL, e.g. https://vault-mgr01:8200
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `lock_on_read` (String) Lock after read
+- `lock_ttl` (String) Lock TTL in minutes
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `namespace` (Set of String) Comma-separated list of vault namespaces
+- `rotate_on_unlock` (String) Rotate after unlock
 - `vault_token` (String, Sensitive) Vault access token with sufficient permissions
 
 ### Read-Only

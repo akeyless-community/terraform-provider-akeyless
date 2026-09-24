@@ -50,6 +50,21 @@ func resourceStaticSecretSync() *schema.Resource {
 				Optional:    true,
 				Description: "JQ expression to filter or transform the secret value",
 			},
+			"environments": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GitHub environments to sync",
+			},
+			"repositories": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GitHub repositories to sync",
+			},
+			"gcp_project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCP project ID to sync",
+			},
 			"delete_remote": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -76,6 +91,9 @@ func resourceStaticSecretSyncCreate(d *schema.ResourceData, m any) error {
 	remoteSecretName := d.Get("remote_secret_name").(string)
 	namespace := d.Get("namespace").(string)
 	filterSecretValue := d.Get("filter_secret_value").(string)
+	environments := d.Get("environments").(string)
+	repositories := d.Get("repositories").(string)
+	gcpProjectID := d.Get("gcp_project_id").(string)
 	deleteRemote := d.Get("delete_remote").(bool)
 
 	body := akeyless_api.StaticSecretSync{
@@ -86,6 +104,9 @@ func resourceStaticSecretSyncCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.RemoteSecretName, remoteSecretName)
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.FilterSecretValue, filterSecretValue)
+	common.GetAkeylessPtr(&body.Environments, environments)
+	common.GetAkeylessPtr(&body.Repositories, repositories)
+	common.GetAkeylessPtr(&body.GcpProjectId, gcpProjectID)
 	common.GetAkeylessPtr(&body.DeleteRemote, deleteRemote)
 
 	_, resp, err := client.StaticSecretSync(ctx).Body(body).Execute()
@@ -122,7 +143,7 @@ func resourceStaticSecretSyncRead(d *schema.ResourceData, m any) error {
 	}
 
 	if rOut.UscSyncAssociatedItems != nil {
-		namespace, filterSecretValue, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
+		namespace, filterSecretValue, environments, repositories, gcpProjectID, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
 		if !exists {
 			return fmt.Errorf("static secret sync not found for secret name: %s, usc name: %s, remote secret name: %s", secretName, uscName, remoteSecretName)
 		}
@@ -134,6 +155,18 @@ func resourceStaticSecretSyncRead(d *schema.ResourceData, m any) error {
 		if err != nil {
 			return err
 		}
+		err = d.Set("environments", environments)
+		if err != nil {
+			return err
+		}
+		err = d.Set("repositories", repositories)
+		if err != nil {
+			return err
+		}
+		err = d.Set("gcp_project_id", gcpProjectID)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(buildStaticUscSyncId(secretName, uscName, remoteSecretName))
@@ -142,7 +175,7 @@ func resourceStaticSecretSyncRead(d *schema.ResourceData, m any) error {
 }
 
 func resourceStaticSecretSyncUpdate(d *schema.ResourceData, m any) error {
-	return nil
+	return resourceStaticSecretSyncCreate(d, m)
 }
 
 func resourceStaticSecretSyncDelete(d *schema.ResourceData, m any) error {
@@ -200,7 +233,7 @@ func resourceStaticSecretSyncImport(d *schema.ResourceData, m any) ([]*schema.Re
 	}
 
 	if rOut.UscSyncAssociatedItems != nil {
-		namespace, filterSecretValue, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
+		namespace, filterSecretValue, environments, repositories, gcpProjectID, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
 		if !exists {
 			return nil, fmt.Errorf("static secret sync not found for secret name: %s, usc name: %s, remote secret name: %s", secretName, uscName, remoteSecretName)
 		}
@@ -209,6 +242,18 @@ func resourceStaticSecretSyncImport(d *schema.ResourceData, m any) ([]*schema.Re
 			return nil, err
 		}
 		err = d.Set("filter_secret_value", filterSecretValue)
+		if err != nil {
+			return nil, err
+		}
+		err = d.Set("environments", environments)
+		if err != nil {
+			return nil, err
+		}
+		err = d.Set("repositories", repositories)
+		if err != nil {
+			return nil, err
+		}
+		err = d.Set("gcp_project_id", gcpProjectID)
 		if err != nil {
 			return nil, err
 		}

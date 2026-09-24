@@ -32,8 +32,11 @@ Salesforce Target resource
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `lock_on_read` (String) Lock after read
+- `lock_ttl` (String) Lock TTL in minutes
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `password` (String, Sensitive) The password of the user attached to the oauth2 app used for connecting to Salesforce (required for user-password flow)
+- `rotate_on_unlock` (String) Rotate after unlock
 - `security_token` (String, Sensitive) The security token of the user attached to the oauth2 app used for connecting to Salesforce  (required for user-password flow)
 
 ### Read-Only

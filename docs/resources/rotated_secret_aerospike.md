@@ -41,7 +41,7 @@ Aerospike rotated secret resource
 - `password_length` (String) Generated password length
 - `rotate_on_unlock` (String) Rotate after unlock
 - `rotated_password` (String, Sensitive) Rotated password
-- `rotated_username` (String) Rotated username
+- `rotated_username` (String, Sensitive) Rotated username
 - `rotation_event_in` (List of String) Rotation notifications
 - `rotation_hour` (Number) Rotation hour
 - `rotation_interval` (String) Rotation interval

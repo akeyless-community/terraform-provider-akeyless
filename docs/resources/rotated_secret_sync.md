@@ -25,8 +25,11 @@ Sync Rotated Secret with Universal Secrets Connector resource
 
 - `delete_from_usc` (Boolean) Delete the secret from the remote target USC as well
 - `delete_remote` (Boolean) Delete the secret from remote secret manager (for association create/update)
+- `environments` (String) GitHub environments to sync
 - `filter_secret_value` (String) JQ expression to filter or transform the secret value
+- `gcp_project_id` (String) GCP project ID to sync
 - `namespace` (String) Vault namespace, releavnt only for Hashicorp Vault Target
+- `repositories` (String) GitHub repositories to sync
 
 ### Read-Only
 

@@ -21,7 +21,7 @@ Aerospike target resource
 
 ### Optional
 
-- `admin_username` (String) Aerospike admin username
+- `admin_username` (String, Sensitive) Aerospike admin username
 - `aerospike_client_id` (String) Aerospike Cloud client ID
 - `aerospike_client_secret` (String, Sensitive) Aerospike Cloud client secret
 - `aerospike_cloud` (Boolean) Aerospike Cloud deployment

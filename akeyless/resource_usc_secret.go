@@ -64,6 +64,11 @@ func resourceUscSecret() *schema.Resource {
 				Optional:    true,
 				Description: "The namespace (relevant for Hashi vault target)",
 			},
+			"gcp_project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The GCP project that contains the secret",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -187,6 +192,7 @@ func resourceUscSecretRead(d *schema.ResourceData, m any) error {
 
 	versionId := d.Get("version_id").(string)
 	namespace := d.Get("namespace").(string)
+	gcpProjectID := d.Get("gcp_project_id").(string)
 
 	body := akeyless_api.UscGet{
 		UscName:  uscName,
@@ -195,6 +201,7 @@ func resourceUscSecretRead(d *schema.ResourceData, m any) error {
 	}
 	common.GetAkeylessPtr(&body.VersionId, versionId)
 	common.GetAkeylessPtr(&body.Namespace, namespace)
+	common.GetAkeylessPtr(&body.GcpProjectId, gcpProjectID)
 
 	rOut, resp, err := client.UscGet(ctx).Body(body).Execute()
 	if err != nil {
@@ -254,6 +261,9 @@ func resourceUscSecretUpdate(d *schema.ResourceData, m any) error {
 	err := validateUscSecretUpdateParams(d)
 	if err != nil {
 		return fmt.Errorf("can't update: %v", err)
+	}
+	if d.HasChange("gcp_project_id") {
+		return resourceUscSecretRead(d, m)
 	}
 
 	secretId, err := getSecretId(d, m)

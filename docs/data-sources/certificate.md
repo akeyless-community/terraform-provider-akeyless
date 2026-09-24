@@ -18,7 +18,10 @@ Certificate data source
 ### Optional
 
 - `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
+- `include_private_key` (Boolean) Include the private key in the certificate value response
+- `leaf_only` (Boolean) Return only the leaf certificate
 - `name` (String) Certificate name
+- `password` (String, Sensitive) Password for the certificate private key
 - `version` (Number) Certificate version
 
 ### Read-Only

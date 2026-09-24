@@ -264,7 +264,7 @@ func GetTargetType(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string
 	return itemTargetsAssoc[0].GetTargetType()
 }
 
-func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, uscName, remoteSecretName string) (namespace, filterSecretValue string, exists bool) {
+func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, uscName, remoteSecretName string) (namespace, filterSecretValue, environments, repositories, gcpProjectID string, exists bool) {
 	normalizedUscName := strings.TrimPrefix(uscName, "/")
 	for _, assoc := range associatedItems {
 		if assoc.ItemName == nil || strings.TrimPrefix(*assoc.ItemName, "/") != normalizedUscName {
@@ -272,17 +272,17 @@ func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, us
 		}
 
 		if assoc.Attributes == nil {
-			return "", "", false
+			return "", "", "", "", "", false
 		}
 		attr := *assoc.Attributes
 
 		if attr.SecretName == nil || *attr.SecretName != remoteSecretName {
-			return "", "", false
+			return "", "", "", "", "", false
 		}
 
-		return attr.GetNamespace(), attr.GetJqSecretFilter(), true
+		return attr.GetNamespace(), attr.GetJqSecretFilter(), attr.GetSelectedEnvironments(), attr.GetSelectedRepositories(), attr.GetProject(), true
 	}
-	return "", "", false
+	return "", "", "", "", "", false
 }
 
 func GetTagsForUpdate(d *schema.ResourceData, name, token string, newTags []string,

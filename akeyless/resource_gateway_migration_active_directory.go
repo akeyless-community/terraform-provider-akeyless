@@ -143,6 +143,16 @@ func resourceGatewayMigrationActiveDirectory() *schema.Resource {
 				Optional:    true,
 				Description: "Enable/Disable discovery of Windows services from each domain server",
 			},
+			"enable_password_policy": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Enable password policy for rotated secrets created for local and domain users",
+			},
+			"skip_dry_run": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Skip dry-run validation for rotated secrets created for local and domain users",
+			},
 			"protection_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -187,6 +197,8 @@ func resourceGatewayMigrationActiveDirectoryCreate(d *schema.ResourceData, m int
 	adOsFilter := d.Get("ad_os_filter").(string)
 	adDiscoverIisApp := d.Get("ad_discover_iis_app").(string)
 	adDiscoverServices := d.Get("ad_discover_services").(string)
+	enablePasswordPolicy := d.Get("enable_password_policy").(string)
+	skipDryRun := d.Get("skip_dry_run").(string)
 	protectionKey := d.Get("protection_key").(string)
 
 	body := akeyless_api.NewGatewayCreateMigration("", name, "", "", targetLocation)
@@ -220,6 +232,8 @@ func resourceGatewayMigrationActiveDirectoryCreate(d *schema.ResourceData, m int
 	common.GetAkeylessPtr(&body.AdOsFilter, adOsFilter)
 	common.GetAkeylessPtr(&body.AdDiscoverIisApp, adDiscoverIisApp)
 	common.GetAkeylessPtr(&body.AdDiscoverServices, adDiscoverServices)
+	common.GetAkeylessPtr(&body.EnablePasswordPolicy, enablePasswordPolicy)
+	common.GetAkeylessPtr(&body.SkipDryRun, skipDryRun)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
 	out, resp, err := client.GatewayCreateMigration(ctx).Body(*body).Execute()
@@ -374,6 +388,16 @@ func resourceGatewayMigrationActiveDirectoryRead(d *schema.ResourceData, m inter
 								return err
 							}
 						}
+						if p.EnablePasswordPolicy != nil {
+							if err := d.Set("enable_password_policy", strconv.FormatBool(*p.EnablePasswordPolicy)); err != nil {
+								return err
+							}
+						}
+						if p.SkipDryRun != nil {
+							if err := d.Set("skip_dry_run", strconv.FormatBool(*p.SkipDryRun)); err != nil {
+								return err
+							}
+						}
 					}
 					break
 				}
@@ -416,6 +440,8 @@ func resourceGatewayMigrationActiveDirectoryUpdate(d *schema.ResourceData, m int
 	adOsFilter := d.Get("ad_os_filter").(string)
 	adDiscoverIisApp := d.Get("ad_discover_iis_app").(string)
 	adDiscoverServices := d.Get("ad_discover_services").(string)
+	enablePasswordPolicy := d.Get("enable_password_policy").(string)
+	skipDryRun := d.Get("skip_dry_run").(string)
 	protectionKey := d.Get("protection_key").(string)
 
 	body := akeyless_api.NewGatewayUpdateMigration("", "", "", targetLocation)
@@ -449,6 +475,8 @@ func resourceGatewayMigrationActiveDirectoryUpdate(d *schema.ResourceData, m int
 	common.GetAkeylessPtr(&body.AdOsFilter, adOsFilter)
 	common.GetAkeylessPtr(&body.AdDiscoverIisApp, adDiscoverIisApp)
 	common.GetAkeylessPtr(&body.AdDiscoverServices, adDiscoverServices)
+	common.GetAkeylessPtr(&body.EnablePasswordPolicy, enablePasswordPolicy)
+	common.GetAkeylessPtr(&body.SkipDryRun, skipDryRun)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 
 	_, resp, err := client.GatewayUpdateMigration(ctx).Body(*body).Execute()

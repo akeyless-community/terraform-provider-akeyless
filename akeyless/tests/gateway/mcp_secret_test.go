@@ -19,6 +19,8 @@ func TestMcpSecretBearerTokenResource(t *testing.T) {
 			url          = "https://mcp.example.com"
 			bearer_token = "token-1"
 			description  = "Test MCP bearer secret"
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum                 = true
 		}
 	`, name, path)
 
@@ -28,6 +30,8 @@ func TestMcpSecretBearerTokenResource(t *testing.T) {
 			url          = "https://mcp2.example.com"
 			bearer_token = "token-2"
 			description  = "Updated MCP bearer secret"
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum                 = false
 		}
 	`, name, path)
 
@@ -49,6 +53,8 @@ func TestMcpSecretOAuthClientCredsResource(t *testing.T) {
 			oauth_token_url     = "https://idp.example.com/token"
 			oauth_scopes        = ["read", "write"]
 			description         = "Test MCP oauth client credentials"
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum                 = true
 		}
 	`, name, path)
 
@@ -61,6 +67,8 @@ func TestMcpSecretOAuthClientCredsResource(t *testing.T) {
 			oauth_token_url     = "https://idp2.example.com/token"
 			oauth_scopes        = ["admin"]
 			description         = "Updated MCP oauth client credentials"
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum                 = false
 		}
 	`, name, path)
 
@@ -84,6 +92,8 @@ func TestMcpSecretOAuthAuthCodeResource(t *testing.T) {
 			oauth_refresh_token = "refresh-1"
 			oauth_scopes        = ["openid"]
 			description         = "Test MCP oauth auth code"
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum                 = true
 		}
 	`, name, path)
 
@@ -98,6 +108,8 @@ func TestMcpSecretOAuthAuthCodeResource(t *testing.T) {
 			oauth_refresh_token = "refresh-2"
 			oauth_scopes        = ["openid", "profile"]
 			description         = "Updated MCP oauth auth code"
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum                 = false
 		}
 	`, name, path)
 

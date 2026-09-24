@@ -60,6 +60,21 @@ func resourceMcpSecretOAuthClientCreds() *schema.Resource {
 				Description: "For personal password manager",
 				Default:     "regular",
 			},
+			"ara_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable AI Quorum",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -134,6 +149,15 @@ func resourceMcpSecretOAuthClientCredsCreate(d *schema.ResourceData, m interface
 	common.GetAkeylessPtr(&body.InputRule, expandOptionalStringList(d, "input_rule"))
 	common.GetAkeylessPtr(&body.OutputRule, expandOptionalStringList(d, "output_rule"))
 	common.GetAkeylessPtr(&body.Tags, expandOptionalStringSet(d, "tags"))
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
 
 	_, resp, err := client.CreateMcpSecretOAuthClientCreds(ctx).Body(body).Execute()
 	if err != nil {
@@ -164,7 +188,7 @@ func resourceMcpSecretOAuthClientCredsUpdate(d *schema.ResourceData, m interface
 	ctx := context.Background()
 	name := d.Id()
 
-	if d.HasChanges("url", "oauth_client_id", "oauth_client_secret", "oauth_token_url", "oauth_scopes", "protection_key", "keep_prev_version", "input_rule", "output_rule") {
+	if d.HasChanges("url", "oauth_client_id", "oauth_client_secret", "oauth_token_url", "oauth_scopes", "protection_key", "keep_prev_version", "input_rule", "output_rule", "ara_enabled", "enable_agentic_runtime_authority", "enable_ai_quorum") {
 		body := akeyless_api.UpdateMcpSecretOAuthClientCreds{
 			Name:  name,
 			Token: &token,
@@ -178,6 +202,15 @@ func resourceMcpSecretOAuthClientCredsUpdate(d *schema.ResourceData, m interface
 		common.GetAkeylessPtr(&body.KeepPrevVersion, d.Get("keep_prev_version").(string))
 		common.GetAkeylessPtr(&body.InputRule, expandOptionalStringList(d, "input_rule"))
 		common.GetAkeylessPtr(&body.OutputRule, expandOptionalStringList(d, "output_rule"))
+		if value, ok := d.GetOkExists("ara_enabled"); ok {
+			common.GetAkeylessPtr(&body.AraEnabled, value)
+		}
+		if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+		}
+		if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+		}
 
 		_, resp, err := client.UpdateMcpSecretOAuthClientCreds(ctx).Body(body).Execute()
 		if err != nil {

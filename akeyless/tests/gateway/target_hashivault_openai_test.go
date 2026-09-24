@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	akeyless_provider "github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
 )
 
@@ -43,7 +44,10 @@ func TestOpenAITargetResource(t *testing.T) {
 	config := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
 			name 				= "%v"
-			api_key 			= "sk-test123"
+			codex_oauth_mode 		= "chatgpt_oauth"
+			codex_oauth_access_token 	= "access-token"
+			codex_oauth_account_id 	= "account-id"
+			codex_oauth_refresh_token 	= "refresh-token"
 			description 		= "Test OpenAI target"
 		}
 	`, targetName, targetPath)
@@ -51,10 +55,23 @@ func TestOpenAITargetResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
 			name 				= "%v"
-			api_key 			= "sk-test456"
+			codex_oauth_mode 		= "chatgpt_oauth"
+			codex_oauth_access_token 	= "updated-access-token"
+			codex_oauth_account_id 	= "updated-account-id"
+			codex_oauth_refresh_token 	= "updated-refresh-token"
 			description 		= "Updated OpenAI target"
 		}
 	`, targetName, targetPath)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
+func TestOpenAITargetCodexOAuthSchema(t *testing.T) {
+	schema := akeyless_provider.Provider().ResourcesMap["akeyless_target_openai"].Schema
+
+	for _, fieldName := range []string{"codex_oauth_access_token", "codex_oauth_refresh_token"} {
+		if field := schema[fieldName]; field == nil || !field.Sensitive {
+			t.Errorf("%s must be sensitive", fieldName)
+		}
+	}
 }

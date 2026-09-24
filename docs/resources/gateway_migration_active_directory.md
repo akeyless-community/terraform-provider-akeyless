@@ -44,7 +44,9 @@ Active Directory Migration resource
 - `ad_user_groups` (String) Comma-separated list of domain groups from which privileged domain users will be migrated
 - `ad_winrm_over_http` (String) Use WinRM over HTTP
 - `ad_winrm_port` (String) Set the WinRM Port for further connection to the domain servers
+- `enable_password_policy` (String) Enable password policy for rotated secrets created for local and domain users
 - `protection_key` (String) The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `skip_dry_run` (String) Skip dry-run validation for rotated secrets created for local and domain users
 
 ### Read-Only
 

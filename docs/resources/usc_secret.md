@@ -25,6 +25,7 @@ Universal Secrets Connector secret resource
 - `binary_value` (Boolean) Use this option if the universal secrets value is a base64 encoded binary
 - `description` (String) Description of the universal secrets
 - `force_delete` (Boolean) Force delete objects that are soft deleted by default (relevant only for Azure target)
+- `gcp_project_id` (String) The GCP project that contains the secret
 - `namespace` (String) The namespace (relevant for Hashi vault target)
 - `object_type` (String) Either secret or certificate (Relevant only for Azure KV targets)
 - `pfx_password` (String, Sensitive) Optional, the passphrase that protects the private key within the pfx certificate (Relevant only for Azure KV certificates)

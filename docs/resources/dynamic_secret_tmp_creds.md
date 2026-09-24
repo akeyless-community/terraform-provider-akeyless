@@ -23,9 +23,13 @@ Manage dynamic secret temporary credentials
 
 ### Optional
 
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `host` (String) Host
 - `input_rule` (List of String) Input rule definitions
 - `output_rule` (List of String) Output rule definitions
+- `skip_dry_run` (Boolean) Skip dry run
 
 ### Read-Only
 

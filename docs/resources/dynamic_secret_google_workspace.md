@@ -23,8 +23,11 @@ Google Workspace dynamic secret resource
 
 ### Optional
 
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from
 - `gcp_key` (String, Sensitive) Base64-encoded service account private key text
 - `group_email` (String) A group email, relevant only for group access-mode
@@ -38,6 +41,7 @@ Google Workspace dynamic secret resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
+- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL

@@ -26,6 +26,8 @@ func TestRoleResourceBasic(t *testing.T) {
 			analytics_access 	= "own"
 			event_center_access = "all"
 			isi_access 			= "all"
+			unlock_secrets     = "scoped"
+			approve_access_request = "all"
 		}
 	`, rolePath)
 
@@ -37,6 +39,8 @@ func TestRoleResourceBasic(t *testing.T) {
 			analytics_access 	= "all"
 			event_center_access = "own"
 			isi_access 			= "scoped"
+			unlock_secrets     = "all"
+			approve_access_request = "scoped"
 		}
 	`, rolePath)
 
@@ -48,11 +52,15 @@ func TestRoleResourceBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "aaaa"),
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "isi_access", "all"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "unlock_secrets", "scoped"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "approve_access_request", "all"),
 					testutils.CheckRoleRulesRemotely(t, rolePath, []testutils.ExpectedRule{
 						{Type: "search-rule", Path: "/scoped", Capabilities: []string{"read"}},
 						{Type: "reports-rule", Path: "/self", Capabilities: []string{"read"}},
 						{Type: "event-rule", Path: "/*", Capabilities: []string{"read"}},
 						{Type: "isi-rule", Path: "/*", Capabilities: []string{"read"}},
+						{Type: "unlock-secrets-rule", Path: "/scoped", Capabilities: []string{"read"}},
+						{Type: "approve-access-request-rule", Path: "/*", Capabilities: []string{"read"}},
 					}),
 				),
 			},
@@ -61,11 +69,15 @@ func TestRoleResourceBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "description", "bbbb"),
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "isi_access", "scoped"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "unlock_secrets", "all"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "approve_access_request", "scoped"),
 					testutils.CheckRoleRulesRemotely(t, rolePath, []testutils.ExpectedRule{
 						{Type: "search-rule", Path: "/*", Capabilities: []string{"read"}},
 						{Type: "reports-rule", Path: "/*", Capabilities: []string{"read"}},
 						{Type: "event-rule", Path: "/self", Capabilities: []string{"read"}},
 						{Type: "isi-rule", Path: "/scoped", Capabilities: []string{"read"}},
+						{Type: "unlock-secrets-rule", Path: "/*", Capabilities: []string{"read"}},
+						{Type: "approve-access-request-rule", Path: "/scoped", Capabilities: []string{"read"}},
 					}),
 				),
 			},

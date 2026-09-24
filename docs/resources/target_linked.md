@@ -22,11 +22,16 @@ Linked Target resource
 ### Optional
 
 - `add_hosts` (String) A comma seperated list of new server hosts and server descriptions joined by semicolon ';' that will be added to the Linked Target hosts.
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `hosts` (String) A comma seperated list of server hosts and server descriptions joined by semicolon ';' (i.e. 'server-dev.com;My Dev server,server-prod.com;My Prod server description')
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
+- `lock_on_read` (String) Lock after read
+- `lock_ttl` (String) Lock TTL in minutes
+- `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `parent_target_name` (String) The parent Target name
 - `rm_hosts` (String) Comma separated list of existing hosts that will be removed from Linked Target hosts.
+- `rotate_on_unlock` (String) Rotate after unlock
 - `type` (String) Specifies the hosts type, relevant only when working without parent target
 
 ### Read-Only

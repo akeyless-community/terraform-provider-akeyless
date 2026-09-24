@@ -52,8 +52,47 @@ func TestTargetDataSourceAws(t *testing.T) {
 	expect := map[string]interface{}{
 		"access_key_id":         "aaaa",
 		"access_key":            "bbbb",
+		"aws_user_name":         "test-user",
 		"region":                "il-central-1",
 		"use_gw_cloud_identity": true,
+		"gw_cloud_identity_external_id_opt": map[string]interface{}{
+			"generated_external_id": "external-id",
+			"is_enabled":            true,
+			"role_arn":              "arn:aws:iam::123456789012:role/test",
+		},
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	defer testutils.DeleteTarget(t, targetPath)
+
+	config := fmt.Sprintf(`
+		data "akeyless_target_details" "%v" {
+			name = "%v"
+		}
+		output "target_details" {
+			value = data.akeyless_target_details.%v.value
+		}
+	`, targetName, targetPath, targetName)
+
+	testTargetDataSource(t, config, targetPath, targetDetailsType, expect)
+}
+
+func TestTargetDataSourceOpenAI(t *testing.T) {
+	targetName := "target-openai"
+	targetPath := testPath(targetName)
+	targetDetailsType := "openai_target_details"
+
+	expect := map[string]interface{}{
+		"api_key":             "api-key",
+		"api_key_id":          "api-key-id",
+		"auth_mode":           "chatgpt_oauth",
+		"oauth_access_token":  "access-token",
+		"oauth_account_id":    "account-id",
+		"oauth_last_refresh":  "2026-09-24T12:00:00Z",
+		"oauth_refresh_token": "refresh-token",
+		"openai_url":          "https://api.openai.com/v1",
+		"organization_id":     "org-id",
+		"project_id":          "project-id",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -600,6 +639,71 @@ func TestTargetDataSourceZeroSsl(t *testing.T) {
 		"imap_port":        "1234",
 		"validation_email": "k@k.io",
 		"timeout":          "1m",
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	defer testutils.DeleteTarget(t, targetPath)
+
+	config := fmt.Sprintf(`
+		data "akeyless_target_details" "%v" {
+			name = "%v"
+		}
+		output "target_details" {
+			value = data.akeyless_target_details.%v.value
+		}
+	`, targetName, targetPath, targetName)
+
+	testTargetDataSource(t, config, targetPath, targetDetailsType, expect)
+}
+
+func TestTargetDataSourceAerospike(t *testing.T) {
+	targetName := "target-aerospike"
+	targetPath := testPath(targetName)
+	targetDetailsType := "aerospike_target_details"
+
+	expect := map[string]interface{}{
+		"admin_username":              "admin",
+		"password":                    "password",
+		"hostname":                    "aerospike.example.com",
+		"port":                        "3000",
+		"namespace":                   "test",
+		"aerospike_cloud":             false,
+		"aerospike_client_id":         "client-id",
+		"aerospike_client_secret":     "client-secret",
+		"aerospike_cluster_id":        "cluster-id",
+		"ssl":                         true,
+		"ssl_certificate":             "certificate",
+		"db_server_name":              "aerospike.example.com",
+		"skip_server_name_validation": "false",
+		"enable_mtls":                 true,
+		"client_certificate":          "client-certificate",
+		"client_private_key":          "client-private-key",
+	}
+
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	defer testutils.DeleteTarget(t, targetPath)
+
+	config := fmt.Sprintf(`
+		data "akeyless_target_details" "%v" {
+			name = "%v"
+		}
+		output "target_details" {
+			value = data.akeyless_target_details.%v.value
+		}
+	`, targetName, targetPath, targetName)
+
+	testTargetDataSource(t, config, targetPath, targetDetailsType, expect)
+}
+
+func TestTargetDataSourceF5BigIP(t *testing.T) {
+	targetName := "target-f5-big-ip"
+	targetPath := testPath(targetName)
+	targetDetailsType := "f5_big_ip_target_details"
+
+	expect := map[string]interface{}{
+		"url":      "https://f5.example.com",
+		"username": "admin",
+		"password": "password",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)

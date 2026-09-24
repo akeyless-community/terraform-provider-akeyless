@@ -26,7 +26,10 @@ Cloudflare Target resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
+- `lock_on_read` (String) Lock after read
+- `lock_ttl` (String) Lock TTL in minutes
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
+- `rotate_on_unlock` (String) Rotate after unlock
 
 ### Read-Only
 
