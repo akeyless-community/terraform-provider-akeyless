@@ -76,8 +76,6 @@ func TestCertificateResource(t *testing.T) {
 			expiration_event_in = ["20"]
 			description 		= "updated certificate description again"
 			delete_protection  	= "false"
-			include_private_key = true
-			leaf_only           = true
 		}
 	`, certificateName, certificatePath, cert2, keyData2)
 

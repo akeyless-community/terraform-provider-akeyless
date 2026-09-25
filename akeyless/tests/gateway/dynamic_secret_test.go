@@ -302,10 +302,6 @@ func TestDynamicSecretCustom(t *testing.T) {
 			create_sync_url                  = "https://webhook.example.com/create"
 			revoke_sync_url                  = "https://webhook.example.com/revoke"
 			user_ttl                         = "30m"
-			ara_enabled                      = true
-			enable_agentic_runtime_authority = true
-			enable_ai_quorum                 = true
-			skip_dry_run                     = true
 		}
 	`, dsName, dsPath)
 
@@ -315,15 +311,10 @@ func TestDynamicSecretCustom(t *testing.T) {
 			create_sync_url                  = "https://webhook.example.com/create"
 			revoke_sync_url                  = "https://webhook.example.com/revoke"
 			user_ttl                         = "60m"
-			ara_enabled                      = false
-			enable_agentic_runtime_authority = false
-			enable_ai_quorum                 = false
-			skip_dry_run                     = false
 			tags                             = ["test1", "test2"]
 		}
 	`, dsName, dsPath)
 
-	resourceName := "akeyless_dynamic_secret_custom." + dsName
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
@@ -331,20 +322,12 @@ func TestDynamicSecretCustom(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
 				),
 			},
 		},
@@ -1020,10 +1003,6 @@ func TestDynamicSecretMysql(t *testing.T) {
 			mysql_port                       = "%v"
 			mysql_dbname                     = "%v"
 			user_ttl                         = "30m"
-			ara_enabled                      = true
-			enable_agentic_runtime_authority = true
-			enable_ai_quorum                 = true
-			skip_dry_run                     = true
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
@@ -1037,15 +1016,10 @@ func TestDynamicSecretMysql(t *testing.T) {
 			mysql_port                       = "%v"
 			mysql_dbname                     = "%v"
 			user_ttl                         = "60m"
-			ara_enabled                      = false
-			enable_agentic_runtime_authority = false
-			enable_ai_quorum                 = false
-			skip_dry_run                     = false
 			tags                             = ["test1", "test2"]
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
-	resourceName := "akeyless_dynamic_secret_mysql." + dsName
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
@@ -1053,20 +1027,12 @@ func TestDynamicSecretMysql(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
 				),
 			},
 		},

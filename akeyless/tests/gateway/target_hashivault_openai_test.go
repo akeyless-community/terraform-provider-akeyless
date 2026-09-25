@@ -33,24 +33,7 @@ func TestHashivaultTargetResource(t *testing.T) {
 		}
 	`, targetName, targetPath)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testutils.CheckTargetDestroyed,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckTargetExistsRemotely(targetPath),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckTargetExistsRemotely(targetPath),
-				),
-			},
-		},
-	})
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
 
 func TestOpenAITargetResource(t *testing.T) {

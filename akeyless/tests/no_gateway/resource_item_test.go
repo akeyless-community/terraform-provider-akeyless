@@ -409,8 +409,6 @@ func TestCsrDataSource(t *testing.T) {
 			ip_addresses      = "192.168.0.1,192.168.0.2"
 			uri_sans          = "uri1.com,uri2.com"
 			split_level       = 2
-			ext_key_usage     = "clientauth"
-			key_usage         = "KeyAgreement,KeyEncipherment"
 		}
 
 		output "csr" {
@@ -436,7 +434,7 @@ func TestCertificateDataSource(t *testing.T) {
 			sensitive = true
 		}
 	`, certificatePath)
-	testutils.TesItemDataSource(t, providerFactories, config, "certificate", []string{"certificate_pem"})
+	testutils.TesItemDataSource(t, providerFactories, config, "certificate", []string{"certificate_pem", "private_key_pem"})
 }
 
 func TestFolderResource(t *testing.T) {

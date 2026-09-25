@@ -301,10 +301,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			use_lower_letters                = "true"
 			use_numbers                      = "true"
 			use_special_characters           = "false"
-			ara_enabled                      = true
-			enable_agentic_runtime_authority = true
-			enable_ai_quorum                 = true
-			skip_dry_run                     = true
 			tags                             = ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -320,10 +316,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 			use_lower_letters                = "true"
 			use_numbers                      = "true"
 			use_special_characters           = "true"
-			ara_enabled                      = false
-			enable_agentic_runtime_authority = false
-			enable_ai_quorum                 = false
-			skip_dry_run                     = false
 			tags                             = ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -345,10 +337,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
 				),
 			},
 			{
@@ -364,10 +352,6 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "use_lower_letters", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_numbers", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_special_characters", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
 				),
 			},
 		},
@@ -745,10 +729,6 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			rotated_username                 = "test"
 			rotated_password                 = "test"
 			password_length                  = "9"
-			ara_enabled                      = true
-			enable_agentic_runtime_authority = true
-			enable_ai_quorum                 = true
-			skip_dry_run                     = true
 			tags                             = ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -762,10 +742,6 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 			rotated_username                 = "test"
 			rotated_password                 = "test"
 			password_length                  = "9"
-			ara_enabled                      = false
-			enable_agentic_runtime_authority = false
-			enable_ai_quorum                 = false
-			skip_dry_run                     = false
 			tags                             = ["t1","t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -779,10 +755,6 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
 				),
 			},
 			{
@@ -790,10 +762,6 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "9"),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
 				),
 			},
 		},

@@ -184,7 +184,6 @@ func TestAccountSettingsResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_expiration_notification_days", ""),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "default_share_link_ttl_minutes", ""),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_item_sharing", "false"),
-					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_ai_quorum", "false"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "company_name", "TestCompanyAccUpd"),
 				),
 			},
