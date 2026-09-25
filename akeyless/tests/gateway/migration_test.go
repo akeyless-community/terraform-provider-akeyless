@@ -277,26 +277,7 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 		}
 	`, name, migrationName, targetName)
 
-	resourceName := "akeyless_gateway_migration_active_directory." + name
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enable_password_policy", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enable_password_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
-				),
-			},
-		},
-	})
+	testMigrationResource(t, config, configUpdate)
 }
 
 func TestGatewayMigrationServerInventory(t *testing.T) {

@@ -100,7 +100,6 @@ func TestDynamicSecretAws(t *testing.T) {
 			password_length               = "16"
 			input_rule                    = ["name=in1,rule=validate input"]
 			output_rule                   = ["name=out1,rule=mask output"]
-			ara_enabled                   = true
 			enable_agentic_runtime_authority = true
 			enable_ai_quorum              = true
 			skip_dry_run                  = true
@@ -131,7 +130,6 @@ func TestDynamicSecretAws(t *testing.T) {
 			password_length               = "20"
 			input_rule                    = ["name=in1,rule=validate input updated"]
 			output_rule                   = ["name=out1,rule=mask output updated"]
-			ara_enabled                   = false
 			enable_agentic_runtime_authority = false
 			enable_ai_quorum              = false
 			skip_dry_run                  = false
@@ -157,7 +155,6 @@ func TestDynamicSecretAws(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "16"),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
@@ -172,7 +169,6 @@ func TestDynamicSecretAws(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),

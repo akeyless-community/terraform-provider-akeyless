@@ -1015,26 +1015,7 @@ func TestRotatedSecretSnowflakeResource(t *testing.T) {
 		}
 	`, rsName, rsPath, targetPath)
 
-	resourceName := "akeyless_rotated_secret_snowflake." + rsName
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(rsPath),
-					resource.TestCheckResourceAttr(resourceName, "rotation_statement", "ALTER USER user1 SET PASSWORD = 'first'"),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(rsPath),
-					resource.TestCheckResourceAttr(resourceName, "rotation_statement", "ALTER USER user2 SET PASSWORD = 'updated'"),
-				),
-			},
-		},
-	})
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
 
 func TestRotatedSecretSshResource(t *testing.T) {

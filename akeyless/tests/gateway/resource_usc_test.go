@@ -94,19 +94,7 @@ func TestUscResourceGcpScope(t *testing.T) {
 		}
 	`, targetName, targetPath, uscName, uscPath, targetName)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_folder_id", "folders/123456789"),
-					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_organization_id", "organizations/987654321"),
-					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_scope", "folder"),
-				),
-			},
-		},
-	})
+	testutils.TestItemResource(t, providerFactories, uscPath, config)
 }
 
 func TestUscSecretResourceHashi(t *testing.T) {

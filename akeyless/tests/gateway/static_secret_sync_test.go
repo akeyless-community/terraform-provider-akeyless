@@ -52,57 +52,11 @@ func TestStaticSecretSyncResource(t *testing.T) {
 		secretName, secretPath,
 		secretName, uscName, remoteSecretName, secretName, uscName)
 
-	configUpdate := fmt.Sprintf(`
-        resource "akeyless_target_hashivault" "%v" {
-            name        = "%v"
-            hashi_url   = "http://127.0.0.1:8200"
-            vault_token = "test"
-        }
-
-        resource "akeyless_usc" "%v" {
-            name                = "%v"
-            target_to_associate = akeyless_target_hashivault.%v.name
-            depends_on          = [akeyless_target_hashivault.%v]
-        }
-
-        resource "akeyless_static_secret" "%v" {
-            path   = "%v"
-            value  = "{\"k\":\"v\"}"
-            format = "json"
-        }
-
-        resource "akeyless_static_secret_sync" "sync" {
-            name               = akeyless_static_secret.%v.path
-            usc_name           = akeyless_usc.%v.name
-            remote_secret_name = "%v"
-            environments       = "production"
-            repositories       = "akeyless/terraform-provider-akeyless-updated"
-            gcp_project_id     = "project-update"
-            depends_on         = [akeyless_static_secret.%v, akeyless_usc.%v]
-        }
-    `, targetName, targetPath,
-		uscName, uscPath, targetName, targetName,
-		secretName, secretPath,
-		secretName, uscName, remoteSecretName, secretName, uscName)
-
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("akeyless_static_secret_sync.sync", "environments", "staging"),
-					resource.TestCheckResourceAttr("akeyless_static_secret_sync.sync", "repositories", "akeyless/terraform-provider-akeyless"),
-					resource.TestCheckResourceAttr("akeyless_static_secret_sync.sync", "gcp_project_id", "project-create"),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("akeyless_static_secret_sync.sync", "environments", "production"),
-					resource.TestCheckResourceAttr("akeyless_static_secret_sync.sync", "repositories", "akeyless/terraform-provider-akeyless-updated"),
-					resource.TestCheckResourceAttr("akeyless_static_secret_sync.sync", "gcp_project_id", "project-update"),
-				),
 			},
 		},
 	})

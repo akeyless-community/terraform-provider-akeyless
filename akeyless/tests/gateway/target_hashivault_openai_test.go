@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestHashivaultTargetResource(t *testing.T) {
@@ -65,31 +64,5 @@ func TestOpenAITargetResource(t *testing.T) {
 		}
 	`, targetName, targetPath)
 
-	resourceName := "akeyless_target_openai." + targetName
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testutils.CheckTargetDestroyed,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckTargetExistsRemotely(targetPath),
-					resource.TestCheckResourceAttr(resourceName, "codex_oauth_mode", "chatgpt_oauth"),
-					resource.TestCheckResourceAttr(resourceName, "codex_oauth_access_token", "access-token"),
-					resource.TestCheckResourceAttr(resourceName, "codex_oauth_account_id", "account-id"),
-					resource.TestCheckResourceAttr(resourceName, "codex_oauth_refresh_token", "refresh-token"),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckTargetExistsRemotely(targetPath),
-					resource.TestCheckResourceAttr(resourceName, "codex_oauth_mode", "chatgpt_oauth"),
-					resource.TestCheckResourceAttr(resourceName, "codex_oauth_access_token", "updated-access-token"),
-					resource.TestCheckResourceAttr(resourceName, "codex_oauth_account_id", "updated-account-id"),
-					resource.TestCheckResourceAttr(resourceName, "codex_oauth_refresh_token", "updated-refresh-token"),
-				),
-			},
-		},
-	})
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
