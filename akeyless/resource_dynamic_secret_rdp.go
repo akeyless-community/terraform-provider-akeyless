@@ -185,36 +185,7 @@ func resourceDynamicSecretRdp() *schema.Resource {
 				Computed:    true,
 				Description: "Enable Web Secure Remote Access",
 			},
-			"block_parent_target_access": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Block access to the parent target when using a linked target [true/false]",
-			},
-			"host_provider": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Host provider type [explicit/target]",
-			},
-			"provider_type": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Provider type",
-			},
-			"ara_enabled": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_agentic_runtime_authority": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_ai_quorum": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
-			},
-			"skip_dry_run": {
-				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
-			},
-			"secure_access_enforce_hosts_restriction": {
-				Type: schema.TypeBool, Optional: true, Description: "Enforce connections only to allowed SRA hosts",
-			}},
+		},
 	}
 }
 
@@ -259,9 +230,6 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
 	secureAccessDelay := d.Get("secure_access_delay").(int)
 	secureAccessRdGatewayServer := d.Get("secure_access_rd_gateway_server").(string)
-	blockParentTargetAccess := d.Get("block_parent_target_access").(string)
-	hostProvider := d.Get("host_provider").(string)
-	providerType := d.Get("provider_type").(string)
 
 	body := akeyless_api.DynamicSecretCreateRdp{
 		Name:  name,
@@ -295,24 +263,7 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessDelay, int64(secureAccessDelay))
 	common.GetAkeylessPtr(&body.SecureAccessRdGatewayServer, secureAccessRdGatewayServer)
-	common.GetAkeylessPtr(&body.BlockParentTargetAccess, blockParentTargetAccess)
-	common.GetAkeylessPtr(&body.HostProvider, hostProvider)
-	common.GetAkeylessPtr(&body.ProviderType, providerType)
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
-	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
-		common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, value)
-	}
+
 	_, resp, err := client.DynamicSecretCreateRdp(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create dynamic secret", resp, err)
@@ -451,14 +402,6 @@ func resourceDynamicSecretRdpRead(d *schema.ResourceData, m interface{}) error {
 	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
 		return err
 	}
-	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
-		return err
-	}
-	if rOut.BlockParentTargetAccess != nil {
-		if err = d.Set("block_parent_target_access", strconv.FormatBool(*rOut.BlockParentTargetAccess)); err != nil {
-			return err
-		}
-	}
 
 	d.SetId(path)
 
@@ -506,9 +449,6 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	secureAccessCertificateIssuer := d.Get("secure_access_certificate_issuer").(string)
 	secureAccessDelay := d.Get("secure_access_delay").(int)
 	secureAccessRdGatewayServer := d.Get("secure_access_rd_gateway_server").(string)
-	blockParentTargetAccess := d.Get("block_parent_target_access").(string)
-	hostProvider := d.Get("host_provider").(string)
-	providerType := d.Get("provider_type").(string)
 
 	body := akeyless_api.DynamicSecretUpdateRdp{
 		Name:  name,
@@ -542,24 +482,7 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessDelay, int64(secureAccessDelay))
 	common.GetAkeylessPtr(&body.SecureAccessRdGatewayServer, secureAccessRdGatewayServer)
-	common.GetAkeylessPtr(&body.BlockParentTargetAccess, blockParentTargetAccess)
-	common.GetAkeylessPtr(&body.HostProvider, hostProvider)
-	common.GetAkeylessPtr(&body.ProviderType, providerType)
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
-	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
-		common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, value)
-	}
+
 	_, resp, err := client.DynamicSecretUpdateRdp(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update dynamic secret", resp, err)

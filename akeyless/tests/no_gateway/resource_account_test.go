@@ -92,7 +92,6 @@ func TestAccountSettingsResource(t *testing.T) {
 			password_expiration_notification_days  = "14"
 			default_share_link_ttl_minutes         = "60"
 			enable_item_sharing                    = "true"
-			enable_ai_quorum                       = "true"
 			company_name                           = "TestCompanyAcc"
 		}
 	`
@@ -118,7 +117,6 @@ func TestAccountSettingsResource(t *testing.T) {
 			password_expiration_notification_days  = ""
 			default_share_link_ttl_minutes         = ""
 			enable_item_sharing                    = "false"
-			enable_ai_quorum                       = "false"
 			company_name                           = "TestCompanyAccUpd"
 		}
 	`
@@ -158,7 +156,6 @@ func TestAccountSettingsResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_expiration_notification_days", "14"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "default_share_link_ttl_minutes", "60"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_item_sharing", "true"),
-					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_ai_quorum", "true"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "company_name", "TestCompanyAcc"),
 				),
 			},
@@ -209,7 +206,6 @@ func TestAccountSettingsResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "password_expiration_notification_days", ""),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "default_share_link_ttl_minutes", ""),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_item_sharing", "false"),
-					resource.TestCheckResourceAttr("akeyless_account_settings.test", "enable_ai_quorum", "false"),
 					resource.TestCheckResourceAttr("akeyless_account_settings.test", "company_name", "TestCompanyAccUpd"),
 				),
 			},

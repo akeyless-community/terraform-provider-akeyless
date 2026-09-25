@@ -23,13 +23,10 @@ F5 BIG-IP rotated secret resource
 
 ### Optional
 
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `authentication_credentials` (String) The credentials to connect with [use-user-creds/use-target-creds]
 - `auto_rotate` (String) Whether to automatically rotate the secret
 - `delete_protection` (String) Protection from accidental deletion [true/false]
 - `description` (String) Description of the object
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep the previous version [true/false]
@@ -55,5 +52,3 @@ F5 BIG-IP rotated secret resource
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

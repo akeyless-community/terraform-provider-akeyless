@@ -997,7 +997,6 @@ func TestRotatedSecretSnowflakeResource(t *testing.T) {
 			authentication_credentials 	= "use-target-creds"
 			rotated_username 			= "user1"
 			rotated_password 			= "pass1"
-			rotation_statement 			= "ALTER USER user1 SET PASSWORD = 'first'"
 			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -1010,7 +1009,6 @@ func TestRotatedSecretSnowflakeResource(t *testing.T) {
 			authentication_credentials 	= "use-target-creds"
 			rotated_username 			= "user2"
 			rotated_password 			= "pass2"
-			rotation_statement 			= "ALTER USER user2 SET PASSWORD = 'updated'"
 			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
@@ -1418,4 +1416,92 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestRotatedSecretAerospikeResource(t *testing.T) {
+	t.Skip("requires a reachable Aerospike target; Akeyless validates the connection during target creation")
+	testutils.SkipIfNoGateway(t)
+
+	name := "rs_aerospike"
+	path := testPath(name)
+	targetPath := testPath("aerospike_target_for_rs")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_aerospike" "target" {
+			name           = "%v"
+			hostname       = "127.0.0.1"
+			port           = "3000"
+			namespace      = "test"
+			admin_username = "admin"
+			password       = "password"
+		}
+		resource "akeyless_rotated_secret_aerospike" "%v" {
+			name           = "%v"
+			target_name    = akeyless_target_aerospike.target.name
+			rotator_type   = "password"
+			skip_dry_run   = true
+			rotated_username = "user"
+			rotated_password = "password"
+		}
+	`, targetPath, name, path)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_aerospike" "target" {
+			name           = "%v"
+			hostname       = "127.0.0.1"
+			port           = "3000"
+			namespace      = "test"
+			admin_username = "admin"
+			password       = "password"
+		}
+		resource "akeyless_rotated_secret_aerospike" "%v" {
+			name           = "%v"
+			target_name    = akeyless_target_aerospike.target.name
+			rotator_type   = "password"
+			skip_dry_run   = true
+			rotated_username = "user"
+			rotated_password = "password"
+			description    = "updated"
+		}
+	`, targetPath, name, path)
+
+	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
+}
+
+func TestRotatedSecretF5BigIpResource(t *testing.T) {
+	t.Skip("requires a reachable F5 BIG-IP target; Akeyless validates the connection during target creation")
+	testutils.SkipIfNoGateway(t)
+
+	name := "rs_f5"
+	path := testPath(name)
+	targetPath := testPath("f5_target_for_rs")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_f5_big_ip" "target" {
+			name     = "%v"
+			url      = "https://f5.example.com"
+			username = "admin"
+			password = "password"
+		}
+		resource "akeyless_rotated_secret_f5_big_ip" "%v" {
+			name         = "%v"
+			target_name  = akeyless_target_f5_big_ip.target.name
+			rotator_type = "password"
+			skip_dry_run = true
+		}
+	`, targetPath, name, path)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_f5_big_ip" "target" {
+			name     = "%v"
+			url      = "https://f5.example.com"
+			username = "admin"
+			password = "password"
+		}
+		resource "akeyless_rotated_secret_f5_big_ip" "%v" {
+			name         = "%v"
+			target_name  = akeyless_target_f5_big_ip.target.name
+			rotator_type = "password"
+			skip_dry_run = true
+			description  = "updated"
+		}
+	`, targetPath, name, path)
+
+	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
 }

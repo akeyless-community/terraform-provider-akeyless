@@ -21,10 +21,7 @@ Ping dynamic secret resource
 
 ### Optional
 
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `ping_administrative_port` (String) Ping Federate administrative port
 - `ping_atm_id` (String) Set a specific Access Token Management (ATM) instance for the created OAuth Client by providing the ATM Id. If no explicit value is given, the default pingfederate server ATM will be set.
@@ -43,7 +40,6 @@ Ping dynamic secret resource
 - `ping_signing_algo` (String) The signing algorithm that the client must use to sign its request objects [RS256,RS384,RS512,ES256,ES384,ES512,PS256,PS384,PS512] If no explicit value is given, the client can use any of the supported signing algorithms (relevant for PRIVATE_KEY_JWT authentication method)
 - `ping_url` (String) Ping URL
 - `producer_encryption_key_name` (String) Dynamic producer encryption key
-- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
 - `user_ttl` (String) The time from dynamic secret creation to expiration.

@@ -170,7 +170,6 @@ func TestPkiResource(t *testing.T) {
 			basic_constraints       = "critical,CA:true,pathlen:0"
 			enable_acme             = false
 			max_path_len          	= 0
-			split_certificate_chain = true
 			expiration_event_in   	= ["1"]
 			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value2\"],\"1.2.3.4.6\":[\"value3\",\"value4\"]}"
 			allow_copy_ext_from_csr = true
@@ -196,7 +195,7 @@ func TestPkiResource(t *testing.T) {
 			server_flag           	= false
 			client_flag           	= false
 			code_signing_flag     	= false
-			key_usage             	= "KeyAgreement"
+			key_usage             	= "DigitalSignature"
 			critical_key_usage    	= "true"
 			organizational_units  	= "org1,org2"
 			country               	= "coun2"
@@ -208,7 +207,6 @@ func TestPkiResource(t *testing.T) {
 			basic_constraints       = "CA:false"
 			enable_acme             = false
 			max_path_len          	= 0
-			split_certificate_chain = false
 			expiration_event_in   	= []
 			allowed_extra_extensions = "{\"1.2.3.4.5\":[\"value1\",\"value5\"]}"
 			allow_copy_ext_from_csr = false
@@ -223,14 +221,12 @@ func TestPkiResource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(itemPath),
-					resource.TestCheckResourceAttr("akeyless_pki_cert_issuer."+name, "split_certificate_chain", "true"),
 				),
 			},
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(itemPath),
-					resource.TestCheckResourceAttr("akeyless_pki_cert_issuer."+name, "split_certificate_chain", "false"),
 				),
 			},
 		},
@@ -426,7 +422,7 @@ func TestCertificateDataSource(t *testing.T) {
 	defer testutils.DeleteItem(t, certificatePath)
 	config := fmt.Sprintf(`
 		data "akeyless_certificate" "test_certificate" {
-			name = "%v"
+			name	= "%v"
 		}
 
 		output "certificate" {

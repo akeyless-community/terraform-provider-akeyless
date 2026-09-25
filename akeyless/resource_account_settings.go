@@ -144,12 +144,6 @@ func resourceAccountSettings() *schema.Resource {
 				Computed:    true,
 				Description: "Enable item sharing [true/false]",
 			},
-			"enable_ai_quorum": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Enable AI Quorum checks account-wide [true/false]",
-			},
 			"company_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -193,7 +187,6 @@ func resourceAccountSettingsUpdate(d *schema.ResourceData, m interface{}) error 
 	common.GetAkeylessPtr(&body.PasswordExpirationNotificationDays, d.Get("password_expiration_notification_days").(string))
 	common.GetAkeylessPtr(&body.DefaultShareLinkTtlMinutes, d.Get("default_share_link_ttl_minutes").(string))
 	common.GetAkeylessPtr(&body.EnableItemSharing, d.Get("enable_item_sharing").(string))
-	common.GetAkeylessPtr(&body.EnableAiQuorum, d.Get("enable_ai_quorum").(string))
 	common.GetAkeylessPtr(&body.CompanyName, d.Get("company_name").(string))
 
 	_, resp, err := client.UpdateAccountSettings(ctx).Body(body).Execute()
@@ -310,12 +303,6 @@ func resourceAccountSettingsRead(d *schema.ResourceData, m interface{}) error {
 				if err := d.Set("enable_item_sharing", boolToStr(*sp.Enable)); err != nil {
 					return err
 				}
-			}
-		}
-
-		if g.AiQuorum != nil && g.AiQuorum.Enable != nil {
-			if err := d.Set("enable_ai_quorum", boolToStr(*g.AiQuorum.Enable)); err != nil {
-				return err
 			}
 		}
 

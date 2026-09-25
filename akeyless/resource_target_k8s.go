@@ -20,10 +20,6 @@ func resourceK8sTarget() *schema.Resource {
 			State: resourceK8sTargetImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"lock_on_read":     {Type: schema.TypeString, Optional: true, Description: "Lock after read"},
-			"lock_ttl":         {Type: schema.TypeString, Optional: true, Description: "Lock TTL in minutes"},
-			"rotate_on_unlock": {Type: schema.TypeString, Optional: true, Description: "Rotate after unlock"},
-
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -134,10 +130,6 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 	if d.HasChange("use_gw_service_account") {
 		body.UseGwServiceAccount = &useGwServiceAccount
 	}
-
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetCreateK8s(ctx).Body(body).Execute()
 	if err != nil {
@@ -275,10 +267,6 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	if d.HasChange("use_gw_service_account") {
 		body.UseGwServiceAccount = &useGwServiceAccount
 	}
-
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetUpdateK8s(ctx).Body(body).Execute()
 	if err != nil {

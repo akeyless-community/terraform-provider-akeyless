@@ -3,6 +3,7 @@ package akeyless
 
 import (
 	"context"
+	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -148,6 +149,11 @@ func resourceAerospikeTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 	if out.Target != nil && out.Target.Comment != nil {
 		if err := d.Set("description", *out.Target.Comment); err != nil {
+			return err
+		}
+	}
+	if out.Target != nil && out.Target.DeleteProtection != nil {
+		if err := d.Set("delete_protection", strconv.FormatBool(*out.Target.DeleteProtection)); err != nil {
 			return err
 		}
 	}

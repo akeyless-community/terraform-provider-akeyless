@@ -22,11 +22,8 @@ Redis dynamic secret resource
 ### Optional
 
 - `acl_rules` (String) A JSON array list of redis ACL rules to attach to the created user. For available rules see the ACL CAT command https://redis.io/commands/acl-cat By default the user will have permissions to read all keys '["~*", "+@read"]'
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `host` (String) Redis Host
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
@@ -35,7 +32,6 @@ Redis dynamic secret resource
 - `password_length` (String) The length of the password to be generated
 - `port` (String) Redis Port
 - `producer_encryption_key_name` (String) Dynamic producer encryption key
-- `skip_dry_run` (Boolean) Skip dry run
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
 - `ssl_certificate` (String) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
 - `tags` (Set of String) Add tags attached to this object

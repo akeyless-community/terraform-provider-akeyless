@@ -22,7 +22,6 @@ Azure AD dynamic secret resource
 ### Optional
 
 - `app_obj_id` (String) Azure App Object Id
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `azure_administrative_unit` (String) Azure AD administrative unit (relevant only when azure-user-portal-access=true)
 - `azure_client_id` (String) Azure Client ID
 - `azure_client_secret` (String, Sensitive) Azure Client Secret
@@ -30,8 +29,6 @@ Azure AD dynamic secret resource
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `encryption_key_name` (String) Dynamic secret encryption key
 - `fixed_user_claim_keyname` (String) FixedUserClaimKeyname
 - `fixed_user_only` (Boolean) Fixed user
@@ -44,7 +41,6 @@ Azure AD dynamic secret resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
-- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
 - `user_group_obj_id` (String) User Group Object Id

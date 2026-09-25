@@ -28,12 +28,6 @@ func resourceCertificateDiscovery() *schema.Resource {
 				ForceNew:    true,
 				Description: "A comma separated list of IPs, CIDR ranges, or DNS names to scan",
 			},
-			"exclude_hosts": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "A comma separated list of IP addresses, CIDR ranges, or DNS names to exclude from the scan",
-			},
 			"port_ranges": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -98,7 +92,6 @@ func resourceCertificateDiscoveryCreate(d *schema.ResourceData, m interface{}) e
 
 	ctx := context.Background()
 	hosts := strings.ReplaceAll(d.Get("hosts").(string), " ", "")
-	excludeHosts := strings.ReplaceAll(d.Get("exclude_hosts").(string), " ", "")
 	portRanges := strings.ReplaceAll(d.Get("port_ranges").(string), " ", "")
 	targetLocation := d.Get("target_location").(string)
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
@@ -115,7 +108,6 @@ func resourceCertificateDiscoveryCreate(d *schema.ResourceData, m interface{}) e
 		Token:          &token,
 	}
 	common.GetAkeylessPtr(&body.PortRanges, portRanges)
-	common.GetAkeylessPtr(&body.ExcludeHosts, excludeHosts)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.ProtectionKey, protectionKey)
 

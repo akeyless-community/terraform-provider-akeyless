@@ -38,8 +38,6 @@ DB Target resource
 - `enable_mtls` (Boolean) Enable mutual TLS [true/false]
 - `host` (String) Database host
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
-- `lock_on_read` (String) Lock after read
-- `lock_ttl` (String) Lock TTL in minutes
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `mongodb_atlas` (Boolean) Flag, set database type to mongodb and the flag to true to create Mongo Atlas target
 - `mongodb_atlas_api_private_key` (String, Sensitive) MongoDB Atlas private key
@@ -54,7 +52,6 @@ DB Target resource
 - `parent_target_name` (String) Name of the parent target, relevant only when connection-type is parent-target
 - `port` (String) Database port
 - `pwd` (String, Sensitive) Database password
-- `rotate_on_unlock` (String) Rotate after unlock
 - `skip_server_name_validation` (String) Skip server name verification while still validating the certificate chain [true/false]
 - `snowflake_account` (String) Snowflake account name
 - `snowflake_api_private_key` (String, Sensitive) RSA Private key (base64 encoded)

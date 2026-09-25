@@ -30,11 +30,13 @@ func resourceRotatedSecretF5BigIp() *schema.Resource {
 			"target_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The target name to associate",
 			},
 			"rotator_type": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The rotator type [target/password]",
 			},
 			"description": {
@@ -53,6 +55,7 @@ func resourceRotatedSecretF5BigIp() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Sensitive:   true,
+				ForceNew:    true,
 				Description: "Username to rotate",
 			},
 			"rotated_password": {
@@ -60,6 +63,7 @@ func resourceRotatedSecretF5BigIp() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Sensitive:   true,
+				ForceNew:    true,
 				Description: "Password for the username to rotate",
 			},
 			"auto_rotate": {
@@ -150,21 +154,6 @@ func resourceRotatedSecretF5BigIp() *schema.Resource {
 				Description: "How many days before rotation to send a notification",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"ara_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_agentic_runtime_authority": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_ai_quorum": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable AI Quorum",
-			},
 			"skip_dry_run": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -229,15 +218,6 @@ func resourceRotatedSecretF5BigIpCreate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.UseLowerLetters, d.Get("use_lower_letters").(string))
 	common.GetAkeylessPtr(&body.UseNumbers, d.Get("use_numbers").(string))
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, d.Get("use_special_characters").(string))
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
 	tags := common.ExpandStringList(d.Get("tags").(*schema.Set).List())
 	if len(tags) > 0 {
 		body.Tags = tags
@@ -330,6 +310,16 @@ func resourceRotatedSecretF5BigIpRead(d *schema.ResourceData, m interface{}) err
 				return err
 			}
 		}
+		if details.MaxVersions != nil {
+			if err = d.Set("max_versions", strconv.FormatInt(*details.MaxVersions, 10)); err != nil {
+				return err
+			}
+		}
+		if details.SkipDryRun != nil {
+			if err = d.Set("skip_dry_run", *details.SkipDryRun); err != nil {
+				return err
+			}
+		}
 	}
 	if itemOut.ItemGeneralInfo != nil {
 		info := itemOut.ItemGeneralInfo
@@ -354,6 +344,14 @@ func resourceRotatedSecretF5BigIpRead(d *schema.ResourceData, m interface{}) err
 		}
 		if err = setAgenticRulesReadFields(d, info.AgenticRules); err != nil {
 			return err
+		}
+		if err = setRotatedSecretPasswordPolicyReadFields(d, info); err != nil {
+			return err
+		}
+		if info.NextRotationEvents != nil {
+			if err = d.Set("rotation_event_in", common.ReadRotationEventInParam(info.NextRotationEvents)); err != nil {
+				return err
+			}
 		}
 	}
 	if itemOut.ItemCustomFieldsDetails != nil {
@@ -401,10 +399,11 @@ func resourceRotatedSecretF5BigIpUpdate(d *schema.ResourceData, m interface{}) e
 	}
 	tags := common.ExpandStringList(d.Get("tags").(*schema.Set).List())
 	add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
-	if err == nil {
-		body.AddTag = add
-		body.RmTag = remove
+	if err != nil {
+		return err
 	}
+	body.AddTag = add
+	body.RmTag = remove
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, d.Get("authentication_credentials").(string))
 	common.GetAkeylessPtr(&body.AutoRotate, d.Get("auto_rotate").(string))
@@ -426,15 +425,6 @@ func resourceRotatedSecretF5BigIpUpdate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.UseLowerLetters, d.Get("use_lower_letters").(string))
 	common.GetAkeylessPtr(&body.UseNumbers, d.Get("use_numbers").(string))
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, d.Get("use_special_characters").(string))
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
 	itemCustomFields := common.ExpandStringMap(d.Get("item_custom_fields").(map[string]interface{}))
 	body.ItemCustomFields = &itemCustomFields
 

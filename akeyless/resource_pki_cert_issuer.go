@@ -252,11 +252,6 @@ func resourcePKICertIssuer() *schema.Resource {
 				Optional:    true,
 				Description: "OCSP NextUpdate window for OCSP responses (min 10m). Supports s,m,h,d suffix.",
 			},
-			"split_certificate_chain": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Separate the leaf certificate from the certificate chain",
-			},
 		},
 	}
 }
@@ -313,7 +308,6 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	maxPathLen := int64(d.Get("max_path_len").(int))
 	ocspTtl := d.Get("ocsp_ttl").(string)
-	splitCertificateChain := d.Get("split_certificate_chain").(bool)
 
 	body := akeyless_api.CreatePKICertIssuer{
 		Name:  name,
@@ -368,7 +362,6 @@ func resourcePKICertIssuerCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.MaxPathLen, maxPathLen)
 	common.GetAkeylessPtr(&body.OcspTtl, ocspTtl)
-	common.GetAkeylessPtr(&body.SplitCertificateChain, splitCertificateChain)
 
 	_, resp, err := client.CreatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {
@@ -685,12 +678,6 @@ func resourcePKICertIssuerRead(d *schema.ResourceData, m interface{}) error {
 					return err
 				}
 			}
-			if pki.SplitCertificateChain != nil {
-				err := d.Set("split_certificate_chain", *pki.SplitCertificateChain)
-				if err != nil {
-					return err
-				}
-			}
 		}
 	}
 	if len(rOut.ItemCustomFieldsDetails) > 0 {
@@ -817,7 +804,6 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	maxPathLen := int64(d.Get("max_path_len").(int))
 	ocspTtl := d.Get("ocsp_ttl").(string)
-	splitCertificateChain := d.Get("split_certificate_chain").(bool)
 
 	body := akeyless_api.UpdatePKICertIssuer{
 		Name:  name,
@@ -882,7 +868,6 @@ func resourcePKICertIssuerUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.MaxPathLen, maxPathLen)
 	common.GetAkeylessPtr(&body.OcspTtl, ocspTtl)
-	common.GetAkeylessPtr(&body.SplitCertificateChain, splitCertificateChain)
 
 	_, resp, err := client.UpdatePKICertIssuer(ctx).Body(body).Execute()
 	if err != nil {

@@ -21,11 +21,8 @@ Github dynamic secret resource
 
 ### Optional
 
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `github_app_id` (Number) Github app id
 - `github_app_private_key` (String) App private key
 - `github_base_url` (String) Base URL
@@ -33,7 +30,6 @@ Github dynamic secret resource
 - `installation_organization` (String) Optional, mutually exclusive with installation id, GitHub organization name
 - `installation_repository` (String) Optional, mutually exclusive with installation id, GitHub repository '<owner>/<repo-name>'
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
-- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
 - `token_permissions` (Set of String) Optional - installation token's allowed permissions

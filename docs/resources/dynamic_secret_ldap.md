@@ -21,13 +21,10 @@ LDAP dynamic secret resource
 
 ### Optional
 
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `bind_dn` (String) Bind DN
 - `bind_dn_password` (String, Sensitive) Bind DN Password
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `external_username` (String) Externally provided username [true/false]
 - `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from (relevant only for external-username=true)
 - `group_dn` (String) Group DN which the temporary user should be added
@@ -43,11 +40,9 @@ LDAP dynamic secret resource
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
-- `secure_access_enforce_hosts_restriction` (Boolean) Enforce connections only to allowed SRA hosts
 - `secure_access_host` (Set of String) Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)
 - `secure_access_rd_gateway_server` (String) RD Gateway server
 - `secure_access_rdp_domain` (String) Required when the Dynamic Secret is used for a domain user
-- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target` (Set of String) A list of linked targets to be associated, Relevant only for Secure Remote Access for ssh cert issuer, ldap rotated secret and ldap dynamic secret, To specify multiple targets use argument multiple times
 - `target_name` (String) Target name

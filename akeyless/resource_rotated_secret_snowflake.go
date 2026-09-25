@@ -132,11 +132,6 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 				Optional:    true,
 				Description: "The path to the file containing the private key (relevant only for rotator-type=key)",
 			},
-			"rotation_statement": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Snowflake rotation statement",
-			},
 			"rotation_event_in": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -148,28 +143,7 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
-
-			"ara_enabled": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_agentic_runtime_authority": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_ai_quorum": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
-			},
-			"skip_dry_run": {
-				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
-			},
-			"lock_on_read": {
-				Type: schema.TypeString, Optional: true, Description: "Lock after read",
-			},
-			"lock_ttl": {
-				Type: schema.TypeString, Optional: true, Description: "Lock TTL",
-			},
-			"rotate_on_unlock": {
-				Type: schema.TypeString, Optional: true, Description: "Rotate after unlock",
-			}},
+		},
 	}
 }
 
@@ -204,7 +178,6 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	maxVersions := d.Get("max_versions").(string)
 	privateKey := d.Get("private_key").(string)
 	privateKeyFileName := d.Get("private_key_file_name").(string)
-	rotationStatement := d.Get("rotation_statement").(string)
 	rotationEventInList := d.Get("rotation_event_in").([]interface{})
 	rotationEventIn := common.ExpandStringList(rotationEventInList)
 
@@ -231,30 +204,8 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
 	common.GetAkeylessPtr(&body.PrivateKeyFileName, privateKeyFileName)
-	common.GetAkeylessPtr(&body.RotationStatement, rotationStatement)
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
-	if value, ok := d.GetOk("lock_on_read"); ok {
-		common.GetAkeylessPtr(&body.LockOnRead, value)
-	}
-	if value, ok := d.GetOk("lock_ttl"); ok {
-		common.GetAkeylessPtr(&body.LockTtl, value)
-	}
-	if value, ok := d.GetOk("rotate_on_unlock"); ok {
-		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
-	}
 	_, resp, err := client.RotatedSecretCreateSnowflake(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create rotated secret", resp, err)
@@ -383,12 +334,6 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 				return err
 			}
 		}
-		if rsd.RotationStatement != nil {
-			err = d.Set("rotation_statement", *rsd.RotationStatement)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
@@ -415,26 +360,6 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 					}
 				}
 			}
-		}
-	}
-
-	if itemOut.ItemGeneralInfo.LockOnRead != nil {
-		if err = d.Set("lock_on_read", strconv.FormatBool(*itemOut.ItemGeneralInfo.LockOnRead)); err != nil {
-			return err
-		}
-	}
-	if itemOut.ItemGeneralInfo.LockTtl != nil {
-		if err = d.Set("lock_ttl", strconv.FormatInt(*itemOut.ItemGeneralInfo.LockTtl, 10)); err != nil {
-			return err
-		}
-	}
-	if itemOut.ItemGeneralInfo.RotateOnUnlock != nil {
-		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.RotateOnUnlock)); err != nil {
-			return err
-		}
-	} else if itemOut.ItemGeneralInfo.PendingRotateOnUnlock != nil {
-		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.PendingRotateOnUnlock)); err != nil {
-			return err
 		}
 	}
 
@@ -480,7 +405,6 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	maxVersions := d.Get("max_versions").(string)
 	privateKey := d.Get("private_key").(string)
 	privateKeyFileName := d.Get("private_key_file_name").(string)
-	rotationStatement := d.Get("rotation_statement").(string)
 	rotationEventInList := d.Get("rotation_event_in").([]interface{})
 	rotationEventIn := common.ExpandStringList(rotationEventInList)
 	keepPrevVersion := d.Get("keep_prev_version").(string)
@@ -516,31 +440,9 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
 	common.GetAkeylessPtr(&body.PrivateKeyFileName, privateKeyFileName)
-	common.GetAkeylessPtr(&body.RotationStatement, rotationStatement)
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
-	if value, ok := d.GetOk("lock_on_read"); ok {
-		common.GetAkeylessPtr(&body.LockOnRead, value)
-	}
-	if value, ok := d.GetOk("lock_ttl"); ok {
-		common.GetAkeylessPtr(&body.LockTtl, value)
-	}
-	if value, ok := d.GetOk("rotate_on_unlock"); ok {
-		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
-	}
 	_, resp, err := client.RotatedSecretUpdateSnowflake(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update rotated secret", resp, err)

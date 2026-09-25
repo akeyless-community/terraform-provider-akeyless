@@ -32,12 +32,6 @@ func setAgenticRulesReadFields(d *schema.ResourceData, agenticRules *akeyless_ap
 		return nil
 	}
 
-	if err := setAgenticRuleBool(d, "enable_agentic_runtime_authority", agenticRules.Enabled); err != nil {
-		return err
-	}
-	if err := setAgenticRuleBool(d, "enable_ai_quorum", agenticRules.QuorumEnabled); err != nil {
-		return err
-	}
 	if err := setAgenticRuleList(d, "input_rule", agenticRules.GetInputRules()); err != nil {
 		return err
 	}
@@ -46,19 +40,4 @@ func setAgenticRulesReadFields(d *schema.ResourceData, agenticRules *akeyless_ap
 	}
 
 	return nil
-}
-
-func setAgenticRuleBool(d *schema.ResourceData, fieldName string, value *bool) error {
-	if value == nil {
-		return nil
-	}
-	if _, ok := d.Get(fieldName).(bool); !ok {
-		return nil
-	}
-
-	return d.Set(fieldName, *value)
-}
-
-func setDynamicSecretSkipDryRunReadField(d *schema.ResourceData, value *bool) error {
-	return setAgenticRuleBool(d, "skip_dry_run", value)
 }

@@ -100,9 +100,6 @@ func TestDynamicSecretAws(t *testing.T) {
 			password_length               = "16"
 			input_rule                    = ["name=in1,rule=validate input"]
 			output_rule                   = ["name=out1,rule=mask output"]
-			enable_agentic_runtime_authority = true
-			enable_ai_quorum              = true
-			skip_dry_run                  = true
 			delete_protection             = "false"
 			description                   = "test dynamic secret"
 			enable_admin_rotation         = false
@@ -130,9 +127,6 @@ func TestDynamicSecretAws(t *testing.T) {
 			password_length               = "20"
 			input_rule                    = ["name=in1,rule=validate input updated"]
 			output_rule                   = ["name=out1,rule=mask output updated"]
-			enable_agentic_runtime_authority = false
-			enable_ai_quorum              = false
-			skip_dry_run                  = false
 			description                   = "updated test dynamic secret"
 			enable_admin_rotation         = false
 			admin_rotation_interval_days  = 10
@@ -155,9 +149,6 @@ func TestDynamicSecretAws(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "16"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
@@ -169,9 +160,6 @@ func TestDynamicSecretAws(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
@@ -1725,4 +1713,49 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestDynamicSecretAerospike(t *testing.T) {
+	t.Skip("requires a reachable Aerospike target; Akeyless validates the connection during target creation")
+	testutils.SkipIfNoGateway(t)
+
+	name := "ds_aerospike"
+	path := testPath(name)
+	targetPath := testPath("aerospike_target_for_ds")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_aerospike" "target" {
+			name           = "%v"
+			hostname       = "127.0.0.1"
+			port           = "3000"
+			namespace      = "test"
+			admin_username = "admin"
+			password       = "password"
+		}
+		resource "akeyless_dynamic_secret_aerospike" "%v" {
+			name            = "%v"
+			target_name     = akeyless_target_aerospike.target.name
+			aerospike_roles = ["read"]
+			user_ttl        = "30m"
+			skip_dry_run    = true
+		}
+	`, targetPath, name, path)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_aerospike" "target" {
+			name           = "%v"
+			hostname       = "127.0.0.1"
+			port           = "3000"
+			namespace      = "test"
+			admin_username = "admin"
+			password       = "password"
+		}
+		resource "akeyless_dynamic_secret_aerospike" "%v" {
+			name            = "%v"
+			target_name     = akeyless_target_aerospike.target.name
+			aerospike_roles = ["read", "write"]
+			user_ttl        = "60m"
+			skip_dry_run    = true
+		}
+	`, targetPath, name, path)
+
+	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
 }

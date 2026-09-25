@@ -22,11 +22,8 @@ MCP secret using OAuth 2.0 Client Credentials authentication
 ### Optional
 
 - `accessibility` (String) For personal password manager
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `input_rule` (List of String) Agentic input rule in name=...,rule=... format
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults

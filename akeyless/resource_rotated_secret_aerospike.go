@@ -18,8 +18,8 @@ func resourceRotatedSecretAerospike() *schema.Resource {
 		Importer: &schema.ResourceImporter{State: resourceRotatedSecretAerospikeImport},
 		Schema: map[string]*schema.Schema{
 			"name":                             {Type: schema.TypeString, Required: true, ForceNew: true, Description: "Rotated secret name"},
-			"target_name":                      {Type: schema.TypeString, Required: true, Description: "Target name"},
-			"rotator_type":                     {Type: schema.TypeString, Required: true, Description: "Rotator type"},
+			"target_name":                      {Type: schema.TypeString, Required: true, ForceNew: true, Description: "Target name"},
+			"rotator_type":                     {Type: schema.TypeString, Required: true, ForceNew: true, Description: "Rotator type"},
 			"description":                      {Type: schema.TypeString, Optional: true, Description: "Description"},
 			"authentication_credentials":       {Type: schema.TypeString, Optional: true, Default: "use-user-creds", Description: "Authentication credentials"},
 			"rotated_username":                 {Type: schema.TypeString, Optional: true, Computed: true, Sensitive: true, Description: "Rotated username"},
@@ -67,11 +67,6 @@ func resourceRotatedSecretAerospikeWrite(d *schema.ResourceData, m interface{}, 
 	set := func(dst interface{}, key string) { common.GetAkeylessPtr(dst, d.Get(key)) }
 	if update {
 		b := akeyless_api.RotatedSecretUpdateAerospike{Name: name, Token: &token, InputRule: input, OutputRule: output}
-		add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
-		if err == nil {
-			b.AddTag = add
-			b.RmTag = remove
-		}
 		set(&b.AuthenticationCredentials, "authentication_credentials")
 		set(&b.AutoRotate, "auto_rotate")
 		set(&b.Description, "description")
@@ -96,7 +91,11 @@ func resourceRotatedSecretAerospikeWrite(d *schema.ResourceData, m interface{}, 
 		set(&b.EnableAgenticRuntimeAuthority, "enable_agentic_runtime_authority")
 		set(&b.EnableAiQuorum, "enable_ai_quorum")
 		set(&b.SkipDryRun, "skip_dry_run")
-		b.RotationEventIn = events
+		add, remove, err := common.GetTagsForUpdate(d, name, token, tags, client)
+		if err != nil {
+			return err
+		}
+		b.RotationEventIn, b.AddTag, b.RmTag = events, add, remove
 		b.ItemCustomFields = &custom
 		_, resp, err := client.RotatedSecretUpdateAerospike(context.Background()).Body(b).Execute()
 		if err != nil {
@@ -249,9 +248,24 @@ func resourceRotatedSecretAerospikeRead(d *schema.ResourceData, m interface{}) e
 				return err
 			}
 		}
+		if rs.MaxVersions != nil {
+			if err := d.Set("max_versions", strconv.FormatInt(*rs.MaxVersions, 10)); err != nil {
+				return err
+			}
+		}
+		if rs.SkipDryRun != nil {
+			if err := d.Set("skip_dry_run", *rs.SkipDryRun); err != nil {
+				return err
+			}
+		}
 	}
 	if err := setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
 		return err
+	}
+	if itemOut.ItemGeneralInfo != nil && itemOut.ItemGeneralInfo.NextRotationEvents != nil {
+		if err := d.Set("rotation_event_in", common.ReadRotationEventInParam(itemOut.ItemGeneralInfo.NextRotationEvents)); err != nil {
+			return err
+		}
 	}
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(akeyless_api.RotatedSecretGetValue{Name: path, Token: &token}).Execute()
 	if err != nil {

@@ -22,7 +22,6 @@ Account Settings resource
 - `default_versioning` (String) Default versioning setting [true/false]
 - `dynamic_secret_max_ttl` (Number) Maximum dynamic secret TTL in minutes
 - `dynamic_secret_max_ttl_enable` (String) Enable maximum dynamic secret TTL [true/false]
-- `enable_ai_quorum` (String) Enable AI Quorum checks account-wide [true/false]
 - `enable_item_sharing` (String) Enable item sharing [true/false]
 - `enable_password_expiration` (String) Enable password expiration [true/false]
 - `hide_personal_folder` (String) Hide personal folder [true/false]

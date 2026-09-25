@@ -42,9 +42,6 @@ func TestStaticSecretSyncResource(t *testing.T) {
             name               = akeyless_static_secret.%v.path
             usc_name           = akeyless_usc.%v.name
             remote_secret_name = "%v"
-            environments       = "staging"
-            repositories       = "akeyless/terraform-provider-akeyless"
-            gcp_project_id     = "project-create"
             depends_on         = [akeyless_static_secret.%v, akeyless_usc.%v]
         }
     `, targetName, targetPath,

@@ -21,10 +21,6 @@ func resourceWindowsTarget() *schema.Resource {
 			State: resourceWindowsTargetImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"lock_on_read":     {Type: schema.TypeString, Optional: true, Description: "Lock after read"},
-			"lock_ttl":         {Type: schema.TypeString, Optional: true, Description: "Lock TTL in minutes"},
-			"rotate_on_unlock": {Type: schema.TypeString, Optional: true, Description: "Rotate after unlock"},
-
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -142,10 +138,6 @@ func resourceWindowsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ConnectionType, connectionType)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.ParentTargetName, parentTargetName)
-
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetCreateWindows(ctx).Body(body).Execute()
 	if err != nil {
@@ -285,10 +277,6 @@ func resourceWindowsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.ParentTargetName, parentTargetName)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
-
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetUpdateWindows(ctx).Body(body).Execute()
 	if err != nil {

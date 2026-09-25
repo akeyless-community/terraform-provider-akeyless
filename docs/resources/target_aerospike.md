@@ -49,5 +49,3 @@ Aerospike target resource
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

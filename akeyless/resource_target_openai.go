@@ -19,10 +19,6 @@ func resourceOpenAITarget() *schema.Resource {
 			State: resourceOpenAITargetImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"lock_on_read":     {Type: schema.TypeString, Optional: true, Description: "Lock after read"},
-			"lock_ttl":         {Type: schema.TypeString, Optional: true, Description: "Lock TTL in minutes"},
-			"rotate_on_unlock": {Type: schema.TypeString, Optional: true, Description: "Rotate after unlock"},
-
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -39,28 +35,6 @@ func resourceOpenAITarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "API key ID",
-			},
-			"codex_oauth_mode": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Codex OAuth authentication mode",
-			},
-			"codex_oauth_access_token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Codex OAuth access token",
-			},
-			"codex_oauth_account_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Codex OAuth account ID",
-			},
-			"codex_oauth_refresh_token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Codex OAuth refresh token",
 			},
 			"model": {
 				Type:        schema.TypeString,
@@ -116,10 +90,6 @@ func resourceOpenAITargetCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	apiKey := d.Get("api_key").(string)
 	apiKeyId := d.Get("api_key_id").(string)
-	codexOauthMode := d.Get("codex_oauth_mode").(string)
-	codexOauthAccessToken := d.Get("codex_oauth_access_token").(string)
-	codexOauthAccountId := d.Get("codex_oauth_account_id").(string)
-	codexOauthRefreshToken := d.Get("codex_oauth_refresh_token").(string)
 	model := d.Get("model").(string)
 	openaiUrl := d.Get("openai_url").(string)
 	organizationId := d.Get("organization_id").(string)
@@ -133,20 +103,12 @@ func resourceOpenAITargetCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.ApiKeyId, apiKeyId)
-	common.GetAkeylessPtr(&body.CodexOauthMode, codexOauthMode)
-	common.GetAkeylessPtr(&body.CodexOauthAccessToken, codexOauthAccessToken)
-	common.GetAkeylessPtr(&body.CodexOauthAccountId, codexOauthAccountId)
-	common.GetAkeylessPtr(&body.CodexOauthRefreshToken, codexOauthRefreshToken)
 	common.GetAkeylessPtr(&body.Model, model)
 	common.GetAkeylessPtr(&body.OpenaiUrl, openaiUrl)
 	common.GetAkeylessPtr(&body.OrganizationId, organizationId)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
-
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetCreateOpenAI(ctx).Body(body).Execute()
 	if err != nil {
@@ -186,30 +148,6 @@ func resourceOpenAITargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 		if rOut.Value.OpenaiTargetDetails.ApiKeyId != nil {
 			err = d.Set("api_key_id", *rOut.Value.OpenaiTargetDetails.ApiKeyId)
-			if err != nil {
-				return err
-			}
-		}
-		if rOut.Value.OpenaiTargetDetails.AuthMode != nil {
-			err = d.Set("codex_oauth_mode", *rOut.Value.OpenaiTargetDetails.AuthMode)
-			if err != nil {
-				return err
-			}
-		}
-		if rOut.Value.OpenaiTargetDetails.OauthAccessToken != nil {
-			err = d.Set("codex_oauth_access_token", *rOut.Value.OpenaiTargetDetails.OauthAccessToken)
-			if err != nil {
-				return err
-			}
-		}
-		if rOut.Value.OpenaiTargetDetails.OauthAccountId != nil {
-			err = d.Set("codex_oauth_account_id", *rOut.Value.OpenaiTargetDetails.OauthAccountId)
-			if err != nil {
-				return err
-			}
-		}
-		if rOut.Value.OpenaiTargetDetails.OauthRefreshToken != nil {
-			err = d.Set("codex_oauth_refresh_token", *rOut.Value.OpenaiTargetDetails.OauthRefreshToken)
 			if err != nil {
 				return err
 			}
@@ -260,10 +198,6 @@ func resourceOpenAITargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	apiKey := d.Get("api_key").(string)
 	apiKeyId := d.Get("api_key_id").(string)
-	codexOauthMode := d.Get("codex_oauth_mode").(string)
-	codexOauthAccessToken := d.Get("codex_oauth_access_token").(string)
-	codexOauthAccountId := d.Get("codex_oauth_account_id").(string)
-	codexOauthRefreshToken := d.Get("codex_oauth_refresh_token").(string)
 	model := d.Get("model").(string)
 	openaiUrl := d.Get("openai_url").(string)
 	organizationId := d.Get("organization_id").(string)
@@ -279,10 +213,6 @@ func resourceOpenAITargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.ApiKeyId, apiKeyId)
-	common.GetAkeylessPtr(&body.CodexOauthMode, codexOauthMode)
-	common.GetAkeylessPtr(&body.CodexOauthAccessToken, codexOauthAccessToken)
-	common.GetAkeylessPtr(&body.CodexOauthAccountId, codexOauthAccountId)
-	common.GetAkeylessPtr(&body.CodexOauthRefreshToken, codexOauthRefreshToken)
 	common.GetAkeylessPtr(&body.Model, model)
 	common.GetAkeylessPtr(&body.OpenaiUrl, openaiUrl)
 	common.GetAkeylessPtr(&body.OrganizationId, organizationId)
@@ -290,10 +220,6 @@ func resourceOpenAITargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
-
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetUpdateOpenAI(ctx).Body(body).Execute()
 	if err != nil {

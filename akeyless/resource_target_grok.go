@@ -21,10 +21,6 @@ func resourceGrokTarget() *schema.Resource {
 			State: resourceGrokTargetImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"lock_on_read":     {Type: schema.TypeString, Optional: true, Description: "Lock after read"},
-			"lock_ttl":         {Type: schema.TypeString, Optional: true, Description: "Lock TTL in minutes"},
-			"rotate_on_unlock": {Type: schema.TypeString, Optional: true, Description: "Rotate after unlock"},
-
 			"name": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -95,10 +91,6 @@ func resourceGrokTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MaxVersions, d.Get("max_versions").(string))
 	common.GetAkeylessPtr(&body.DeleteProtection, d.Get("delete_protection").(string))
 
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
-
 	_, resp, err := client.TargetCreateGrok(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create Target", resp, err)
@@ -152,7 +144,6 @@ func resourceGrokTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 	}
-
 	d.SetId(path)
 	return nil
 }
@@ -173,10 +164,6 @@ func resourceGrokTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.MaxVersions, d.Get("max_versions").(string))
 	common.GetAkeylessPtr(&body.DeleteProtection, d.Get("delete_protection").(string))
 	common.GetAkeylessPtr(&body.KeepPrevVersion, d.Get("keep_prev_version").(string))
-
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetUpdateGrok(ctx).Body(body).Execute()
 	if err != nil {

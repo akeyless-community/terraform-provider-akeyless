@@ -23,20 +23,13 @@ OpenAI Target resource
 
 - `api_key` (String, Sensitive) API key for OpenAI
 - `api_key_id` (String) API key ID
-- `codex_oauth_access_token` (String, Sensitive) Codex OAuth access token
-- `codex_oauth_account_id` (String) Codex OAuth account ID
-- `codex_oauth_mode` (String) Codex OAuth authentication mode
-- `codex_oauth_refresh_token` (String, Sensitive) Codex OAuth refresh token
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
-- `lock_on_read` (String) Lock after read
-- `lock_ttl` (String) Lock TTL in minutes
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `model` (String) Default model to use with OpenAI
 - `openai_url` (String) Base URL of the OpenAI API
 - `organization_id` (String) Organization ID
-- `rotate_on_unlock` (String) Rotate after unlock
 
 ### Read-Only
 

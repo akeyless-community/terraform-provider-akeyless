@@ -250,8 +250,6 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 			ad_targets_path_template = "terraform-tests/migrations/ad/Targets/create/{{COMPUTER_NAME}}/{{USERNAME}}"
 			ad_targets_type     = "ssh"
 			ad_ssh_port         = "22"
-			enable_password_policy = "true"
-			skip_dry_run          = "true"
 		}
 	`, name, migrationName, targetName)
 
@@ -272,8 +270,6 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 			ad_auto_rotate      = "true"
 			ad_rotation_interval = 7
 			ad_rotation_hour     = 3
-			enable_password_policy = "false"
-			skip_dry_run          = "false"
 		}
 	`, name, migrationName, targetName)
 

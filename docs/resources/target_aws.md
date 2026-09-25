@@ -27,12 +27,9 @@ AWS Target resource
 - `generate_external_id` (Boolean) A unique auto-generated value used in your AWS account when configuring your AWS IAM role to securely delegate access to Akeyless. Relevant only when using GW cloud ID
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
-- `lock_on_read` (String) Lock after read
-- `lock_ttl` (String) Lock TTL in minutes
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `region` (String) AWS region
 - `role_arn` (String) AWS IAM role identifier that Gateway will assume in your AWS account, relevant only when using external ID
-- `rotate_on_unlock` (String) Rotate after unlock
 - `session_token` (String) Required only for temporary security credentials retrieved using STS
 - `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
 

@@ -174,40 +174,7 @@ func resourceRotatedSecretWindows() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
-			"host_provider": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Host provider type [explicit/target]",
-			},
-			"provider_type": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Provider type",
-			},
-			"ara_enabled": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_agentic_runtime_authority": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_ai_quorum": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
-			},
-			"skip_dry_run": {
-				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
-			},
-			"lock_on_read": {
-				Type: schema.TypeString, Optional: true, Description: "Lock after read",
-			},
-			"lock_ttl": {
-				Type: schema.TypeString, Optional: true, Description: "Lock TTL",
-			},
-			"rotate_on_unlock": {
-				Type: schema.TypeString, Optional: true, Description: "Rotate after unlock",
-			},
-			"secure_access_enforce_hosts_restriction": {
-				Type: schema.TypeBool, Optional: true, Description: "Enforce connections only to allowed SRA hosts",
-			}},
+		},
 	}
 }
 
@@ -247,8 +214,6 @@ func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) e
 	secureAccessHost := common.ExpandStringList(secureAccessHostList)
 	secureAccessRdpDomain := d.Get("secure_access_rdp_domain").(string)
 	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
-	hostProvider := d.Get("host_provider").(string)
-	providerType := d.Get("provider_type").(string)
 
 	body := akeyless_api.RotatedSecretCreateWindows{
 		Name:        name,
@@ -279,8 +244,6 @@ func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessRdpDomain, secureAccessRdpDomain)
 	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
-	common.GetAkeylessPtr(&body.HostProvider, hostProvider)
-	common.GetAkeylessPtr(&body.ProviderType, providerType)
 	if len(itemCustomFields) > 0 {
 		customFields := make(map[string]string)
 		for k, v := range itemCustomFields {
@@ -289,30 +252,6 @@ func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) e
 		body.ItemCustomFields = &customFields
 	}
 
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
-	if value, ok := d.GetOk("lock_on_read"); ok {
-		common.GetAkeylessPtr(&body.LockOnRead, value)
-	}
-	if value, ok := d.GetOk("lock_ttl"); ok {
-		common.GetAkeylessPtr(&body.LockTtl, value)
-	}
-	if value, ok := d.GetOk("rotate_on_unlock"); ok {
-		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
-	}
-	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
-		common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, value)
-	}
 	_, resp, err := client.RotatedSecretCreateWindows(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create rotated secret", resp, err)
@@ -468,26 +407,6 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
-	if itemOut.ItemGeneralInfo.LockOnRead != nil {
-		if err = d.Set("lock_on_read", strconv.FormatBool(*itemOut.ItemGeneralInfo.LockOnRead)); err != nil {
-			return err
-		}
-	}
-	if itemOut.ItemGeneralInfo.LockTtl != nil {
-		if err = d.Set("lock_ttl", strconv.FormatInt(*itemOut.ItemGeneralInfo.LockTtl, 10)); err != nil {
-			return err
-		}
-	}
-	if itemOut.ItemGeneralInfo.RotateOnUnlock != nil {
-		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.RotateOnUnlock)); err != nil {
-			return err
-		}
-	} else if itemOut.ItemGeneralInfo.PendingRotateOnUnlock != nil {
-		if err = d.Set("rotate_on_unlock", strconv.FormatBool(*itemOut.ItemGeneralInfo.PendingRotateOnUnlock)); err != nil {
-			return err
-		}
-	}
-
 	if err = setAgenticRulesReadFields(d, itemOut.ItemGeneralInfo.AgenticRules); err != nil {
 		return err
 	}
@@ -536,8 +455,6 @@ func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) e
 	secureAccessRdpDomain := d.Get("secure_access_rdp_domain").(string)
 	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
 	keepPrevVersion := d.Get("keep_prev_version").(string)
-	hostProvider := d.Get("host_provider").(string)
-	providerType := d.Get("provider_type").(string)
 
 	body := akeyless_api.RotatedSecretUpdateWindows{
 		Name:    name,
@@ -577,8 +494,6 @@ func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.SecureAccessHost, secureAccessHost)
 	common.GetAkeylessPtr(&body.SecureAccessRdpDomain, secureAccessRdpDomain)
 	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
-	common.GetAkeylessPtr(&body.HostProvider, hostProvider)
-	common.GetAkeylessPtr(&body.ProviderType, providerType)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 	if len(itemCustomFields) > 0 {
 		customFields := make(map[string]string)
@@ -588,30 +503,6 @@ func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) e
 		body.ItemCustomFields = &customFields
 	}
 
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
-	if value, ok := d.GetOk("lock_on_read"); ok {
-		common.GetAkeylessPtr(&body.LockOnRead, value)
-	}
-	if value, ok := d.GetOk("lock_ttl"); ok {
-		common.GetAkeylessPtr(&body.LockTtl, value)
-	}
-	if value, ok := d.GetOk("rotate_on_unlock"); ok {
-		common.GetAkeylessPtr(&body.RotateOnUnlock, value)
-	}
-	if value, ok := d.GetOkExists("secure_access_enforce_hosts_restriction"); ok {
-		common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, value)
-	}
 	_, resp, err = client.RotatedSecretUpdateWindows(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update rotated secret", resp, err)

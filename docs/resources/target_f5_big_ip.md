@@ -36,5 +36,3 @@ F5 BIG-IP Target resource
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

@@ -31,11 +31,8 @@ Let's Encrypt Target resource
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
 - `lets_encrypt_url` (String) Let's Encrypt directory environment
-- `lock_on_read` (String) Lock after read
-- `lock_ttl` (String) Lock TTL in minutes
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `resource_group` (String) Azure resource group name. Required when dns-target-creds points to Azure target
-- `rotate_on_unlock` (String) Rotate after unlock
 - `timeout` (String) Timeout for challenge validation
 
 ### Read-Only

@@ -372,14 +372,9 @@ func resourceAuthMethodAliCloudRead(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	if len(rOut.AccessInfo.AllowedClientType) > 0 {
-		// Only set allowed_client_type if it was explicitly configured by the user
-		if _, ok := d.GetOk("allowed_client_type"); ok {
-			err = d.Set("allowed_client_type", rOut.AccessInfo.AllowedClientType)
-			if err != nil {
-				return err
-			}
-		}
+	err = d.Set("allowed_client_type", rOut.AccessInfo.AllowedClientType)
+	if err != nil {
+		return err
 	}
 
 	if rOut.Description != nil {

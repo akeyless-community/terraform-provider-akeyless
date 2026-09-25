@@ -128,11 +128,6 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Description: "A CIDR whitelist with the GW IPs that the access is restricted to",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"gateway_url": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Akeyless Gateway URL (Configuration Management port). Relevant only when working with Gateway mode",
-			},
 			"product_type": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -186,7 +181,6 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	gwBoundIpsSet := d.Get("gw_bound_ips").(*schema.Set)
 	gwBoundIps := common.ExpandStringList(gwBoundIpsSet.List())
-	gatewayURL := d.Get("gateway_url").(string)
 	productTypeSet := d.Get("product_type").(*schema.Set)
 	productType := common.ExpandStringList(productTypeSet.List())
 	subclaimsDelimitersSet := d.Get("subclaims_delimiters").(*schema.Set)
@@ -214,7 +208,6 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
-	common.GetAkeylessPtr(&body.GatewayUrl, gatewayURL)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
 
@@ -439,7 +432,6 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	gwBoundIpsSet := d.Get("gw_bound_ips").(*schema.Set)
 	gwBoundIps := common.ExpandStringList(gwBoundIpsSet.List())
-	gatewayURL := d.Get("gateway_url").(string)
 	productTypeSet := d.Get("product_type").(*schema.Set)
 	productType := common.ExpandStringList(productTypeSet.List())
 	subclaimsDelimitersSet := d.Get("subclaims_delimiters").(*schema.Set)
@@ -468,7 +460,6 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
-	common.GetAkeylessPtr(&body.GatewayUrl, gatewayURL)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
 

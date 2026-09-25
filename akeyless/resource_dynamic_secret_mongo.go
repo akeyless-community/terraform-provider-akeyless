@@ -196,19 +196,7 @@ func resourceDynamicSecretMongo() *schema.Resource {
 				Optional:    true,
 				Description: "The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds",
 			},
-
-			"ara_enabled": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_agentic_runtime_authority": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_ai_quorum": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
-			},
-			"skip_dry_run": {
-				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
-			}},
+		},
 	}
 }
 
@@ -294,18 +282,7 @@ func resourceDynamicSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 		secureAccessDelayInt64 := int64(secureAccessDelay)
 		common.GetAkeylessPtr(&body.SecureAccessDelay, secureAccessDelayInt64)
 	}
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
+
 	_, resp, err := client.DynamicSecretCreateMongoDb(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create dynamic secret", resp, err)
@@ -483,9 +460,6 @@ func resourceDynamicSecretMongoRead(d *schema.ResourceData, m interface{}) error
 	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
 		return err
 	}
-	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
-		return err
-	}
 
 	d.SetId(path)
 
@@ -574,18 +548,7 @@ func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 		secureAccessDelayInt64 := int64(secureAccessDelay)
 		common.GetAkeylessPtr(&body.SecureAccessDelay, secureAccessDelayInt64)
 	}
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
+
 	_, resp, err := client.DynamicSecretUpdateMongoDb(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update dynamic secret", resp, err)

@@ -99,22 +99,6 @@ func dataSourceGenerateCsr() *schema.Resource {
 				Optional:    true,
 				Description: "The number of fragments that the item will be split into (not includes customer fragment, relevant only for dfc keys)",
 			},
-			"customer_frg_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Customer fragment ID for DFC keys",
-			},
-			"ext_key_usage": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "A comma-separated list of extended key usage values",
-			},
-			"key_usage": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "A comma-separated list of key usage values",
-			},
 			"data": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -147,9 +131,6 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	ipAddresses := d.Get("ip_addresses").(string)
 	uriSans := d.Get("uri_sans").(string)
 	splitLevel := d.Get("split_level").(int)
-	customerFrgID := d.Get("customer_frg_id").(string)
-	extKeyUsage := d.Get("ext_key_usage").(string)
-	keyUsage := d.Get("key_usage").(string)
 
 	body := akeyless_api.GenerateCsr{
 		Name:       name,
@@ -171,9 +152,6 @@ func dataSourceGenerateCsrRead(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.IpAddresses, ipAddresses)
 	common.GetAkeylessPtr(&body.UriSans, uriSans)
 	common.GetAkeylessPtr(&body.SplitLevel, splitLevel)
-	common.GetAkeylessPtr(&body.CustomerFrgId, customerFrgID)
-	common.GetAkeylessPtr(&body.ExtKeyUsage, extKeyUsage)
-	common.GetAkeylessPtr(&body.KeyUsage, keyUsage)
 
 	rOut, res, err := client.GenerateCsr(ctx).Body(body).Execute()
 	if err != nil {

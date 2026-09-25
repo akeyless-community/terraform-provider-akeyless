@@ -19,13 +19,6 @@ Get dynamic secret temporary credentials list data source
 
 - `name` (String) Dynamic Secret Name
 
-### Optional
-
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
-- `skip_dry_run` (Boolean) Skip dry run
-
 ### Read-Only
 
 - `id` (String) The ID of this resource.

@@ -87,22 +87,6 @@ func resourceCertificate() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
-			"include_private_key": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Include the private key in the certificate value response",
-			},
-			"leaf_only": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Return only the leaf certificate",
-			},
-			"password": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Password for the certificate private key",
-			},
 		},
 	}
 }
@@ -222,15 +206,6 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 	certBody := akeyless_api.GetCertificateValue{
 		Name:  &name,
 		Token: &token,
-	}
-	if value, ok := d.GetOkExists("include_private_key"); ok {
-		common.GetAkeylessPtr(&certBody.IncludePrivateKey, value)
-	}
-	if value, ok := d.GetOkExists("leaf_only"); ok {
-		common.GetAkeylessPtr(&certBody.LeafOnly, value)
-	}
-	if value, ok := d.GetOk("password"); ok {
-		common.GetAkeylessPtr(&certBody.Password, value)
 	}
 
 	certOut, resp, err := client.GetCertificateValue(ctx).Body(certBody).Execute()

@@ -23,7 +23,6 @@ DigiCert Target resource
 ### Optional
 
 - `acme_challenge` (String) ACME challenge type. Options: [dns]
-- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `digicert_url` (String) DigiCert ACME endpoint selector. Options: [us-production/eu-production/us-demo/eu-demo]
 - `dns_target_creds` (String) Name of existing cloud target for DNS credentials. Required when challenge type is dns. Supported providers: AWS, Azure, GCP, Cloudflare
@@ -34,11 +33,8 @@ DigiCert Target resource
 - `hosted_zone` (String) AWS Route53 hosted zone ID. Required when DNS credentials target is AWS
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
-- `lock_on_read` (String) Lock after read
-- `lock_ttl` (String) Lock TTL in minutes
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `resource_group` (String) Azure resource group name. Required when DNS credentials target is Azure
-- `rotate_on_unlock` (String) Rotate after unlock
 - `timeout` (String) Timeout for challenge validation
 
 ### Read-Only

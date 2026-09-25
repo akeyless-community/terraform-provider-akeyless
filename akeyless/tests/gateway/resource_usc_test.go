@@ -71,32 +71,6 @@ func TestUscResourceHashi(t *testing.T) {
 	testutils.TestItemResource(t, providerFactories, uscPath, config, configUpdate)
 }
 
-func TestUscResourceGcpScope(t *testing.T) {
-	testutils.SkipIfNoGateway(t)
-
-	targetName := "test-target-gcp-for-usc"
-	targetPath := testPath(targetName)
-	uscName := "test-usc-gcp-scope"
-	uscPath := testPath(uscName)
-
-	config := fmt.Sprintf(`
-		resource "akeyless_target_gcp" "%v" {
-			name                  = "%v"
-			use_gw_cloud_identity = true
-		}
-
-		resource "akeyless_usc" "%v" {
-			name                = "%v"
-			target_to_associate = akeyless_target_gcp.%v.name
-			gcp_folder_id       = "folders/123456789"
-			gcp_organization_id = "organizations/987654321"
-			gcp_scope           = "folder"
-		}
-	`, targetName, targetPath, uscName, uscPath, targetName)
-
-	testutils.TestItemResource(t, providerFactories, uscPath, config)
-}
-
 func TestUscSecretResourceHashi(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 	testutils.SkipIfNoVault(t)

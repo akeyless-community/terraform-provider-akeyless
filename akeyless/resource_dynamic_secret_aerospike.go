@@ -124,6 +124,11 @@ func resourceDynamicSecretAerospikeRead(d *schema.ResourceData, m interface{}) e
 			return err
 		}
 	}
+	if out.SkipDryRun != nil {
+		if err := d.Set("skip_dry_run", *out.SkipDryRun); err != nil {
+			return err
+		}
+	}
 	if out.ItemTargetsAssoc != nil {
 		if err := common.SetDataByPrefixSlash(d, "target_name", common.GetTargetName(out.ItemTargetsAssoc), d.Get("target_name").(string)); err != nil {
 			return err
@@ -159,9 +164,6 @@ func resourceDynamicSecretAerospikeRead(d *schema.ResourceData, m interface{}) e
 		return err
 	}
 	if err := setAgenticRulesReadFields(d, out.AgenticRules); err != nil {
-		return err
-	}
-	if err := setDynamicSecretSkipDryRunReadField(d, out.SkipDryRun); err != nil {
 		return err
 	}
 	return nil

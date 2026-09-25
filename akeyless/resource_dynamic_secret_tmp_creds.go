@@ -54,26 +54,6 @@ func resourceDynamicSecretTmpCreds() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "Output rule definitions",
 			},
-			"ara_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_agentic_runtime_authority": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_ai_quorum": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Enable AI Quorum",
-			},
-			"skip_dry_run": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Skip dry run",
-			},
 		},
 	}
 }
@@ -100,18 +80,6 @@ func resourceDynamicSecretTmpCredsUpdate(d *schema.ResourceData, m interface{}) 
 	}
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
 
 	resp, err := client.DynamicSecretTmpCredsUpdate(ctx).Body(body).Execute()
 	if err != nil {
@@ -139,18 +107,6 @@ func resourceDynamicSecretTmpCredsRead(d *schema.ResourceData, m interface{}) er
 	body := akeyless_api.DynamicSecretTmpCredsGet{
 		Name:  name,
 		Token: &token,
-	}
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
 	}
 
 	rOut, res, err := client.DynamicSecretTmpCredsGet(ctx).Body(body).Execute()
@@ -205,18 +161,6 @@ func resourceDynamicSecretTmpCredsDelete(d *schema.ResourceData, m interface{}) 
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.TmpCredsId, tmpCredsId)
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
 
 	resp, err := client.DynamicSecretTmpCredsDelete(ctx).Body(body).Execute()
 	if err != nil {

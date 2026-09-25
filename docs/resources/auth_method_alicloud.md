@@ -46,5 +46,3 @@ AliCloud Auth Method Resource
 
 - `access_id` (String) Auth Method access ID
 - `id` (String) The ID of this resource.
-
-

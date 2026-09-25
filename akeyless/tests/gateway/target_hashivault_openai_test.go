@@ -42,25 +42,17 @@ func TestOpenAITargetResource(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
-			name                      = "%v"
-			api_key                   = "test-api-key"
-			codex_oauth_mode          = "chatgpt_oauth"
-			codex_oauth_access_token  = "access-token"
-			codex_oauth_account_id    = "account-id"
-			codex_oauth_refresh_token = "refresh-token"
-			description               = "Test OpenAI target"
+			name 				= "%v"
+			api_key 			= "sk-test123"
+			description 		= "Test OpenAI target"
 		}
 	`, targetName, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_openai" "%v" {
-			name                      = "%v"
-			api_key                   = "updated-test-api-key"
-			codex_oauth_mode          = "chatgpt_oauth"
-			codex_oauth_access_token  = "updated-access-token"
-			codex_oauth_account_id    = "updated-account-id"
-			codex_oauth_refresh_token = "updated-refresh-token"
-			description               = "Updated OpenAI target"
+			name 				= "%v"
+			api_key 			= "sk-test456"
+			description 		= "Updated OpenAI target"
 		}
 	`, targetName, targetPath)
 

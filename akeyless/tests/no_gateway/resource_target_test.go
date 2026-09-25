@@ -449,8 +449,6 @@ func TestTargetGkeResource(t *testing.T) {
 }
 
 func TestTargetGlobalSignResource(t *testing.T) {
-	t.Skip("GlobalSign target creation requires valid external GlobalSign credentials")
-
 	targetName := "globalsign_target1"
 	targetPath := testPath(targetName)
 
@@ -1368,6 +1366,64 @@ func TestTargetZeroSslResource(t *testing.T) {
 			imap_fqdn         	= "fqdn2"
 			imap_target_email	= "ku@ku2.io"
 			description       	= "desc2"
+		}
+	`, targetName, targetPath)
+
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
+func TestTargetAerospikeResource(t *testing.T) {
+	t.Skip("Akeyless validates a live Aerospike connection during target creation")
+
+	targetName := "aerospike_target"
+	targetPath := testPath(targetName)
+	config := fmt.Sprintf(`
+		resource "akeyless_target_aerospike" "%v" {
+			name           = "%v"
+			hostname       = "127.0.0.1"
+			port           = "3000"
+			namespace      = "test"
+			admin_username = "admin"
+			password       = "password"
+			description    = "test aerospike target"
+		}
+	`, targetName, targetPath)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_aerospike" "%v" {
+			name           = "%v"
+			hostname       = "127.0.0.1"
+			port           = "3000"
+			namespace      = "test"
+			admin_username = "admin"
+			password       = "password"
+			description    = "updated aerospike target"
+		}
+	`, targetName, targetPath)
+
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
+func TestTargetF5BigIpResource(t *testing.T) {
+	t.Skip("Akeyless validates a live F5 BIG-IP connection during target creation")
+
+	targetName := "f5_big_ip_target"
+	targetPath := testPath(targetName)
+	config := fmt.Sprintf(`
+		resource "akeyless_target_f5_big_ip" "%v" {
+			name        = "%v"
+			url         = "https://f5.example.com"
+			username    = "admin"
+			password    = "password"
+			description = "test f5 target"
+		}
+	`, targetName, targetPath)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_f5_big_ip" "%v" {
+			name        = "%v"
+			url         = "https://f5.example.com"
+			username    = "admin"
+			password    = "password"
+			description = "updated f5 target"
 		}
 	`, targetName, targetPath)
 

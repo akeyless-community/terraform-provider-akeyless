@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -24,10 +23,6 @@ func resourceLinkedTarget() *schema.Resource {
 			State: resourceLinkedTargetImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"lock_on_read":     {Type: schema.TypeString, Optional: true, Description: "Lock after read"},
-			"lock_ttl":         {Type: schema.TypeString, Optional: true, Description: "Lock TTL in minutes"},
-			"rotate_on_unlock": {Type: schema.TypeString, Optional: true, Description: "Rotate after unlock"},
-
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -64,17 +59,6 @@ func resourceLinkedTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
-			"max_versions": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Set the maximum number of versions, limited by the account settings defaults",
-			},
-			"delete_protection": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "false",
-				Description: "Protection from accidental deletion of this object [true/false]",
-			},
 			"rm_hosts": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -104,12 +88,6 @@ func resourceLinkedTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ParentTargetName, parentTargetName)
 	common.GetAkeylessPtr(&body.Type, hostType)
 	common.GetAkeylessPtr(&body.Description, description)
-	common.GetAkeylessPtr(&body.MaxVersions, d.Get("max_versions").(string))
-	common.GetAkeylessPtr(&body.DeleteProtection, d.Get("delete_protection").(string))
-
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetCreateLinked(ctx).Body(body).Execute()
 	if err != nil {
@@ -164,12 +142,6 @@ func resourceLinkedTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 	if rOut.Target.Comment != nil {
 		err = d.Set("description", *rOut.Target.Comment)
-		if err != nil {
-			return err
-		}
-	}
-	if rOut.Target.DeleteProtection != nil {
-		err = d.Set("delete_protection", strconv.FormatBool(*rOut.Target.DeleteProtection))
 		if err != nil {
 			return err
 		}
@@ -238,13 +210,7 @@ func resourceLinkedTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.AddHosts, addHosts)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
-	common.GetAkeylessPtr(&body.MaxVersions, d.Get("max_versions").(string))
-	common.GetAkeylessPtr(&body.DeleteProtection, d.Get("delete_protection").(string))
 	common.GetAkeylessPtr(&body.RmHosts, rmHosts)
-
-	common.GetAkeylessPtr(&body.LockOnRead, d.Get("lock_on_read").(string))
-	common.GetAkeylessPtr(&body.LockTtl, d.Get("lock_ttl").(string))
-	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 
 	_, resp, err := client.TargetUpdateLinked(ctx).Body(body).Execute()
 	if err != nil {

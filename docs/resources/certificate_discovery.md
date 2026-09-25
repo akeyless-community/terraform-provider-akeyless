@@ -22,7 +22,6 @@ Certificate Discovery resource. Starts a certificate discovery scan and saves re
 
 ### Optional
 
-- `exclude_hosts` (String) A comma separated list of IP addresses, CIDR ranges, or DNS names to exclude from the scan
 - `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified. To specify multiple events, repeat this argument.
 - `port_ranges` (String) A comma separated list of port ranges. Example: 80,8080-8085
 - `protection_key` (String) The name of the key that protects the certificate value (if empty, the account default key will be used)

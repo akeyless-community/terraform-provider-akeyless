@@ -22,12 +22,9 @@ Google Cloud Provider (GCP) dynamic secret resource
 ### Optional
 
 - `access_type` (String) The type of the GCP dynamic secret, options are [sa, external]
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `encryption_key_name` (String) Dynamic producer encryption key
 - `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from (Relevant only when --access-type=external)
 - `gcp_cred_type` (String) Credentials type, options are [token, key]
@@ -46,7 +43,6 @@ Google Cloud Provider (GCP) dynamic secret resource
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `service_account_type` (String) The type of the GCP service account. Options [fixed, dynamic] (Relevant only when --access-type=sa)
-- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
 - `user_ttl` (String) User TTL

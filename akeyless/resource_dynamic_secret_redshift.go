@@ -151,19 +151,7 @@ func resourceDynamicSecretRedshift() *schema.Resource {
 				Description: "Additional custom fields to associate with the item",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-
-			"ara_enabled": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_agentic_runtime_authority": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
-			},
-			"enable_ai_quorum": {
-				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
-			},
-			"skip_dry_run": {
-				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
-			}},
+		},
 	}
 }
 
@@ -227,18 +215,7 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 		}
 		common.GetAkeylessPtr(&body.ItemCustomFields, customFields)
 	}
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
+
 	_, resp, err := client.DynamicSecretCreateRedshift(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create dynamic secret", resp, err)
@@ -380,9 +357,6 @@ func resourceDynamicSecretRedshiftRead(d *schema.ResourceData, m interface{}) er
 	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
 		return err
 	}
-	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
-		return err
-	}
 
 	d.SetId(path)
 
@@ -449,18 +423,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 		}
 		common.GetAkeylessPtr(&body.ItemCustomFields, customFields)
 	}
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
-	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
-	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
-	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
-	}
+
 	_, resp, err := client.DynamicSecretUpdateRedshift(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update dynamic secret", resp, err)

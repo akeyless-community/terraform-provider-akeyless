@@ -23,18 +23,14 @@ Artifactory dynamic secret resource
 
 ### Optional
 
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `artifactory_admin_name` (String) Admin name
 - `artifactory_admin_pwd` (String) Admin API Key/Password
 - `base_url` (String) Artifactory REST URL, must end with artifactory postfix
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (Boolean) Protection from accidental deletion of this item
 - `description` (String) Description of the object
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
-- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL

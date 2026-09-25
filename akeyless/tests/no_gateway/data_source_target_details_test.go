@@ -54,35 +54,6 @@ func TestTargetDataSourceAws(t *testing.T) {
 		"access_key":            "bbbb",
 		"region":                "il-central-1",
 		"use_gw_cloud_identity": true,
-		"gw_cloud_identity_external_id_opt": map[string]interface{}{
-			"is_enabled": false,
-		},
-	}
-
-	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
-	defer testutils.DeleteTarget(t, targetPath)
-
-	config := fmt.Sprintf(`
-		data "akeyless_target_details" "%v" {
-			name = "%v"
-		}
-		output "target_details" {
-			value = data.akeyless_target_details.%v.value
-		}
-	`, targetName, targetPath, targetName)
-
-	testTargetDataSource(t, config, targetPath, targetDetailsType, expect)
-}
-
-func TestTargetDataSourceOpenAI(t *testing.T) {
-	targetName := "target-openai"
-	targetPath := testPath(targetName)
-	targetDetailsType := "openai_target_details"
-
-	expect := map[string]interface{}{
-		"api_key":         "api-key",
-		"openai_url":      "https://api.openai.com/v1",
-		"organization_id": "org-id",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -329,8 +300,6 @@ func TestTargetDataSourceGlobalSignAtlas(t *testing.T) {
 }
 
 func TestTargetDataSourceGlobalSign(t *testing.T) {
-	t.Skip("GlobalSign target creation requires valid external GlobalSign credentials")
-
 	targetName := "target-globalsign"
 	targetPath := testPath(targetName)
 	targetDetailsType := "globalsign_target_details"

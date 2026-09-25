@@ -21,7 +21,6 @@ Amazon Elastic Kubernetes Service (Amazon EKS) dynamic secret
 
 ### Optional
 
-- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `eks_access_key_id` (String) EKS Access Key ID
@@ -31,8 +30,6 @@ Amazon Elastic Kubernetes Service (Amazon EKS) dynamic secret
 - `eks_cluster_name` (String) EKS cluster name. Must match the EKS cluster name you want to connect to.
 - `eks_region` (String) EKS Region
 - `eks_secret_access_key` (String, Sensitive) EKS Secret Access Key
-- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
-- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `secure_access_allow_port_forwading` (Boolean) Enable Port forwarding while using CLI access.
@@ -42,7 +39,6 @@ Amazon Elastic Kubernetes Service (Amazon EKS) dynamic secret
 - `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
-- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
 - `user_ttl` (String) User TTL
