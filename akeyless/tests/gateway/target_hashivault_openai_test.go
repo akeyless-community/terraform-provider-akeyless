@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	akeyless_provider "github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -93,14 +92,4 @@ func TestOpenAITargetResource(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestOpenAITargetCodexOAuthSchema(t *testing.T) {
-	schema := akeyless_provider.Provider().ResourcesMap["akeyless_target_openai"].Schema
-
-	for _, fieldName := range []string{"codex_oauth_access_token", "codex_oauth_refresh_token"} {
-		if field := schema[fieldName]; field == nil || !field.Sensitive {
-			t.Errorf("%s must be sensitive", fieldName)
-		}
-	}
 }

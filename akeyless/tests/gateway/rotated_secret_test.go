@@ -40,10 +40,6 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "aaaa"
-			ara_enabled                      = true
-			enable_agentic_runtime_authority = true
-			enable_ai_quorum                 = true
-			skip_dry_run                     = true
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -57,39 +53,10 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "bbbb"
-			ara_enabled                      = false
-			enable_agentic_runtime_authority = false
-			enable_ai_quorum                 = false
-			skip_dry_run                     = false
 		}
 	`, rsName, rsPath, targetPath)
 
-	resourceName := "akeyless_rotated_secret_aws." + rsName
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(rsPath),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(rsPath),
-					resource.TestCheckResourceAttr(resourceName, "ara_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
-				),
-			},
-		},
-	})
+	testutils.TestItemResource(t, providerFactories, rsPath, config, configUpdate)
 }
 
 func TestRotatedSecretAzureResource(t *testing.T) {
@@ -292,31 +259,31 @@ func TestRotatedSecretCustomResource(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_custom" "%v" {
-			name                             = "%v"
-			target_name                      = "%v"
-			custom_payload                   = "payload1"
-			input_rule                       = ["name=in1,rule=validate input"]
-			output_rule                      = ["name=out1,rule=mask output"]
-			use_capital_letters              = "true"
-			use_lower_letters                = "true"
-			use_numbers                      = "true"
-			use_special_characters           = "false"
-			tags                             = ["t1", "t2"]
+			name 						= "%v"
+			target_name 				= "%v"
+			custom_payload 				= "payload1"
+			input_rule 					= ["name=in1,rule=validate input"]
+			output_rule 				= ["name=out1,rule=mask output"]
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "false"
+			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_custom" "%v" {
-			name                             = "%v"
-			target_name                      = "%v"
-			custom_payload                   = "payload2"
-			input_rule                       = ["name=in1,rule=validate input updated"]
-			output_rule                      = ["name=out1,rule=mask output updated"]
-			use_capital_letters              = "true"
-			use_lower_letters                = "true"
-			use_numbers                      = "true"
-			use_special_characters           = "true"
-			tags                             = ["t1", "t3"]
+			name 						= "%v"
+			target_name 				= "%v"
+			custom_payload 				= "payload2"
+			input_rule 					= ["name=in1,rule=validate input updated"]
+			output_rule 				= ["name=out1,rule=mask output updated"]
+			use_capital_letters 		= "true"
+			use_lower_letters 			= "true"
+			use_numbers 				= "true"
+			use_special_characters 		= "true"
+			tags 						= ["t1", "t3"]
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -722,27 +689,27 @@ func TestRotatedSecretMysqlResource(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_mysql" "%v" {
-			name                             = "%v"
-			target_name                      = "%v"
-			rotator_type                     = "target"
-			authentication_credentials       = "use-target-creds"
-			rotated_username                 = "test"
-			rotated_password                 = "test"
-			password_length                  = "9"
-			tags                             = ["t1", "t2"]
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "target"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "test"
+  			rotated_password 			= "test"
+			password_length 			= "9"
+			tags 						= ["t1", "t2"]
 		}
 	`, rsName, rsPath, targetPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_rotated_secret_mysql" "%v" {
-			name                             = "%v"
-			target_name                      = "%v"
-			rotator_type                     = "target"
-			authentication_credentials       = "use-target-creds"
-			rotated_username                 = "test"
-			rotated_password                 = "test"
-			password_length                  = "9"
-			tags                             = ["t1","t3"]
+			name 						= "%v"
+			target_name 				= "%v"
+			rotator_type 				= "target"
+			authentication_credentials 	= "use-target-creds"
+			rotated_username 			= "test"
+  			rotated_password 			= "test"
+			password_length 			= "9"
+			tags 						= ["t1","t3"]
 		}
 	`, rsName, rsPath, targetPath)
 

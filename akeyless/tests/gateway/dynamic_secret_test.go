@@ -298,40 +298,24 @@ func TestDynamicSecretCustom(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_custom" "%v" {
-			name                             = "%v"
-			create_sync_url                  = "https://webhook.example.com/create"
-			revoke_sync_url                  = "https://webhook.example.com/revoke"
-			user_ttl                         = "30m"
+			name             = "%v"
+			create_sync_url  = "https://webhook.example.com/create"
+			revoke_sync_url  = "https://webhook.example.com/revoke"
+			user_ttl         = "30m"
 		}
 	`, dsName, dsPath)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_custom" "%v" {
-			name                             = "%v"
-			create_sync_url                  = "https://webhook.example.com/create"
-			revoke_sync_url                  = "https://webhook.example.com/revoke"
-			user_ttl                         = "60m"
-			tags                             = ["test1", "test2"]
+			name             = "%v"
+			create_sync_url  = "https://webhook.example.com/create"
+			revoke_sync_url  = "https://webhook.example.com/revoke"
+			user_ttl         = "60m"
+			tags             = ["test1", "test2"]
 		}
 	`, dsName, dsPath)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(dsPath),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(dsPath),
-				),
-			},
-		},
-	})
+	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
 }
 
 func TestDynamicSecretDockerhub(t *testing.T) {
@@ -995,48 +979,32 @@ func TestDynamicSecretMysql(t *testing.T) {
 
 	config := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_mysql" "%v" {
-			name                             = "%v"
-			target_name                      = "%v"
-			mysql_username                   = "%v"
-			mysql_password                   = "%v"
-			mysql_host                       = "%v"
-			mysql_port                       = "%v"
-			mysql_dbname                     = "%v"
-			user_ttl                         = "30m"
+			name           = "%v"
+			target_name    = "%v"
+			mysql_username = "%v"
+			mysql_password = "%v"
+			mysql_host     = "%v"
+			mysql_port     = "%v"
+			mysql_dbname   = "%v"
+			user_ttl       = "30m"
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_mysql" "%v" {
-			name                             = "%v"
-			target_name                      = "%v"
-			mysql_username                   = "%v"
-			mysql_password                   = "%v"
-			mysql_host                       = "%v"
-			mysql_port                       = "%v"
-			mysql_dbname                     = "%v"
-			user_ttl                         = "60m"
-			tags                             = ["test1", "test2"]
+			name           = "%v"
+			target_name    = "%v"
+			mysql_username = "%v"
+			mysql_password = "%v"
+			mysql_host     = "%v"
+			mysql_port     = "%v"
+			mysql_dbname   = "%v"
+			user_ttl       = "60m"
+			tags           = ["test1", "test2"]
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(dsPath),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(dsPath),
-				),
-			},
-		},
-	})
+	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
 }
 
 func TestDynamicSecretOpenai(t *testing.T) {
@@ -1707,10 +1675,6 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 30
 			input_rule   = ["name=in1,rule=validate input"]
 			output_rule  = ["name=out1,rule=mask output"]
-			ara_enabled                     = true
-			enable_agentic_runtime_authority = true
-			enable_ai_quorum                 = true
-			skip_dry_run                    = true
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1721,10 +1685,6 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 60
 			input_rule   = ["name=in1,rule=validate input updated"]
 			output_rule  = ["name=out1,rule=mask output updated"]
-			ara_enabled                     = false
-			enable_agentic_runtime_authority = false
-			enable_ai_quorum                 = false
-			skip_dry_run                    = false
 		}
 	`, dsPath, tmpCredsId)
 

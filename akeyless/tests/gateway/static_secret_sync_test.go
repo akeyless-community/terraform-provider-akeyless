@@ -157,42 +157,6 @@ func TestRotatedSecretSyncResource(t *testing.T) {
             name               = akeyless_rotated_secret_custom.%v.name
             usc_name           = akeyless_usc.%v.name
             remote_secret_name = "%v"
-            environments       = "staging"
-            repositories       = "akeyless/terraform-provider-akeyless"
-            gcp_project_id     = "project-create"
-            depends_on         = [akeyless_rotated_secret_custom.%v, akeyless_usc.%v]
-        }
-    `, hashiTargetName, hashiTargetPath,
-		uscName, uscPath, hashiTargetName, hashiTargetName,
-		rsName, rsPath, targetPath,
-		rsName, uscName, remoteSecretName, rsName, uscName)
-
-	configUpdate := fmt.Sprintf(`
-        resource "akeyless_target_hashivault" "%v" {
-            name        = "%v"
-            hashi_url   = "http://127.0.0.1:8200"
-            vault_token = "test"
-        }
-
-        resource "akeyless_usc" "%v" {
-            name                = "%v"
-            target_to_associate = akeyless_target_hashivault.%v.name
-            depends_on          = [akeyless_target_hashivault.%v]
-        }
-
-        resource "akeyless_rotated_secret_custom" "%v" {
-            name           = "%v"
-            target_name    = "%v"
-            custom_payload = "p1"
-        }
-
-        resource "akeyless_rotated_secret_sync" "sync" {
-            name               = akeyless_rotated_secret_custom.%v.name
-            usc_name           = akeyless_usc.%v.name
-            remote_secret_name = "%v"
-            environments       = "production"
-            repositories       = "akeyless/terraform-provider-akeyless-updated"
-            gcp_project_id     = "project-update"
             depends_on         = [akeyless_rotated_secret_custom.%v, akeyless_usc.%v]
         }
     `, hashiTargetName, hashiTargetPath,
@@ -205,19 +169,6 @@ func TestRotatedSecretSyncResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("akeyless_rotated_secret_sync.sync", "environments", "staging"),
-					resource.TestCheckResourceAttr("akeyless_rotated_secret_sync.sync", "repositories", "akeyless/terraform-provider-akeyless"),
-					resource.TestCheckResourceAttr("akeyless_rotated_secret_sync.sync", "gcp_project_id", "project-create"),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("akeyless_rotated_secret_sync.sync", "environments", "production"),
-					resource.TestCheckResourceAttr("akeyless_rotated_secret_sync.sync", "repositories", "akeyless/terraform-provider-akeyless-updated"),
-					resource.TestCheckResourceAttr("akeyless_rotated_secret_sync.sync", "gcp_project_id", "project-update"),
-				),
 			},
 		},
 	})

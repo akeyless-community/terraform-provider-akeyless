@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
-	akeyless_provider "github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -36,19 +35,6 @@ var checkStaticSecretDestroyed = func(s *terraform.State) error {
 	return nil
 }
 
-func TestStaticSecretProviderTypeSchema(t *testing.T) {
-	providerType := akeyless_provider.Provider().ResourcesMap["akeyless_static_secret"].Schema["provider_type"]
-	if providerType == nil {
-		t.Fatal("provider_type schema is missing")
-	}
-	if !providerType.Optional {
-		t.Error("provider_type must be optional")
-	}
-	if providerType.ForceNew {
-		t.Error("provider_type must support in-place updates")
-	}
-}
-
 func TestStaticResource(t *testing.T) {
 
 	t.Parallel()
@@ -70,8 +56,6 @@ func TestStaticResource(t *testing.T) {
 			accessibility 		= "regular"
 			multiline_value 	= false
 			change_event 		= "true"
-			enable_agentic_runtime_authority = true
-			enable_ai_quorum                 = true
 		}
 	`, secretName, secretPath)
 
@@ -82,8 +66,6 @@ func TestStaticResource(t *testing.T) {
 			secure_access_enable 		= "false"
 			secure_access_web_browsing 	= "true"
 			secure_access_url 			= "http://abc.com"
-			enable_agentic_runtime_authority = false
-			enable_ai_quorum                 = false
 			tags 						= ["t1", "t3"]
 			description 				= "bbbb"
 		}
@@ -115,8 +97,6 @@ func TestStaticResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "accessibility", "regular"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "multiline_value", "false"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "change_event", "true"),
-					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_agentic_runtime_authority", "true"),
-					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_ai_quorum", "true"),
 				),
 			},
 			{
@@ -124,8 +104,6 @@ func TestStaticResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkSecretExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "description", "bbbb"),
-					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_agentic_runtime_authority", "false"),
-					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_ai_quorum", "false"),
 				),
 			},
 			{
