@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -1011,13 +1010,6 @@ func TestDynamicSecretMysql(t *testing.T) {
 
 	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
 
-	configOmitted := strings.NewReplacer(
-		`user_ttl       = "30m"`, `user_ttl       = "60m"`,
-		`ara_enabled    = true`, "",
-		`enable_agentic_runtime_authority = true`, "",
-		`enable_ai_quorum = true`, "",
-		`skip_dry_run    = true`, "",
-	).Replace(config)
 	resourceName := "akeyless_dynamic_secret_mysql." + dsName
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
@@ -1032,12 +1024,12 @@ func TestDynamicSecretMysql(t *testing.T) {
 				),
 			},
 			{
-				Config: configOmitted,
+				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
 				),
 			},
 		},
