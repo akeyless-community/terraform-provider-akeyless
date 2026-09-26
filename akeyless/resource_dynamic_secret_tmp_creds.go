@@ -100,17 +100,17 @@ func resourceDynamicSecretTmpCredsUpdate(d *schema.ResourceData, m interface{}) 
 	}
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
+	if raw := d.GetRawConfig().GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.AraEnabled, raw.True())
 	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	if raw := d.GetRawConfig().GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
 	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	if raw := d.GetRawConfig().GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
 	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
+	if raw := d.GetRawConfig().GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
 	}
 
 	resp, err := client.DynamicSecretTmpCredsUpdate(ctx).Body(body).Execute()
@@ -140,17 +140,17 @@ func resourceDynamicSecretTmpCredsRead(d *schema.ResourceData, m interface{}) er
 		Name:  name,
 		Token: &token,
 	}
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
+	if raw := d.GetRawConfig().GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.AraEnabled, raw.True())
 	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	if raw := d.GetRawConfig().GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
 	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	if raw := d.GetRawConfig().GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
 	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
+	if raw := d.GetRawConfig().GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
 	}
 
 	rOut, res, err := client.DynamicSecretTmpCredsGet(ctx).Body(body).Execute()
@@ -205,17 +205,17 @@ func resourceDynamicSecretTmpCredsDelete(d *schema.ResourceData, m interface{}) 
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.TmpCredsId, tmpCredsId)
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
+	if raw := d.GetRawConfig().GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.AraEnabled, raw.True())
 	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	if raw := d.GetRawConfig().GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
 	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	if raw := d.GetRawConfig().GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
 	}
-	if value, ok := d.GetOkExists("skip_dry_run"); ok {
-		common.GetAkeylessPtr(&body.SkipDryRun, value)
+	if raw := d.GetRawConfig().GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
 	}
 
 	resp, err := client.DynamicSecretTmpCredsDelete(ctx).Body(body).Execute()

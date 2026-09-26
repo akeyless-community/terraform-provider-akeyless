@@ -162,14 +162,14 @@ func resourceMcpSecretOAuthAuthCodeCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.InputRule, expandOptionalStringList(d, "input_rule"))
 	common.GetAkeylessPtr(&body.OutputRule, expandOptionalStringList(d, "output_rule"))
 	common.GetAkeylessPtr(&body.Tags, expandOptionalStringSet(d, "tags"))
-	if value, ok := d.GetOkExists("ara_enabled"); ok {
-		common.GetAkeylessPtr(&body.AraEnabled, value)
+	if raw := d.GetRawConfig().GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.AraEnabled, raw.True())
 	}
-	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	if raw := d.GetRawConfig().GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
 	}
-	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	if raw := d.GetRawConfig().GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
 	}
 
 	_, resp, err := client.CreateMcpSecretOAuthAuthCode(ctx).Body(body).Execute()
@@ -223,14 +223,14 @@ func resourceMcpSecretOAuthAuthCodeUpdate(d *schema.ResourceData, m interface{})
 		common.GetAkeylessPtr(&body.KeepPrevVersion, d.Get("keep_prev_version").(string))
 		common.GetAkeylessPtr(&body.InputRule, expandOptionalStringList(d, "input_rule"))
 		common.GetAkeylessPtr(&body.OutputRule, expandOptionalStringList(d, "output_rule"))
-		if value, ok := d.GetOkExists("ara_enabled"); ok {
-			common.GetAkeylessPtr(&body.AraEnabled, value)
+		if raw := d.GetRawConfig().GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
 		}
-		if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
-			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+		if raw := d.GetRawConfig().GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
 		}
-		if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
-			common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+		if raw := d.GetRawConfig().GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
 		}
 
 		_, resp, err := client.UpdateMcpSecretOAuthAuthCode(ctx).Body(body).Execute()
