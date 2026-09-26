@@ -19,6 +19,9 @@ func TestMcpSecretBearerTokenResource(t *testing.T) {
 			url          = "https://mcp.example.com"
 			bearer_token = "token-1"
 			description  = "Test MCP bearer secret"
+			ara_enabled  = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum = true
 		}
 	`, name, path)
 
@@ -28,6 +31,9 @@ func TestMcpSecretBearerTokenResource(t *testing.T) {
 			url          = "https://mcp2.example.com"
 			bearer_token = "token-2"
 			description  = "Updated MCP bearer secret"
+			ara_enabled  = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum = false
 		}
 	`, name, path)
 

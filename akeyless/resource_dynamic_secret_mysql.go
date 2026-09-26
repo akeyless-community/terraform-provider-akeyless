@@ -189,7 +189,19 @@ func resourceDynamicSecretMysql() *schema.Resource {
 				Optional:    true,
 				Description: "The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds",
 			},
-		},
+
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			}},
 	}
 }
 
@@ -273,7 +285,21 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 		secureAccessDelayInt64 := int64(secureAccessDelay)
 		common.GetAkeylessPtr(&body.SecureAccessDelay, &secureAccessDelayInt64)
 	}
-
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.DynamicSecretCreateMySql(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create dynamic secret", resp, err)
@@ -433,6 +459,9 @@ func resourceDynamicSecretMysqlRead(d *schema.ResourceData, m interface{}) error
 	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
 		return err
 	}
+	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
+		return err
+	}
 
 	d.SetId(path)
 
@@ -519,7 +548,21 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 		secureAccessDelayInt64 := int64(secureAccessDelay)
 		common.GetAkeylessPtr(&body.SecureAccessDelay, &secureAccessDelayInt64)
 	}
-
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.DynamicSecretUpdateMySql(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update dynamic secret", resp, err)

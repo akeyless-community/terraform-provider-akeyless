@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -110,9 +111,12 @@ func TestDynamicSecretAws(t *testing.T) {
 			secure_access_aws_native_cli  = true
 			secure_access_delay           = 10
 			tags                          = ["tag1"]
+			ara_enabled                   = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum              = true
+			skip_dry_run                  = true
 		}
 	`, dsName, dsPath, targetPath)
-
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_aws" "%v" {
 			name                          = "%v"
@@ -138,6 +142,10 @@ func TestDynamicSecretAws(t *testing.T) {
 			secure_access_web             = true
 			secure_access_delay           = 20
 			tags                          = ["test1", "test2"]
+			ara_enabled                   = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum              = false
+			skip_dry_run                  = false
 		}
 	`, dsName, dsPath, targetPath)
 	resourceName := "akeyless_dynamic_secret_aws." + dsName
@@ -153,6 +161,9 @@ func TestDynamicSecretAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
 				),
 			},
 			{
@@ -164,6 +175,9 @@ func TestDynamicSecretAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
 				),
 			},
 		},
@@ -971,9 +985,12 @@ func TestDynamicSecretMysql(t *testing.T) {
 			mysql_port     = "%v"
 			mysql_dbname   = "%v"
 			user_ttl       = "30m"
+			ara_enabled    = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum = true
+			skip_dry_run    = true
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
-
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_mysql" "%v" {
 			name           = "%v"
@@ -985,10 +1002,46 @@ func TestDynamicSecretMysql(t *testing.T) {
 			mysql_dbname   = "%v"
 			user_ttl       = "60m"
 			tags           = ["test1", "test2"]
+			ara_enabled    = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum = false
+			skip_dry_run    = false
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
 	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
+
+	configOmitted := strings.NewReplacer(
+		`user_ttl       = "30m"`, `user_ttl       = "60m"`,
+		`ara_enabled    = true`, "",
+		`enable_agentic_runtime_authority = true`, "",
+		`enable_ai_quorum = true`, "",
+		`skip_dry_run    = true`, "",
+	).Replace(config)
+	resourceName := "akeyless_dynamic_secret_mysql." + dsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+				),
+			},
+			{
+				Config: configOmitted,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+				),
+			},
+		},
+	})
 }
 
 func TestDynamicSecretOpenai(t *testing.T) {
@@ -1659,6 +1712,10 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 30
 			input_rule   = ["name=in1,rule=validate input"]
 			output_rule  = ["name=out1,rule=mask output"]
+			ara_enabled  = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum = true
+			skip_dry_run = true
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1669,6 +1726,10 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 60
 			input_rule   = ["name=in1,rule=validate input updated"]
 			output_rule  = ["name=out1,rule=mask output updated"]
+			ara_enabled  = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum = false
+			skip_dry_run = false
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1713,4 +1774,49 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestDynamicSecretAerospike(t *testing.T) {
+	t.Skip("requires a reachable Aerospike target; Akeyless validates the connection during target creation")
+	testutils.SkipIfNoGateway(t)
+
+	name := "ds_aerospike"
+	path := testPath(name)
+	targetPath := testPath("aerospike_target_for_ds")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_aerospike" "target" {
+			name           = "%v"
+			hostname       = "127.0.0.1"
+			port           = "3000"
+			namespace      = "test"
+			admin_username = "admin"
+			password       = "password"
+		}
+		resource "akeyless_dynamic_secret_aerospike" "%v" {
+			name            = "%v"
+			target_name     = akeyless_target_aerospike.target.name
+			aerospike_roles = ["read"]
+			user_ttl        = "30m"
+			skip_dry_run    = true
+		}
+	`, targetPath, name, path)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_aerospike" "target" {
+			name           = "%v"
+			hostname       = "127.0.0.1"
+			port           = "3000"
+			namespace      = "test"
+			admin_username = "admin"
+			password       = "password"
+		}
+		resource "akeyless_dynamic_secret_aerospike" "%v" {
+			name            = "%v"
+			target_name     = akeyless_target_aerospike.target.name
+			aerospike_roles = ["read", "write"]
+			user_ttl        = "60m"
+			skip_dry_run    = true
+		}
+	`, targetPath, name, path)
+
+	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
 }

@@ -71,6 +71,21 @@ func resourceMcpSecretOAuthAuthCode() *schema.Resource {
 				Description: "For personal password manager",
 				Default:     "regular",
 			},
+			"ara_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable AI Quorum",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -147,6 +162,18 @@ func resourceMcpSecretOAuthAuthCodeCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.InputRule, expandOptionalStringList(d, "input_rule"))
 	common.GetAkeylessPtr(&body.OutputRule, expandOptionalStringList(d, "output_rule"))
 	common.GetAkeylessPtr(&body.Tags, expandOptionalStringSet(d, "tags"))
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+	}
 
 	_, resp, err := client.CreateMcpSecretOAuthAuthCode(ctx).Body(body).Execute()
 	if err != nil {
@@ -183,7 +210,7 @@ func resourceMcpSecretOAuthAuthCodeUpdate(d *schema.ResourceData, m interface{})
 	ctx := context.Background()
 	name := d.Id()
 
-	if d.HasChanges("url", "oauth_client_id", "oauth_client_secret", "oauth_token_url", "oauth_scopes", "oauth_redirect_uri", "oauth_refresh_token", "protection_key", "keep_prev_version", "input_rule", "output_rule") {
+	if d.HasChanges("url", "oauth_client_id", "oauth_client_secret", "oauth_token_url", "oauth_scopes", "oauth_redirect_uri", "oauth_refresh_token", "protection_key", "keep_prev_version", "input_rule", "output_rule", "ara_enabled", "enable_agentic_runtime_authority", "enable_ai_quorum") {
 		body := akeyless_api.UpdateMcpSecretOAuthAuthCode{
 			Name:  name,
 			Token: &token,
@@ -199,6 +226,18 @@ func resourceMcpSecretOAuthAuthCodeUpdate(d *schema.ResourceData, m interface{})
 		common.GetAkeylessPtr(&body.KeepPrevVersion, d.Get("keep_prev_version").(string))
 		common.GetAkeylessPtr(&body.InputRule, expandOptionalStringList(d, "input_rule"))
 		common.GetAkeylessPtr(&body.OutputRule, expandOptionalStringList(d, "output_rule"))
+		rawConfig := d.GetRawConfig()
+		if rawConfig.IsKnown() && !rawConfig.IsNull() {
+			if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+				common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+			}
+			if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+				common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+			}
+			if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+				common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+			}
+		}
 
 		_, resp, err := client.UpdateMcpSecretOAuthAuthCode(ctx).Body(body).Execute()
 		if err != nil {

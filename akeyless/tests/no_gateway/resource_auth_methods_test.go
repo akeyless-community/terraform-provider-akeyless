@@ -990,3 +990,60 @@ func TestAuthMethodOCIResource(t *testing.T) {
 		},
 	})
 }
+
+func TestAuthMethodAliCloudResource(t *testing.T) {
+	name := "test_auth_method_alicloud"
+	path := testPath("auth_method_alicloud")
+	testutils.DeleteAuthMethod(path, "alicloud")
+
+	config := fmt.Sprintf(`
+		resource "akeyless_auth_method_alicloud" "%v" {
+			name              = "%v"
+			description       = "test alicloud auth method"
+			bound_account_id  = ["1234567890123456"]
+			bound_role_name   = ["test-role"]
+			sts_url           = "https://sts.aliyuncs.com"
+			allowed_client_type = ["cli", "gateway-admin", "sdk"]
+			delete_protection = "true"
+		}
+	`, name, path)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_auth_method_alicloud" "%v" {
+			name              = "%v"
+			description       = "updated alicloud auth method"
+			bound_account_id  = ["1234567890123456"]
+			bound_role_name   = ["test-role-updated"]
+			sts_url           = "https://sts.aliyuncs.com"
+			allowed_client_type = ["cli", "gateway-admin", "sdk"]
+			delete_protection = "false"
+		}
+	`, name, path)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testutils.CheckAuthMethodDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckMethodExistsRemotely(path),
+					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "description", "test alicloud auth method"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "delete_protection", "true"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "bound_role_name.0", "test-role"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "sts_url", "https://sts.aliyuncs.com"),
+					resource.TestCheckResourceAttrSet("akeyless_auth_method_alicloud."+name, "access_id"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckMethodExistsRemotely(path),
+					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "description", "updated alicloud auth method"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "delete_protection", "false"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "bound_role_name.0", "test-role-updated"),
+					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "sts_url", "https://sts.aliyuncs.com"),
+				),
+			},
+		},
+	})
+}
