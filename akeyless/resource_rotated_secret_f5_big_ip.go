@@ -159,6 +159,21 @@ func resourceRotatedSecretF5BigIp() *schema.Resource {
 				Optional:    true,
 				Description: "Skip the dry run [true/false]",
 			},
+			"ara_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable AI Quorum",
+			},
 			"use_capital_letters": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -214,6 +229,15 @@ func resourceRotatedSecretF5BigIpCreate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 	common.GetAkeylessPtr(&body.RotationEventIn, common.ExpandStringList(d.Get("rotation_event_in").([]interface{})))
 	common.GetAkeylessPtr(&body.SkipDryRun, d.Get("skip_dry_run").(bool))
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
 	common.GetAkeylessPtr(&body.UseCapitalLetters, d.Get("use_capital_letters").(string))
 	common.GetAkeylessPtr(&body.UseLowerLetters, d.Get("use_lower_letters").(string))
 	common.GetAkeylessPtr(&body.UseNumbers, d.Get("use_numbers").(string))
@@ -421,6 +445,15 @@ func resourceRotatedSecretF5BigIpUpdate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.KeepPrevVersion, d.Get("keep_prev_version").(string))
 	common.GetAkeylessPtr(&body.RotationEventIn, common.ExpandStringList(d.Get("rotation_event_in").([]interface{})))
 	common.GetAkeylessPtr(&body.SkipDryRun, d.Get("skip_dry_run").(bool))
+	if value, ok := d.GetOkExists("ara_enabled"); ok {
+		common.GetAkeylessPtr(&body.AraEnabled, value)
+	}
+	if value, ok := d.GetOkExists("enable_agentic_runtime_authority"); ok {
+		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, value)
+	}
+	if value, ok := d.GetOkExists("enable_ai_quorum"); ok {
+		common.GetAkeylessPtr(&body.EnableAiQuorum, value)
+	}
 	common.GetAkeylessPtr(&body.UseCapitalLetters, d.Get("use_capital_letters").(string))
 	common.GetAkeylessPtr(&body.UseLowerLetters, d.Get("use_lower_letters").(string))
 	common.GetAkeylessPtr(&body.UseNumbers, d.Get("use_numbers").(string))
