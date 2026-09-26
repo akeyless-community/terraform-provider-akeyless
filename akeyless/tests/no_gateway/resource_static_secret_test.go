@@ -156,6 +156,8 @@ func TestStaticPasswordResource(t *testing.T) {
 			delete_protection  	= "true"
 			# exercise ignore_cache in Read
 			ignore_cache       = "true"
+			secure_access_enable = "true"
+			secure_access_url = "http://abc.com"
 		}
 	`, secretName, secretPath)
 
@@ -172,6 +174,8 @@ func TestStaticPasswordResource(t *testing.T) {
 			tags 				= ["t5"]
 			description 		= "my updated password"
             keep_prev_version	= "false"
+			secure_access_enable = "true"
+			secure_access_url = "http://abc.com"
 		}
 	`, secretName, secretPath)
 
@@ -183,6 +187,8 @@ func TestStaticPasswordResource(t *testing.T) {
 			password 			= "def"
 			inject_url 			= ["http://abc.com", "http://def.com"]
 			delete_protection  	= "false"
+			secure_access_enable = "true"
+			secure_access_url = "http://abc.com"
 		}
 	`, secretName, secretPath)
 

@@ -1003,6 +1003,7 @@ func TestAuthMethodAliCloudResource(t *testing.T) {
 			bound_account_id  = ["1234567890123456"]
 			bound_role_name   = ["test-role"]
 			sts_url           = "https://sts.aliyuncs.com"
+			allowed_client_type = ["cli", "gateway-admin", "sdk"]
 			delete_protection = "true"
 		}
 	`, name, path)
@@ -1013,6 +1014,7 @@ func TestAuthMethodAliCloudResource(t *testing.T) {
 			bound_account_id  = ["1234567890123456"]
 			bound_role_name   = ["test-role-updated"]
 			sts_url           = "https://sts.aliyuncs.com"
+			allowed_client_type = ["cli", "gateway-admin", "sdk"]
 			delete_protection = "false"
 		}
 	`, name, path)

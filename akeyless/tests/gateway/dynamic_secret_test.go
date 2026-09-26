@@ -117,14 +117,6 @@ func TestDynamicSecretAws(t *testing.T) {
 			skip_dry_run                  = true
 		}
 	`, dsName, dsPath, targetPath)
-	configOmitted := strings.NewReplacer(
-		`ara_enabled                   = true`, "",
-		`enable_agentic_runtime_authority = true`, "",
-		`enable_ai_quorum              = true`, "",
-		`skip_dry_run                  = true`, "",
-		`description                   = "test dynamic secret"`, `description = "dynamic secret with omitted agentic fields"`,
-	).Replace(config)
-
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_aws" "%v" {
 			name                          = "%v"
@@ -169,15 +161,6 @@ func TestDynamicSecretAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
-					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
-				),
-			},
-			{
-				Config: configOmitted,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
 					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
@@ -1002,9 +985,12 @@ func TestDynamicSecretMysql(t *testing.T) {
 			mysql_port     = "%v"
 			mysql_dbname   = "%v"
 			user_ttl       = "30m"
+			ara_enabled    = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum = true
+			skip_dry_run    = true
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
-
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_mysql" "%v" {
 			name           = "%v"
@@ -1016,10 +1002,46 @@ func TestDynamicSecretMysql(t *testing.T) {
 			mysql_dbname   = "%v"
 			user_ttl       = "60m"
 			tags           = ["test1", "test2"]
+			ara_enabled    = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum = false
+			skip_dry_run    = false
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
 	testutils.TestItemResource(t, providerFactories, dsPath, config, configUpdate)
+
+	configOmitted := strings.NewReplacer(
+		`user_ttl       = "30m"`, `user_ttl       = "60m"`,
+		`ara_enabled    = true`, "",
+		`enable_agentic_runtime_authority = true`, "",
+		`enable_ai_quorum = true`, "",
+		`skip_dry_run    = true`, "",
+	).Replace(config)
+	resourceName := "akeyless_dynamic_secret_mysql." + dsName
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+				),
+			},
+			{
+				Config: configOmitted,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+				),
+			},
+		},
+	})
 }
 
 func TestDynamicSecretOpenai(t *testing.T) {

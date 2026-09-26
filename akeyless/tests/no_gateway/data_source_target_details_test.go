@@ -300,6 +300,8 @@ func TestTargetDataSourceGlobalSignAtlas(t *testing.T) {
 }
 
 func TestTargetDataSourceGlobalSign(t *testing.T) {
+	t.Skip("GlobalSign target creation requires valid external GlobalSign credentials")
+
 	targetName := "target-globalsign"
 	targetPath := testPath(targetName)
 	targetDetailsType := "globalsign_target_details"
