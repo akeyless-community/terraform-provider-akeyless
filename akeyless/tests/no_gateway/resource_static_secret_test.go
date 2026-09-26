@@ -126,7 +126,7 @@ func TestStaticResource(t *testing.T) {
 				ResourceName:            "akeyless_static_secret.test_secret",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"value", "password", "ignore_cache", "accessibility", "format", "keep_prev_version", "max_versions", "multiline_value", "secure_access_enable", "change_event"},
+				ImportStateVerifyIgnore: []string{"value", "password", "ignore_cache", "accessibility", "format", "keep_prev_version", "max_versions", "multiline_value", "secure_access_enable", "change_event", "ara_enabled", "enable_agentic_runtime_authority", "enable_ai_quorum"},
 			},
 		},
 	})
