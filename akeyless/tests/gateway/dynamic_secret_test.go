@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -110,8 +111,19 @@ func TestDynamicSecretAws(t *testing.T) {
 			secure_access_aws_native_cli  = true
 			secure_access_delay           = 10
 			tags                          = ["tag1"]
+			ara_enabled                   = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum              = true
+			skip_dry_run                  = true
 		}
 	`, dsName, dsPath, targetPath)
+	configOmitted := strings.NewReplacer(
+		`ara_enabled                   = true`, "",
+		`enable_agentic_runtime_authority = true`, "",
+		`enable_ai_quorum              = true`, "",
+		`skip_dry_run                  = true`, "",
+		`description                   = "test dynamic secret"`, `description = "dynamic secret with omitted agentic fields"`,
+	).Replace(config)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_aws" "%v" {
@@ -138,6 +150,10 @@ func TestDynamicSecretAws(t *testing.T) {
 			secure_access_web             = true
 			secure_access_delay           = 20
 			tags                          = ["test1", "test2"]
+			ara_enabled                   = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum              = false
+			skip_dry_run                  = false
 		}
 	`, dsName, dsPath, targetPath)
 	resourceName := "akeyless_dynamic_secret_aws." + dsName
@@ -153,6 +169,18 @@ func TestDynamicSecretAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
+				),
+			},
+			{
+				Config: configOmitted,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "true"),
 				),
 			},
 			{
@@ -164,6 +192,9 @@ func TestDynamicSecretAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_rule.0", "name=in1,rule=validate input updated"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
+					resource.TestCheckResourceAttr(resourceName, "enable_agentic_runtime_authority", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ai_quorum", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_dry_run", "false"),
 				),
 			},
 		},
@@ -1659,6 +1690,10 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 30
 			input_rule   = ["name=in1,rule=validate input"]
 			output_rule  = ["name=out1,rule=mask output"]
+			ara_enabled  = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum = true
+			skip_dry_run = true
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1669,6 +1704,10 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 60
 			input_rule   = ["name=in1,rule=validate input updated"]
 			output_rule  = ["name=out1,rule=mask output updated"]
+			ara_enabled  = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum = false
+			skip_dry_run = false
 		}
 	`, dsPath, tmpCredsId)
 

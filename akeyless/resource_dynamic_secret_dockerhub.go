@@ -130,17 +130,20 @@ func resourceDynamicSecretDockerhubCreate(d *schema.ResourceData, m interface{})
 		}
 		body.ItemCustomFields = &fields
 	}
-	if raw := d.GetRawConfig().GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.AraEnabled, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
 	}
 	_, resp, err := client.GatewayCreateProducerDockerhub(ctx).Body(body).Execute()
 	if err != nil {
@@ -269,17 +272,20 @@ func resourceDynamicSecretDockerhubUpdate(d *schema.ResourceData, m interface{})
 		}
 		body.ItemCustomFields = &fields
 	}
-	if raw := d.GetRawConfig().GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.AraEnabled, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
 	}
 	_, resp, err := client.GatewayUpdateProducerDockerhub(ctx).Body(body).Execute()
 	if err != nil {

@@ -229,14 +229,17 @@ func resourceRotatedSecretF5BigIpCreate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.RotateOnUnlock, d.Get("rotate_on_unlock").(string))
 	common.GetAkeylessPtr(&body.RotationEventIn, common.ExpandStringList(d.Get("rotation_event_in").([]interface{})))
 	common.GetAkeylessPtr(&body.SkipDryRun, d.Get("skip_dry_run").(bool))
-	if raw := d.GetRawConfig().GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.AraEnabled, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
 	}
 	common.GetAkeylessPtr(&body.UseCapitalLetters, d.Get("use_capital_letters").(string))
 	common.GetAkeylessPtr(&body.UseLowerLetters, d.Get("use_lower_letters").(string))
@@ -445,14 +448,17 @@ func resourceRotatedSecretF5BigIpUpdate(d *schema.ResourceData, m interface{}) e
 	common.GetAkeylessPtr(&body.KeepPrevVersion, d.Get("keep_prev_version").(string))
 	common.GetAkeylessPtr(&body.RotationEventIn, common.ExpandStringList(d.Get("rotation_event_in").([]interface{})))
 	common.GetAkeylessPtr(&body.SkipDryRun, d.Get("skip_dry_run").(bool))
-	if raw := d.GetRawConfig().GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.AraEnabled, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
-	}
-	if raw := d.GetRawConfig().GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
-		common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
 	}
 	common.GetAkeylessPtr(&body.UseCapitalLetters, d.Get("use_capital_letters").(string))
 	common.GetAkeylessPtr(&body.UseLowerLetters, d.Get("use_lower_letters").(string))

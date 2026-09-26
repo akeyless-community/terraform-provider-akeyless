@@ -40,6 +40,10 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "aaaa"
+			ara_enabled 				= true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum 			= true
+			skip_dry_run 				= true
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -53,6 +57,10 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "bbbb"
+			ara_enabled 				= false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum 			= false
+			skip_dry_run 				= false
 		}
 	`, rsName, rsPath, targetPath)
 
