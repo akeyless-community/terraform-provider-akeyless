@@ -298,6 +298,8 @@ func setTargetDetailsByType(d *schema.ResourceData, details *akeyless_api.Target
 
 func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, targetType string) (map[string]string, error) {
 	switch {
+	case details.AerospikeTargetDetails != nil:
+		return extractAerospikeTargetDetails(details.AerospikeTargetDetails)
 	case details.ArtifactoryTargetDetails != nil:
 		return extractArtifactoryTargetDetails(details.ArtifactoryTargetDetails)
 	case details.AwsTargetDetails != nil:
@@ -314,6 +316,8 @@ func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, ta
 		return extractDockerhubTargetDetails(details.DockerhubTargetDetails)
 	case details.EksTargetDetails != nil:
 		return extractEksTargetDetails(details.EksTargetDetails)
+	case details.F5BigIpTargetDetails != nil:
+		return extractF5BigIpTargetDetails(details.F5BigIpTargetDetails)
 	case details.GcpTargetDetails != nil:
 		return extractGcpTargetDetails(details.GcpTargetDetails)
 	case details.GeminiTargetDetails != nil:
@@ -363,6 +367,61 @@ func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, ta
 	default:
 		return nil, fmt.Errorf("can't get target details: unknown target type")
 	}
+}
+
+func extractAerospikeTargetDetails(details *akeyless_api.AerospikeTargetDetails) (map[string]string, error) {
+	m := make(map[string]interface{})
+
+	if details.AerospikeAdminUsername != nil {
+		m["admin_username"] = *details.AerospikeAdminUsername
+	}
+	if details.AerospikePassword != nil {
+		m["password"] = *details.AerospikePassword
+	}
+	if details.AerospikeHostname != nil {
+		m["hostname"] = *details.AerospikeHostname
+	}
+	if details.AerospikePort != nil {
+		m["port"] = *details.AerospikePort
+	}
+	if details.AerospikeNamespace != nil {
+		m["namespace"] = *details.AerospikeNamespace
+	}
+	if details.AerospikeCloud != nil {
+		m["aerospike_cloud"] = *details.AerospikeCloud
+	}
+	if details.AerospikeClientId != nil {
+		m["aerospike_client_id"] = *details.AerospikeClientId
+	}
+	if details.AerospikeClientSecret != nil {
+		m["aerospike_client_secret"] = *details.AerospikeClientSecret
+	}
+	if details.AerospikeClusterId != nil {
+		m["aerospike_cluster_id"] = *details.AerospikeClusterId
+	}
+	if details.AerospikeSslConnectionMode != nil {
+		m["ssl"] = *details.AerospikeSslConnectionMode
+	}
+	if details.AerospikeSslConnectionCertificate != nil {
+		m["ssl_certificate"] = *details.AerospikeSslConnectionCertificate
+	}
+	if details.AerospikeDbServerName != nil {
+		m["db_server_name"] = *details.AerospikeDbServerName
+	}
+	if details.AerospikeSkipServerNameValidation != nil {
+		m["skip_server_name_validation"] = *details.AerospikeSkipServerNameValidation
+	}
+	if details.AerospikeEnableMtls != nil {
+		m["enable_mtls"] = *details.AerospikeEnableMtls
+	}
+	if details.AerospikeClientCertificate != nil {
+		m["client_certificate"] = *details.AerospikeClientCertificate
+	}
+	if details.AerospikeClientPrivateKey != nil {
+		m["client_private_key"] = *details.AerospikeClientPrivateKey
+	}
+
+	return buildTargetDetailsVal(m, "aerospike_target_details")
 }
 
 func extractArtifactoryTargetDetails(details *akeyless_api.ArtifactoryTargetDetails) (map[string]string, error) {
@@ -588,6 +647,22 @@ func extractEksTargetDetails(details *akeyless_api.EKSTargetDetails) (map[string
 		return nil, err
 	}
 	return value, nil
+}
+
+func extractF5BigIpTargetDetails(details *akeyless_api.F5BigIpTargetDetails) (map[string]string, error) {
+	m := make(map[string]interface{})
+
+	if details.Url != nil {
+		m["url"] = *details.Url
+	}
+	if details.Username != nil {
+		m["username"] = *details.Username
+	}
+	if details.Password != nil {
+		m["password"] = *details.Password
+	}
+
+	return buildTargetDetailsVal(m, "f5_big_ip_target_details")
 }
 
 func extractGcpTargetDetails(details *akeyless_api.GcpTargetDetails) (map[string]string, error) {
