@@ -1491,6 +1491,8 @@ func TestRotatedSecretF5BigIpResource(t *testing.T) {
 			name                   = "%v"
 			target_name            = akeyless_target_f5_big_ip.target.name
 			rotator_type           = "password"
+			rotated_username       = "user"
+			rotated_password       = "password"
 			description            = "F5 rotated secret"
 			password_length        = "16"
 			skip_dry_run           = true
@@ -1509,6 +1511,8 @@ func TestRotatedSecretF5BigIpResource(t *testing.T) {
 			name                   = "%v"
 			target_name            = akeyless_target_f5_big_ip.target.name
 			rotator_type           = "password"
+			rotated_username       = "user"
+			rotated_password       = "password"
 			description            = "updated F5 rotated secret"
 			password_length        = "20"
 			skip_dry_run           = false
