@@ -299,39 +299,6 @@ func TestTargetDataSourceGlobalSignAtlas(t *testing.T) {
 	testTargetDataSource(t, config, targetPath, targetDetailsType, expect)
 }
 
-func TestTargetDataSourceGlobalSign(t *testing.T) {
-	t.Skip("GlobalSign target creation requires valid external GlobalSign credentials")
-
-	targetName := "target-globalsign"
-	targetPath := testPath(targetName)
-	targetDetailsType := "globalsign_target_details"
-
-	expect := map[string]interface{}{
-		"timeout":            "1m",
-		"username":           "user1",
-		"password":           "1234",
-		"profile_id":         "id1",
-		"contact_first_name": "first1",
-		"contact_last_name":  "last1",
-		"contact_phone":      "phone1",
-		"contact_email":      "k@k.io",
-	}
-
-	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
-	defer testutils.DeleteTarget(t, targetPath)
-
-	config := fmt.Sprintf(`
-		data "akeyless_target_details" "%v" {
-			name = "%v"
-		}
-		output "target_details" {
-			value = data.akeyless_target_details.%v.value
-		}
-	`, targetName, targetPath, targetName)
-
-	testTargetDataSource(t, config, targetPath, targetDetailsType, expect)
-}
-
 func TestTargetDataSourceLdap(t *testing.T) {
 	targetName := "target-ldap"
 	targetPath := testPath(targetName)
