@@ -274,6 +274,7 @@ func TestOpenAITargetResource(t *testing.T) {
 		resource "akeyless_target_openai" "%v" {
 			name        = "%v"
 			api_key     = "sk-test123"
+			openai_url  = "https://api.openai.com"
 			description = "Test OpenAI target"
 		}
 	`, targetName, targetPath)
@@ -282,6 +283,7 @@ func TestOpenAITargetResource(t *testing.T) {
 		resource "akeyless_target_openai" "%v" {
 			name        = "%v"
 			api_key     = "sk-test456"
+			openai_url  = "https://api.openai.com"
 			description = "Updated OpenAI target"
 		}
 	`, targetName, targetPath)

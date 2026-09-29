@@ -1124,7 +1124,8 @@ func TestRotatedSecretOpenAIResource(t *testing.T) {
 	targetDetailsType := "openai_target_details"
 
 	expect := map[string]any{
-		"api_key": "sk-test-key-12345",
+		"api_key":    "sk-test-key-12345",
+		"openai_url": "https://api.openai.com",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
