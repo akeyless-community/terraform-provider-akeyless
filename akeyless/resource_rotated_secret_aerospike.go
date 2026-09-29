@@ -156,9 +156,9 @@ func resourceRotatedSecretAerospikeRead(d *schema.ResourceData, m interface{}) e
 	client, token := *provider.client, *provider.token
 	ctx := context.Background()
 	path := d.Id()
-	itemOut, _, err := client.DescribeItem(ctx).Body(akeyless_api.DescribeItem{Name: path, ShowVersions: akeyless_api.PtrBool(true), Token: &token}).Execute()
+	itemOut, res, err := client.DescribeItem(ctx).Body(akeyless_api.DescribeItem{Name: path, ShowVersions: akeyless_api.PtrBool(true), Token: &token}).Execute()
 	if err != nil {
-		return err
+		return common.HandleReadError(d, "can't get rotated secret", res, err)
 	}
 	if itemOut.ItemTargetsAssoc != nil {
 		if err := common.SetDataByPrefixSlash(d, "target_name", common.GetTargetName(itemOut.ItemTargetsAssoc), d.Get("target_name").(string)); err != nil {

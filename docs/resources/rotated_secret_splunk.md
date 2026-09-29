@@ -23,11 +23,14 @@ Splunk rotated secret resource
 
 ### Optional
 
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `audience` (String) Token audience for Splunk token creation (required for rotator-type=token)
 - `authentication_credentials` (String) The credentials to connect with use-user-creds/use-target-creds
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `expiration_date` (String) Token expiration date in YYYY-MM-DD format (relevant only for rotator-type=token when manual rotation is selected)
 - `hec_token` (String, Sensitive) Current Splunk HEC token value to store (relevant only for rotator-type=hec-token)
 - `hec_token_name` (String) Splunk HEC input name to manage (required for rotator-type=hec-token)
@@ -43,6 +46,7 @@ Splunk rotated secret resource
 - `rotation_event_in` (List of String) How many days before the rotation of the item would you like to be notified
 - `rotation_hour` (Number) The Hour of the rotation in UTC
 - `rotation_interval` (String) The number of days to wait between every automatic key rotation (1-365)
+- `skip_dry_run` (Boolean) Skip dry run
 - `splunk_token` (String, Sensitive) Current Splunk authentication token to store (relevant only for rotator-type=token)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `token_owner` (String) Splunk token owner username (relevant only for rotator-type=token)

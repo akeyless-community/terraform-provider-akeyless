@@ -1475,7 +1475,6 @@ func TestRotatedSecretAerospikeResource(t *testing.T) {
 }
 
 func TestRotatedSecretF5BigIpResource(t *testing.T) {
-	t.Skip("requires a reachable F5 BIG-IP target; Akeyless validates the connection during target creation")
 	testutils.SkipIfNoGateway(t)
 
 	name := "rs_f5"
@@ -1489,10 +1488,14 @@ func TestRotatedSecretF5BigIpResource(t *testing.T) {
 			password = "password"
 		}
 		resource "akeyless_rotated_secret_f5_big_ip" "%v" {
-			name         = "%v"
-			target_name  = akeyless_target_f5_big_ip.target.name
-			rotator_type = "password"
-			skip_dry_run = true
+			name                   = "%v"
+			target_name            = akeyless_target_f5_big_ip.target.name
+			rotator_type           = "password"
+			description            = "F5 rotated secret"
+			password_length        = "16"
+			skip_dry_run           = true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum       = true
 		}
 	`, targetPath, name, path)
 	configUpdate := fmt.Sprintf(`
@@ -1503,11 +1506,14 @@ func TestRotatedSecretF5BigIpResource(t *testing.T) {
 			password = "password"
 		}
 		resource "akeyless_rotated_secret_f5_big_ip" "%v" {
-			name         = "%v"
-			target_name  = akeyless_target_f5_big_ip.target.name
-			rotator_type = "password"
-			skip_dry_run = true
-			description  = "updated"
+			name                   = "%v"
+			target_name            = akeyless_target_f5_big_ip.target.name
+			rotator_type           = "password"
+			description            = "updated F5 rotated secret"
+			password_length        = "20"
+			skip_dry_run           = false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum       = false
 		}
 	`, targetPath, name, path)
 

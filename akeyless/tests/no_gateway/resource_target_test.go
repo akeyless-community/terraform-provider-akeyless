@@ -1406,8 +1406,6 @@ func TestTargetAerospikeResource(t *testing.T) {
 }
 
 func TestTargetF5BigIpResource(t *testing.T) {
-	t.Skip("Akeyless validates a live F5 BIG-IP connection during target creation")
-
 	targetName := "f5_big_ip_target"
 	targetPath := testPath(targetName)
 	config := fmt.Sprintf(`
@@ -1422,9 +1420,9 @@ func TestTargetF5BigIpResource(t *testing.T) {
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_target_f5_big_ip" "%v" {
 			name        = "%v"
-			url         = "https://f5.example.com"
-			username    = "admin"
-			password    = "password"
+			url         = "https://f5-updated.example.com"
+			username    = "admin2"
+			password    = "password2"
 			description = "updated f5 target"
 		}
 	`, targetName, targetPath)
