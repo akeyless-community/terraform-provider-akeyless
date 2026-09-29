@@ -1374,37 +1374,6 @@ func TestTargetZeroSslResource(t *testing.T) {
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
 
-func TestTargetAerospikeResource(t *testing.T) {
-	t.Skip("Akeyless validates a live Aerospike connection during target creation")
-
-	targetName := "aerospike_target"
-	targetPath := testPath(targetName)
-	config := fmt.Sprintf(`
-		resource "akeyless_target_aerospike" "%v" {
-			name           = "%v"
-			hostname       = "127.0.0.1"
-			port           = "3000"
-			namespace      = "test"
-			admin_username = "admin"
-			password       = "password"
-			description    = "test aerospike target"
-		}
-	`, targetName, targetPath)
-	configUpdate := fmt.Sprintf(`
-		resource "akeyless_target_aerospike" "%v" {
-			name           = "%v"
-			hostname       = "127.0.0.1"
-			port           = "3000"
-			namespace      = "test"
-			admin_username = "admin"
-			password       = "password"
-			description    = "updated aerospike target"
-		}
-	`, targetName, targetPath)
-
-	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
-}
-
 func TestTargetF5BigIpResource(t *testing.T) {
 	targetName := "f5_big_ip_target"
 	targetPath := testPath(targetName)

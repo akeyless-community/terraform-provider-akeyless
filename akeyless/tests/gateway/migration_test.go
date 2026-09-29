@@ -158,8 +158,6 @@ func TestGatewayMigrationConjur(t *testing.T) {
 
 func TestGatewayMigrationK8s(t *testing.T) {
 
-	t.Skip("TODO: GW is broken. Next release will fix this.")
-
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_k8s"

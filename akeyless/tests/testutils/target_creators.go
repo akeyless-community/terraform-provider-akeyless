@@ -13,12 +13,14 @@ import (
 type CreateTargetFunc func(t *testing.T, name string, details map[string]any)
 
 var CreateTargetByTypeMap = map[string]CreateTargetFunc{
+	"aerospike_target_details":        CreateAerospikeTarget,
 	"artifactory_target_details":      CreateArtifactoryTarget,
 	"aws_target_details":              CreateAwsTarget,
 	"azure_target_details":            CreateAzureTarget,
 	"db_target_details":               CreateDbTarget,
 	"dockerhub_target_details":        CreateDockerHubTarget,
 	"eks_target_details":              CreateEksTarget,
+	"f5_big_ip_target_details":        CreateF5BigIpTarget,
 	"gcp_target_details":              CreateGcpTarget,
 	"github_target_details":           CreateGithubTarget,
 	"gitlab_target_details":           CreateGitlabTarget,
@@ -44,6 +46,24 @@ var CreateTargetByTypeMap = map[string]CreateTargetFunc{
 
 func CreateTargetByType(t *testing.T, name, targetType string, details map[string]any) {
 	CreateTargetByTypeMap[targetType](t, name, details)
+}
+
+func CreateAerospikeTarget(t *testing.T, name string, details map[string]any) {
+	client, token, err := GetClient()
+	require.NoError(t, err)
+
+	body := akeyless_api.TargetCreateAerospike{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.AdminUsername, details["admin_username"])
+	common.GetAkeylessPtr(&body.Password, details["password"])
+	common.GetAkeylessPtr(&body.Hostname, details["hostname"])
+	common.GetAkeylessPtr(&body.Port, details["port"])
+	common.GetAkeylessPtr(&body.Namespace, details["namespace"])
+
+	_, resp, err := client.TargetCreateAerospike(context.Background()).Body(body).Execute()
+	require.NoError(t, common.HandleError("can't create aerospike target for test", resp, err))
 }
 
 func CreateArtifactoryTarget(t *testing.T, name string, details map[string]any) {
@@ -159,6 +179,22 @@ func CreateEksTarget(t *testing.T, name string, details map[string]any) {
 
 	_, resp, err := client.CreateEKSTarget(context.Background()).Body(body).Execute()
 	require.NoError(t, common.HandleError("can't create eks target for test", resp, err))
+}
+
+func CreateF5BigIpTarget(t *testing.T, name string, details map[string]any) {
+	client, token, err := GetClient()
+	require.NoError(t, err)
+
+	body := akeyless_api.TargetCreateF5BigIp{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.Url, details["url"])
+	common.GetAkeylessPtr(&body.Username, details["username"])
+	common.GetAkeylessPtr(&body.Password, details["password"])
+
+	_, resp, err := client.TargetCreateF5BigIp(context.Background()).Body(body).Execute()
+	require.NoError(t, common.HandleError("can't create f5 big-ip target for test", resp, err))
 }
 
 func CreateGcpTarget(t *testing.T, name string, details map[string]any) {

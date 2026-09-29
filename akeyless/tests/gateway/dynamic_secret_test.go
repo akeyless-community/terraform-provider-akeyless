@@ -1704,10 +1704,6 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 30
 			input_rule   = ["name=in1,rule=validate input"]
 			output_rule  = ["name=out1,rule=mask output"]
-			ara_enabled  = true
-			enable_agentic_runtime_authority = true
-			enable_ai_quorum = true
-			skip_dry_run = true
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1718,10 +1714,6 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 			new_ttl_min  = 60
 			input_rule   = ["name=in1,rule=validate input updated"]
 			output_rule  = ["name=out1,rule=mask output updated"]
-			ara_enabled  = false
-			enable_agentic_runtime_authority = false
-			enable_ai_quorum = false
-			skip_dry_run = false
 		}
 	`, dsPath, tmpCredsId)
 
@@ -1769,46 +1761,41 @@ func TestDynamicSecretTmpCreds(t *testing.T) {
 }
 
 func TestDynamicSecretAerospike(t *testing.T) {
-	t.Skip("requires a reachable Aerospike target; Akeyless validates the connection during target creation")
 	testutils.SkipIfNoGateway(t)
 
 	name := "ds_aerospike"
 	path := testPath(name)
 	targetPath := testPath("aerospike_target_for_ds")
+	targetDetailsType := "aerospike_target_details"
+	expect := map[string]any{
+		"admin_username": "admin",
+		"password":       "password",
+		"hostname":       "127.0.0.1",
+		"port":           "3000",
+		"namespace":      "test",
+	}
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
 	config := fmt.Sprintf(`
-		resource "akeyless_target_aerospike" "target" {
-			name           = "%v"
-			hostname       = "127.0.0.1"
-			port           = "3000"
-			namespace      = "test"
-			admin_username = "admin"
-			password       = "password"
-		}
 		resource "akeyless_dynamic_secret_aerospike" "%v" {
 			name            = "%v"
-			target_name     = akeyless_target_aerospike.target.name
+			target_name     = "%v"
 			aerospike_roles = ["read"]
 			user_ttl        = "30m"
 			skip_dry_run    = true
 		}
-	`, targetPath, name, path)
+	`, name, path, targetPath)
 	configUpdate := fmt.Sprintf(`
-		resource "akeyless_target_aerospike" "target" {
-			name           = "%v"
-			hostname       = "127.0.0.1"
-			port           = "3000"
-			namespace      = "test"
-			admin_username = "admin"
-			password       = "password"
-		}
 		resource "akeyless_dynamic_secret_aerospike" "%v" {
 			name            = "%v"
-			target_name     = akeyless_target_aerospike.target.name
+			target_name     = "%v"
 			aerospike_roles = ["read", "write"]
 			user_ttl        = "60m"
-			skip_dry_run    = true
+			skip_dry_run    = false
 		}
-	`, targetPath, name, path)
+	`, name, path, targetPath)
 
 	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
 }
