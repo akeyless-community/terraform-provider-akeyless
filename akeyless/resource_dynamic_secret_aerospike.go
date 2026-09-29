@@ -123,72 +123,120 @@ func resourceDynamicSecretAerospike() *schema.Resource {
 	}
 }
 
-func resourceDynamicSecretAerospikeWrite(d *schema.ResourceData, m interface{}, update bool) error {
+func resourceDynamicSecretAerospikeCreate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client, token := *provider.client, *provider.token
 	name := d.Get("name").(string)
 	roles := common.ExpandStringList(d.Get("aerospike_roles").([]interface{}))
 	input, output := common.ExpandStringList(d.Get("input_rule").([]interface{})), common.ExpandStringList(d.Get("output_rule").([]interface{}))
+	targetName := d.Get("target_name").(string)
+	userTtl := d.Get("user_ttl").(string)
+	customUsernameTemplate := d.Get("custom_username_template").(string)
+	passwordLength := d.Get("password_length").(string)
+	useCapitalLetters := d.Get("use_capital_letters").(string)
+	useLowerLetters := d.Get("use_lower_letters").(string)
+	useNumbers := d.Get("use_numbers").(string)
+	useSpecialCharacters := d.Get("use_special_characters").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
 	fields := d.Get("item_custom_fields").(map[string]interface{})
 	custom := make(map[string]string, len(fields))
 	for k, v := range fields {
 		custom[k] = v.(string)
 	}
-	set := func(dst interface{}, key string) { common.GetAkeylessPtr(dst, d.Get(key)) }
-	if update {
-		b := akeyless_api.DynamicSecretUpdateAerospike{Name: name, Token: &token, AerospikeRoles: roles, InputRule: input, OutputRule: output}
-		set(&b.TargetName, "target_name")
-		set(&b.UserTtl, "user_ttl")
-		set(&b.CustomUsernameTemplate, "custom_username_template")
-		set(&b.PasswordLength, "password_length")
-		set(&b.UseCapitalLetters, "use_capital_letters")
-		set(&b.UseLowerLetters, "use_lower_letters")
-		set(&b.UseNumbers, "use_numbers")
-		set(&b.UseSpecialCharacters, "use_special_characters")
-		set(&b.AraEnabled, "ara_enabled")
-		set(&b.EnableAgenticRuntimeAuthority, "enable_agentic_runtime_authority")
-		set(&b.EnableAiQuorum, "enable_ai_quorum")
-		set(&b.SkipDryRun, "skip_dry_run")
-		set(&b.DeleteProtection, "delete_protection")
-		set(&b.Description, "description")
-		b.ItemCustomFields = &custom
-		_, resp, err := client.DynamicSecretUpdateAerospike(context.Background()).Body(b).Execute()
-		if err != nil {
-			return common.HandleError("can't update dynamic secret", resp, err)
+	body := akeyless_api.DynamicSecretCreateAerospike{Name: name, Token: &token, AerospikeRoles: roles, InputRule: input, OutputRule: output}
+	common.GetAkeylessPtr(&body.TargetName, targetName)
+	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.UseCapitalLetters, useCapitalLetters)
+	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
+	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
+	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
 		}
-	} else {
-		b := akeyless_api.DynamicSecretCreateAerospike{Name: name, Token: &token, AerospikeRoles: roles, InputRule: input, OutputRule: output}
-		set(&b.TargetName, "target_name")
-		set(&b.UserTtl, "user_ttl")
-		set(&b.CustomUsernameTemplate, "custom_username_template")
-		set(&b.PasswordLength, "password_length")
-		set(&b.UseCapitalLetters, "use_capital_letters")
-		set(&b.UseLowerLetters, "use_lower_letters")
-		set(&b.UseNumbers, "use_numbers")
-		set(&b.UseSpecialCharacters, "use_special_characters")
-		set(&b.AraEnabled, "ara_enabled")
-		set(&b.EnableAgenticRuntimeAuthority, "enable_agentic_runtime_authority")
-		set(&b.EnableAiQuorum, "enable_ai_quorum")
-		set(&b.SkipDryRun, "skip_dry_run")
-		set(&b.DeleteProtection, "delete_protection")
-		set(&b.Description, "description")
-		if len(custom) > 0 {
-			b.ItemCustomFields = &custom
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
 		}
-		_, resp, err := client.DynamicSecretCreateAerospike(context.Background()).Body(b).Execute()
-		if err != nil {
-			return common.HandleError("can't create dynamic secret", resp, err)
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
 		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
+	if len(custom) > 0 {
+		body.ItemCustomFields = &custom
+	}
+
+	_, resp, err := client.DynamicSecretCreateAerospike(context.Background()).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't create dynamic secret", resp, err)
 	}
 	d.SetId(name)
 	return nil
 }
 
-func resourceDynamicSecretAerospikeCreate(d *schema.ResourceData, m interface{}) error {
-	return resourceDynamicSecretAerospikeWrite(d, m, false)
-}
 func resourceDynamicSecretAerospikeUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceDynamicSecretAerospikeWrite(d, m, true)
+	provider := m.(*providerMeta)
+	client, token := *provider.client, *provider.token
+	name := d.Get("name").(string)
+	roles := common.ExpandStringList(d.Get("aerospike_roles").([]interface{}))
+	input, output := common.ExpandStringList(d.Get("input_rule").([]interface{})), common.ExpandStringList(d.Get("output_rule").([]interface{}))
+	targetName := d.Get("target_name").(string)
+	userTtl := d.Get("user_ttl").(string)
+	customUsernameTemplate := d.Get("custom_username_template").(string)
+	passwordLength := d.Get("password_length").(string)
+	useCapitalLetters := d.Get("use_capital_letters").(string)
+	useLowerLetters := d.Get("use_lower_letters").(string)
+	useNumbers := d.Get("use_numbers").(string)
+	useSpecialCharacters := d.Get("use_special_characters").(string)
+	deleteProtection := d.Get("delete_protection").(string)
+	description := d.Get("description").(string)
+	fields := d.Get("item_custom_fields").(map[string]interface{})
+	custom := make(map[string]string, len(fields))
+	for k, v := range fields {
+		custom[k] = v.(string)
+	}
+	body := akeyless_api.DynamicSecretUpdateAerospike{Name: name, Token: &token, AerospikeRoles: roles, InputRule: input, OutputRule: output}
+	common.GetAkeylessPtr(&body.TargetName, targetName)
+	common.GetAkeylessPtr(&body.UserTtl, userTtl)
+	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
+	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
+	common.GetAkeylessPtr(&body.UseCapitalLetters, useCapitalLetters)
+	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
+	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
+	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
+	common.GetAkeylessPtr(&body.Description, description)
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
+	body.ItemCustomFields = &custom
+
+	_, resp, err := client.DynamicSecretUpdateAerospike(context.Background()).Body(body).Execute()
+	if err != nil {
+		return common.HandleError("can't update dynamic secret", resp, err)
+	}
+	d.SetId(name)
+	return nil
 }
 
 func resourceDynamicSecretAerospikeRead(d *schema.ResourceData, m interface{}) error {
@@ -222,10 +270,8 @@ func resourceDynamicSecretAerospikeRead(d *schema.ResourceData, m interface{}) e
 			return err
 		}
 	}
-	if len(out.AerospikeRoles) > 0 {
-		if err := d.Set("aerospike_roles", out.AerospikeRoles); err != nil {
-			return err
-		}
+	if err := d.Set("aerospike_roles", out.AerospikeRoles); err != nil {
+		return err
 	}
 	if out.Metadata != nil {
 		if err := d.Set("description", *out.Metadata); err != nil {
@@ -245,6 +291,28 @@ func resourceDynamicSecretAerospikeRead(d *schema.ResourceData, m interface{}) e
 	}
 	if err := setDynamicSecretPasswordPolicyReadFields(d, out); err != nil {
 		return err
+	}
+	if out.PasswordPolicyInfo != nil {
+		if out.PasswordPolicyInfo.UseCapitalLetters != nil {
+			if err := d.Set("use_capital_letters", strconv.FormatBool(*out.PasswordPolicyInfo.UseCapitalLetters)); err != nil {
+				return err
+			}
+		}
+		if out.PasswordPolicyInfo.UseLowerLetters != nil {
+			if err := d.Set("use_lower_letters", strconv.FormatBool(*out.PasswordPolicyInfo.UseLowerLetters)); err != nil {
+				return err
+			}
+		}
+		if out.PasswordPolicyInfo.UseNumbers != nil {
+			if err := d.Set("use_numbers", strconv.FormatBool(*out.PasswordPolicyInfo.UseNumbers)); err != nil {
+				return err
+			}
+		}
+		if out.PasswordPolicyInfo.UseSpecialCharacters != nil {
+			if err := d.Set("use_special_characters", strconv.FormatBool(*out.PasswordPolicyInfo.UseSpecialCharacters)); err != nil {
+				return err
+			}
+		}
 	}
 	if err := setAgenticRulesReadFields(d, out.AgenticRules); err != nil {
 		return err

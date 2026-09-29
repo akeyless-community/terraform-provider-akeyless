@@ -316,8 +316,6 @@ func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, ta
 		return extractDockerhubTargetDetails(details.DockerhubTargetDetails)
 	case details.EksTargetDetails != nil:
 		return extractEksTargetDetails(details.EksTargetDetails)
-	case details.F5BigIpTargetDetails != nil:
-		return extractF5BigIpTargetDetails(details.F5BigIpTargetDetails)
 	case details.GcpTargetDetails != nil:
 		return extractGcpTargetDetails(details.GcpTargetDetails)
 	case details.GeminiTargetDetails != nil:
@@ -647,22 +645,6 @@ func extractEksTargetDetails(details *akeyless_api.EKSTargetDetails) (map[string
 		return nil, err
 	}
 	return value, nil
-}
-
-func extractF5BigIpTargetDetails(details *akeyless_api.F5BigIpTargetDetails) (map[string]string, error) {
-	m := make(map[string]interface{})
-
-	if details.Url != nil {
-		m["url"] = *details.Url
-	}
-	if details.Username != nil {
-		m["username"] = *details.Username
-	}
-	if details.Password != nil {
-		m["password"] = *details.Password
-	}
-
-	return buildTargetDetailsVal(m, "f5_big_ip_target_details")
 }
 
 func extractGcpTargetDetails(details *akeyless_api.GcpTargetDetails) (map[string]string, error) {

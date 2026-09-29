@@ -20,7 +20,6 @@ var CreateTargetByTypeMap = map[string]CreateTargetFunc{
 	"db_target_details":               CreateDbTarget,
 	"dockerhub_target_details":        CreateDockerHubTarget,
 	"eks_target_details":              CreateEksTarget,
-	"f5_big_ip_target_details":        CreateF5BigIpTarget,
 	"gcp_target_details":              CreateGcpTarget,
 	"github_target_details":           CreateGithubTarget,
 	"gitlab_target_details":           CreateGitlabTarget,
@@ -179,22 +178,6 @@ func CreateEksTarget(t *testing.T, name string, details map[string]any) {
 
 	_, resp, err := client.CreateEKSTarget(context.Background()).Body(body).Execute()
 	require.NoError(t, common.HandleError("can't create eks target for test", resp, err))
-}
-
-func CreateF5BigIpTarget(t *testing.T, name string, details map[string]any) {
-	client, token, err := GetClient()
-	require.NoError(t, err)
-
-	body := akeyless_api.TargetCreateF5BigIp{
-		Name:  name,
-		Token: &token,
-	}
-	common.GetAkeylessPtr(&body.Url, details["url"])
-	common.GetAkeylessPtr(&body.Username, details["username"])
-	common.GetAkeylessPtr(&body.Password, details["password"])
-
-	_, resp, err := client.TargetCreateF5BigIp(context.Background()).Body(body).Execute()
-	require.NoError(t, common.HandleError("can't create f5 big-ip target for test", resp, err))
 }
 
 func CreateGcpTarget(t *testing.T, name string, details map[string]any) {

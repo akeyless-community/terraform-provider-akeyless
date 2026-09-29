@@ -1334,28 +1334,3 @@ func TestTargetZeroSslResource(t *testing.T) {
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
-
-func TestTargetF5BigIpResource(t *testing.T) {
-	targetName := "f5_big_ip_target"
-	targetPath := testPath(targetName)
-	config := fmt.Sprintf(`
-		resource "akeyless_target_f5_big_ip" "%v" {
-			name        = "%v"
-			url         = "https://f5.example.com"
-			username    = "admin"
-			password    = "password"
-			description = "test f5 target"
-		}
-	`, targetName, targetPath)
-	configUpdate := fmt.Sprintf(`
-		resource "akeyless_target_f5_big_ip" "%v" {
-			name        = "%v"
-			url         = "https://f5-updated.example.com"
-			username    = "admin2"
-			password    = "password2"
-			description = "updated f5 target"
-		}
-	`, targetName, targetPath)
-
-	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
-}
