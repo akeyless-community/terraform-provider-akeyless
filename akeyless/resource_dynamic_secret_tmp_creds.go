@@ -108,21 +108,6 @@ func resourceDynamicSecretTmpCredsRead(d *schema.ResourceData, m interface{}) er
 		Name:  name,
 		Token: &token,
 	}
-	rawConfig := d.GetRawConfig()
-	if rawConfig.IsKnown() && !rawConfig.IsNull() {
-		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
-			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
-		}
-		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
-			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
-		}
-		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
-			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
-		}
-		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
-			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
-		}
-	}
 
 	rOut, res, err := client.DynamicSecretTmpCredsGet(ctx).Body(body).Execute()
 	if err != nil {
@@ -176,21 +161,6 @@ func resourceDynamicSecretTmpCredsDelete(d *schema.ResourceData, m interface{}) 
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.TmpCredsId, tmpCredsId)
-	rawConfig := d.GetRawConfig()
-	if rawConfig.IsKnown() && !rawConfig.IsNull() {
-		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
-			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
-		}
-		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
-			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
-		}
-		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
-			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
-		}
-		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
-			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
-		}
-	}
 
 	resp, err := client.DynamicSecretTmpCredsDelete(ctx).Body(body).Execute()
 	if err != nil {
