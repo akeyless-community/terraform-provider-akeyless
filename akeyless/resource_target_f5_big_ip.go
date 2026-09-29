@@ -35,7 +35,6 @@ func resourceF5BigIpTarget() *schema.Resource {
 			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Sensitive:   true,
 				Description: "F5 username with permission to manage certificates",
 			},
 			"password": {

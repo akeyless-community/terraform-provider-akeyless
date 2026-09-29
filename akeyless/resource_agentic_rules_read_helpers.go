@@ -58,7 +58,3 @@ func setAgenticRuleBool(d *schema.ResourceData, fieldName string, value *bool) e
 
 	return d.Set(fieldName, *value)
 }
-
-func setDynamicSecretSkipDryRunReadField(d *schema.ResourceData, value *bool) error {
-	return setAgenticRuleBool(d, "skip_dry_run", value)
-}
