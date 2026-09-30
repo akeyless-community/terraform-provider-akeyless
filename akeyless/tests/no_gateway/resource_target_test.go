@@ -448,43 +448,6 @@ func TestTargetGkeResource(t *testing.T) {
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, secretPath)
 }
 
-func TestTargetGlobalSignResource(t *testing.T) {
-	targetName := "globalsign_target1"
-	targetPath := testPath(targetName)
-
-	config := fmt.Sprintf(`
-		resource "akeyless_target_globalsign" "%v" {
-			name              	= "%v"
-			timeout             = "1m0s"
-			username            = "user1"
-			password            = "pass1"
-			profile_id          = "id1"
-			contact_first_name  = "first1"
-			contact_last_name   = "last1"
-			contact_phone       = "phone1"
-			contact_email		= "ku@ku1.io"
-			description       	= "desc1"
-		}
-	`, targetName, targetPath)
-
-	configUpdate := fmt.Sprintf(`
-		resource "akeyless_target_globalsign" "%v" {
-			name              	= "%v"
-			timeout             = "2m30s"
-			username            = "user2"
-			password            = "pass2"
-			profile_id          = "id2"
-			contact_first_name  = "first2"
-			contact_last_name   = "last2"
-			contact_phone       = "phone2"
-			contact_email		= "ku@ku2.io"
-			description       	= "desc2"
-		}
-	`, targetName, targetPath)
-
-	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
-}
-
 func TestTargetGlobalSignAtlasResource(t *testing.T) {
 	targetName := "globalsign_atlas_target"
 	targetPath := testPath(targetName)

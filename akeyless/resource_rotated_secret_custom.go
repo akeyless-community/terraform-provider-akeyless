@@ -20,6 +20,18 @@ func resourceRotatedSecretCustom() *schema.Resource {
 			State: resourceRotatedSecretCustomImport,
 		},
 		Schema: map[string]*schema.Schema{
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -308,6 +320,21 @@ func resourceRotatedSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.RotatedSecretCreateCustom(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create rotated secret", resp, err)
@@ -543,6 +570,21 @@ func resourceRotatedSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.RotatedSecretUpdateCustom(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update rotated secret", resp, err)

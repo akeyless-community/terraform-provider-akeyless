@@ -83,6 +83,8 @@ Documentation is auto-generated.
 
 ## 6. Testing
 
+Do not add unit tests. This provider must remain a simple SDK mapping plugin with no business logic; new unit tests usually indicate logic that belongs elsewhere. Unit tests are not run in the pipeline.
+
 1.  Add tests to an existing or new test file (not required to create a separate file per resource).
 2.  Implement acceptance tests using `resource.TestCase`.
 3.  Try to cover as much as input arguments, especially the arguments that are unique to the resource.

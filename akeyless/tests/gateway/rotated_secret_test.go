@@ -40,6 +40,10 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "aaaa"
+			ara_enabled 				= true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum 			= true
+			skip_dry_run 				= true
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -53,6 +57,10 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "bbbb"
+			ara_enabled 				= false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum 			= false
+			skip_dry_run 				= false
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -1116,7 +1124,8 @@ func TestRotatedSecretOpenAIResource(t *testing.T) {
 	targetDetailsType := "openai_target_details"
 
 	expect := map[string]any{
-		"api_key": "sk-test-key-12345",
+		"api_key":    "sk-test-key-12345",
+		"openai_url": "https://api.openai.com",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -1416,4 +1425,49 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestRotatedSecretAerospikeResource(t *testing.T) {
+	// TODO: Re-enable after Aerospike target validation receives BYPASS_DRY_RUN.
+	t.Skip("Aerospike target creation requires a reachable Aerospike service")
+	testutils.SkipIfNoGateway(t)
+
+	name := "rs_aerospike"
+	path := testPath(name)
+	targetPath := testPath("aerospike_target_for_rs")
+	targetDetailsType := "aerospike_target_details"
+	expect := map[string]any{
+		"admin_username": "admin",
+		"password":       "password",
+		"hostname":       "127.0.0.1",
+		"port":           "3000",
+		"namespace":      "test",
+	}
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_aerospike" "%v" {
+			name           = "%v"
+			target_name    = "%v"
+			rotator_type   = "password"
+			skip_dry_run   = true
+			rotated_username = "user"
+			rotated_password = "password"
+		}
+	`, name, path, targetPath)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_aerospike" "%v" {
+			name           = "%v"
+			target_name    = "%v"
+			rotator_type   = "password"
+			skip_dry_run   = false
+			rotated_username = "user"
+			rotated_password = "password"
+			description    = "updated"
+		}
+	`, name, path, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
 }

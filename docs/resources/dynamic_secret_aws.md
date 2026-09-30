@@ -23,6 +23,7 @@ AWS dynamic secret resource
 
 - `access_mode` (String) The types of credentials to retrieve from AWS. Options:[iam_user,assume_role]
 - `admin_rotation_interval_days` (Number) Admin credentials rotation interval (days)
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `aws_access_key_id` (String) Access Key ID
 - `aws_access_secret_key` (String, Sensitive) Access Secret Key
 - `aws_external_id` (String) The AWS External ID associated with the AWS role (relevant only for assume_role mode)
@@ -35,6 +36,8 @@ AWS dynamic secret resource
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `enable_admin_rotation` (Boolean) Automatic admin credentials rotation
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
@@ -53,6 +56,7 @@ AWS dynamic secret resource
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless Web Access Bastion
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `session_tags` (String) Session tags, space separated, relevant only for Assumed Role. Format: Key=name,Value=val Key=name2,Value=val2
+- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Name of existing target to use in dynamic secret creation
 - `transitive_tag_keys` (String) Transitive tag keys, space separated, relevant only for Assumed Role

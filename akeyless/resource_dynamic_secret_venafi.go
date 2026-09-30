@@ -148,7 +148,19 @@ func resourceDynamicSecretVenafi() *schema.Resource {
 				Description: "Additional custom fields to associate with the item",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-		},
+
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			}},
 	}
 }
 
@@ -216,7 +228,21 @@ func resourceDynamicSecretVenafiCreate(d *schema.ResourceData, m interface{}) er
 		}
 		body.ItemCustomFields = &fields
 	}
-
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.GatewayCreateProducerVenafi(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create dynamic secret", resp, err)
@@ -298,6 +324,10 @@ func resourceDynamicSecretVenafiRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 
+	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -367,7 +397,21 @@ func resourceDynamicSecretVenafiUpdate(d *schema.ResourceData, m interface{}) er
 		}
 		body.ItemCustomFields = &fields
 	}
-
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.GatewayUpdateProducerVenafi(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update dynamic secret", resp, err)

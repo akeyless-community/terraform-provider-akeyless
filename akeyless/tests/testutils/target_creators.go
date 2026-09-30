@@ -13,6 +13,7 @@ import (
 type CreateTargetFunc func(t *testing.T, name string, details map[string]any)
 
 var CreateTargetByTypeMap = map[string]CreateTargetFunc{
+	"aerospike_target_details":        CreateAerospikeTarget,
 	"artifactory_target_details":      CreateArtifactoryTarget,
 	"aws_target_details":              CreateAwsTarget,
 	"azure_target_details":            CreateAzureTarget,
@@ -44,6 +45,24 @@ var CreateTargetByTypeMap = map[string]CreateTargetFunc{
 
 func CreateTargetByType(t *testing.T, name, targetType string, details map[string]any) {
 	CreateTargetByTypeMap[targetType](t, name, details)
+}
+
+func CreateAerospikeTarget(t *testing.T, name string, details map[string]any) {
+	client, token, err := GetClient()
+	require.NoError(t, err)
+
+	body := akeyless_api.TargetCreateAerospike{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.AdminUsername, details["admin_username"])
+	common.GetAkeylessPtr(&body.Password, details["password"])
+	common.GetAkeylessPtr(&body.Hostname, details["hostname"])
+	common.GetAkeylessPtr(&body.Port, details["port"])
+	common.GetAkeylessPtr(&body.Namespace, details["namespace"])
+
+	_, resp, err := client.TargetCreateAerospike(context.Background()).Body(body).Execute()
+	require.NoError(t, common.HandleError("can't create aerospike target for test", resp, err))
 }
 
 func CreateArtifactoryTarget(t *testing.T, name string, details map[string]any) {
