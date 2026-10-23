@@ -60,3 +60,33 @@ func TestCertificateDiscoveryResource(t *testing.T) {
 		},
 	})
 }
+
+func TestCertificateDiscoveryExcludeHosts(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	name := "cert_discovery_exclude_hosts"
+	folder := testPath(name)
+	resourceName := fmt.Sprintf("akeyless_certificate_discovery.%v", name)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_certificate_discovery" "%v" {
+			hosts           = "127.0.0.0/30"
+			exclude_hosts   = "127.0.0.2"
+			port_ranges     = "443"
+			target_location = "%v"
+		}
+	`, name, folder)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_hosts", "127.0.0.2"),
+				),
+			},
+		},
+	})
+}

@@ -166,6 +166,11 @@ func resourceRotatedSecretLdap() *schema.Resource {
 				Optional:    true,
 				Description: "Enable/Disable secure remote access [true/false]",
 			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed Secure Remote Access hosts",
+			},
 			"secure_access_host": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -318,6 +323,9 @@ func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 		}
 		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.RotatedSecretCreateLdap(ctx).Body(body).Execute()
@@ -496,6 +504,12 @@ func resourceRotatedSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
 		return err
 	}
+	if sra := itemOut.ItemGeneralInfo.SecureRemoteAccessDetails; sra != nil {
+		err = d.Set("secure_access_enforce_hosts_restriction", sra.GetEnforceHostsRestriction())
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -606,6 +620,9 @@ func resourceRotatedSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 		}
 		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.RotatedSecretUpdateLdap(ctx).Body(body).Execute()

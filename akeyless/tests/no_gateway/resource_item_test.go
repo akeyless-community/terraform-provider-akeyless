@@ -460,3 +460,84 @@ func TestFolderResource(t *testing.T) {
 	`, folderEndName, folderName)
 	testutils.TestFolderResource(t, providerFactories, folderName, config, configUpdate, configUpdate2)
 }
+
+func TestPkiResourceSplitCertificateChain(t *testing.T) {
+	t.Parallel()
+	keyPath := testPath("test-dfc-for-pki-split-chain")
+	testutils.CreateDfcKey(t, keyPath)
+	defer testutils.DeleteItem(t, keyPath)
+	name := "test-pki-split-chain"
+	itemPath := testPath(name)
+	resourceName := "akeyless_pki_cert_issuer." + name
+
+	config := fmt.Sprintf(`
+		resource "akeyless_pki_cert_issuer" "%v" {
+			name                    = "%v"
+			signer_key_name         = "/%v"
+			ttl                     = "50"
+			allow_any_name          = true
+			split_certificate_chain = true
+		}
+	`, name, itemPath, keyPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_pki_cert_issuer" "%v" {
+			name                    = "%v"
+			signer_key_name         = "/%v"
+			ttl                     = "50"
+			allow_any_name          = true
+			split_certificate_chain = false
+		}
+	`, name, itemPath, keyPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(itemPath),
+					resource.TestCheckResourceAttr(resourceName, "split_certificate_chain", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(itemPath),
+					resource.TestCheckResourceAttr(resourceName, "split_certificate_chain", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestCsrDataSourceKeyUsage(t *testing.T) {
+	t.Parallel()
+	name := "test_csr_key_usage"
+	keyPath := testPath(name)
+	t.Cleanup(func() {
+		testutils.DeleteItem(t, keyPath)
+	})
+
+	config := fmt.Sprintf(`
+		data "akeyless_csr" "%v" {
+			name          = "%v"
+			generate_key  = true
+			key_type      = "classic-key"
+			alg           = "RSA2048"
+			common_name   = "test.example.com"
+			key_usage     = "digitalsignature,keyencipherment"
+			ext_key_usage = "serverauth,clientauth"
+		}
+	`, name, keyPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.TestCheckResourceAttrSet("data.akeyless_csr."+name, "data"),
+			},
+		},
+	})
+}

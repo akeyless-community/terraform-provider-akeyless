@@ -264,7 +264,7 @@ func GetTargetType(itemTargetsAssoc []akeyless_api.ItemTargetAssociation) string
 	return itemTargetsAssoc[0].GetTargetType()
 }
 
-func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, uscName, remoteSecretName string) (namespace, filterSecretValue string, exists bool) {
+func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, uscName, remoteSecretName string) (*akeyless_api.UscSyncInfo, bool) {
 	normalizedUscName := strings.TrimPrefix(uscName, "/")
 	for _, assoc := range associatedItems {
 		if assoc.ItemName == nil || strings.TrimPrefix(*assoc.ItemName, "/") != normalizedUscName {
@@ -272,17 +272,37 @@ func GetRotatorUscSync(associatedItems []akeyless_api.ItemUSCSyncAssociation, us
 		}
 
 		if assoc.Attributes == nil {
-			return "", "", false
+			return nil, false
 		}
-		attr := *assoc.Attributes
+		attr := assoc.Attributes
 
 		if attr.SecretName == nil || *attr.SecretName != remoteSecretName {
-			return "", "", false
+			return nil, false
 		}
 
-		return attr.GetNamespace(), attr.GetJqSecretFilter(), true
+		return attr, true
 	}
-	return "", "", false
+	return nil, false
+}
+
+func SetUscSyncInfo(d *schema.ResourceData, info *akeyless_api.UscSyncInfo) error {
+	err := d.Set("namespace", info.GetNamespace())
+	if err != nil {
+		return err
+	}
+	err = d.Set("filter_secret_value", info.GetJqSecretFilter())
+	if err != nil {
+		return err
+	}
+	err = d.Set("environments", info.GetSelectedEnvironments())
+	if err != nil {
+		return err
+	}
+	err = d.Set("repositories", info.GetSelectedRepositories())
+	if err != nil {
+		return err
+	}
+	return d.Set("gcp_project_id", info.GetProject())
 }
 
 func GetTagsForUpdate(d *schema.ResourceData, name, token string, newTags []string,
@@ -350,6 +370,17 @@ func GetSraFromItem(d *schema.ResourceData, item *akeyless_api.Item) error {
 	sra := item.GetItemGeneralInfo().SecureRemoteAccessDetails
 
 	return GetSra(d, sra, itemType)
+}
+
+func SetSraHostProvider(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess) error {
+	if sra == nil {
+		return nil
+	}
+	err := d.Set("host_provider", sra.GetHostProviderType())
+	if err != nil {
+		return err
+	}
+	return d.Set("secure_access_enforce_hosts_restriction", sra.GetEnforceHostsRestriction())
 }
 
 func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemType string) error {

@@ -2,19 +2,23 @@ package akeyless
 
 import (
 	"context"
+	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const codexOauthModeChatGPT = "chatgpt_oauth"
+
 func resourceOpenAITarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "OpenAI Target resource",
-		Create:      resourceOpenAITargetCreate,
-		Read:        resourceOpenAITargetRead,
-		Update:      resourceOpenAITargetUpdate,
-		Delete:      resourceOpenAITargetDelete,
+		Description:   "OpenAI Target resource. In ChatGPT OAuth mode, every update requires a new Codex refresh token",
+		Create:        resourceOpenAITargetCreate,
+		Read:          resourceOpenAITargetRead,
+		Update:        resourceOpenAITargetUpdate,
+		Delete:        resourceOpenAITargetDelete,
+		CustomizeDiff: resourceOpenAITargetCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			State: resourceOpenAITargetImport,
 		},
@@ -77,6 +81,35 @@ func resourceOpenAITarget() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
+			"codex_oauth_mode": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Auth mode: empty (default, static api-key) or chatgpt_oauth",
+			},
+			"codex_oauth_account_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Codex OAuth account id (auth.json tokens.account_id), used when codex_oauth_mode=chatgpt_oauth",
+			},
+			"codex_oauth_access_token_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Codex OAuth access token (auth.json tokens.access_token), used when codex_oauth_mode=chatgpt_oauth. Optional, the gateway populates it during refresh. Write-only, not stored in state; sent only when codex_oauth_token_wo_version changes. Requires Terraform 1.11 or later",
+			},
+			"codex_oauth_refresh_token_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Codex OAuth refresh token (auth.json tokens.refresh_token), required when codex_oauth_mode=chatgpt_oauth. Write-only, not stored in state; sent only when codex_oauth_token_wo_version changes. The gateway rotates this token during use, so every update in chatgpt_oauth mode requires a new refresh token (for example, from a new codex login). Do not keep using the same Codex session locally. Requires Terraform 1.11 or later",
+			},
+			"codex_oauth_token_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version of the Codex OAuth write-only tokens. Change it to send new codex_oauth_refresh_token_wo and codex_oauth_access_token_wo values. In chatgpt_oauth mode, every update requires a new version",
+			},
 		},
 	}
 }
@@ -96,6 +129,10 @@ func resourceOpenAITargetCreate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 	maxVersions := d.Get("max_versions").(string)
+	codexOauthMode := d.Get("codex_oauth_mode").(string)
+	codexOauthAccountId := d.Get("codex_oauth_account_id").(string)
+	codexOauthAccessToken := getWriteOnlyString(d, "codex_oauth_access_token_wo")
+	codexOauthRefreshToken := getWriteOnlyString(d, "codex_oauth_refresh_token_wo")
 
 	body := akeyless_api.TargetCreateOpenAI{
 		Name:  name,
@@ -109,6 +146,10 @@ func resourceOpenAITargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.CodexOauthMode, codexOauthMode)
+	common.GetAkeylessPtr(&body.CodexOauthAccountId, codexOauthAccountId)
+	common.GetAkeylessPtr(&body.CodexOauthAccessToken, codexOauthAccessToken)
+	common.GetAkeylessPtr(&body.CodexOauthRefreshToken, codexOauthRefreshToken)
 
 	_, resp, err := client.TargetCreateOpenAI(ctx).Body(body).Execute()
 	if err != nil {
@@ -170,6 +211,14 @@ func resourceOpenAITargetRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
+		err = d.Set("codex_oauth_mode", rOut.Value.OpenaiTargetDetails.GetAuthMode())
+		if err != nil {
+			return err
+		}
+		err = d.Set("codex_oauth_account_id", rOut.Value.OpenaiTargetDetails.GetOauthAccountId())
+		if err != nil {
+			return err
+		}
 	}
 	if rOut.Target != nil && rOut.Target.Comment != nil {
 		err := d.Set("description", *rOut.Target.Comment)
@@ -205,6 +254,8 @@ func resourceOpenAITargetUpdate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	maxVersions := d.Get("max_versions").(string)
 	keepPrevVersion := d.Get("keep_prev_version").(string)
+	codexOauthMode := d.Get("codex_oauth_mode").(string)
+	codexOauthAccountId := d.Get("codex_oauth_account_id").(string)
 
 	body := akeyless_api.TargetUpdateOpenAI{
 		Name:  name,
@@ -220,6 +271,12 @@ func resourceOpenAITargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+	common.GetAkeylessPtr(&body.CodexOauthMode, codexOauthMode)
+	common.GetAkeylessPtr(&body.CodexOauthAccountId, codexOauthAccountId)
+	if d.HasChange("codex_oauth_token_wo_version") {
+		common.GetAkeylessPtr(&body.CodexOauthAccessToken, getWriteOnlyString(d, "codex_oauth_access_token_wo"))
+		common.GetAkeylessPtr(&body.CodexOauthRefreshToken, getWriteOnlyString(d, "codex_oauth_refresh_token_wo"))
+	}
 
 	_, resp, err := client.TargetUpdateOpenAI(ctx).Body(body).Execute()
 	if err != nil {
@@ -229,6 +286,24 @@ func resourceOpenAITargetUpdate(d *schema.ResourceData, m interface{}) error {
 	d.SetId(name)
 
 	return nil
+}
+
+func resourceOpenAITargetCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	if d.Id() == "" || d.Get("codex_oauth_mode").(string) != codexOauthModeChatGPT {
+		return nil
+	}
+	if len(d.GetChangedKeysPrefix("")) > 0 && !d.HasChange("codex_oauth_token_wo_version") {
+		return fmt.Errorf("codex_oauth_token_wo_version must change on every update in %s mode, because the gateway rotates the refresh token. Run codex login, set the new codex_oauth_refresh_token_wo and change codex_oauth_token_wo_version", codexOauthModeChatGPT)
+	}
+	return nil
+}
+
+func getWriteOnlyString(d *schema.ResourceData, key string) string {
+	value := d.GetRawConfig().GetAttr(key)
+	if !value.IsKnown() || value.IsNull() {
+		return ""
+	}
+	return value.AsString()
 }
 
 func resourceOpenAITargetDelete(d *schema.ResourceData, m interface{}) error {

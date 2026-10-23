@@ -3,12 +3,12 @@
 page_title: "akeyless_target_openai Resource - terraform-provider-akeyless"
 subcategory: ""
 description: |-
-  OpenAI Target resource
+  OpenAI Target resource. In ChatGPT OAuth mode, every update requires a new Codex refresh token
 ---
 
 # akeyless_target_openai (Resource)
 
-OpenAI Target resource
+OpenAI Target resource. In ChatGPT OAuth mode, every update requires a new Codex refresh token
 
 
 
@@ -23,6 +23,11 @@ OpenAI Target resource
 
 - `api_key` (String, Sensitive) API key for OpenAI
 - `api_key_id` (String) API key ID
+- `codex_oauth_access_token_wo` (String, Sensitive) Codex OAuth access token (auth.json tokens.access_token), used when codex_oauth_mode=chatgpt_oauth. Optional, the gateway populates it during refresh. Write-only, not stored in state; sent only when codex_oauth_token_wo_version changes. Requires Terraform 1.11 or later
+- `codex_oauth_account_id` (String) Codex OAuth account id (auth.json tokens.account_id), used when codex_oauth_mode=chatgpt_oauth
+- `codex_oauth_mode` (String) Auth mode: empty (default, static api-key) or chatgpt_oauth
+- `codex_oauth_refresh_token_wo` (String, Sensitive) Codex OAuth refresh token (auth.json tokens.refresh_token), required when codex_oauth_mode=chatgpt_oauth. Write-only, not stored in state; sent only when codex_oauth_token_wo_version changes. The gateway rotates this token during use, so every update in chatgpt_oauth mode requires a new refresh token (for example, from a new codex login). Do not keep using the same Codex session locally. Requires Terraform 1.11 or later
+- `codex_oauth_token_wo_version` (Number) Version of the Codex OAuth write-only tokens. Change it to send new codex_oauth_refresh_token_wo and codex_oauth_access_token_wo values. In chatgpt_oauth mode, every update requires a new version
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)

@@ -158,6 +158,23 @@ func resourceRotatedSecretCustom() *schema.Resource {
 				Optional:    true,
 				Description: "Enable/Disable secure remote access [true/false]",
 			},
+			"host_provider": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access",
+			},
+			"target": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of linked targets to be associated, Relevant only for Secure Remote Access",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed Secure Remote Access hosts",
+			},
 			"secure_access_host": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -319,6 +336,8 @@ func resourceRotatedSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
 	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
 
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsKnown() && !rawConfig.IsNull() {
@@ -333,6 +352,9 @@ func resourceRotatedSecretCustomCreate(d *schema.ResourceData, m interface{}) er
 		}
 		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.RotatedSecretCreateCustom(ctx).Body(body).Execute()
@@ -461,6 +483,9 @@ func resourceRotatedSecretCustomRead(d *schema.ResourceData, m interface{}) erro
 	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
 		return err
 	}
+	if err = common.SetSraHostProvider(d, itemOut.ItemGeneralInfo.SecureRemoteAccessDetails); err != nil {
+		return err
+	}
 
 	d.SetId(path)
 
@@ -569,6 +594,8 @@ func resourceRotatedSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.UseLowerLetters, useLowerLetters)
 	common.GetAkeylessPtr(&body.UseNumbers, useNumbers)
 	common.GetAkeylessPtr(&body.UseSpecialCharacters, useSpecialCharacters)
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
 
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsKnown() && !rawConfig.IsNull() {
@@ -583,6 +610,9 @@ func resourceRotatedSecretCustomUpdate(d *schema.ResourceData, m interface{}) er
 		}
 		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.RotatedSecretUpdateCustom(ctx).Body(body).Execute()

@@ -148,3 +148,37 @@ func checkCertificateExistsRemotely(path string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+func TestCertificateDataSourcePfx(t *testing.T) {
+	t.Parallel()
+	certificateName := "test_certificate_pfx"
+	certificatePath := testPath(certificateName)
+	keyData, cert := testutils.GenerateCertForTest(t, 2048)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_certificate" "%v" {
+			name             = "%v"
+			certificate_data = "%v"
+			format           = "pem"
+			key_data         = "%v"
+		}
+
+		data "akeyless_certificate" "%v" {
+			name                = akeyless_certificate.%v.name
+			format              = "pfx"
+			password            = "Test-Passw0rd"
+			include_private_key = true
+		}
+	`, certificateName, certificatePath, cert, keyData, certificateName, certificateName)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkCertificateDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.TestCheckResourceAttrSet("data.akeyless_certificate."+certificateName, "encoded_certificate"),
+			},
+		},
+	})
+}

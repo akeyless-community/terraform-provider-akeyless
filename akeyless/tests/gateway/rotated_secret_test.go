@@ -1471,3 +1471,53 @@ func TestRotatedSecretAerospikeResource(t *testing.T) {
 
 	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
 }
+
+func TestRotatedSecretSshSecureAccess(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetPath := testPath("test-target-ssh-sra")
+	testutils.CreateTargetByType(t, targetPath, "ssh_target_details", map[string]any{
+		"host":     "ssh.example.com",
+		"port":     "22",
+		"username": "admin",
+		"password": "DummyPass123",
+	})
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	rsName := "test-rs-ssh-sra"
+	rsPath := testPath(rsName)
+	resourceName := "akeyless_rotated_secret_ssh." + rsName
+
+	configTemplate := `
+		resource "akeyless_rotated_secret_ssh" "%v" {
+			name                                    = "%v"
+			target_name                             = "%v"
+			rotator_type                            = "target"
+			authentication_credentials              = "use-target-creds"
+			secure_access_enable                    = "true"
+			secure_access_host                      = ["ssh.example.com"]
+			host_provider                           = "explicit"
+			secure_access_enforce_hosts_restriction = %v
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(configTemplate, rsName, rsPath, targetPath, true),
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "host_provider", "explicit"),
+					resource.TestCheckResourceAttr(resourceName, "secure_access_enforce_hosts_restriction", "true"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(configTemplate, rsName, rsPath, targetPath, false),
+				Check:  resource.TestCheckResourceAttr(resourceName, "secure_access_enforce_hosts_restriction", "false"),
+			},
+		},
+	})
+}

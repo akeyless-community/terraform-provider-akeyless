@@ -173,6 +173,23 @@ func resourceStaticSecret() *schema.Resource {
 				Optional:    true,
 				Description: "Secure browser via Akeyless's Secure Remote Access (SRA)",
 			},
+			"host_provider": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access",
+			},
+			"target": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of linked targets to be associated, Relevant only for Secure Remote Access",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed Secure Remote Access hosts",
+			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
 				Required:    false,
@@ -303,6 +320,8 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.SecureAccessGateway, secureAccessGateway)
 	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
 
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsKnown() && !rawConfig.IsNull() {
@@ -314,6 +333,9 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 		}
 		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.CreateSecret(ctx).Body(body).Execute()
@@ -479,6 +501,9 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 	}
 
 	common.GetSraFromItem(d, itemOut)
+	if err = common.SetSraHostProvider(d, itemOut.ItemGeneralInfo.SecureRemoteAccessDetails); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -583,6 +608,8 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&bodyItem.SecureAccessGateway, secureAccessGateway)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&bodyItem.SecureAccessWebProxy, secureAccessWebProxy)
+	common.GetAkeylessPtr(&bodyItem.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&bodyItem.Target, common.ExpandStringList(d.Get("target").([]interface{})))
 
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsKnown() && !rawConfig.IsNull() {
@@ -594,6 +621,9 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 		}
 		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&bodyItem.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&bodyItem.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.UpdateItem(ctx).Body(bodyItem).Execute()

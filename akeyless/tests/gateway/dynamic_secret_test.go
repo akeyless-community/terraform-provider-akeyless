@@ -1801,3 +1801,55 @@ func TestDynamicSecretAerospike(t *testing.T) {
 
 	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
 }
+
+func TestDynamicSecretRdpSecureAccess(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetPath := testPath("test-target-rdp-sra")
+	testutils.CreateTargetByType(t, targetPath, "windows_target_details", map[string]any{
+		"hostname": "windows.example.com",
+		"username": "administrator",
+		"password": "DummyPass123",
+	})
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	dsName := "ds_rdp_sra_test"
+	dsPath := testPath(dsName)
+	resourceName := "akeyless_dynamic_secret_rdp." + dsName
+
+	configTemplate := `
+		resource "akeyless_dynamic_secret_rdp" "%v" {
+			name                                    = "%v"
+			target_name                             = "%v"
+			rdp_admin_name                          = "administrator"
+			rdp_admin_pwd                           = "DummyPass123"
+			rdp_host_name                           = "rdp.example.com"
+			rdp_host_port                           = "3389"
+			rdp_user_groups                         = "Administrators"
+			secure_access_enable                    = "true"
+			secure_access_host                      = ["rdp.example.com"]
+			host_provider                           = "explicit"
+			secure_access_enforce_hosts_restriction = %v
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(configTemplate, dsName, dsPath, targetPath, true),
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(dsPath),
+					resource.TestCheckResourceAttr(resourceName, "host_provider", "explicit"),
+					resource.TestCheckResourceAttr(resourceName, "secure_access_enforce_hosts_restriction", "true"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(configTemplate, dsName, dsPath, targetPath, false),
+				Check:  resource.TestCheckResourceAttr(resourceName, "secure_access_enforce_hosts_restriction", "false"),
+			},
+		},
+	})
+}

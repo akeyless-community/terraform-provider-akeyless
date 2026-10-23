@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -31,6 +32,7 @@ import (
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -225,6 +227,28 @@ func DisableCache() error {
 	}
 
 	return nil
+}
+
+// SkipIfTerraformBelow skips tests that use Terraform CLI features, such as write-only attributes, that older versions reject.
+func SkipIfTerraformBelow(t *testing.T, minVersion string) {
+	t.Helper()
+	binary := os.Getenv("TF_ACC_TERRAFORM_PATH")
+	if binary == "" {
+		binary = "terraform"
+	}
+	out, err := exec.Command(binary, "version", "-json").Output()
+	if err != nil {
+		t.Skipf("skipping: cannot get terraform version: %v", err)
+	}
+	var tfVersion struct {
+		TerraformVersion string `json:"terraform_version"`
+	}
+	if err := json.Unmarshal(out, &tfVersion); err != nil {
+		t.Skipf("skipping: cannot parse terraform version: %v", err)
+	}
+	if version.Must(version.NewVersion(tfVersion.TerraformVersion)).LessThan(version.Must(version.NewVersion(minVersion))) {
+		t.Skipf("skipping: requires terraform %s or later, found %s", minVersion, tfVersion.TerraformVersion)
+	}
 }
 
 func SkipIfNoVault(t *testing.T) {

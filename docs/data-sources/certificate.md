@@ -17,13 +17,18 @@ Certificate data source
 
 ### Optional
 
+- `format` (String) Format to download the certificate in [pem/pfx/jks], pfx/jks require a password
 - `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
+- `include_private_key` (Boolean) If set, includes the private key in the pfx/jks file, only relevant when format is pfx or jks
+- `leaf_only` (Boolean) If set, downloads only the leaf certificate instead of the full chain, only available for certificates issued with split certificate chain enabled
 - `name` (String) Certificate name
+- `password` (String, Sensitive) Password to protect the pfx/jks file, required when format is pfx or jks
 - `version` (Number) Certificate version
 
 ### Read-Only
 
 - `certificate_pem` (String, Sensitive) The certificate value in pem format
+- `encoded_certificate` (String, Sensitive) The base64 encoded certificate file, returned when format is pfx or jks
 - `id` (String) The ID of this resource.
 - `private_key_pem` (String, Sensitive) The private key value in pem format
 
