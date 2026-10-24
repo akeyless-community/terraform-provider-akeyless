@@ -292,10 +292,20 @@ func resourceOpenAITargetCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 	if d.Id() == "" || d.Get("codex_oauth_mode").(string) != codexOauthModeChatGPT {
 		return nil
 	}
-	if len(d.GetChangedKeysPrefix("")) > 0 && !d.HasChange("codex_oauth_token_wo_version") {
+	if hasNonWriteOnlyChange(d) && !d.HasChange("codex_oauth_token_wo_version") {
 		return fmt.Errorf("codex_oauth_token_wo_version must change on every update in %s mode, because the gateway rotates the refresh token. Run codex login, set the new codex_oauth_refresh_token_wo and change codex_oauth_token_wo_version", codexOauthModeChatGPT)
 	}
 	return nil
+}
+
+// The SDK diff lists write-only attributes as changed on every plan, because they are never stored in state.
+func hasNonWriteOnlyChange(d *schema.ResourceDiff) bool {
+	for _, key := range d.GetChangedKeysPrefix("") {
+		if key != "codex_oauth_access_token_wo" && key != "codex_oauth_refresh_token_wo" {
+			return true
+		}
+	}
+	return false
 }
 
 func getWriteOnlyString(d *schema.ResourceData, key string) string {

@@ -528,6 +528,7 @@ func TestCsrDataSourceKeyUsage(t *testing.T) {
 			common_name   = "test.example.com"
 			key_usage     = "digitalSignature,keyEncipherment"
 			ext_key_usage = "serverauth,clientauth"
+			split_level   = 2
 		}
 	`, name, keyPath)
 
