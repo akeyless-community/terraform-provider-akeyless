@@ -526,7 +526,7 @@ func TestCsrDataSourceKeyUsage(t *testing.T) {
 			key_type      = "classic-key"
 			alg           = "RSA2048"
 			common_name   = "test.example.com"
-			key_usage     = "DigitalSignature,KeyEncipherment"
+			key_usage     = "digitalSignature,keyEncipherment"
 			ext_key_usage = "serverauth,clientauth"
 		}
 	`, name, keyPath)
