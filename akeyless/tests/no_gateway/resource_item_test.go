@@ -523,7 +523,7 @@ func TestCsrDataSourceKeyUsage(t *testing.T) {
 		data "akeyless_csr" "%v" {
 			name          = "%v"
 			generate_key  = true
-			key_type      = "classic-key"
+			key_type      = "dfc"
 			alg           = "RSA2048"
 			common_name   = "test.example.com"
 			key_usage     = "digitalSignature,keyEncipherment"
