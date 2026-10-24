@@ -875,7 +875,8 @@ func TestRoleResourceRefreshAccessRulesWithoutRules(t *testing.T) {
 						t.Fatalf("failed to update role remotely: %v", err)
 					}
 				},
-				RefreshState: true,
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "unlock_secrets", "scoped"),
 					resource.TestCheckResourceAttr("akeyless_role.test_role", "approve_access_request", "all"),

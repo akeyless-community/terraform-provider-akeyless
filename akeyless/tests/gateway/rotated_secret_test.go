@@ -1498,6 +1498,7 @@ func TestRotatedSecretSshSecureAccess(t *testing.T) {
 			authentication_credentials              = "use-target-creds"
 			secure_access_enable                    = "true"
 			secure_access_host                      = ["ssh.example.com"]
+			secure_access_target_type               = "ssh"
 			host_provider                           = "explicit"
 			secure_access_enforce_hosts_restriction = %v
 		}

@@ -301,6 +301,7 @@ func TestStaticSecretSecureAccessHostsRestriction(t *testing.T) {
 			value                                   = "value1"
 			secure_access_enable                    = "true"
 			secure_access_host                      = ["127.0.0.1"]
+			secure_access_url                       = "http://abc.com"
 			host_provider                           = "explicit"
 			secure_access_enforce_hosts_restriction = true
 		}
@@ -312,6 +313,7 @@ func TestStaticSecretSecureAccessHostsRestriction(t *testing.T) {
 			value                                   = "value1"
 			secure_access_enable                    = "true"
 			secure_access_host                      = ["127.0.0.1"]
+			secure_access_url                       = "http://abc.com"
 			host_provider                           = "explicit"
 			secure_access_enforce_hosts_restriction = false
 		}

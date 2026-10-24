@@ -376,11 +376,16 @@ func SetSraHostProvider(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAc
 	if sra == nil {
 		return nil
 	}
-	err := d.Set("host_provider", sra.GetHostProviderType())
-	if err != nil {
-		return err
+	if hostProvider, ok := sra.GetHostProviderTypeOk(); ok {
+		err := d.Set("host_provider", *hostProvider)
+		if err != nil {
+			return err
+		}
 	}
-	return d.Set("secure_access_enforce_hosts_restriction", sra.GetEnforceHostsRestriction())
+	if enforceHostsRestriction, ok := sra.GetEnforceHostsRestrictionOk(); ok {
+		return d.Set("secure_access_enforce_hosts_restriction", *enforceHostsRestriction)
+	}
+	return nil
 }
 
 func GetSra(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess, itemType string) error {
