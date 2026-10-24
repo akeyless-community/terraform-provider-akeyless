@@ -1385,8 +1385,6 @@ func TestTargetLinkedResourceDeleteProtection(t *testing.T) {
 }
 
 func TestTargetOpenaiResourceCodexOauth(t *testing.T) {
-	testutils.SkipIfTerraformBelow(t, "1.11.0")
-
 	targetName := "openai_target_codex_oauth"
 	targetPath := testPath(targetName)
 	resourceName := "akeyless_target_openai." + targetName
