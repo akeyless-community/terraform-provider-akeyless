@@ -2,6 +2,7 @@ package akeyless
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -140,6 +141,11 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Description: "A list of additional sub claims delimiters (relevant only for SAML, OIDC, OAuth2/JWT)",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"gateway_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Akeyless Gateway URL (Configuration Management port). Relevant only when working with Gateway mode",
+			},
 			"access_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -185,6 +191,7 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	productType := common.ExpandStringList(productTypeSet.List())
 	subclaimsDelimitersSet := d.Get("subclaims_delimiters").(*schema.Set)
 	subclaimsDelimiters := common.ExpandStringList(subclaimsDelimitersSet.List())
+	gatewayUrl := d.Get("gateway_url").(string)
 
 	body := akeyless_api.AuthMethodCreateOIDC{
 		Name:             name,
@@ -210,6 +217,7 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
+	common.GetAkeylessPtr(&body.GatewayUrl, gatewayUrl)
 
 	rOut, resp, err := client.AuthMethodCreateOIDC(ctx).Body(body).Execute()
 	if err != nil {
@@ -334,6 +342,12 @@ func resourceAuthMethodOidcRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if d.Get("gateway_url").(string) != "" {
+		if rOut.AccessInfo.OidcAccessRules.AuthorizedGwClusterName == nil {
+			return fmt.Errorf("gateway_url is set, but the auth method does not have an authorized gateway cluster name")
+		}
+	}
+
 	if rOut.AccessInfo.AuditLogsClaims != nil {
 		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
@@ -436,6 +450,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	productType := common.ExpandStringList(productTypeSet.List())
 	subclaimsDelimitersSet := d.Get("subclaims_delimiters").(*schema.Set)
 	subclaimsDelimiters := common.ExpandStringList(subclaimsDelimitersSet.List())
+	gatewayUrl := d.Get("gateway_url").(string)
 
 	body := akeyless_api.AuthMethodUpdateOIDC{
 		Name:             name,
@@ -462,6 +477,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
+	common.GetAkeylessPtr(&body.GatewayUrl, gatewayUrl)
 
 	_, resp, err := client.AuthMethodUpdateOIDC(ctx).Body(body).Execute()
 	if err != nil {

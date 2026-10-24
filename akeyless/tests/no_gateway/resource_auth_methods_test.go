@@ -3,6 +3,7 @@ package no_gateway
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
@@ -1043,6 +1044,47 @@ func TestAuthMethodAliCloudResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "bound_role_name.0", "test-role-updated"),
 					resource.TestCheckResourceAttr("akeyless_auth_method_alicloud."+name, "sts_url", "https://sts.aliyuncs.com"),
 				),
+			},
+		},
+	})
+}
+
+func TestAuthMethodGatewayUrlNotRegistered(t *testing.T) {
+	oidcName := "test_auth_method_oidc_gw_url"
+	oidcPath := testPath(oidcName)
+	samlName := "test_auth_method_saml_gw_url"
+	samlPath := testPath(samlName)
+
+	oidcConfig := fmt.Sprintf(`
+		resource "akeyless_auth_method_oidc" "%v" {
+			name              = "%v"
+			unique_identifier = "email"
+			issuer            = "https://dev-9yl2unqy.us.auth0.com/"
+			client_id         = "trst-ci"
+			client_secret     = "test-client-secret"
+			gateway_url       = "https://not-registered-gateway.example.com:8000"
+		}
+	`, oidcName, oidcPath)
+
+	samlConfig := fmt.Sprintf(`
+		resource "akeyless_auth_method_saml" "%v" {
+			name              = "%v"
+			unique_identifier = "email"
+			idp_metadata_url  = "https://dev-1111.okta.com/app/abc12345/sso/saml/metadata"
+			gateway_url       = "https://not-registered-gateway.example.com:8000"
+		}
+	`, samlName, samlPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      oidcConfig,
+				ExpectError: regexp.MustCompile("invalid gateway url"),
+			},
+			{
+				Config:      samlConfig,
+				ExpectError: regexp.MustCompile("invalid gateway url"),
 			},
 		},
 	})

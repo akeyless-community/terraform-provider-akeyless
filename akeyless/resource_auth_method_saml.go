@@ -2,6 +2,7 @@ package akeyless
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -124,6 +125,11 @@ func resourceAuthMethodSaml() *schema.Resource {
 				Optional:    true,
 				Description: "Use dedicated SAML URLs",
 			},
+			"gateway_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Akeyless Gateway URL (Configuration Management port). Relevant only when working with Gateway mode",
+			},
 			"access_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -164,6 +170,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	productType := common.ExpandStringList(productTypeSet.List())
 	subclaimsDelimitersSet := d.Get("subclaims_delimiters").(*schema.Set)
 	subclaimsDelimiters := common.ExpandStringList(subclaimsDelimitersSet.List())
+	gatewayUrl := d.Get("gateway_url").(string)
 	useDedicatedSamlUrls := d.Get("use_dedicated_saml_urls").(bool)
 
 	body := akeyless_api.AuthMethodCreateSAML{
@@ -186,6 +193,7 @@ func resourceAuthMethodSamlCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
+	common.GetAkeylessPtr(&body.GatewayUrl, gatewayUrl)
 	common.GetAkeylessPtr(&body.UseDedicatedSamlUrls, useDedicatedSamlUrls)
 
 	rOut, resp, err := client.AuthMethodCreateSAML(ctx).Body(body).Execute()
@@ -291,6 +299,13 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+
+	if d.Get("gateway_url").(string) != "" {
+		if rOut.AccessInfo.SamlAccessRules.AuthorizedGwClusterName == nil {
+			return fmt.Errorf("gateway_url is set, but the auth method does not have an authorized gateway cluster name")
+		}
+	}
+
 	if rOut.AccessInfo.AuditLogsClaims != nil {
 		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
@@ -388,6 +403,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	productType := common.ExpandStringList(productTypeSet.List())
 	subclaimsDelimitersSet := d.Get("subclaims_delimiters").(*schema.Set)
 	subclaimsDelimiters := common.ExpandStringList(subclaimsDelimitersSet.List())
+	gatewayUrl := d.Get("gateway_url").(string)
 	useDedicatedSamlUrls := d.Get("use_dedicated_saml_urls").(bool)
 
 	body := akeyless_api.AuthMethodUpdateSAML{
@@ -411,6 +427,7 @@ func resourceAuthMethodSamlUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.GwBoundIps, gwBoundIps)
 	common.GetAkeylessPtr(&body.ProductType, productType)
 	common.GetAkeylessPtr(&body.SubclaimsDelimiters, subclaimsDelimiters)
+	common.GetAkeylessPtr(&body.GatewayUrl, gatewayUrl)
 	common.GetAkeylessPtr(&body.UseDedicatedSamlUrls, useDedicatedSamlUrls)
 
 	_, resp, err := client.AuthMethodUpdateSAML(ctx).Body(body).Execute()

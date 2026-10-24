@@ -23,6 +23,7 @@ RDP dynamic secret resource
 
 - `allow_user_extend_session` (Number) Allow user to extend session
 - `ara_enabled` (Boolean) Enable Agentic Runtime Authority
+- `block_parent_target_access` (String) Block access to the parent target when using a linked target [true/false]
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
@@ -31,6 +32,7 @@ RDP dynamic secret resource
 - `encryption_key_name` (String) Dynamic producer encryption key
 - `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from (relevant only for fixed-user-only=true)
 - `fixed_user_only` (String) Allow access using externally (IdP) provided username [true/false]
+- `host_provider` (String) Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `output_rule` (List of String) Password output rule definitions
@@ -44,6 +46,7 @@ RDP dynamic secret resource
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_enforce_hosts_restriction` (Boolean) Enforce connections only to allowed Secure Remote Access hosts
 - `secure_access_host` (Set of String) Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)
 - `secure_access_rd_gateway_server` (String) RD Gateway server
 - `secure_access_rdp_domain` (String) Required when the Dynamic Secret is used for a domain user
@@ -51,6 +54,7 @@ RDP dynamic secret resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target` (List of String) A list of linked targets to be associated, Relevant only for Secure Remote Access
 - `target_name` (String) Target name
 - `user_ttl` (String) User TTL
 - `warn_user_before_expiration` (Number) Warn user before expiration in minutes

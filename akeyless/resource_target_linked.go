@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -64,6 +65,17 @@ func resourceLinkedTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Comma separated list of existing hosts that will be removed from Linked Target hosts.",
 			},
+			"max_versions": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Set the maximum number of versions, limited by the account settings defaults.",
+			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "false",
+				Description: "Protection from accidental deletion of this object [true/false]",
+			},
 		},
 	}
 }
@@ -79,6 +91,8 @@ func resourceLinkedTargetCreate(d *schema.ResourceData, m interface{}) error {
 	parentTargetName := d.Get("parent_target_name").(string)
 	hostType := d.Get("type").(string)
 	description := d.Get("description").(string)
+	maxVersions := d.Get("max_versions").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.TargetCreateLinked{
 		Name:  name,
@@ -88,6 +102,8 @@ func resourceLinkedTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.ParentTargetName, parentTargetName)
 	common.GetAkeylessPtr(&body.Type, hostType)
 	common.GetAkeylessPtr(&body.Description, description)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, resp, err := client.TargetCreateLinked(ctx).Body(body).Execute()
 	if err != nil {
@@ -146,6 +162,12 @@ func resourceLinkedTargetRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+	if rOut.Target.DeleteProtection != nil {
+		err = d.Set("delete_protection", strconv.FormatBool(*rOut.Target.DeleteProtection))
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId(path)
 
@@ -199,6 +221,8 @@ func resourceLinkedTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	addHosts := d.Get("add_hosts").(string)
 	keepPrevVersion := d.Get("keep_prev_version").(string)
 	rmHosts := d.Get("rm_hosts").(string)
+	maxVersions := d.Get("max_versions").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.TargetUpdateLinked{
 		Name:  name,
@@ -211,6 +235,8 @@ func resourceLinkedTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.AddHosts, addHosts)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 	common.GetAkeylessPtr(&body.RmHosts, rmHosts)
+	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, resp, err := client.TargetUpdateLinked(ctx).Body(body).Execute()
 	if err != nil {

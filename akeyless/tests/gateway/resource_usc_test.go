@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"testing"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -191,4 +192,36 @@ func createUsc(t *testing.T, uscName, targetName string, opts uscOptions) {
 	} else {
 		fmt.Println("created:", uscName)
 	}
+}
+
+func TestUscResourceGcpScopeValidation(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+	testutils.SkipIfNoVault(t)
+
+	targetPath := testPath("test-target-hashi-gcp-scope")
+	testutils.CreateTargetByType(t, targetPath, "hashi_target_details", map[string]any{
+		"vault_url":        HashiVaultUrl,
+		"vault_token":      HashiVaultToken,
+		"vault_namespaces": "",
+	})
+	defer testutils.DeleteTarget(t, targetPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_usc" "gcp_scope" {
+			name                = "%v"
+			target_to_associate = "%v"
+			gcp_scope           = "folder"
+			gcp_organization_id = "123456"
+		}
+	`, testPath("test-usc-gcp-scope"), targetPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile("gcp_folder_id is required when gcp_scope is folder"),
+			},
+		},
+	})
 }
