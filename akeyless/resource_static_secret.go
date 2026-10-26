@@ -502,9 +502,12 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 
 	common.GetSraFromItem(d, itemOut)
 	if sra := itemOut.ItemGeneralInfo.SecureRemoteAccessDetails; sra != nil && !sra.GetEnable() {
-		err = d.Set("secure_access_url", "")
-		if err != nil {
-			return err
+		secureAccessURL := d.GetRawConfig().GetAttr("secure_access_url")
+		if !secureAccessURL.IsKnown() || secureAccessURL.IsNull() {
+			err = d.Set("secure_access_url", "")
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if err = common.SetSraHostProvider(d, itemOut.ItemGeneralInfo.SecureRemoteAccessDetails); err != nil {
