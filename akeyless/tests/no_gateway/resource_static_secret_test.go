@@ -414,11 +414,22 @@ resource "akeyless_static_secret" "%[1]s" {
 			},
 			{
 				Config: configUpdate,
-				Check: resource.TestCheckResourceAttr(
-					"akeyless_static_secret."+secretName,
-					"secure_access_enable",
-					"false",
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"akeyless_static_secret."+secretName,
+						"secure_access_enable",
+						"false",
+					),
+					resource.TestCheckResourceAttr(
+						"akeyless_static_secret."+secretName,
+						"secure_access_url",
+						"",
+					),
 				),
+			},
+			{
+				Config:   configUpdate,
+				PlanOnly: true,
 			},
 		},
 	})
