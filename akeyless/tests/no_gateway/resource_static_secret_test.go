@@ -340,3 +340,86 @@ func TestStaticSecretSecureAccessHostsRestriction(t *testing.T) {
 		},
 	})
 }
+
+func TestStaticSecretDescriptionUpdateWithoutSRA(t *testing.T) {
+	t.Parallel()
+
+	secretName := "static_secret_update_without_sra"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+resource "akeyless_static_secret" "%[1]s" {
+	path        = "%[2]s"
+	value       = "test value"
+	description = "before-update"
+}
+`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+resource "akeyless_static_secret" "%[1]s" {
+	path        = "%[2]s"
+	value       = "test value"
+	description = "after-update"
+}
+`, secretName, secretPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkStaticSecretDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				Config: configUpdate,
+				Check: resource.TestCheckResourceAttr(
+					"akeyless_static_secret."+secretName,
+					"description",
+					"after-update",
+				),
+			},
+		},
+	})
+}
+
+func TestStaticSecretDisableSRA(t *testing.T) {
+	t.Parallel()
+
+	secretName := "static_secret_disable_sra"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+resource "akeyless_static_secret" "%[1]s" {
+	path                 = "%[2]s"
+	value                = "test value"
+	secure_access_enable = "true"
+	secure_access_url    = "http://example.com"
+}
+`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+resource "akeyless_static_secret" "%[1]s" {
+	path                 = "%[2]s"
+	value                = "test value"
+	secure_access_enable = "false"
+}
+`, secretName, secretPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkStaticSecretDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				Config: configUpdate,
+				Check: resource.TestCheckResourceAttr(
+					"akeyless_static_secret."+secretName,
+					"secure_access_enable",
+					"false",
+				),
+			},
+		},
+	})
+}
