@@ -420,11 +420,6 @@ resource "akeyless_static_secret" "%[1]s" {
 						"secure_access_enable",
 						"false",
 					),
-					resource.TestCheckResourceAttr(
-						"akeyless_static_secret."+secretName,
-						"secure_access_url",
-						"",
-					),
 				),
 			},
 			{

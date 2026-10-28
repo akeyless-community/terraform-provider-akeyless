@@ -162,9 +162,12 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "Static-Secret values contains SSH Credentials, either Private Key or Password [password/private-key]",
 			},
 			"secure_access_url": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+				DiffSuppressFunc: func(_ string, _, new string, d *schema.ResourceData) bool {
+					return new == "" && d.Get("secure_access_enable").(string) == "false"
+				},
 				Description: "Destination URL to inject secrets.",
 			},
 			"secure_access_web_browsing": {
@@ -501,15 +504,6 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 	}
 
 	common.GetSraFromItem(d, itemOut)
-	if sra := itemOut.ItemGeneralInfo.SecureRemoteAccessDetails; sra != nil && !sra.GetEnable() {
-		secureAccessURL := d.GetRawConfig().GetAttr("secure_access_url")
-		if !secureAccessURL.IsKnown() || secureAccessURL.IsNull() {
-			err = d.Set("secure_access_url", "")
-			if err != nil {
-				return err
-			}
-		}
-	}
 	if err = common.SetSraHostProvider(d, itemOut.ItemGeneralInfo.SecureRemoteAccessDetails); err != nil {
 		return err
 	}
