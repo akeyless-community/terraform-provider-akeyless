@@ -135,6 +135,11 @@ func resourceDynamicSecretLdap() *schema.Resource {
 				Optional:    true,
 				Description: "Enable/Disable secure remote access [true/false]",
 			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed Secure Remote Access hosts",
+			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -293,6 +298,9 @@ func resourceDynamicSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
 		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
+		}
 	}
 	_, resp, err := client.GatewayCreateProducerLdap(ctx).Body(body).Execute()
 	if err != nil {
@@ -386,6 +394,12 @@ func resourceDynamicSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 	}
 	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
 		return err
+	}
+	if sra := rOut.SecureRemoteAccessDetails; sra != nil {
+		err = d.Set("secure_access_enforce_hosts_restriction", sra.GetEnforceHostsRestriction())
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(path)
@@ -486,6 +500,9 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 		}
 		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.GatewayUpdateProducerLdap(ctx).Body(body).Execute()

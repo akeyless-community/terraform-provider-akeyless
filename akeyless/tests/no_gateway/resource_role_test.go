@@ -837,3 +837,51 @@ func TestRoleResourceWithFewAssocs(t *testing.T) {
 		},
 	})
 }
+
+func TestRoleResourceRefreshAccessRulesWithoutRules(t *testing.T) {
+	rolePath := testPath("test_role_refresh_access_rules")
+	testutils.DeleteRole(rolePath)
+	defer testutils.DeleteRole(rolePath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_role" "test_role" {
+			name                   = "%v"
+			unlock_secrets         = "all"
+			approve_access_request = "scoped"
+		}
+	`, rolePath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "unlock_secrets", "all"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "approve_access_request", "scoped"),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, token := testutils.PrepareClient(t)
+					body := akeyless_api.UpdateRole{
+						Name:                 rolePath,
+						UnlockSecrets:        akeyless_api.PtrString("scoped"),
+						ApproveAccessRequest: akeyless_api.PtrString("all"),
+						Token:                &token,
+					}
+					_, _, err := client.UpdateRole(context.Background()).Body(body).Execute()
+					if err != nil {
+						t.Fatalf("failed to update role remotely: %v", err)
+					}
+				},
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "unlock_secrets", "scoped"),
+					resource.TestCheckResourceAttr("akeyless_role.test_role", "approve_access_request", "all"),
+				),
+			},
+		},
+	})
+}

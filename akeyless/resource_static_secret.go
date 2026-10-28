@@ -162,9 +162,12 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "Static-Secret values contains SSH Credentials, either Private Key or Password [password/private-key]",
 			},
 			"secure_access_url": {
-				Type:        schema.TypeString,
-				Required:    false,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+				DiffSuppressFunc: func(_ string, _, new string, d *schema.ResourceData) bool {
+					return new == "" && d.Get("secure_access_enable").(string) == "false"
+				},
 				Description: "Destination URL to inject secrets.",
 			},
 			"secure_access_web_browsing": {
@@ -172,6 +175,23 @@ func resourceStaticSecret() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "Secure browser via Akeyless's Secure Remote Access (SRA)",
+			},
+			"host_provider": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access",
+			},
+			"target": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of linked targets to be associated, Relevant only for Secure Remote Access",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed Secure Remote Access hosts",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
@@ -303,6 +323,8 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.SecureAccessGateway, secureAccessGateway)
 	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&body.SecureAccessWebProxy, secureAccessWebProxy)
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
 
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsKnown() && !rawConfig.IsNull() {
@@ -314,6 +336,9 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 		}
 		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.CreateSecret(ctx).Body(body).Execute()
@@ -479,6 +504,9 @@ func resourceStaticSecretRead(d *schema.ResourceData, m any) error {
 	}
 
 	common.GetSraFromItem(d, itemOut)
+	if err = common.SetSraHostProvider(d, itemOut.ItemGeneralInfo.SecureRemoteAccessDetails); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -550,6 +578,20 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	secureAccessGateway := d.Get("secure_access_gateway").(string)
 	secureAccessRdpUser := d.Get("secure_access_rdp_user").(string)
 	secureAccessWebProxy := d.Get("secure_access_web_proxy").(bool)
+	previousSecureAccessEnable, _ := d.GetChange("secure_access_enable")
+	hadSraEnabled, _ := previousSecureAccessEnable.(string)
+	hasOtherSraUpdate := d.HasChange("secure_access_ssh_creds") ||
+		d.HasChange("secure_access_url") ||
+		d.HasChange("secure_access_web_browsing") ||
+		d.HasChange("secure_access_host") ||
+		d.HasChange("secure_access_ssh_user") ||
+		d.HasChange("secure_access_certificate_issuer") ||
+		d.HasChange("secure_access_gateway") ||
+		d.HasChange("secure_access_rdp_user") ||
+		d.HasChange("secure_access_web_proxy") ||
+		d.HasChange("host_provider") ||
+		d.HasChange("target") ||
+		d.HasChange("secure_access_enforce_hosts_restriction")
 
 	bodyItem := akeyless_api.UpdateItem{
 		Name:    path,
@@ -569,20 +611,26 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 
 	common.GetAkeylessPtr(&bodyItem.Description, description)
 	common.GetAkeylessPtr(&bodyItem.ChangeEvent, changeEvent)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessEnable, secureAccessEnable)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCreds, secureAccessSshCreds)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessUrl, secureAccessUrl)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessWebBrowsing, secureAccessWebBrowsing)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHost)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessSshCredsUser, secureAccessSshUser)
+	hasSraUpdate := hasOtherSraUpdate ||
+		(d.HasChange("secure_access_enable") && (hadSraEnabled == "true" || secureAccessEnable != "false"))
+	if hasSraUpdate {
+		common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHostList)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessEnable, secureAccessEnable)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessSshCreds, secureAccessSshCreds)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessUrl, secureAccessUrl)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessWebBrowsing, secureAccessWebBrowsing)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessHost, secureAccessHost)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessSshCredsUser, secureAccessSshUser)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessGateway, secureAccessGateway)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessRdpUser, secureAccessRdpUser)
+		common.GetAkeylessPtr(&bodyItem.SecureAccessWebProxy, secureAccessWebProxy)
+		common.GetAkeylessPtr(&bodyItem.HostProvider, d.Get("host_provider").(string))
+		common.GetAkeylessPtr(&bodyItem.Target, common.ExpandStringList(d.Get("target").([]interface{})))
+	}
 	common.GetAkeylessPtr(&bodyItem.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&bodyItem.ItemCustomFields, itemCustomFields)
 	common.GetAkeylessPtr(&bodyItem.MaxVersions, maxVersions)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessGateway, secureAccessGateway)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessRdpUser, secureAccessRdpUser)
-	common.GetAkeylessPtr(&bodyItem.SecureAccessWebProxy, secureAccessWebProxy)
 
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsKnown() && !rawConfig.IsNull() {
@@ -594,6 +642,9 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 		}
 		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&bodyItem.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&bodyItem.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.UpdateItem(ctx).Body(bodyItem).Execute()

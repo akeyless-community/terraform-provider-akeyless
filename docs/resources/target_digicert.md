@@ -23,6 +23,7 @@ DigiCert Target resource
 ### Optional
 
 - `acme_challenge` (String) ACME challenge type. Options: [dns]
+- `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `digicert_url` (String) DigiCert ACME endpoint selector. Options: [us-production/eu-production/us-demo/eu-demo]
 - `dns_target_creds` (String) Name of existing cloud target for DNS credentials. Required when challenge type is dns. Supported providers: AWS, Azure, GCP, Cloudflare

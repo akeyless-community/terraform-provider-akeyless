@@ -289,3 +289,143 @@ func checkSecretExistsRemotely(path string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+func TestStaticSecretSecureAccessHostsRestriction(t *testing.T) {
+	t.Parallel()
+	secretName := "test_secret_sra_hosts_restriction"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path                                    = "%v"
+			value                                   = "value1"
+			secure_access_enable                    = "true"
+			secure_access_host                      = ["127.0.0.1"]
+			secure_access_url                       = "http://abc.com"
+			host_provider                           = "explicit"
+			secure_access_enforce_hosts_restriction = true
+		}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path                                    = "%v"
+			value                                   = "value1"
+			secure_access_enable                    = "true"
+			secure_access_host                      = ["127.0.0.1"]
+			secure_access_url                       = "http://abc.com"
+			host_provider                           = "explicit"
+			secure_access_enforce_hosts_restriction = false
+		}
+	`, secretName, secretPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkStaticSecretDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "secure_access_enforce_hosts_restriction", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkSecretExistsRemotely(secretPath),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "secure_access_enforce_hosts_restriction", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestStaticSecretDescriptionUpdateWithoutSRA(t *testing.T) {
+	t.Parallel()
+
+	secretName := "static_secret_update_without_sra"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+resource "akeyless_static_secret" "%[1]s" {
+	path        = "%[2]s"
+	value       = "test value"
+	description = "before-update"
+}
+`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+resource "akeyless_static_secret" "%[1]s" {
+	path        = "%[2]s"
+	value       = "test value"
+	description = "after-update"
+}
+`, secretName, secretPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkStaticSecretDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				Config: configUpdate,
+				Check: resource.TestCheckResourceAttr(
+					"akeyless_static_secret."+secretName,
+					"description",
+					"after-update",
+				),
+			},
+		},
+	})
+}
+
+func TestStaticSecretDisableSRA(t *testing.T) {
+	t.Parallel()
+
+	secretName := "static_secret_disable_sra"
+	secretPath := testPath(secretName)
+
+	config := fmt.Sprintf(`
+resource "akeyless_static_secret" "%[1]s" {
+	path                 = "%[2]s"
+	value                = "test value"
+	secure_access_enable = "true"
+	secure_access_url    = "http://example.com"
+}
+`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+resource "akeyless_static_secret" "%[1]s" {
+	path                 = "%[2]s"
+	value                = "test value"
+	secure_access_enable = "false"
+}
+`, secretName, secretPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		CheckDestroy:      checkStaticSecretDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"akeyless_static_secret."+secretName,
+						"secure_access_enable",
+						"false",
+					),
+				),
+			},
+			{
+				Config:   configUpdate,
+				PlanOnly: true,
+			},
+		},
+	})
+}

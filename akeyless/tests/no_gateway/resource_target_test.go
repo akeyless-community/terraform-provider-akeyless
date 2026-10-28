@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
@@ -1333,4 +1334,188 @@ func TestTargetZeroSslResource(t *testing.T) {
 	`, targetName, targetPath)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
+func TestTargetLinkedResourceDeleteProtection(t *testing.T) {
+	targetName := "linked_target_delete_protection"
+	targetPath := testPath(targetName)
+	resourceName := "akeyless_target_linked." + targetName
+
+	config := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name              = "%v"
+			hosts             = "www.test1.com;test"
+			type              = "mysql"
+			max_versions      = "5"
+			delete_protection = "true"
+		}
+	`, targetName, targetPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_linked" "%v" {
+			name              = "%v"
+			hosts             = "www.test1.com;test"
+			type              = "mysql"
+			max_versions      = "6"
+			delete_protection = "false"
+		}
+	`, targetName, targetPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "max_versions", "5"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "max_versions", "6"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestTargetOpenaiResourceCodexOauth(t *testing.T) {
+	targetName := "openai_target_codex_oauth"
+	targetPath := testPath(targetName)
+	resourceName := "akeyless_target_openai." + targetName
+
+	oauthConfig := func(description, refreshToken, accessToken string, tokenVersion int) string {
+		return fmt.Sprintf(`
+			resource "akeyless_target_openai" "%v" {
+				name                         = "%v"
+				openai_url                   = "https://api.openai.com/v1"
+				description                  = "%v"
+				codex_oauth_mode             = "chatgpt_oauth"
+				codex_oauth_account_id       = "test-account-id"
+				codex_oauth_refresh_token_wo = "%v"
+				codex_oauth_access_token_wo  = "%v"
+				codex_oauth_token_wo_version = %v
+			}
+		`, targetName, targetPath, description, refreshToken, accessToken, tokenVersion)
+	}
+
+	configMissingAccountId := fmt.Sprintf(`
+		resource "akeyless_target_openai" "%v" {
+			name                         = "%v"
+			codex_oauth_mode             = "chatgpt_oauth"
+			codex_oauth_refresh_token_wo = "test-refresh-token"
+		}
+	`, targetName, targetPath)
+
+	configApiKey := fmt.Sprintf(`
+		resource "akeyless_target_openai" "%v" {
+			name        = "%v"
+			openai_url  = "https://api.openai.com/v1"
+			description = "api key mode"
+			api_key     = "test-api-key"
+		}
+	`, targetName, targetPath)
+
+	tokenVersionError := regexp.MustCompile("codex_oauth_token_wo_version must change on every update")
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      configMissingAccountId,
+				ExpectError: regexp.MustCompile("codex-oauth-account-id must not be empty"),
+			},
+			{
+				Config: oauthConfig("d1", "refresh-1", "", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "codex_oauth_mode", "chatgpt_oauth"),
+					resource.TestCheckResourceAttr(resourceName, "codex_oauth_account_id", "test-account-id"),
+					resource.TestCheckNoResourceAttr(resourceName, "codex_oauth_refresh_token_wo"),
+					resource.TestCheckNoResourceAttr(resourceName, "codex_oauth_access_token_wo"),
+				),
+			},
+			{
+				Config:      oauthConfig("d2", "refresh-1", "", 1),
+				PlanOnly:    true,
+				ExpectError: tokenVersionError,
+			},
+			{
+				Config: oauthConfig("d2", "refresh-2", "", 2),
+				Check:  resource.TestCheckResourceAttr(resourceName, "description", "d2"),
+			},
+			{
+				Config:   oauthConfig("d2", "refresh-3", "access-1", 2),
+				PlanOnly: true,
+			},
+			{
+				Config:   oauthConfig("d2", "refresh-2", "", 2),
+				PlanOnly: true,
+			},
+			{
+				Config: configApiKey,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "codex_oauth_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "codex_oauth_account_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestTargetDigiCertResourceDeleteProtection(t *testing.T) {
+	eabKeyId := os.Getenv("AKEYLESS_DIGICERT_EAB_KEY_ID")
+	eabHmacKey := os.Getenv("AKEYLESS_DIGICERT_EAB_HMAC_KEY")
+	if eabKeyId == "" || eabHmacKey == "" {
+		t.Skip("skipping: AKEYLESS_DIGICERT_EAB_KEY_ID and AKEYLESS_DIGICERT_EAB_HMAC_KEY must be set for DigiCert target tests")
+	}
+
+	dnsTargetPath := testPath("dns_target_digicert_delete_protection")
+	testutils.CreateTargetByType(t, dnsTargetPath, "aws_target_details", map[string]any{
+		"access_key_id": "test",
+		"access_key":    "test",
+		"region":        "us-east-1",
+	})
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, dnsTargetPath)
+	})
+
+	targetName := "digicert_target_delete_protection"
+	targetPath := testPath(targetName)
+	resourceName := "akeyless_target_digicert." + targetName
+
+	configTemplate := `
+		resource "akeyless_target_digicert" "%v" {
+			name              = "%v"
+			email             = "test@example.com"
+			acme_challenge    = "dns"
+			digicert_url      = "us-demo"
+			dns_target_creds  = "%v"
+			hosted_zone       = "Z1234567890"
+			eab_hmac_key      = "%v"
+			eab_key_id        = "%v"
+			delete_protection = "%v"
+		}
+	`
+	config := fmt.Sprintf(configTemplate, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId, "true")
+	configUpdate := fmt.Sprintf(configTemplate, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId, "false")
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.TestCheckResourceAttr(resourceName, "delete_protection", "true"),
+			},
+			{
+				Config: configUpdate,
+				Check:  resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+			},
+		},
+	})
 }
