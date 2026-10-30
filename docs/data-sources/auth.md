@@ -17,14 +17,14 @@ Authenticate to Akeyless and returns a token to be used by the provider
 
 ### Optional
 
-- `api_key_login` (Block List) A configuration block, described below, that attempts to authenticate using API-Key. (see [below for nested schema](#nestedblock--api_key_login))
-- `aws_iam_login` (Block List) A configuration block, described below, that attempts to authenticate using AWS-IAM authentication credentials. (see [below for nested schema](#nestedblock--aws_iam_login))
-- `azure_ad_login` (Block List) A configuration block, described below, that attempts to authenticate using Azure Active Directory authentication. (see [below for nested schema](#nestedblock--azure_ad_login))
-- `cert_login` (Block List) A configuration block, described below, that attempts to authenticate using Certificate authentication.  The Certificate and the Private key can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_CERT and AKEYLESS_AUTH_KEY. (see [below for nested schema](#nestedblock--cert_login))
-- `email_login` (Block List) A configuration block, described below, that attempts to authenticate using email and password. (see [below for nested schema](#nestedblock--email_login))
-- `gcp_login` (Block List) A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials. (see [below for nested schema](#nestedblock--gcp_login))
-- `jwt_login` (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT. (see [below for nested schema](#nestedblock--jwt_login))
-- `uid_login` (Block List) A configuration block, described below, that attempts to authenticate using Universal Identity authentication. (see [below for nested schema](#nestedblock--uid_login))
+- `api_key_login` (Block List) A configuration block, described below, that attempts to authenticate using API-Key. The access ID and key can be pulled out of the environment variables AKEYLESS_ACCESS_ID and AKEYLESS_ACCESS_KEY. (see [below for nested schema](#nestedblock--api_key_login))
+- `aws_iam_login` (Block List) A configuration block, described below, that attempts to authenticate using AWS-IAM authentication credentials. The access ID can be pulled out of the environment variable AKEYLESS_ACCESS_ID. (see [below for nested schema](#nestedblock--aws_iam_login))
+- `azure_ad_login` (Block List) A configuration block, described below, that attempts to authenticate using Azure Active Directory authentication. The access ID can be pulled out of the environment variable AKEYLESS_ACCESS_ID. (see [below for nested schema](#nestedblock--azure_ad_login))
+- `cert_login` (Block List) A configuration block, described below, that attempts to authenticate using Certificate authentication.  The access ID, Certificate and Private key can be provided as arguments or pulled out of the environment variables AKEYLESS_ACCESS_ID, AKEYLESS_AUTH_CERT and AKEYLESS_AUTH_KEY. (see [below for nested schema](#nestedblock--cert_login))
+- `email_login` (Block List) A configuration block, described below, that attempts to authenticate using email and password. The email and password can be pulled out of the environment variables AKEYLESS_EMAIL and AKEYLESS_PASSWORD. (see [below for nested schema](#nestedblock--email_login))
+- `gcp_login` (Block List) A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials. The access ID and audience can be pulled out of the environment variables AKEYLESS_ACCESS_ID and AKEYLESS_GCP_AUDIENCE. (see [below for nested schema](#nestedblock--gcp_login))
+- `jwt_login` (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The access ID and JWT can be provided as arguments or pulled out of the environment variables AKEYLESS_ACCESS_ID and AKEYLESS_AUTH_JWT (or a file named by AKEYLESS_AUTH_JWT_FILE). (see [below for nested schema](#nestedblock--jwt_login))
+- `uid_login` (Block List) A configuration block, described below, that attempts to authenticate using Universal Identity authentication. The access ID and token can be pulled out of the environment variables AKEYLESS_ACCESS_ID and AKEYLESS_AUTH_UID. (see [below for nested schema](#nestedblock--uid_login))
 
 ### Read-Only
 
