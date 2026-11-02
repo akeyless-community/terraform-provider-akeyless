@@ -302,6 +302,8 @@ func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, ta
 		return extractAerospikeTargetDetails(details.AerospikeTargetDetails)
 	case details.ArtifactoryTargetDetails != nil:
 		return extractArtifactoryTargetDetails(details.ArtifactoryTargetDetails)
+	case details.AtlassianTargetDetails != nil:
+		return extractAtlassianTargetDetails(details.AtlassianTargetDetails)
 	case details.AwsTargetDetails != nil:
 		return extractAwsTargetDetails(details.AwsTargetDetails)
 	case details.AzureTargetDetails != nil:
@@ -1232,6 +1234,30 @@ func extractGodaddyTargetDetails(details *akeyless_api.GodaddyTargetDetails) (ma
 	}
 
 	value, err := buildTargetDetailsVal(m, "godaddy_target_details")
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func extractAtlassianTargetDetails(details *akeyless_api.AtlassianTargetDetails) (map[string]string, error) {
+
+	m := make(map[string]interface{})
+
+	if details.AtlassianUrl != nil {
+		m["url"] = *details.AtlassianUrl
+	}
+	if details.AtlassianEmail != nil {
+		m["email"] = *details.AtlassianEmail
+	}
+	if details.AtlassianToken != nil {
+		m["token"] = *details.AtlassianToken
+	}
+	if details.AtlassianAutomationKey != nil {
+		m["automation_key"] = *details.AtlassianAutomationKey
+	}
+
+	value, err := buildTargetDetailsVal(m, "atlassian_target_details")
 	if err != nil {
 		return nil, err
 	}
