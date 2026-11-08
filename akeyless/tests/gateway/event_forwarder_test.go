@@ -20,6 +20,7 @@ func TestEventForwarderEmail(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 
 	eventForwarderName := "test-event-forwarder-email"
+	overrideURL := getCurrentGatewayURL(t)
 
 	config := fmt.Sprintf(`
 		resource "akeyless_event_forwarder_email" "%v" {
@@ -29,14 +30,14 @@ func TestEventForwarderEmail(t *testing.T) {
 			auth_methods_event_source_locations = ["/auth-methods/*"]
 			event_types = ["request-access", "certificate-pending-expiration", "email-auth-method-approved", "usage", "rotation-usage", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			email_to = "sendmemail@akeyless.io,sendmemail2@akeyless.io"
-			override_url = "https://example.com"
+			override_url = "%v"
 			include_error = "true"
 			runner_type = "periodic"
 			every = "1"
 			enable = "true"
 			description = "test email event forwarder"
 		}
-	`, eventForwarderName, eventForwarderName)
+	`, eventForwarderName, eventForwarderName, overrideURL)
 
 	configUpdate := fmt.Sprintf(`
 		resource "akeyless_event_forwarder_email" "%v" {
@@ -45,7 +46,7 @@ func TestEventForwarderEmail(t *testing.T) {
 			targets_event_source_locations = ["targets/*", "targets2/*"]
 			event_types = ["secret-sync", "request-access", "gateway-inactive", "static-secret-updated", "rate-limiting", "usage-report"]
 			email_to = "sendmemail123@akeyless.io"
-			override_url = "https://example2.com"
+			override_url = "%v"
 			include_error = "false"
 			runner_type = "periodic"
 			every = "1"
@@ -53,9 +54,34 @@ func TestEventForwarderEmail(t *testing.T) {
 			keep_prev_version = "true"
 			description = "test email event forwarder update"
         }
-	`, eventForwarderName, eventForwarderName)
+	`, eventForwarderName, eventForwarderName, overrideURL)
 
 	testEventForwarderResource(t, eventForwarderName, config, configUpdate)
+}
+
+func getCurrentGatewayURL(t *testing.T) string {
+	t.Helper()
+
+	client, token, err := testutils.GetClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out, _, err := client.ListGateways(context.Background()).Body(akeyless_api.ListGateways{
+		Token: &token,
+	}).Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, gateway := range out.GetClusters() {
+		if gateway.GetCurrentGw() && gateway.GetClusterUrl() != "" {
+			return gateway.GetClusterUrl()
+		}
+	}
+
+	t.Fatal("current Gateway URL was not found")
+	return ""
 }
 
 func TestEventForwarderWebhook(t *testing.T) {
