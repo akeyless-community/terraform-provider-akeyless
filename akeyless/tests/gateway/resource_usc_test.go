@@ -225,3 +225,47 @@ func TestUscResourceGcpScopeValidation(t *testing.T) {
 		},
 	})
 }
+
+func TestUscResourceGcpScopeRead(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetPath := testPath("test-target-gcp-usc-scope")
+	testutils.CreateTargetByType(t, targetPath, "gcp_target_details", map[string]any{
+		"gcp_service_account_key": testutils.GCP_KEY,
+	})
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	uscName := "gcp_scope"
+	uscPath := testPath("test-usc-gcp-scope")
+	resourceName := "akeyless_usc." + uscName
+	config := fmt.Sprintf(`
+		resource "akeyless_usc" "%v" {
+			name                = "%v"
+			target_to_associate = "%v"
+			gcp_scope           = "folder"
+			gcp_folder_id       = "123456"
+			gcp_organization_id = "987654"
+		}
+	`, uscName, uscPath, targetPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "gcp_scope", "folder"),
+					resource.TestCheckResourceAttr(resourceName, "gcp_folder_id", "123456"),
+					resource.TestCheckResourceAttr(resourceName, "gcp_organization_id", "987654"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}

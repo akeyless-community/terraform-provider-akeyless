@@ -374,7 +374,10 @@ func GetSraFromItem(d *schema.ResourceData, item *akeyless_api.Item) error {
 
 func SetSraHostProvider(d *schema.ResourceData, sra *akeyless_api.SecureRemoteAccess) error {
 	if sra == nil {
-		return nil
+		return d.Set("target", nil)
+	}
+	if err := d.Set("target", sra.GetTargets()); err != nil {
+		return err
 	}
 	if hostProvider, ok := sra.GetHostProviderTypeOk(); ok {
 		err := d.Set("host_provider", *hostProvider)

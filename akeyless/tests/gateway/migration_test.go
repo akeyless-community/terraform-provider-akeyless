@@ -190,8 +190,6 @@ func TestGatewayMigrationK8s(t *testing.T) {
 }
 
 func TestGatewayMigrationCertificate(t *testing.T) {
-	// TODO: Re-enable after gateway migration update no longer classifies certificate requests as Active Directory.
-	t.Skip("gateway migration update requires an unrelated ad-target-name")
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_cert"
@@ -219,8 +217,6 @@ func TestGatewayMigrationCertificate(t *testing.T) {
 }
 
 func TestGatewayMigrationActiveDirectory(t *testing.T) {
-	// TODO: Re-enable after Gateway migration update routing ignores the SDK default port_ranges for Active Directory updates.
-	t.Skip("gateway migration update misclassifies Active Directory as Certificate and requires hosts")
 	testutils.SkipIfNoGateway(t)
 
 	targetName := testPath("ad-ldap-target")
@@ -277,8 +273,6 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 }
 
 func TestGatewayMigrationServerInventory(t *testing.T) {
-	// TODO: Re-enable after gateway migration update no longer classifies server-inventory requests as Active Directory.
-	t.Skip("gateway migration update requires an unrelated ad-target-name")
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_si"

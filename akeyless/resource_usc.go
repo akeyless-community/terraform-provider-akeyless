@@ -247,6 +247,24 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 						return err
 					}
 				}
+				if gcpScope, ok := attr["gcp_scope"]; ok {
+					err := d.Set("gcp_scope", gcpScope)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpFolderId, ok := attr["gcp_folder_id"]; ok {
+					err := d.Set("gcp_folder_id", gcpFolderId)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpOrganizationId, ok := attr["gcp_organization_id"]; ok {
+					err := d.Set("gcp_organization_id", gcpOrganizationId)
+					if err != nil {
+						return err
+					}
+				}
 				if uscPrefix, ok := attr["usc_prefix"]; ok {
 					err := d.Set("usc_prefix", uscPrefix)
 					if err != nil {
