@@ -75,12 +75,12 @@ func getCurrentGatewayURL(t *testing.T) string {
 	}
 
 	for _, gateway := range out.GetClusters() {
-		if gateway.GetCurrentGw() && gateway.GetClusterUrl() != "" {
+		if (gateway.GetStatus() == "Running" || gateway.GetStatus() == "Warning") && gateway.GetClusterUrl() != "" {
 			return gateway.GetClusterUrl()
 		}
 	}
 
-	t.Fatal("current Gateway URL was not found")
+	t.Fatal("active Gateway URL was not found")
 	return ""
 }
 
