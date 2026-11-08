@@ -221,8 +221,9 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 					return err
 				}
 			}
+			attr := make(map[string]string)
 			if assoc.Attributes != nil {
-				attr := *assoc.Attributes
+				attr = *assoc.Attributes
 				if k8sNamespace, ok := attr["k8s_namespace"]; ok {
 					err := d.Set("k8s_namespace", k8sNamespace)
 					if err != nil {
@@ -231,36 +232,6 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 				}
 				if azureKvName, ok := attr["azure_vault"]; ok {
 					err := d.Set("azure_kv_name", azureKvName)
-					if err != nil {
-						return err
-					}
-				}
-				if gcpProjectId, ok := attr["gcp_project_id"]; ok {
-					err := d.Set("gcp_project_id", gcpProjectId)
-					if err != nil {
-						return err
-					}
-				}
-				if gcpSmRegions, ok := attr["gcp_sm_regions"]; ok {
-					err := d.Set("gcp_sm_regions", gcpSmRegions)
-					if err != nil {
-						return err
-					}
-				}
-				if gcpScope, ok := attr["gcp_scope"]; ok {
-					err := d.Set("gcp_scope", gcpScope)
-					if err != nil {
-						return err
-					}
-				}
-				if gcpFolderId, ok := attr["gcp_folder_id"]; ok {
-					err := d.Set("gcp_folder_id", gcpFolderId)
-					if err != nil {
-						return err
-					}
-				}
-				if gcpOrganizationId, ok := attr["gcp_organization_id"]; ok {
-					err := d.Set("gcp_organization_id", gcpOrganizationId)
 					if err != nil {
 						return err
 					}
@@ -277,6 +248,9 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 						return err
 					}
 				}
+			}
+			if err := setUscGcpReadFields(d, attr); err != nil {
+				return err
 			}
 		}
 	}
@@ -297,6 +271,22 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 	d.SetId(path)
 
 	return nil
+}
+
+func setUscGcpReadFields(d *schema.ResourceData, attributes map[string]string) error {
+	if err := d.Set("gcp_project_id", attributes["gcp_project_id"]); err != nil {
+		return err
+	}
+	if err := d.Set("gcp_sm_regions", attributes["gcp_sm_regions"]); err != nil {
+		return err
+	}
+	if err := d.Set("gcp_scope", attributes["gcp_scope"]); err != nil {
+		return err
+	}
+	if err := d.Set("gcp_folder_id", attributes["gcp_folder_id"]); err != nil {
+		return err
+	}
+	return d.Set("gcp_organization_id", attributes["gcp_organization_id"])
 }
 
 func resourceUscUpdate(d *schema.ResourceData, m any) error {
