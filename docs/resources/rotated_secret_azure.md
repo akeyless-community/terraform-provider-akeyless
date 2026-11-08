@@ -26,10 +26,13 @@ Azure rotated secret resource
 - `api_id` (String) API ID to rotate (relevant only for rotator-type=api-key)
 - `api_key` (String) API key to rotate (relevant only for rotator-type=api-key)
 - `app_id` (String) Id of the azure app that hold the serect to be rotated (relevant only for rotator-type=api-key & authentication-credentials=use-target-creds)
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `authentication_credentials` (String) The credentials to connect with use-self-creds/use-target-creds
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `explicitly_set_sa` (String) If set, explicitly provide the storage account details [true/false]
 - `grace_rotation` (String) Create a new access key without deleting the old key from AWS/Azure/GCP for backup (relevant only for AWS/Azure/GCP) [true/false]
 - `grace_rotation_hour` (Number) The Hour of the grace rotation in UTC
@@ -53,6 +56,7 @@ Azure rotated secret resource
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
+- `skip_dry_run` (Boolean) Skip dry run
 - `storage_account_key_name` (String) The name of the storage account key to rotate [key1/key2/kerb1/kerb2] (relevat to azure-storage-account)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `username` (String) The user principal name to rotate his password (relevant only for rotator-type=password)

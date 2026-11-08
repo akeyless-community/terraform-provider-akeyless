@@ -96,6 +96,12 @@ func resourceAuthMethodUniversalIdentity() *schema.Resource {
 				Description: "Token ttl (in minutes)",
 				Default:     60,
 			},
+			"uid_expiration_event_at": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Trigger an event when Universal Identity Token TTL has reached the specified percentage (e.g. 10, 20, 50)",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"audit_logs_claims": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -141,6 +147,8 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	denyRotate := d.Get("deny_rotate").(bool)
 	denyInheritance := d.Get("deny_inheritance").(bool)
 	ttl := d.Get("ttl").(int)
+	uidExpirationEventAtSet := d.Get("uid_expiration_event_at").(*schema.Set)
+	uidExpirationEventAt := common.ExpandStringList(uidExpirationEventAtSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
@@ -161,6 +169,7 @@ func resourceAuthMethodUniversalIdentityCreate(d *schema.ResourceData, m interfa
 	common.GetAkeylessPtr(&body.DenyRotate, denyRotate)
 	common.GetAkeylessPtr(&body.DenyInheritance, denyInheritance)
 	common.GetAkeylessPtr(&body.Ttl, ttl)
+	common.GetAkeylessPtr(&body.UidExpirationEventAt, uidExpirationEventAt)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
@@ -280,6 +289,20 @@ func resourceAuthMethodUniversalIdentityRead(d *schema.ResourceData, m interface
 			return err
 		}
 	}
+	if len(rOut.AccessInfo.UidExpirationEvents) > 0 {
+		vals := make([]string, 0, len(rOut.AccessInfo.UidExpirationEvents))
+		for _, ev := range rOut.AccessInfo.UidExpirationEvents {
+			if ev.PercentPassed != nil {
+				vals = append(vals, strconv.FormatInt(*ev.PercentPassed, 10))
+			}
+		}
+		if len(vals) > 0 {
+			err = d.Set("uid_expiration_event_at", vals)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	if rOut.AccessInfo.AuditLogsClaims != nil {
 		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {
@@ -339,6 +362,8 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	denyRotate := d.Get("deny_rotate").(bool)
 	denyInheritance := d.Get("deny_inheritance").(bool)
 	ttl := d.Get("ttl").(int)
+	uidExpirationEventAtSet := d.Get("uid_expiration_event_at").(*schema.Set)
+	uidExpirationEventAt := common.ExpandStringList(uidExpirationEventAtSet.List())
 	subClaimsSet := d.Get("audit_logs_claims").(*schema.Set)
 	subClaims := common.ExpandStringList(subClaimsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
@@ -359,6 +384,7 @@ func resourceAuthMethodUniversalIdentityUpdate(d *schema.ResourceData, m interfa
 	common.GetAkeylessPtr(&body.DenyRotate, denyRotate)
 	common.GetAkeylessPtr(&body.DenyInheritance, denyInheritance)
 	common.GetAkeylessPtr(&body.Ttl, ttl)
+	common.GetAkeylessPtr(&body.UidExpirationEventAt, uidExpirationEventAt)
 	common.GetAkeylessPtr(&body.AuditLogsClaims, subClaims)
 	common.GetAkeylessPtr(&body.NewName, name)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)

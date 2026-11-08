@@ -24,10 +24,13 @@ Snowflake dynamic secret resource
 - `account` (String) Account name
 - `account_password` (String, Sensitive) Database Password
 - `account_username` (String) Database Username
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `auth_mode` (String) The authentication mode for the temporary user [password/key]
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `db_name` (String) Database name
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `key_algo` (String) Key algorithm
@@ -36,6 +39,7 @@ Snowflake dynamic secret resource
 - `private_key` (String, Sensitive) RSA Private key (base64 encoded)
 - `private_key_passphrase` (String, Sensitive) The Private key passphrase
 - `role` (String) User role
+- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
 - `user_ttl` (String) User TTL

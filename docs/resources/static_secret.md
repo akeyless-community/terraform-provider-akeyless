@@ -46,10 +46,13 @@ resource "akeyless_static_secret" "secret" {
 ### Optional
 
 - `accessibility` (String) For personal password manager
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `change_event` (String) Trigger an event when a secret value changed [true/false] (Relevant only for Static Secret)
 - `custom_field` (Map of String, Sensitive) Additional custom fields to associate with the item (e.g fieldName1=value1) (relevant only for type 'password')
 - `delete_protection` (String) Protection from accidental deletion of this auth method, [true/false]
 - `description` (String) Description of the object
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `format` (String) Secret format [text/json/key-value] (relevant only for type 'generic')
 - `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `inject_url` (Set of String) List of URLs associated with the item (relevant only for type 'password')

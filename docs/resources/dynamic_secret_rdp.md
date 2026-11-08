@@ -22,9 +22,12 @@ RDP dynamic secret resource
 ### Optional
 
 - `allow_user_extend_session` (Number) Allow user to extend session
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `encryption_key_name` (String) Dynamic producer encryption key
 - `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from (relevant only for fixed-user-only=true)
 - `fixed_user_only` (String) Allow access using externally (IdP) provided username [true/false]
@@ -46,6 +49,7 @@ RDP dynamic secret resource
 - `secure_access_rdp_domain` (String) Required when the Dynamic Secret is used for a domain user
 - `secure_access_rdp_user` (String) Override the RDP Domain username
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `target_name` (String) Target name
 - `user_ttl` (String) User TTL

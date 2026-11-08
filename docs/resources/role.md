@@ -76,6 +76,7 @@ output "demo-role" {
 ### Optional
 
 - `analytics_access` (String) Allow this role to view analytics. Currently only 'none', 'own' and 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
+- `approve_access_request` (String) Allow this role to approve Access Requests for items. Currently only 'none', 'scoped' and 'all' values are supported.
 - `assoc_auth_method` (Block Set, Deprecated) Create an association between role and auth method (see [below for nested schema](#nestedblock--assoc_auth_method))
 - `audit_access` (String) Allow this role to view audit logs. Currently only 'none', 'own', 'scoped' and 'all' values are supported, allowing associated auth methods to view audit logs produced by the same auth methods.
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
@@ -88,6 +89,7 @@ output "demo-role" {
 - `reverse_rbac_access` (String) Allow this role to view Reverse RBAC. Supported values: 'scoped', 'all'.
 - `rules` (Block Set) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
 - `sra_reports_access` (String) Allow this role to view SRA Clusters. Currently only 'none', 'scoped', 'all' values are supported.
+- `unlock_secrets` (String) Allow this role to force-unlock locked secrets. Currently only 'none', 'scoped' and 'all' values are supported.
 - `usage_reports_access` (String) Allow this role to view Usage Report. Currently only 'none' and 'all' values are supported.
 
 ### Read-Only

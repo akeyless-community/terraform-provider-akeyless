@@ -132,6 +132,11 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 				Optional:    true,
 				Description: "The path to the file containing the private key (relevant only for rotator-type=key)",
 			},
+			"rotation_statement": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Snowflake rotation statement",
+			},
 			"rotation_event_in": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -142,6 +147,19 @@ func resourceRotatedSecretSnowflake() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
+			},
+
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
 			},
 		},
 	}
@@ -178,6 +196,7 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	maxVersions := d.Get("max_versions").(string)
 	privateKey := d.Get("private_key").(string)
 	privateKeyFileName := d.Get("private_key_file_name").(string)
+	rotationStatement := d.Get("rotation_statement").(string)
 	rotationEventInList := d.Get("rotation_event_in").([]interface{})
 	rotationEventIn := common.ExpandStringList(rotationEventInList)
 
@@ -204,8 +223,24 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
 	common.GetAkeylessPtr(&body.PrivateKeyFileName, privateKeyFileName)
+	common.GetAkeylessPtr(&body.RotationStatement, rotationStatement)
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.RotatedSecretCreateSnowflake(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create rotated secret", resp, err)
@@ -334,6 +369,12 @@ func resourceRotatedSecretSnowflakeRead(d *schema.ResourceData, m interface{}) e
 				return err
 			}
 		}
+		if rsd.RotationStatement != nil {
+			err = d.Set("rotation_statement", *rsd.RotationStatement)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	rOut, res, err := client.RotatedSecretGetValue(ctx).Body(body).Execute()
@@ -405,6 +446,7 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	maxVersions := d.Get("max_versions").(string)
 	privateKey := d.Get("private_key").(string)
 	privateKeyFileName := d.Get("private_key_file_name").(string)
+	rotationStatement := d.Get("rotation_statement").(string)
 	rotationEventInList := d.Get("rotation_event_in").([]interface{})
 	rotationEventIn := common.ExpandStringList(rotationEventInList)
 	keepPrevVersion := d.Get("keep_prev_version").(string)
@@ -440,9 +482,25 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
 	common.GetAkeylessPtr(&body.PrivateKeyFileName, privateKeyFileName)
+	common.GetAkeylessPtr(&body.RotationStatement, rotationStatement)
 	common.GetAkeylessPtr(&body.RotationEventIn, rotationEventIn)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.RotatedSecretUpdateSnowflake(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update rotated secret", resp, err)

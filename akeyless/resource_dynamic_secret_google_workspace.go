@@ -135,7 +135,19 @@ func resourceDynamicSecretGoogleWorkspace() *schema.Resource {
 				Optional:    true,
 				Description: "Web-Proxy via Akeyless's Secure Remote Access (SRA)",
 			},
-		},
+
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			}},
 	}
 }
 
@@ -204,7 +216,21 @@ func resourceDynamicSecretGoogleWorkspaceCreate(d *schema.ResourceData, m interf
 		}
 		body.ItemCustomFields = &fields
 	}
-
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.DynamicSecretCreateGoogleWorkspace(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create dynamic secret", resp, err)
@@ -330,6 +356,10 @@ func resourceDynamicSecretGoogleWorkspaceRead(d *schema.ResourceData, m interfac
 		}
 	}
 
+	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
+		return err
+	}
+
 	d.SetId(path)
 
 	return nil
@@ -400,7 +430,21 @@ func resourceDynamicSecretGoogleWorkspaceUpdate(d *schema.ResourceData, m interf
 		}
 		body.ItemCustomFields = &fields
 	}
-
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+	}
 	_, resp, err := client.DynamicSecretUpdateGoogleWorkspace(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update dynamic secret", resp, err)

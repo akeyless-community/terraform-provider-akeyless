@@ -56,6 +56,9 @@ func TestStaticResource(t *testing.T) {
 			accessibility 		= "regular"
 			multiline_value 	= false
 			change_event 		= "true"
+			ara_enabled 		= true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum 	= true
 		}
 	`, secretName, secretPath)
 
@@ -68,6 +71,9 @@ func TestStaticResource(t *testing.T) {
 			secure_access_url 			= "http://abc.com"
 			tags 						= ["t1", "t3"]
 			description 				= "bbbb"
+			ara_enabled 				= false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum 			= false
 		}
 	`, secretName, secretPath)
 
@@ -97,6 +103,8 @@ func TestStaticResource(t *testing.T) {
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "accessibility", "regular"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "multiline_value", "false"),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "change_event", "true"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_agentic_runtime_authority", "true"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_ai_quorum", "true"),
 				),
 			},
 			{
@@ -104,6 +112,8 @@ func TestStaticResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkSecretExistsRemotely(secretPath),
 					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "description", "bbbb"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_agentic_runtime_authority", "false"),
+					resource.TestCheckResourceAttr("akeyless_static_secret."+secretName, "enable_ai_quorum", "false"),
 				),
 			},
 			{
@@ -116,7 +126,7 @@ func TestStaticResource(t *testing.T) {
 				ResourceName:            "akeyless_static_secret.test_secret",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"value", "password", "ignore_cache", "accessibility", "format", "keep_prev_version", "max_versions", "multiline_value", "secure_access_enable", "change_event"},
+				ImportStateVerifyIgnore: []string{"value", "password", "ignore_cache", "accessibility", "format", "keep_prev_version", "max_versions", "multiline_value", "secure_access_enable", "change_event", "ara_enabled", "enable_agentic_runtime_authority", "enable_ai_quorum"},
 			},
 		},
 	})
@@ -146,6 +156,8 @@ func TestStaticPasswordResource(t *testing.T) {
 			delete_protection  	= "true"
 			# exercise ignore_cache in Read
 			ignore_cache       = "true"
+			secure_access_enable = "true"
+			secure_access_url = "http://abc.com"
 		}
 	`, secretName, secretPath)
 
@@ -162,6 +174,8 @@ func TestStaticPasswordResource(t *testing.T) {
 			tags 				= ["t5"]
 			description 		= "my updated password"
             keep_prev_version	= "false"
+			secure_access_enable = "true"
+			secure_access_url = "http://abc.com"
 		}
 	`, secretName, secretPath)
 
@@ -173,6 +187,8 @@ func TestStaticPasswordResource(t *testing.T) {
 			password 			= "def"
 			inject_url 			= ["http://abc.com", "http://def.com"]
 			delete_protection  	= "false"
+			secure_access_enable = "true"
+			secure_access_url = "http://abc.com"
 		}
 	`, secretName, secretPath)
 
