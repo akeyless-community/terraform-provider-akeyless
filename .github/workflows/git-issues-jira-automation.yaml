@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Login to Akeyless jira
-        uses: atlassian/gajira-login@v3
+        uses: atlassian/gajira-login@ca13f8850ea309cf44a6e4e0c49d9aa48ac3ca4c # v3
         env:
           JIRA_BASE_URL: ${{ secrets.AKEYLESS_JIRA_BASE_URL }}
           JIRA_USER_EMAIL: ${{ secrets.AKEYLESS_JIRA_USER_EMAIL }}
@@ -32,14 +32,14 @@ jobs:
 
       - name: Find Existing Jira issue
         if: env.jira_issue_exist == 'true'
-        uses: atlassian/gajira-find-issue-key@v3
+        uses: atlassian/gajira-find-issue-key@7d9cbdfce900a0fcf608050ce728620a928be8b6 # v3
         with:
           string: ${{ env.akeyless_jira_issue }}
 
       - name: Create Jira issue
         if: env.jira_issue_exist == 'false' && github.event.action == 'opened'
         id: create-jira-issue
-        uses: atlassian/gajira-create@v3
+        uses: atlassian/gajira-create@1ff0b6bd115a780592b47bfbb63fc4629132e6ec # v3
         with:
           project: ASM
           issuetype: Bug-Field
@@ -52,7 +52,7 @@ jobs:
         run: echo "Jira Issue ${{ steps.create-jira-issue.outputs.issue }} was created"
 
       - name: Label Create Git Issue
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         if: steps.create-jira-issue.outcome == 'success'
         with:
           script: |
@@ -65,7 +65,7 @@ jobs:
 
       - name: Add Comment On Jira issue
         if: env.jira_issue_exist == 'true' && (github.event_name == 'issue_comment' || (github.event_name == 'issues' && github.event.action == 'closed'))
-        uses: atlassian/gajira-comment@v3
+        uses: atlassian/gajira-comment@76589d6b6d0b94b1ca6b01171c01a6affb5d6701 # v3
         with:
           issue: ${{ env.akeyless_jira_issue }}
           comment: ${{ env.jira_description }}
@@ -73,7 +73,7 @@ jobs:
       - name: Transition issue
         if: github.event_name == 'issues' && github.event.action == 'closed' && env.jira_issue_exist == 'true'
         id: transition
-        uses: atlassian/gajira-transition@v3
+        uses: atlassian/gajira-transition@4749176faf14633954d72af7a44d7f2af01cc92b # v3
         with:
           issue: ${{ env.akeyless_jira_issue }}
           transition: "Done"
