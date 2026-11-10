@@ -28,7 +28,7 @@ Certificate data source
 ### Read-Only
 
 - `certificate_pem` (String, Sensitive) The certificate value in pem format
-- `encoded_certificate` (String, Sensitive) The base64 encoded certificate file, returned when format is pfx or jks
+- `encoded_certificate` (String, Sensitive) Base64-encoded certificate data, returned when format is pfx or jks
 - `id` (String) The ID of this resource.
 - `private_key_pem` (String, Sensitive) The private key value in pem format
 

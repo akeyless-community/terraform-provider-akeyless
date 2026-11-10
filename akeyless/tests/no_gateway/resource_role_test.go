@@ -862,6 +862,8 @@ func TestRoleResourceRefreshAccessRulesWithoutRules(t *testing.T) {
 				),
 			},
 			{
+				// Simulate an out-of-band role update and verify that RefreshState restores
+				// access rules when the Terraform configuration has no rules block.
 				PreConfig: func() {
 					client, token := testutils.PrepareClient(t)
 					body := akeyless_api.UpdateRole{

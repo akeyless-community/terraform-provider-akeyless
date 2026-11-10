@@ -194,7 +194,7 @@ func resourceRotatedSecretSsh() *schema.Resource {
 			"key_algorithm": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
+				Default:     "ED25519",
 				Description: "The key algorithm to generate with when no private key is supplied. options: [ED25519/RSA2048/RSA3072/RSA4096/ECDSA256/ECDSA384/ECDSA521]",
 			},
 			"secure_access_enforce_hosts_restriction": {

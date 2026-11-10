@@ -161,6 +161,19 @@ func resourceStaticSecretSyncRead(d *schema.ResourceData, m any) error {
 		}
 	}
 
+	err = d.Set("name", secretName)
+	if err != nil {
+		return err
+	}
+	err = d.Set("usc_name", uscName)
+	if err != nil {
+		return err
+	}
+	err = d.Set("remote_secret_name", remoteSecretName)
+	if err != nil {
+		return err
+	}
+
 	d.SetId(buildStaticUscSyncId(secretName, uscName, remoteSecretName))
 
 	return nil
@@ -205,49 +218,7 @@ func resourceStaticSecretSyncDelete(d *schema.ResourceData, m any) error {
 
 func resourceStaticSecretSyncImport(d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
 
-	ctx := context.Background()
-
-	provider := m.(*providerMeta)
-	client := *provider.client
-	token := *provider.token
-
-	secretName, uscName, remoteSecretName, err := extractStaticUscSyncFromId(d.Id())
-	if err != nil {
-		return nil, err
-	}
-
-	body := akeyless_api.DescribeItem{
-		Name:  secretName,
-		Token: &token,
-	}
-
-	rOut, resp, err := client.DescribeItem(ctx).Body(body).Execute()
-	if err != nil {
-		return nil, common.HandleReadError(d, "can't get usc", resp, err)
-	}
-
-	if rOut.UscSyncAssociatedItems != nil {
-		syncInfo, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
-		if !exists {
-			return nil, fmt.Errorf("static secret sync not found for secret name: %s, usc name: %s, remote secret name: %s", secretName, uscName, remoteSecretName)
-		}
-		err := common.SetUscSyncInfo(d, syncInfo)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	d.SetId(buildStaticUscSyncId(secretName, uscName, remoteSecretName))
-
-	err = d.Set("name", secretName)
-	if err != nil {
-		return nil, err
-	}
-	err = d.Set("usc_name", uscName)
-	if err != nil {
-		return nil, err
-	}
-	err = d.Set("remote_secret_name", remoteSecretName)
+	err := resourceStaticSecretSyncRead(d, m)
 	if err != nil {
 		return nil, err
 	}

@@ -34,7 +34,6 @@ OIDC Auth Method Resource
 - `description` (String) Auth Method description
 - `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified.
 - `force_sub_claims` (Boolean) if true: enforce role-association must include sub claims
-- `gateway_url` (String) Akeyless Gateway URL (Configuration Management port). Relevant only when working with Gateway mode
 - `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
 - `issuer` (String) Issuer URL
 - `jwt_ttl` (Number) Jwt TTL

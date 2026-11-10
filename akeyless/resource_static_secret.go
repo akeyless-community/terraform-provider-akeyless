@@ -162,12 +162,10 @@ func resourceStaticSecret() *schema.Resource {
 				Description: "Static-Secret values contains SSH Credentials, either Private Key or Password [password/private-key]",
 			},
 			"secure_access_url": {
-				Type:     schema.TypeString,
-				Required: false,
-				Optional: true,
-				DiffSuppressFunc: func(_ string, _, new string, d *schema.ResourceData) bool {
-					return new == "" && d.Get("secure_access_enable").(string) == "false"
-				},
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Computed:    true,
 				Description: "Destination URL to inject secrets.",
 			},
 			"secure_access_web_browsing": {

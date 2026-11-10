@@ -161,6 +161,19 @@ func resourceRotatedSecretSyncRead(d *schema.ResourceData, m any) error {
 		}
 	}
 
+	err = d.Set("name", rsName)
+	if err != nil {
+		return err
+	}
+	err = d.Set("usc_name", uscName)
+	if err != nil {
+		return err
+	}
+	err = d.Set("remote_secret_name", remoteSecretName)
+	if err != nil {
+		return err
+	}
+
 	d.SetId(buildRsUscSyncId(rsName, uscName, remoteSecretName))
 
 	return nil
@@ -204,49 +217,7 @@ func resourceRotatedSecretSyncDelete(d *schema.ResourceData, m any) error {
 
 func resourceRotatedSecretSyncImport(d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
 
-	ctx := context.Background()
-
-	provider := m.(*providerMeta)
-	client := *provider.client
-	token := *provider.token
-
-	rsName, uscName, remoteSecretName, err := extractRsUscSyncFromId(d.Id())
-	if err != nil {
-		return nil, err
-	}
-
-	body := akeyless_api.DescribeItem{
-		Name:  rsName,
-		Token: &token,
-	}
-
-	rOut, resp, err := client.DescribeItem(ctx).Body(body).Execute()
-	if err != nil {
-		return nil, common.HandleReadError(d, "can't get usc", resp, err)
-	}
-
-	if rOut.UscSyncAssociatedItems != nil {
-		syncInfo, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
-		if !exists {
-			return nil, fmt.Errorf("rotated secret sync not found for rotated secret name: %s, usc name: %s, remote secret name: %s", rsName, uscName, remoteSecretName)
-		}
-		err := common.SetUscSyncInfo(d, syncInfo)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	d.SetId(buildRsUscSyncId(rsName, uscName, remoteSecretName))
-
-	err = d.Set("name", rsName)
-	if err != nil {
-		return nil, err
-	}
-	err = d.Set("usc_name", uscName)
-	if err != nil {
-		return nil, err
-	}
-	err = d.Set("remote_secret_name", remoteSecretName)
+	err := resourceRotatedSecretSyncRead(d, m)
 	if err != nil {
 		return nil, err
 	}

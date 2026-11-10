@@ -886,6 +886,7 @@ func TestTargetDigiCertResource(t *testing.T) {
 			eab_key_id       = "%v"
 			timeout          = "5m"
 			description      = "Test DigiCert target"
+			delete_protection = "true"
 		}
 	`, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId)
 
@@ -900,6 +901,7 @@ func TestTargetDigiCertResource(t *testing.T) {
 			eab_key_id       = "%v"
 			timeout          = "10m"
 			description      = "Updated DigiCert target"
+			delete_protection = "false"
 		}
 	`, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId)
 
@@ -991,6 +993,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "www.test1.com;test,aaa.com;fff"
 			type 		= "mysql"
 			description = "aaa"
+			max_versions      = "5"
+			delete_protection = "true"
 		}
 	`, secretName, secretPath)
 
@@ -1000,6 +1004,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,www.test1.com;test"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1009,6 +1015,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1018,6 +1026,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,www.test3.com;"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1027,6 +1037,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,www.test4"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1036,6 +1048,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,www.test4;"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1336,54 +1350,6 @@ func TestTargetZeroSslResource(t *testing.T) {
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
 }
 
-func TestTargetLinkedResourceDeleteProtection(t *testing.T) {
-	targetName := "linked_target_delete_protection"
-	targetPath := testPath(targetName)
-	resourceName := "akeyless_target_linked." + targetName
-
-	config := fmt.Sprintf(`
-		resource "akeyless_target_linked" "%v" {
-			name              = "%v"
-			hosts             = "www.test1.com;test"
-			type              = "mysql"
-			max_versions      = "5"
-			delete_protection = "true"
-		}
-	`, targetName, targetPath)
-
-	configUpdate := fmt.Sprintf(`
-		resource "akeyless_target_linked" "%v" {
-			name              = "%v"
-			hosts             = "www.test1.com;test"
-			type              = "mysql"
-			max_versions      = "6"
-			delete_protection = "false"
-		}
-	`, targetName, targetPath)
-
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckTargetExistsRemotely(targetPath),
-					resource.TestCheckResourceAttr(resourceName, "max_versions", "5"),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "true"),
-				),
-			},
-			{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testutils.CheckTargetExistsRemotely(targetPath),
-					resource.TestCheckResourceAttr(resourceName, "max_versions", "6"),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
-				),
-			},
-		},
-	})
-}
-
 func TestTargetOpenaiResourceCodexOauth(t *testing.T) {
 	targetName := "openai_target_codex_oauth"
 	targetPath := testPath(targetName)
@@ -1463,58 +1429,6 @@ func TestTargetOpenaiResourceCodexOauth(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "codex_oauth_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "codex_oauth_account_id", ""),
 				),
-			},
-		},
-	})
-}
-
-func TestTargetDigiCertResourceDeleteProtection(t *testing.T) {
-	eabKeyId := os.Getenv("AKEYLESS_DIGICERT_EAB_KEY_ID")
-	eabHmacKey := os.Getenv("AKEYLESS_DIGICERT_EAB_HMAC_KEY")
-	if eabKeyId == "" || eabHmacKey == "" {
-		t.Skip("skipping: AKEYLESS_DIGICERT_EAB_KEY_ID and AKEYLESS_DIGICERT_EAB_HMAC_KEY must be set for DigiCert target tests")
-	}
-
-	dnsTargetPath := testPath("dns_target_digicert_delete_protection")
-	testutils.CreateTargetByType(t, dnsTargetPath, "aws_target_details", map[string]any{
-		"access_key_id": "test",
-		"access_key":    "test",
-		"region":        "us-east-1",
-	})
-	t.Cleanup(func() {
-		testutils.DeleteTarget(t, dnsTargetPath)
-	})
-
-	targetName := "digicert_target_delete_protection"
-	targetPath := testPath(targetName)
-	resourceName := "akeyless_target_digicert." + targetName
-
-	configTemplate := `
-		resource "akeyless_target_digicert" "%v" {
-			name              = "%v"
-			email             = "test@example.com"
-			acme_challenge    = "dns"
-			digicert_url      = "us-demo"
-			dns_target_creds  = "%v"
-			hosted_zone       = "Z1234567890"
-			eab_hmac_key      = "%v"
-			eab_key_id        = "%v"
-			delete_protection = "%v"
-		}
-	`
-	config := fmt.Sprintf(configTemplate, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId, "true")
-	configUpdate := fmt.Sprintf(configTemplate, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId, "false")
-
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check:  resource.TestCheckResourceAttr(resourceName, "delete_protection", "true"),
-			},
-			{
-				Config: configUpdate,
-				Check:  resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
 			},
 		},
 	})

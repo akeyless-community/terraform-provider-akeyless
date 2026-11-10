@@ -196,47 +196,66 @@ func TestStaticSecretSyncRepositories(t *testing.T) {
 	uscName := "usc_for_sync_repos"
 	secretName := "test_static_secret_for_sync_repos"
 
-	configTemplate := `
-        resource "akeyless_target_hashivault" "%v" {
-            name        = "%v"
+	config := `
+        resource "akeyless_target_hashivault" "` + targetName + `" {
+            name        = "` + testPath(targetName) + `"
             hashi_url   = "http://127.0.0.1:8200"
             vault_token = "test"
         }
 
-        resource "akeyless_usc" "%v" {
-            name                = "%v"
-            target_to_associate = akeyless_target_hashivault.%v.name
+        resource "akeyless_usc" "` + uscName + `" {
+            name                = "` + testPath(uscName) + `"
+            target_to_associate = akeyless_target_hashivault.` + targetName + `.name
         }
 
-        resource "akeyless_static_secret" "%v" {
-            path   = "%v"
+        resource "akeyless_static_secret" "` + secretName + `" {
+            path   = "` + testPath(secretName) + `"
             value  = "{\"k\":\"v\"}"
             format = "json"
         }
 
         resource "akeyless_static_secret_sync" "sync" {
-            name               = akeyless_static_secret.%v.path
-            usc_name           = akeyless_usc.%v.name
+            name               = akeyless_static_secret.` + secretName + `.path
+            usc_name           = akeyless_usc.` + uscName + `.name
             remote_secret_name = "secret/data/repos-example"
-            repositories       = "%v"
+            repositories       = "repo1"
         }
     `
-	config := func(repositories string) string {
-		return fmt.Sprintf(configTemplate, targetName, testPath(targetName),
-			uscName, testPath(uscName), targetName,
-			secretName, testPath(secretName),
-			secretName, uscName, repositories)
-	}
+	configUpdate := `
+        resource "akeyless_target_hashivault" "` + targetName + `" {
+            name        = "` + testPath(targetName) + `"
+            hashi_url   = "http://127.0.0.1:8200"
+            vault_token = "test"
+        }
+
+        resource "akeyless_usc" "` + uscName + `" {
+            name                = "` + testPath(uscName) + `"
+            target_to_associate = akeyless_target_hashivault.` + targetName + `.name
+        }
+
+        resource "akeyless_static_secret" "` + secretName + `" {
+            path   = "` + testPath(secretName) + `"
+            value  = "{\"k\":\"v\"}"
+            format = "json"
+        }
+
+        resource "akeyless_static_secret_sync" "sync" {
+            name               = akeyless_static_secret.` + secretName + `.path
+            usc_name           = akeyless_usc.` + uscName + `.name
+            remote_secret_name = "secret/data/repos-example"
+            repositories       = "repo1,repo2"
+        }
+    `
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: config("repo1"),
+				Config: config,
 				Check:  resource.TestCheckResourceAttr("akeyless_static_secret_sync.sync", "repositories", "repo1"),
 			},
 			{
-				Config: config("repo1,repo2"),
+				Config: configUpdate,
 				Check:  resource.TestCheckResourceAttr("akeyless_static_secret_sync.sync", "repositories", "repo1,repo2"),
 			},
 		},

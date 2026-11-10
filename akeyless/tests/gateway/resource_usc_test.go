@@ -225,3 +225,48 @@ func TestUscResourceGcpScopeValidation(t *testing.T) {
 		},
 	})
 }
+
+func TestUscResourceGcpScopeRead(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetPath := testPath("test-target-gcp-usc-scope")
+	testutils.CreateTargetByType(t, targetPath, "gcp_target_details", map[string]any{
+		"gcp_service_account_key": testutils.GCP_KEY,
+	})
+	defer testutils.DeleteTarget(t, targetPath)
+
+	uscName := "gcp_scope"
+	uscPath := testPath("test-usc-gcp-scope-read")
+	config := fmt.Sprintf(`
+		resource "akeyless_usc" "%[1]s" {
+			name                = "%[2]s"
+			target_to_associate = "%[3]s"
+			gcp_project_id      = "project-123"
+			gcp_sm_regions      = "us-east1,us-west1"
+			gcp_scope           = "folder"
+			gcp_folder_id       = "123456"
+			gcp_organization_id = "987654"
+		}
+	`, uscName, uscPath, targetPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_project_id", "project-123"),
+					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_sm_regions", "us-east1,us-west1"),
+					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_scope", "folder"),
+					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_folder_id", "123456"),
+					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_organization_id", "987654"),
+				),
+			},
+			{
+				ResourceName:      "akeyless_usc." + uscName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}

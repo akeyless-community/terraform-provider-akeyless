@@ -66,7 +66,7 @@ func dataSourceCertificate() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   true,
-				Description: "The base64 encoded certificate file, returned when format is pfx or jks",
+				Description: "Base64-encoded certificate data, returned when format is pfx or jks",
 			},
 		},
 	}

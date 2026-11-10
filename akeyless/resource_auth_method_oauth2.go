@@ -351,6 +351,7 @@ func resourceAuthMethodOauth2Read(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	// gateway_url was mistakenly added as a Terraform field and remains for backwards compatibility.
 	if d.Get("gateway_url").(string) != "" {
 		if rOut.AccessInfo.Oauth2AccessRules.AuthorizedGwClusterName == nil {
 			return fmt.Errorf("gateway_url is set, but the auth method does not have an authorized gateway cluster name")

@@ -377,7 +377,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			if len(rulesSet.List()) > 0 {
 				err = readRules(d, role.Rules.PathRules)
 			} else {
-				err = readAccessRules(d, role.Rules.PathRules)
+				err = readAdministrativeRules(d, role.Rules.PathRules)
 			}
 			if err != nil {
 				return diag.FromErr(err)
@@ -614,7 +614,7 @@ func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc []akeyless_ap
 	return nil
 }
 
-func readAccessRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
+func readAdministrativeRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 	for _, ruleSrc := range rules {
 		if ruleSrc.Type == nil || ruleSrc.Path == nil || !isAccessRule(*ruleSrc.Type) {
 			continue
@@ -628,13 +628,15 @@ func readAccessRules(d *schema.ResourceData, rules []akeyless_api.PathRule) erro
 }
 
 func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
-	var err error
-	var roleRules []interface{}
-
-	err = readAccessRules(d, rules)
-	if err != nil {
+	if err := readAdministrativeRules(d, rules); err != nil {
 		return err
 	}
+
+	return readObjectRules(d, rules)
+}
+
+func readObjectRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
+	var roleRules []interface{}
 
 	for _, ruleSrc := range rules {
 		if !isAccessRule(*ruleSrc.Type) {
@@ -663,12 +665,7 @@ func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 		}
 	}
 
-	err = d.Set("rules", roleRules)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("rules", roleRules)
 }
 
 func convertSraCapabilities(capabilities []string) []string {

@@ -155,6 +155,14 @@ func resourceLinkedTargetRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
+		if generalAttributes, ok := rOut.Target.Attributes["general"].(map[string]interface{}); ok {
+			if maxVersions, ok := generalAttributes["max_versions"]; ok {
+				err = d.Set("max_versions", fmt.Sprintf("%v", maxVersions))
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 	if rOut.Target.Comment != nil {
 		err = d.Set("description", *rOut.Target.Comment)

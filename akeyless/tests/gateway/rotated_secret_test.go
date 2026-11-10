@@ -1490,17 +1490,30 @@ func TestRotatedSecretSshSecureAccess(t *testing.T) {
 	rsPath := testPath(rsName)
 	resourceName := "akeyless_rotated_secret_ssh." + rsName
 
-	configTemplate := `
-		resource "akeyless_rotated_secret_ssh" "%v" {
-			name                                    = "%v"
-			target_name                             = "%v"
+	config := `
+		resource "akeyless_rotated_secret_ssh" "` + rsName + `" {
+			name                                    = "` + rsPath + `"
+			target_name                             = "` + targetPath + `"
 			rotator_type                            = "target"
 			authentication_credentials              = "use-target-creds"
 			secure_access_enable                    = "true"
 			secure_access_host                      = ["ssh.example.com"]
 			secure_access_target_type               = "rdp"
 			host_provider                           = "explicit"
-			secure_access_enforce_hosts_restriction = %v
+			secure_access_enforce_hosts_restriction = true
+		}
+	`
+	configUpdate := `
+		resource "akeyless_rotated_secret_ssh" "` + rsName + `" {
+			name                                    = "` + rsPath + `"
+			target_name                             = "` + targetPath + `"
+			rotator_type                            = "target"
+			authentication_credentials              = "use-target-creds"
+			secure_access_enable                    = "true"
+			secure_access_host                      = ["ssh.example.com"]
+			secure_access_target_type               = "rdp"
+			host_provider                           = "explicit"
+			secure_access_enforce_hosts_restriction = false
 		}
 	`
 
@@ -1508,7 +1521,7 @@ func TestRotatedSecretSshSecureAccess(t *testing.T) {
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(configTemplate, rsName, rsPath, targetPath, true),
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(rsPath),
 					resource.TestCheckResourceAttr(resourceName, "host_provider", "explicit"),
@@ -1516,7 +1529,7 @@ func TestRotatedSecretSshSecureAccess(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(configTemplate, rsName, rsPath, targetPath, false),
+				Config: configUpdate,
 				Check:  resource.TestCheckResourceAttr(resourceName, "secure_access_enforce_hosts_restriction", "false"),
 			},
 		},

@@ -1819,10 +1819,10 @@ func TestDynamicSecretRdpSecureAccess(t *testing.T) {
 	dsPath := testPath(dsName)
 	resourceName := "akeyless_dynamic_secret_rdp." + dsName
 
-	configTemplate := `
-		resource "akeyless_dynamic_secret_rdp" "%v" {
-			name                                    = "%v"
-			target_name                             = "%v"
+	config := `
+		resource "akeyless_dynamic_secret_rdp" "` + dsName + `" {
+			name                                    = "` + dsPath + `"
+			target_name                             = "` + targetPath + `"
 			rdp_admin_name                          = "administrator"
 			rdp_admin_pwd                           = "DummyPass123"
 			rdp_host_name                           = "rdp.example.com"
@@ -1831,7 +1831,22 @@ func TestDynamicSecretRdpSecureAccess(t *testing.T) {
 			secure_access_enable                    = "true"
 			secure_access_host                      = ["rdp.example.com"]
 			host_provider                           = "explicit"
-			secure_access_enforce_hosts_restriction = %v
+			secure_access_enforce_hosts_restriction = true
+		}
+	`
+	configUpdate := `
+		resource "akeyless_dynamic_secret_rdp" "` + dsName + `" {
+			name                                    = "` + dsPath + `"
+			target_name                             = "` + targetPath + `"
+			rdp_admin_name                          = "administrator"
+			rdp_admin_pwd                           = "DummyPass123"
+			rdp_host_name                           = "rdp.example.com"
+			rdp_host_port                           = "3389"
+			rdp_user_groups                         = "Administrators"
+			secure_access_enable                    = "true"
+			secure_access_host                      = ["rdp.example.com"]
+			host_provider                           = "explicit"
+			secure_access_enforce_hosts_restriction = false
 		}
 	`
 
@@ -1839,7 +1854,7 @@ func TestDynamicSecretRdpSecureAccess(t *testing.T) {
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(configTemplate, dsName, dsPath, targetPath, true),
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testutils.CheckItemExistsRemotely(dsPath),
 					resource.TestCheckResourceAttr(resourceName, "host_provider", "explicit"),
@@ -1847,7 +1862,7 @@ func TestDynamicSecretRdpSecureAccess(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(configTemplate, dsName, dsPath, targetPath, false),
+				Config: configUpdate,
 				Check:  resource.TestCheckResourceAttr(resourceName, "secure_access_enforce_hosts_restriction", "false"),
 			},
 		},

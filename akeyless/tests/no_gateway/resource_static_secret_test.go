@@ -348,20 +348,20 @@ func TestStaticSecretDescriptionUpdateWithoutSRA(t *testing.T) {
 	secretPath := testPath(secretName)
 
 	config := fmt.Sprintf(`
-resource "akeyless_static_secret" "%[1]s" {
-	path        = "%[2]s"
-	value       = "test value"
-	description = "before-update"
-}
-`, secretName, secretPath)
+		resource "akeyless_static_secret" "%[1]s" {
+			path        = "%[2]s"
+			value       = "test value"
+			description = "before-update"
+		}
+	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
-resource "akeyless_static_secret" "%[1]s" {
-	path        = "%[2]s"
-	value       = "test value"
-	description = "after-update"
-}
-`, secretName, secretPath)
+		resource "akeyless_static_secret" "%[1]s" {
+			path        = "%[2]s"
+			value       = "test value"
+			description = "after-update"
+		}
+	`, secretName, secretPath)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
@@ -389,21 +389,21 @@ func TestStaticSecretDisableSRA(t *testing.T) {
 	secretPath := testPath(secretName)
 
 	config := fmt.Sprintf(`
-resource "akeyless_static_secret" "%[1]s" {
-	path                 = "%[2]s"
-	value                = "test value"
-	secure_access_enable = "true"
-	secure_access_url    = "http://example.com"
-}
-`, secretName, secretPath)
+		resource "akeyless_static_secret" "%[1]s" {
+			path                 = "%[2]s"
+			value                = "test value"
+			secure_access_enable = "true"
+			secure_access_url    = "http://example.com"
+		}
+	`, secretName, secretPath)
 
 	configUpdate := fmt.Sprintf(`
-resource "akeyless_static_secret" "%[1]s" {
-	path                 = "%[2]s"
-	value                = "test value"
-	secure_access_enable = "false"
-}
-`, secretName, secretPath)
+		resource "akeyless_static_secret" "%[1]s" {
+			path                 = "%[2]s"
+			value                = "test value"
+			secure_access_enable = "false"
+		}
+	`, secretName, secretPath)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
