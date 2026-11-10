@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
 
@@ -27,18 +27,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
 
       - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.0.1
           terraform_wrapper: false
 
       - name: Set up GO
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
         id: go
@@ -57,18 +57,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
 
       - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.0.1
           terraform_wrapper: false
 
       - name: Set up GO
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
         id: go
@@ -99,18 +99,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
 
       - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.0.1
           terraform_wrapper: false
 
       - name: Set up GO
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
         id: go

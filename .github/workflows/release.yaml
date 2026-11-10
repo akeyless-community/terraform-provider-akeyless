@@ -10,24 +10,24 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout 
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # required for the changelog to work correctly
 
       - name: Set up GO
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Import GPG key
         id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
+        uses: crazy-max/ghaction-import-gpg@v7
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: latest
           args: release --clean
