@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -32,6 +31,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_GATEWAY", publicApi),
 				Description: "Origin URL of the API Gateway server. This is a URL with a scheme, a hostname and a port.",
+			},
+			"access_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_ACCESS_TYPE", nil),
+				Description: "Login method to use when no login block is configured: auto, api_key, password, aws_iam, gcp, azure_ad, jwt, universal_identity, cert or token. The values for each method are read from environment variables. Can also be set with the AKEYLESS_ACCESS_TYPE environment variable. Defaults to auto.",
 			},
 			"api_key_login":  apiKeyLoginSchema,
 			"aws_iam_login":  awsIamLoginSchema,
@@ -258,6 +263,9 @@ func getProviderToken(ctx context.Context, d *schema.ResourceData, client *akeyl
 	if len(tokenLogin) > 0 {
 		return extractTokenFromInput(tokenLogin)
 	}
+	if token, ok := tokenFromEnv(d); ok {
+		return token, nil
+	}
 	return getTokenByAuth(ctx, d, client)
 }
 
@@ -483,13 +491,9 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 		return certLogin[0], CertLogin, nil
 	}
 
-	// if login details not provided, use api-key authentication with id+key from env vars
-	if os.Getenv("AKEYLESS_ACCESS_ID") != "" && os.Getenv("AKEYLESS_ACCESS_KEY") != "" {
-		login := make(map[string]interface{})
-		login["access_id"] = os.Getenv("AKEYLESS_ACCESS_ID")
-		login["access_key"] = os.Getenv("AKEYLESS_ACCESS_KEY")
-
-		return login, ApiKeyLogin, nil
+	// if login details not provided, use environment variables
+	if login, lt, ok, err := loginFromEnv(accessTypeFrom(d)); ok || err != nil {
+		return login, lt, err
 	}
 
 	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")
