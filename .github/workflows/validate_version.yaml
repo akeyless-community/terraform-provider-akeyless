@@ -54,6 +54,10 @@ jobs:
           TF_ACC=1 go test ./akeyless/tests/no_gateway/ ./akeyless/common/ -v -count 1 -parallel 4 -timeout 120m
 
   test-gateway-items:
+    # The tests share one account and gateway cluster, so concurrent runs see each other's changes.
+    concurrency:
+      group: test-gateway-items
+      cancel-in-progress: false
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -96,6 +100,10 @@ jobs:
         run: docker compose -f docker-compose.test.yml down -v
 
   test-gateway-config:
+    # The tests share one account and gateway cluster, so concurrent runs see each other's changes.
+    concurrency:
+      group: test-gateway-config
+      cancel-in-progress: false
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
