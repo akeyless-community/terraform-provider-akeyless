@@ -26,7 +26,7 @@ runs:
         cd "${{ github.workspace }}/python/akeyless/.gen"
         poetry config pypi-token.pypi ${{ inputs.pypi_token }}
         poetry build
-        poetry publish
+        poetry publish --skip-existing
 
     - name: Release CDKTF-Python summary
       shell: bash
