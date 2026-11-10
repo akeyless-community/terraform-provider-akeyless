@@ -241,7 +241,6 @@ func TestUscResourceGcpScopeRead(t *testing.T) {
 		resource "akeyless_usc" "%[1]s" {
 			name                = "%[2]s"
 			target_to_associate = "%[3]s"
-			gcp_project_id      = "project-123"
 			gcp_sm_regions      = "us-east1,us-west1"
 			gcp_scope           = "folder"
 			gcp_folder_id       = "123456"
@@ -255,7 +254,6 @@ func TestUscResourceGcpScopeRead(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_project_id", "project-123"),
 					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_sm_regions", "us-east1,us-west1"),
 					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_scope", "folder"),
 					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_folder_id", "123456"),
