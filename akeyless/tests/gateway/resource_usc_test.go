@@ -231,7 +231,7 @@ func TestUscResourceGcpScopeRead(t *testing.T) {
 
 	targetPath := testPath("test-target-gcp-usc-scope")
 	testutils.CreateTargetByType(t, targetPath, "gcp_target_details", map[string]any{
-		"gcp_service_account_key": testutils.GCP_KEY,
+		"gcp_service_account_key": common.Base64Encode(GcpKey1),
 	})
 	defer testutils.DeleteTarget(t, targetPath)
 
