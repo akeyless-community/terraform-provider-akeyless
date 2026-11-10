@@ -46,7 +46,6 @@ jobs:
 
       - name: Slack Notification
         if: failure() || success()
-        continue-on-error: true
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: 'operations'
