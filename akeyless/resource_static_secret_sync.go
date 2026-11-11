@@ -64,7 +64,6 @@ func resourceStaticSecretSync() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"repositories"},
 				Description:   "GitHub environments to sync to, relevant only for GitHub targets (e.g. repo1/env1,repo2/env2). Syncs to all environments defined on the USC by default",
 			},
@@ -72,7 +71,6 @@ func resourceStaticSecretSync() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"environments"},
 				Description:   "GitHub repositories to sync to, relevant only for GitHub targets (e.g. repo1,repo2). Syncs to all repositories defined on the USC by default",
 			},
@@ -80,7 +78,6 @@ func resourceStaticSecretSync() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				ForceNew:    true,
 				Description: "GCP project to sync the secret to. Relevant only for GCP USCs; must be a project available on the USC",
 			},
 		},
@@ -180,6 +177,15 @@ func resourceStaticSecretSyncRead(d *schema.ResourceData, m any) error {
 }
 
 func resourceStaticSecretSyncUpdate(d *schema.ResourceData, m any) error {
+	if d.HasChange("namespace") ||
+		d.HasChange("filter_secret_value") ||
+		d.HasChange("delete_remote") ||
+		d.HasChange("environments") ||
+		d.HasChange("repositories") ||
+		d.HasChange("gcp_project_id") {
+		return fmt.Errorf("updating static secret sync associations is not supported; delete and recreate the association instead")
+	}
+
 	return nil
 }
 

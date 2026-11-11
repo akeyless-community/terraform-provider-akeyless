@@ -248,9 +248,36 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 						return err
 					}
 				}
-			}
-			if err := setUscGcpReadFields(d, attr); err != nil {
-				return err
+				if gcpProjectID, ok := attr["gcp_project_id"]; ok {
+					err := d.Set("gcp_project_id", gcpProjectID)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpSMRegions, ok := attr["gcp_sm_regions"]; ok {
+					err := d.Set("gcp_sm_regions", gcpSMRegions)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpScope, ok := attr["gcp_scope"]; ok {
+					err := d.Set("gcp_scope", gcpScope)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpFolderID, ok := attr["gcp_folder_id"]; ok {
+					err := d.Set("gcp_folder_id", gcpFolderID)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpOrganizationID, ok := attr["gcp_organization_id"]; ok {
+					err := d.Set("gcp_organization_id", gcpOrganizationID)
+					if err != nil {
+						return err
+					}
+				}
 			}
 		}
 	}
@@ -271,22 +298,6 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 	d.SetId(path)
 
 	return nil
-}
-
-func setUscGcpReadFields(d *schema.ResourceData, attributes map[string]string) error {
-	if err := d.Set("gcp_project_id", attributes["gcp_project_id"]); err != nil {
-		return err
-	}
-	if err := d.Set("gcp_sm_regions", attributes["gcp_sm_regions"]); err != nil {
-		return err
-	}
-	if err := d.Set("gcp_scope", attributes["gcp_scope"]); err != nil {
-		return err
-	}
-	if err := d.Set("gcp_folder_id", attributes["gcp_folder_id"]); err != nil {
-		return err
-	}
-	return d.Set("gcp_organization_id", attributes["gcp_organization_id"])
 }
 
 func resourceUscUpdate(d *schema.ResourceData, m any) error {
