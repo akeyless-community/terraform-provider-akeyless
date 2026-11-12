@@ -291,6 +291,7 @@ func resourceAuthMethodSamlRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
+
 	if rOut.AccessInfo.AuditLogsClaims != nil {
 		err = d.Set("audit_logs_claims", rOut.AccessInfo.AuditLogsClaims)
 		if err != nil {

@@ -4,6 +4,9 @@ package common
 import (
 	"strings"
 	"testing"
+
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestEnsureLeadingSlash(t *testing.T) {
@@ -179,5 +182,45 @@ func TestGenerateRandomLowercasedString(t *testing.T) {
 	}
 	if got != strings.ToLower(got) {
 		t.Error("GenerateRandomLowercasedString should return only lowercase characters")
+	}
+}
+
+func TestSetSraHostProvider(t *testing.T) {
+	schemaMap := map[string]*schema.Schema{
+		"host_provider": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"target": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+		"secure_access_enforce_hosts_restriction": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+	}
+	d := schema.TestResourceDataRaw(t, schemaMap, map[string]interface{}{
+		"target": []interface{}{"/targets/old"},
+	})
+	sra := akeyless_api.NewSecureRemoteAccess()
+	sra.SetTargets([]string{"/targets/new"})
+	sra.SetHostProviderType("target")
+	sra.SetEnforceHostsRestriction(true)
+
+	if err := SetSraHostProvider(d, sra); err != nil {
+		t.Fatalf("SetSraHostProvider() error = %v", err)
+	}
+	if got := d.Get("target").([]interface{}); len(got) != 1 || got[0] != "/targets/new" {
+		t.Errorf("target = %v, want [/targets/new]", got)
+	}
+
+	if err := SetSraHostProvider(d, nil); err != nil {
+		t.Fatalf("SetSraHostProvider(nil) error = %v", err)
+	}
+	if got := d.Get("target").([]interface{}); len(got) != 0 {
+		t.Errorf("target = %v, want empty after remote removal", got)
 	}
 }

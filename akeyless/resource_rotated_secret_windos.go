@@ -165,6 +165,23 @@ func resourceRotatedSecretWindows() *schema.Resource {
 				Optional:    true,
 				Description: "Enable/Disable secure remote access [true/false]",
 			},
+			"host_provider": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access",
+			},
+			"target": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of linked targets to be associated, Relevant only for Secure Remote Access",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed Secure Remote Access hosts",
+			},
 			"secure_access_host": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -263,6 +280,8 @@ func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) e
 		}
 		body.ItemCustomFields = &customFields
 	}
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
 
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsKnown() && !rawConfig.IsNull() {
@@ -277,6 +296,9 @@ func resourceRotatedSecretWindowsCreate(d *schema.ResourceData, m interface{}) e
 		}
 		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err := client.RotatedSecretCreateWindows(ctx).Body(body).Execute()
@@ -440,6 +462,9 @@ func resourceRotatedSecretWindowsRead(d *schema.ResourceData, m interface{}) err
 	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
 		return err
 	}
+	if err = common.SetSraHostProvider(d, itemOut.ItemGeneralInfo.SecureRemoteAccessDetails); err != nil {
+		return err
+	}
 
 	d.SetId(path)
 
@@ -529,6 +554,8 @@ func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) e
 		}
 		body.ItemCustomFields = &customFields
 	}
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
 
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsKnown() && !rawConfig.IsNull() {
@@ -543,6 +570,9 @@ func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) e
 		}
 		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
 			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
 		}
 	}
 	_, resp, err = client.RotatedSecretUpdateWindows(ctx).Body(body).Execute()

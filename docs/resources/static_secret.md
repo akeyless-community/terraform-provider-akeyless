@@ -54,6 +54,7 @@ resource "akeyless_static_secret" "secret" {
 - `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
 - `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `format` (String) Secret format [text/json/key-value] (relevant only for type 'generic')
+- `host_provider` (String) Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access
 - `ignore_cache` (String) Retrieve the Secret value without checking the Gateway's cache [true/false]
 - `inject_url` (Set of String) List of URLs associated with the item (relevant only for type 'password')
 - `input_rule` (List of String) Password input rule definitions
@@ -67,6 +68,7 @@ resource "akeyless_static_secret" "secret" {
 - `protection_key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
+- `secure_access_enforce_hosts_restriction` (Boolean) Enforce connections only to allowed Secure Remote Access hosts
 - `secure_access_gateway` (String) Secure Remote Access Gateway
 - `secure_access_host` (Set of String) Target servers for connections., For multiple values repeat this flag.
 - `secure_access_rdp_user` (String) Remote Desktop Username
@@ -77,6 +79,7 @@ resource "akeyless_static_secret" "secret" {
 - `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target` (List of String) A list of linked targets to be associated, Relevant only for Secure Remote Access
 - `type` (String) Secret type [generic/password]
 - `username` (String) Username value (relevant only for type 'password')
 - `value` (String, Sensitive) The secret content.

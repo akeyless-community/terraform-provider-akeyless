@@ -188,3 +188,47 @@ func TestFolderSyncResource(t *testing.T) {
 		},
 	})
 }
+
+func TestStaticSecretSyncRepositories(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "target_hashi_for_sync_repos"
+	uscName := "usc_for_sync_repos"
+	secretName := "test_static_secret_for_sync_repos"
+
+	config := `
+        resource "akeyless_target_hashivault" "` + targetName + `" {
+            name        = "` + testPath(targetName) + `"
+            hashi_url   = "http://127.0.0.1:8200"
+            vault_token = "test"
+        }
+
+        resource "akeyless_usc" "` + uscName + `" {
+            name                = "` + testPath(uscName) + `"
+            target_to_associate = akeyless_target_hashivault.` + targetName + `.name
+        }
+
+        resource "akeyless_static_secret" "` + secretName + `" {
+            path   = "` + testPath(secretName) + `"
+            value  = "{\"k\":\"v\"}"
+            format = "json"
+        }
+
+        resource "akeyless_static_secret_sync" "sync" {
+            name               = akeyless_static_secret.` + secretName + `.path
+            usc_name           = akeyless_usc.` + uscName + `.name
+            remote_secret_name = "secret/data/repos-example"
+            repositories       = "repo1"
+        }
+    `
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.TestCheckResourceAttr("akeyless_static_secret_sync.sync", "repositories", "repo1"),
+			},
+		},
+	})
+}

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
@@ -885,6 +886,7 @@ func TestTargetDigiCertResource(t *testing.T) {
 			eab_key_id       = "%v"
 			timeout          = "5m"
 			description      = "Test DigiCert target"
+			delete_protection = "true"
 		}
 	`, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId)
 
@@ -899,6 +901,7 @@ func TestTargetDigiCertResource(t *testing.T) {
 			eab_key_id       = "%v"
 			timeout          = "10m"
 			description      = "Updated DigiCert target"
+			delete_protection = "false"
 		}
 	`, targetName, targetPath, dnsTargetPath, eabHmacKey, eabKeyId)
 
@@ -990,6 +993,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "www.test1.com;test,aaa.com;fff"
 			type 		= "mysql"
 			description = "aaa"
+			max_versions      = "5"
+			delete_protection = "true"
 		}
 	`, secretName, secretPath)
 
@@ -999,6 +1004,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,www.test1.com;test"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1008,6 +1015,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1017,6 +1026,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,www.test3.com;"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1026,6 +1037,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,www.test4"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1035,6 +1048,8 @@ func TestTargetLinkedResource(t *testing.T) {
 			hosts	= "aaa.com;fff,www.test4;"
 			type 		= "mssql"
 			description = "bbb"
+			max_versions      = "6"
+			delete_protection = "false"
 		}
 	`, secretName, secretPath)
 
@@ -1333,4 +1348,88 @@ func TestTargetZeroSslResource(t *testing.T) {
 	`, targetName, targetPath)
 
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, targetPath)
+}
+
+func TestTargetOpenaiResourceCodexOauth(t *testing.T) {
+	targetName := "openai_target_codex_oauth"
+	targetPath := testPath(targetName)
+	resourceName := "akeyless_target_openai." + targetName
+
+	oauthConfig := func(description, refreshToken, accessToken string, tokenVersion int) string {
+		return fmt.Sprintf(`
+			resource "akeyless_target_openai" "%v" {
+				name                         = "%v"
+				openai_url                   = "https://api.openai.com/v1"
+				description                  = "%v"
+				codex_oauth_mode             = "chatgpt_oauth"
+				codex_oauth_account_id       = "test-account-id"
+				codex_oauth_refresh_token_wo = "%v"
+				codex_oauth_access_token_wo  = "%v"
+				codex_oauth_token_wo_version = %v
+			}
+		`, targetName, targetPath, description, refreshToken, accessToken, tokenVersion)
+	}
+
+	configMissingAccountId := fmt.Sprintf(`
+		resource "akeyless_target_openai" "%v" {
+			name                         = "%v"
+			codex_oauth_mode             = "chatgpt_oauth"
+			codex_oauth_refresh_token_wo = "test-refresh-token"
+		}
+	`, targetName, targetPath)
+
+	configApiKey := fmt.Sprintf(`
+		resource "akeyless_target_openai" "%v" {
+			name        = "%v"
+			openai_url  = "https://api.openai.com/v1"
+			description = "api key mode"
+			api_key     = "test-api-key"
+		}
+	`, targetName, targetPath)
+
+	tokenVersionError := regexp.MustCompile("codex_oauth_token_wo_version must change on every update")
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      configMissingAccountId,
+				ExpectError: regexp.MustCompile("codex-oauth-account-id must not be empty"),
+			},
+			{
+				Config: oauthConfig("d1", "refresh-1", "", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckTargetExistsRemotely(targetPath),
+					resource.TestCheckResourceAttr(resourceName, "codex_oauth_mode", "chatgpt_oauth"),
+					resource.TestCheckResourceAttr(resourceName, "codex_oauth_account_id", "test-account-id"),
+					resource.TestCheckNoResourceAttr(resourceName, "codex_oauth_refresh_token_wo"),
+					resource.TestCheckNoResourceAttr(resourceName, "codex_oauth_access_token_wo"),
+				),
+			},
+			{
+				Config:      oauthConfig("d2", "refresh-1", "", 1),
+				PlanOnly:    true,
+				ExpectError: tokenVersionError,
+			},
+			{
+				Config: oauthConfig("d2", "refresh-2", "", 2),
+				Check:  resource.TestCheckResourceAttr(resourceName, "description", "d2"),
+			},
+			{
+				Config:   oauthConfig("d2", "refresh-3", "access-1", 2),
+				PlanOnly: true,
+			},
+			{
+				Config:   oauthConfig("d2", "refresh-2", "", 2),
+				PlanOnly: true,
+			},
+			{
+				Config: configApiKey,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "codex_oauth_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "codex_oauth_account_id", ""),
+				),
+			},
+		},
+	})
 }
