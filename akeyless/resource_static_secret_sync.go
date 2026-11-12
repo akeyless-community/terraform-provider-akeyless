@@ -60,6 +60,26 @@ func resourceStaticSecretSync() *schema.Resource {
 				Optional:    true,
 				Description: "Delete the secret from the remote target USC as well",
 			},
+			"environments": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"repositories"},
+				Description:   "GitHub environments to sync to, relevant only for GitHub targets (e.g. repo1/env1,repo2/env2). Syncs to all environments defined on the USC by default",
+			},
+			"repositories": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"environments"},
+				Description:   "GitHub repositories to sync to, relevant only for GitHub targets (e.g. repo1,repo2). Syncs to all repositories defined on the USC by default",
+			},
+			"gcp_project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "GCP project to sync the secret to. Relevant only for GCP USCs; must be a project available on the USC",
+			},
 		},
 	}
 }
@@ -77,6 +97,9 @@ func resourceStaticSecretSyncCreate(d *schema.ResourceData, m any) error {
 	namespace := d.Get("namespace").(string)
 	filterSecretValue := d.Get("filter_secret_value").(string)
 	deleteRemote := d.Get("delete_remote").(bool)
+	environments := d.Get("environments").(string)
+	repositories := d.Get("repositories").(string)
+	gcpProjectId := d.Get("gcp_project_id").(string)
 
 	body := akeyless_api.StaticSecretSync{
 		Name:  secretName,
@@ -87,6 +110,9 @@ func resourceStaticSecretSyncCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.FilterSecretValue, filterSecretValue)
 	common.GetAkeylessPtr(&body.DeleteRemote, deleteRemote)
+	common.GetAkeylessPtr(&body.Environments, environments)
+	common.GetAkeylessPtr(&body.Repositories, repositories)
+	common.GetAkeylessPtr(&body.GcpProjectId, gcpProjectId)
 
 	_, resp, err := client.StaticSecretSync(ctx).Body(body).Execute()
 	if err != nil {
@@ -122,18 +148,27 @@ func resourceStaticSecretSyncRead(d *schema.ResourceData, m any) error {
 	}
 
 	if rOut.UscSyncAssociatedItems != nil {
-		namespace, filterSecretValue, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
+		syncInfo, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
 		if !exists {
 			return fmt.Errorf("static secret sync not found for secret name: %s, usc name: %s, remote secret name: %s", secretName, uscName, remoteSecretName)
 		}
-		err = d.Set("namespace", namespace)
+		err = common.SetUscSyncInfo(d, syncInfo)
 		if err != nil {
 			return err
 		}
-		err = d.Set("filter_secret_value", filterSecretValue)
-		if err != nil {
-			return err
-		}
+	}
+
+	err = d.Set("name", secretName)
+	if err != nil {
+		return err
+	}
+	err = d.Set("usc_name", uscName)
+	if err != nil {
+		return err
+	}
+	err = d.Set("remote_secret_name", remoteSecretName)
+	if err != nil {
+		return err
 	}
 
 	d.SetId(buildStaticUscSyncId(secretName, uscName, remoteSecretName))
@@ -142,6 +177,15 @@ func resourceStaticSecretSyncRead(d *schema.ResourceData, m any) error {
 }
 
 func resourceStaticSecretSyncUpdate(d *schema.ResourceData, m any) error {
+	if d.HasChange("namespace") ||
+		d.HasChange("filter_secret_value") ||
+		d.HasChange("delete_remote") ||
+		d.HasChange("environments") ||
+		d.HasChange("repositories") ||
+		d.HasChange("gcp_project_id") {
+		return fmt.Errorf("updating static secret sync associations is not supported; delete and recreate the association instead")
+	}
+
 	return nil
 }
 
@@ -166,6 +210,8 @@ func resourceStaticSecretSyncDelete(d *schema.ResourceData, m any) error {
 		UscName: uscName,
 	}
 	common.GetAkeylessPtr(&deleteItem.DeleteFromUsc, deleteFromUsc)
+	common.GetAkeylessPtr(&deleteItem.Environments, d.Get("environments").(string))
+	common.GetAkeylessPtr(&deleteItem.Repositories, d.Get("repositories").(string))
 	common.GetAkeylessPtr(&deleteItem.RemoteSecretName, remoteSecretName)
 
 	_, _, err = client.StaticSecretDeleteSync(ctx).Body(deleteItem).Execute()
@@ -178,53 +224,7 @@ func resourceStaticSecretSyncDelete(d *schema.ResourceData, m any) error {
 
 func resourceStaticSecretSyncImport(d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
 
-	ctx := context.Background()
-
-	provider := m.(*providerMeta)
-	client := *provider.client
-	token := *provider.token
-
-	secretName, uscName, remoteSecretName, err := extractStaticUscSyncFromId(d.Id())
-	if err != nil {
-		return nil, err
-	}
-
-	body := akeyless_api.DescribeItem{
-		Name:  secretName,
-		Token: &token,
-	}
-
-	rOut, resp, err := client.DescribeItem(ctx).Body(body).Execute()
-	if err != nil {
-		return nil, common.HandleReadError(d, "can't get usc", resp, err)
-	}
-
-	if rOut.UscSyncAssociatedItems != nil {
-		namespace, filterSecretValue, exists := common.GetRotatorUscSync(rOut.UscSyncAssociatedItems, uscName, remoteSecretName)
-		if !exists {
-			return nil, fmt.Errorf("static secret sync not found for secret name: %s, usc name: %s, remote secret name: %s", secretName, uscName, remoteSecretName)
-		}
-		err := d.Set("namespace", namespace)
-		if err != nil {
-			return nil, err
-		}
-		err = d.Set("filter_secret_value", filterSecretValue)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	d.SetId(buildStaticUscSyncId(secretName, uscName, remoteSecretName))
-
-	err = d.Set("name", secretName)
-	if err != nil {
-		return nil, err
-	}
-	err = d.Set("usc_name", uscName)
-	if err != nil {
-		return nil, err
-	}
-	err = d.Set("remote_secret_name", remoteSecretName)
+	err := resourceStaticSecretSyncRead(d, m)
 	if err != nil {
 		return nil, err
 	}

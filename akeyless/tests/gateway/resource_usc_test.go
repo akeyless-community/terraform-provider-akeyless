@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"testing"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -191,4 +192,80 @@ func createUsc(t *testing.T, uscName, targetName string, opts uscOptions) {
 	} else {
 		fmt.Println("created:", uscName)
 	}
+}
+
+func TestUscResourceGcpScopeValidation(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+	testutils.SkipIfNoVault(t)
+
+	targetPath := testPath("test-target-hashi-gcp-scope")
+	testutils.CreateTargetByType(t, targetPath, "hashi_target_details", map[string]any{
+		"vault_url":        HashiVaultUrl,
+		"vault_token":      HashiVaultToken,
+		"vault_namespaces": "",
+	})
+	defer testutils.DeleteTarget(t, targetPath)
+
+	config := fmt.Sprintf(`
+		resource "akeyless_usc" "gcp_scope" {
+			name                = "%v"
+			target_to_associate = "%v"
+			gcp_scope           = "folder"
+			gcp_organization_id = "123456"
+		}
+	`, testPath("test-usc-gcp-scope"), targetPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile("gcp_folder_id is required when gcp_scope is folder"),
+			},
+		},
+	})
+}
+
+func TestUscResourceGcpScopeRead(t *testing.T) {
+	t.Skip("skipping: requires real GCP credentials and an organization scope; verified manually")
+	testutils.SkipIfNoGateway(t)
+
+	targetPath := testPath("test-target-gcp-usc-scope")
+	testutils.CreateTargetByType(t, targetPath, "gcp_target_details", map[string]any{
+		"gcp_service_account_key": common.Base64Encode(GcpKey1),
+	})
+	defer testutils.DeleteTarget(t, targetPath)
+
+	uscName := "gcp_scope"
+	uscPath := testPath("test-usc-gcp-scope-read")
+	config := fmt.Sprintf(`
+		resource "akeyless_usc" "%[1]s" {
+			name                = "%[2]s"
+			target_to_associate = "%[3]s"
+			gcp_sm_regions      = "us-east1,us-west1"
+			gcp_scope           = "folder"
+			gcp_folder_id       = "123456"
+			gcp_organization_id = "987654"
+		}
+	`, uscName, uscPath, targetPath)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_sm_regions", "us-east1,us-west1"),
+					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_scope", "folder"),
+					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_folder_id", "123456"),
+					resource.TestCheckResourceAttr("akeyless_usc."+uscName, "gcp_organization_id", "987654"),
+				),
+			},
+			{
+				ResourceName:      "akeyless_usc." + uscName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }

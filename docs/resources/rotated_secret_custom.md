@@ -31,6 +31,7 @@ Custom rotated secret resource
 - `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
 - `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `enable_password_policy` (String) Enable password policy
+- `host_provider` (String) Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
@@ -45,6 +46,7 @@ Custom rotated secret resource
 - `secure_access_allow_external_user` (Boolean) Allow providing external user for a domain users
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
+- `secure_access_enforce_hosts_restriction` (Boolean) Enforce connections only to allowed Secure Remote Access hosts
 - `secure_access_host` (List of String) Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)
 - `secure_access_rdp_domain` (String) Default domain name server. i.e. microsoft.com
 - `secure_access_rdp_user` (String) Override the RDP Domain username
@@ -55,6 +57,7 @@ Custom rotated secret resource
 - `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target` (List of String) A list of linked targets to be associated, Relevant only for Secure Remote Access
 - `timeout_sec` (Number) Maximum allowed time in seconds for the custom rotator to return the results
 - `use_capital_letters` (String) Password must contain capital letters [true/false]
 - `use_lower_letters` (String) Password must contain lower case letters [true/false]

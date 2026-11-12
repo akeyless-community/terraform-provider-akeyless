@@ -375,10 +375,12 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			// default rules the user never authored would be written to state and cause a perpetual diff
 			rulesSet := d.Get("rules").(*schema.Set)
 			if len(rulesSet.List()) > 0 {
-				err := readRules(d, role.Rules.PathRules)
-				if err != nil {
-					return diag.FromErr(err)
-				}
+				err = readRules(d, role.Rules.PathRules)
+			} else {
+				err = readAdministrativeRules(d, role.Rules.PathRules)
+			}
+			if err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -416,10 +418,6 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			case "event-forwarder-rule":
 				// event-forwarder-rule has special handling for multiple event forwarder names
 				eventForwarderNames = append(eventForwarderNames, *rule.Path)
-			case "unlock-secrets-rule", "approve-access-request-rule":
-				if err := setAccessRuleField(d, *rule.Type, *rule.Path); err != nil {
-					return diag.FromErr(err)
-				}
 			}
 		}
 		if len(eventForwarderNames) > 0 {
@@ -616,17 +614,32 @@ func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc []akeyless_ap
 	return nil
 }
 
+func readAdministrativeRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
+	for _, ruleSrc := range rules {
+		if ruleSrc.Type == nil || ruleSrc.Path == nil || !isAccessRule(*ruleSrc.Type) {
+			continue
+		}
+		err := setAccessRuleField(d, *ruleSrc.Type, *ruleSrc.Path)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
-	var err error
+	if err := readAdministrativeRules(d, rules); err != nil {
+		return err
+	}
+
+	return readObjectRules(d, rules)
+}
+
+func readObjectRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 	var roleRules []interface{}
 
 	for _, ruleSrc := range rules {
-		if isAccessRule(*ruleSrc.Type) {
-			err = setAccessRuleField(d, *ruleSrc.Type, *ruleSrc.Path)
-			if err != nil {
-				return err
-			}
-		} else {
+		if !isAccessRule(*ruleSrc.Type) {
 			isRestrictedRule := false
 			restrictedRules := extractRestrictedRules(d)
 			for _, restrictedRule := range restrictedRules {
@@ -652,12 +665,7 @@ func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 		}
 	}
 
-	err = d.Set("rules", roleRules)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("rules", roleRules)
 }
 
 func convertSraCapabilities(capabilities []string) []string {

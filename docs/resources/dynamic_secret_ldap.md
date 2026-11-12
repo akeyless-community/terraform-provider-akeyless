@@ -43,6 +43,7 @@ LDAP dynamic secret resource
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
+- `secure_access_enforce_hosts_restriction` (Boolean) Enforce connections only to allowed Secure Remote Access hosts
 - `secure_access_host` (Set of String) Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)
 - `secure_access_rd_gateway_server` (String) RD Gateway server
 - `secure_access_rdp_domain` (String) Required when the Dynamic Secret is used for a domain user

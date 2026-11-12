@@ -31,7 +31,7 @@ jobs:
 
       - name: docker run
         run: |
-          docker run --rm --user root -v "${GITHUB_WORKSPACE}/temp":"/src" -w '/src' -e GH_DEBUG=${{ runner.debug }} akeyless.jfrog.io/akeyless-internals/cdktf:0.0.5 "${{ env.version }}" "${{ matrix.language }}"
+          docker run --rm --user root -v "${GITHUB_WORKSPACE}/temp":"/src" -w '/src' -e GH_DEBUG=${{ runner.debug }} akeyless.jfrog.io/akeyless-internals/cdktf:0.0.6 "${{ env.version }}" "${{ matrix.language }}"
 
       - name: Copy Files for ${{ matrix.language }}
         run: |

@@ -30,10 +30,12 @@ Ssh rotated secret resource
 - `description` (String) Description of the object
 - `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
 - `enable_ai_quorum` (Boolean) Enable AI Quorum
+- `host_provider` (String) Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `key_algorithm` (String) The key algorithm to generate with when no private key is supplied. options: [ED25519/RSA2048/RSA3072/RSA4096/ECDSA256/ECDSA384/ECDSA521]
 - `key_data_base64` (String) Private key file contents encoded using base64
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `output_rule` (List of String) Password output rule definitions
@@ -50,13 +52,20 @@ Ssh rotated secret resource
 - `secure_access_allow_external_user` (Boolean) Allow providing external user for a domain users
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
+- `secure_access_enforce_hosts_restriction` (Boolean) Enforce connections only to allowed Secure Remote Access hosts
 - `secure_access_host` (List of String) Target servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts - Relevant only for Dynamic Secrets/producers)
 - `secure_access_rdp_domain` (String) Default domain name server. i.e. microsoft.com
 - `secure_access_rdp_user` (String) Override the RDP Domain username
+- `secure_access_ssh_creds` (String) Secret values contains SSH Credentials, either Private Key or Password [password/private-key]
 - `secure_access_ssh_user` (String) Override the SSH username as indicated in SSH Certificate Issuer
 - `secure_access_target_type` (String) Specify target type. Options are ssh or rdp
+- `secure_access_url` (String) Destination URL to inject secrets
+- `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `secure_access_web_browsing` (Boolean) Secure browser via Akeyless's Secure Remote Access (SRA)
+- `secure_access_web_proxy` (Boolean) Web-Proxy via Akeyless's Secure Remote Access (SRA)
 - `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
+- `target` (List of String) A list of linked targets to be associated, Relevant only for Secure Remote Access
 
 ### Read-Only
 

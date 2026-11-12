@@ -1191,6 +1191,12 @@ func extractOpenaiTargetDetails(details *akeyless_api.OpenAITargetDetails) (map[
 	if details.ProjectId != nil {
 		m["project_id"] = *details.ProjectId
 	}
+	if details.AuthMode != nil {
+		m["auth_mode"] = *details.AuthMode
+	}
+	if details.OauthAccountId != nil {
+		m["oauth_account_id"] = *details.OauthAccountId
+	}
 
 	value, err := buildTargetDetailsVal(m, "openai_target_details")
 	if err != nil {
