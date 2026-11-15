@@ -9,8 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 var (
@@ -139,6 +141,70 @@ func TestRetryProviderDefaultAndOverride(t *testing.T) {
 	})
 }
 
+func TestRetryStatusCodes(t *testing.T) {
+	captureWaits(t)
+	codesBlock := map[string]interface{}{
+		"retry_on_status_codes": []interface{}{429, 503},
+		"interval_seconds":      1,
+		"max_interval_seconds":  1,
+		"max_retries":           3,
+	}
+
+	t.Run("listed status is retried", func(t *testing.T) {
+		calls, err := runResourceOpErr(t, nil, codesBlock, 2, func() error { return apiError(503, "") })
+		if err != nil || calls != 3 {
+			t.Errorf("calls=%d err=%v want 3 calls and success", calls, err)
+		}
+	})
+
+	t.Run("other status is not retried", func(t *testing.T) {
+		calls, err := runResourceOpErr(t, nil, codesBlock, 10, func() error { return apiError(404, "") })
+		if err == nil || calls != 1 {
+			t.Errorf("calls=%d err=%v want 1 call", calls, err)
+		}
+	})
+
+	t.Run("error message is unchanged", func(t *testing.T) {
+		if got := apiError(503, "").Error(); got != "can't create item: Service Unavailable" {
+			t.Errorf("message=%q", got)
+		}
+	})
+}
+
+func TestRetryAfter(t *testing.T) {
+	waits := captureWaits(t)
+	block := map[string]interface{}{
+		"retry_on_status_codes": []interface{}{429},
+		"error_message_regex":   []interface{}{"will be released in"},
+		"interval_seconds":      2,
+		"max_interval_seconds":  60,
+		"max_retries":           1,
+	}
+
+	cases := []struct {
+		name string
+		err  error
+		want time.Duration
+	}{
+		{"no Retry-After uses backoff", apiError(429, ""), 2 * time.Second},
+		{"longer Retry-After wins", apiError(429, "15"), 15 * time.Second},
+		{"shorter Retry-After keeps backoff", apiError(429, "1"), 2 * time.Second},
+		{"Retry-After is capped", apiError(429, "300"), 60 * time.Second},
+		{"release delay in message", errors.New("429 Too Many Requests: will be released in 4.5s"), 4500 * time.Millisecond},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			*waits = nil
+			if _, err := runResourceOpErr(t, nil, block, 1, func() error { return tc.err }); err != nil {
+				t.Fatal(err)
+			}
+			if len(*waits) != 1 || (*waits)[0] != tc.want {
+				t.Errorf("waits=%v want [%s]", *waits, tc.want)
+			}
+		})
+	}
+}
+
 func TestRetryCancelStopsWait(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -170,6 +236,17 @@ func TestRetryResourceEnable(t *testing.T) {
 	}
 	if err := r.InternalValidate(nil, true); err != nil {
 		t.Errorf("InternalValidate: %v", err)
+	}
+}
+
+func TestRetryBlockNeedsTrigger(t *testing.T) {
+	r := &schema.Resource{Schema: map[string]*schema.Schema{}}
+	EnableResourceRetry(r)
+	cfg := terraform.NewResourceConfigRaw(map[string]interface{}{
+		"retry": []interface{}{map[string]interface{}{"max_retries": 2}},
+	})
+	if diags := r.Validate(cfg); !diags.HasError() {
+		t.Error("expected an error for a retry block without error_message_regex or retry_on_status_codes")
 	}
 }
 
@@ -208,13 +285,28 @@ func providerRetryConfig(t *testing.T) *retryConfig {
 // runResourceOp wraps a Create that fails failCount times with errMsg, then succeeds.
 func runResourceOp(t *testing.T, providerCfg *retryConfig, retry map[string]interface{}, failCount int, errMsg string) (int, error) {
 	t.Helper()
+	return runResourceOpErr(t, providerCfg, retry, failCount, func() error { return errors.New(errMsg) })
+}
+
+// apiError builds the error resources return for a failed API call.
+func apiError(status int, retryAfter string) error {
+	resp := &http.Response{StatusCode: status, Header: http.Header{}}
+	if retryAfter != "" {
+		resp.Header.Set("Retry-After", retryAfter)
+	}
+	return common.HandleError("can't create item", resp, errors.New(http.StatusText(status)))
+}
+
+// runResourceOpErr wraps a Create that fails failCount times with newErr(), then succeeds.
+func runResourceOpErr(t *testing.T, providerCfg *retryConfig, retry map[string]interface{}, failCount int, newErr func() error) (int, error) {
+	t.Helper()
 	calls := 0
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 		Create: func(*schema.ResourceData, interface{}) error {
 			calls++
 			if calls <= failCount {
-				return errors.New(errMsg)
+				return newErr()
 			}
 			return nil
 		},

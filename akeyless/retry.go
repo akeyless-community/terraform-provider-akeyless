@@ -6,22 +6,30 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
-	defaultRetryIntervalSeconds    = 10
+	defaultRetryIntervalSeconds    = 3
 	defaultRetryMaxIntervalSeconds = 180
 	defaultRetryMaxRetries         = 3
 )
 
 // retrySleep is replaced in tests.
 var retrySleep = sleepContext
+
+// retryTriggerFields must have at least one value in a retry {} block.
+var retryTriggerFields = []string{"retry.0.error_message_regex", "retry.0.retry_on_status_codes"}
+
+// releaseDelayRE reads the delay from SaaS rate-limit errors, for example "will be released in 14.15s".
+var releaseDelayRE = regexp.MustCompile(`(?i)will be released in\s+([0-9]+(?:\.[0-9]+)?)\s*s`)
 
 // retrySchema returns the optional retry {} block. The provider and every resource use the same block.
 func retrySchema(description string) *schema.Schema {
@@ -33,13 +41,25 @@ func retrySchema(description string) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"error_message_regex": {
-					Type:        schema.TypeList,
-					Required:    true,
-					MinItems:    1,
-					Description: "Regular expressions matched against the error message. If any matches, the operation is retried.",
+					Type:         schema.TypeList,
+					Optional:     true,
+					MinItems:     1,
+					AtLeastOneOf: retryTriggerFields,
+					Description:  "Regular expressions matched against the error message. If any matches, the operation is retried.",
 					Elem: &schema.Schema{
 						Type:         schema.TypeString,
 						ValidateFunc: validation.StringIsValidRegExp,
+					},
+				},
+				"retry_on_status_codes": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MinItems:     1,
+					AtLeastOneOf: retryTriggerFields,
+					Description:  "HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.",
+					Elem: &schema.Schema{
+						Type:         schema.TypeInt,
+						ValidateFunc: validation.IntBetween(100, 599),
 					},
 				},
 				"interval_seconds": {
@@ -70,6 +90,7 @@ func retrySchema(description string) *schema.Schema {
 
 type retryConfig struct {
 	regexes     []*regexp.Regexp
+	statusCodes map[int]bool
 	interval    time.Duration
 	maxInterval time.Duration
 	maxRetries  int
@@ -84,6 +105,7 @@ func retryConfigFromData(d *schema.ResourceData) (*retryConfig, error) {
 	m := raw[0].(map[string]interface{})
 
 	cfg := &retryConfig{
+		statusCodes: map[int]bool{},
 		interval:    time.Duration(m["interval_seconds"].(int)) * time.Second,
 		maxInterval: time.Duration(m["max_interval_seconds"].(int)) * time.Second,
 		maxRetries:  m["max_retries"].(int),
@@ -95,6 +117,9 @@ func retryConfigFromData(d *schema.ResourceData) (*retryConfig, error) {
 		}
 		cfg.regexes = append(cfg.regexes, re)
 	}
+	for _, code := range m["retry_on_status_codes"].([]interface{}) {
+		cfg.statusCodes[code.(int)] = true
+	}
 	return cfg, nil
 }
 
@@ -102,12 +127,40 @@ func (c *retryConfig) matches(err error) bool {
 	if err == nil {
 		return false
 	}
+	var apiErr *common.APIError
+	if errors.As(err, &apiErr) && c.statusCodes[apiErr.StatusCode] {
+		return true
+	}
 	for _, re := range c.regexes {
 		if re.MatchString(err.Error()) {
 			return true
 		}
 	}
 	return false
+}
+
+// wait returns the backoff for this retry, or the server's Retry-After when it is longer,
+// capped at maxInterval.
+func (c *retryConfig) wait(retry int, err error) time.Duration {
+	wait := backoffWait(c.interval, c.maxInterval, retry)
+	if after := serverRetryAfter(err); after > wait {
+		wait = min(after, c.maxInterval)
+	}
+	return wait
+}
+
+// serverRetryAfter returns the Retry-After header, or the "will be released in Ns" delay.
+func serverRetryAfter(err error) time.Duration {
+	var apiErr *common.APIError
+	if errors.As(err, &apiErr) && apiErr.RetryAfter > 0 {
+		return apiErr.RetryAfter
+	}
+	if m := releaseDelayRE.FindStringSubmatch(err.Error()); len(m) == 2 {
+		if sec, parseErr := strconv.ParseFloat(m[1], 64); parseErr == nil {
+			return time.Duration(sec * float64(time.Second))
+		}
+	}
+	return 0
 }
 
 // activeRetryConfig returns the resource retry {} block, or the provider retry {} block
@@ -134,7 +187,7 @@ func runWithRetry(ctx context.Context, d *schema.ResourceData, m interface{}, op
 		return err
 	}
 	for retry := 0; retry < cfg.maxRetries && cfg.matches(err); retry++ {
-		wait := backoffWait(cfg.interval, cfg.maxInterval, retry)
+		wait := cfg.wait(retry, err)
 		log.Printf("[INFO] akeyless: retry %d/%d after %s: %v", retry+1, cfg.maxRetries, wait, err)
 		if sleepErr := retrySleep(ctx, wait); sleepErr != nil {
 			return err

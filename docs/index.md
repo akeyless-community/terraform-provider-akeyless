@@ -33,7 +33,8 @@ provider "akeyless" {
   # Optional: default retry for all resources. A resource retry {} block overrides it.
   # See docs/guides/customized_retry.md
   # retry {
-  #   error_message_regex = ["Too Many Requests"]
+  #   retry_on_status_codes = [429, 503]
+  #   error_message_regex   = ["Too Many Requests"]
   # }
 }
 
