@@ -38,6 +38,7 @@ Google Cloud Provider (GCP) dynamic secret resource
 - `gcp_token_scopes` (String) Access token scopes list, e.g. scope1,scope2 (Relevant only when --access-type=sa; required when --gcp-cred-type=token)
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `project_id` (String) GCP Project ID override for dynamic secret operations
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `role_binding` (String) Role binding definitions in JSON format (Relevant only when --access-type=sa and --service-account-type=dynamic)
 - `role_names` (String) Comma-separated list of GCP roles to assign to the user (Relevant only when --access-type=external)
 - `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
@@ -54,5 +55,16 @@ Google Cloud Provider (GCP) dynamic secret resource
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 

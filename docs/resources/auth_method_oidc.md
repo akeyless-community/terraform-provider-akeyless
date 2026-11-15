@@ -40,11 +40,23 @@ OIDC Auth Method Resource
 - `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
 - `required_scopes` (Set of String) RequiredScopes is a list of required scopes that the oidc method will request from the oidc provider and the user must approve
 - `required_scopes_prefix` (String) RequiredScopesPrefix is a a prefix to add to all required-scopes when requesting them from the oidc server (for example, azures' Application ID URI)
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `subclaims_delimiters` (Set of String) A list of additional sub claims delimiters (relevant only for SAML, OIDC, OAuth2/JWT)
 
 ### Read-Only
 
 - `access_id` (String) Auth Method access ID
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 

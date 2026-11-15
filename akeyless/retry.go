@@ -48,7 +48,7 @@ func retrySchema(description string) *schema.Schema {
 					Description:  "Regular expressions matched against the error message. If any matches, the operation is retried.",
 					Elem: &schema.Schema{
 						Type:         schema.TypeString,
-						ValidateFunc: validation.StringIsValidRegExp,
+						ValidateFunc: validation.All(validation.StringIsNotEmpty, validation.StringIsValidRegExp),
 					},
 				},
 				"retry_on_status_codes": {
@@ -267,24 +267,35 @@ func EnableResourceRetry(r *schema.Resource) {
 		}
 	}
 
-	r.Create = wrapResourceFunc(r.Create)
-	r.Read = wrapResourceFunc(r.Read)
-	r.Update = wrapResourceFunc(r.Update)
-	r.Delete = wrapResourceFunc(r.Delete)
-	r.CreateContext = wrapResourceContextFunc(r.CreateContext)
-	r.ReadContext = wrapResourceContextFunc(r.ReadContext)
-	r.UpdateContext = wrapResourceContextFunc(r.UpdateContext)
-	r.DeleteContext = wrapResourceContextFunc(r.DeleteContext)
+	// Plain CRUD functions become context functions, so Ctrl+C and timeouts stop the retry wait.
+	r.CreateContext, r.Create = wrapCRUD(r.Create, r.CreateContext), nil
+	r.ReadContext, r.Read = wrapCRUD(r.Read, r.ReadContext), nil
+	r.UpdateContext, r.Update = skipRetryOnlyUpdate(wrapCRUD(r.Update, r.UpdateContext)), nil
+	r.DeleteContext, r.Delete = wrapCRUD(r.Delete, r.DeleteContext), nil
 }
 
-func wrapResourceFunc(orig func(*schema.ResourceData, interface{}) error) func(*schema.ResourceData, interface{}) error {
-	if orig == nil {
-		return nil
+func wrapCRUD(plain func(*schema.ResourceData, interface{}) error, withCtx func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+	if plain != nil {
+		return wrapResourceFunc(plain)
 	}
-	return func(d *schema.ResourceData, m interface{}) error {
-		return runWithRetry(context.Background(), d, m, func() error {
+	return wrapResourceContextFunc(withCtx)
+}
+
+// skipRetryOnlyUpdate stores a change of only the retry block without calling the update API.
+func skipRetryOnlyUpdate(update func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		if !d.HasChangeExcept("retry") {
+			return nil
+		}
+		return update(ctx, d, m)
+	}
+}
+
+func wrapResourceFunc(orig func(*schema.ResourceData, interface{}) error) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		return diag.FromErr(runWithRetry(ctx, d, m, func() error {
 			return orig(d, m)
-		})
+		}))
 	}
 }
 

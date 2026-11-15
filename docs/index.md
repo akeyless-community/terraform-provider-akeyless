@@ -31,7 +31,7 @@ provider "akeyless" {
   }
 
   # Optional: default retry for all resources. A resource retry {} block overrides it.
-  # See docs/guides/customized_retry.md
+  # See the Customized Retry guide.
   # retry {
   #   retry_on_status_codes = [429, 503]
   #   error_message_regex   = ["Too Many Requests"]
@@ -124,7 +124,7 @@ output "auth_method" {
 - `email_login` (Block List) A configuration block, described below, that attempts to authenticate using email and password. (see [below for nested schema](#nestedblock--email_login))
 - `gcp_login` (Block List) A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials. (see [below for nested schema](#nestedblock--gcp_login))
 - `jwt_login` (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT. (see [below for nested schema](#nestedblock--jwt_login))
-- `retry` (Block List, Max: 1) Default retry for all resources when the error matches `error_message_regex`. A resource `retry` block overrides it. Same fields as the resource `retry` block. See the [Customized Retry](guides/customized_retry.md) guide.
+- `retry` (Block List, Max: 1) Default retry for all resources when the error matches error_message_regex. A resource retry block overrides it. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `token_login` (Block List) A configuration block, described below, that attempts to authenticate using akeyless token. The token can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_TOKEN. (see [below for nested schema](#nestedblock--token_login))
 - `uid_login` (Block List) A configuration block, described below, that attempts to authenticate using Universal Identity authentication. (see [below for nested schema](#nestedblock--uid_login))
 
@@ -196,6 +196,18 @@ Required:
 
 - `access_id` (String)
 - `jwt` (String, Sensitive)
+
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 
 <a id="nestedblock--token_login"></a>

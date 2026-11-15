@@ -32,6 +32,7 @@ K8S Auth config
 - `k8s_issuer` (String) The Kubernetes JWT issuer name. K8SIssuer is the claim that specifies who issued the Kubernetes token
 - `rancher_api_key` (String) The api key used to access the TokenReview API to validate other JWTs (relevant for "rancher" only)
 - `rancher_cluster_id` (String) The cluster id as define in rancher (relevant for "rancher" only)
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `signing_key` (String, Sensitive) The private key (in base64 encoded of the PEM format) associated with the public key defined in the Kubernetes auth
 - `token_exp` (Number) Time in seconds of expiration of the Akeyless Kube Auth Method token
 - `token_reviewer_jwt` (String, Sensitive) A Kubernetes service account JWT used to access the TokenReview API to validate other JWTs (relevant for "native_k8s" only). If not set, the JWT submitted in the authentication process will be used to access the Kubernetes TokenReview API.
@@ -40,5 +41,16 @@ K8S Auth config
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 

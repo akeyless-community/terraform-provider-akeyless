@@ -1,3 +1,10 @@
+---
+page_title: "Customized Retry"
+subcategory: ""
+description: |-
+  Retry resource operations on busy or temporary errors.
+---
+
 # Customized Retry
 
 By default the provider retries only connection errors (`EOF`, `connection reset by peer`,
@@ -81,7 +88,8 @@ resource "akeyless_dynamic_secret_mysql" "example" {
 
 To turn off the provider retry for one resource, set `max_retries = 0` in its `retry {}` block.
 
-Changing only the `retry` block never recreates the resource.
+Changing only the `retry` block never recreates the resource. The plan shows an in-place
+update, but the provider only saves the new retry settings and does not call the update API.
 
 **Note:** if a Create fails after the item was already created on the server, a rerun can
 fail with an "already exists" error. Use regexes that match only busy or temporary errors.

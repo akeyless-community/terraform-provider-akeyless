@@ -42,6 +42,7 @@ Kerberos Auth Method Resource
 - `ldap_ca_cert` (String) LDAP CA certificate
 - `ldap_url` (String) LDAP URL
 - `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `subclaims_delimiters` (Set of String) A list of additional sub claims delimiters
 - `unique_identifier` (String) A unique identifier (ID) value should be configured. Whenever a user logs in with a token, these authentication types issue a sub claim that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.
 - `user_attribute` (String) User attribute
@@ -51,5 +52,16 @@ Kerberos Auth Method Resource
 
 - `access_id` (String) Auth Method access ID
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 

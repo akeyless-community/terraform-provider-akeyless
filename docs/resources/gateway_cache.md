@@ -21,6 +21,7 @@ Cache settings
 - `enable_cache` (String) Enable cache [true/false]
 - `enable_proactive` (String) Enable proactive caching [true/false]
 - `minimum_fetch_interval` (String) When using Cache or/and Proactive Cache, additional secrets will be fetched upon requesting a secret, based on the requestor's access policy. Define minimum fetching interval to avoid over fetching in a given time frame
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `stale_timeout` (String) Stale timeout in minutes, cache entries which are not accessed within timeout will be removed from cache
 
 ### Read-Only
@@ -28,5 +29,16 @@ Cache settings
 - `cache_encryption_key` (String) Cache encryption key
 - `id` (String) The ID of this resource.
 - `new_proactive_cache_enable` (Boolean) New proactive cache enable flag
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 

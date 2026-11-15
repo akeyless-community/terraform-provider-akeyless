@@ -32,10 +32,22 @@ Kubernetes Migration resource
 - `k8s_url` (String) K8s API Server URL, e.g. https://k8s-api.mycompany.com:6443 (relevant only for K8s migration)
 - `k8s_username` (String) For Password Authentication method K8s Client username with sufficient permission to list and get secrets in the namespace(s) you selected (relevant only for K8s migration with Password Authentication method)
 - `protection_key` (String) The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
 - `migration_id` (String) Migration ID
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 

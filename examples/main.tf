@@ -15,6 +15,13 @@ provider "akeyless" {
 //    access_id = ""
 //    access_key = ""
   }
+
+  # Optional: default retry for all resources. A resource retry {} block overrides it.
+  # See the Customized Retry guide.
+  # retry {
+  #   retry_on_status_codes = [429, 503]
+  #   error_message_regex   = ["Too Many Requests"]
+  # }
 }
 
 resource "akeyless_auth_method" "api_key" {

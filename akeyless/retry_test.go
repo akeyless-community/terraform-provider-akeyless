@@ -205,15 +205,78 @@ func TestRetryAfter(t *testing.T) {
 	}
 }
 
-func TestRetryCancelStopsWait(t *testing.T) {
+func TestRetryCancelStopsRetry(t *testing.T) {
+	calls := 0
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+		Create: func(*schema.ResourceData, interface{}) error {
+			calls++
+			return errors.New("429 Too Many Requests")
+		},
+	}
+	EnableResourceRetry(r)
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{"retry": []interface{}{resourceRetryBlock}})
+
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	start := time.Now()
-	if err := sleepContext(ctx, time.Hour); !errors.Is(err, context.Canceled) {
-		t.Errorf("err=%v want context.Canceled", err)
+	if diags := r.CreateContext(ctx, d, nil); !diags.HasError() || calls != 1 {
+		t.Errorf("calls=%d diags=%v want 1 call and the error", calls, diags)
 	}
 	if time.Since(start) > time.Second {
-		t.Error("wait was not stopped")
+		t.Error("retry wait was not stopped")
+	}
+}
+
+func TestRetryOnlyRetryChangeSkipsUpdate(t *testing.T) {
+	updates := 0
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"description": {Type: schema.TypeString, Optional: true},
+		},
+		Create: func(*schema.ResourceData, interface{}) error { return nil },
+		Read:   func(*schema.ResourceData, interface{}) error { return nil },
+		Update: func(*schema.ResourceData, interface{}) error {
+			updates++
+			return nil
+		},
+		Delete: func(*schema.ResourceData, interface{}) error { return nil },
+	}
+	EnableResourceRetry(r)
+
+	state := &terraform.InstanceState{ID: "x", Attributes: map[string]string{"description": "a"}}
+	run := func(raw map[string]interface{}) {
+		diff, err := r.Diff(context.Background(), state, terraform.NewResourceConfigRaw(raw), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		d, err := schema.InternalMap(r.Schema).Data(state, diff)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diags := r.UpdateContext(context.Background(), d, nil); diags.HasError() {
+			t.Fatal(diags)
+		}
+	}
+
+	run(map[string]interface{}{"description": "a", "retry": []interface{}{map[string]interface{}{"retry_on_status_codes": []interface{}{429}}}})
+	if updates != 0 {
+		t.Errorf("updates=%d want 0 when only retry changed", updates)
+	}
+	run(map[string]interface{}{"description": "b"})
+	if updates != 1 {
+		t.Errorf("updates=%d want 1 when another field changed", updates)
+	}
+}
+
+func TestRetryEmptyRegexRejected(t *testing.T) {
+	r := &schema.Resource{Schema: map[string]*schema.Schema{}}
+	EnableResourceRetry(r)
+	cfg := terraform.NewResourceConfigRaw(map[string]interface{}{
+		"retry": []interface{}{map[string]interface{}{"error_message_regex": []interface{}{""}}},
+	})
+	if diags := r.Validate(cfg); !diags.HasError() {
+		t.Error("expected an error for an empty error_message_regex")
 	}
 }
 
@@ -318,6 +381,6 @@ func runResourceOpErr(t *testing.T, providerCfg *retryConfig, retry map[string]i
 		raw["retry"] = []interface{}{retry}
 	}
 	d := schema.TestResourceDataRaw(t, r.Schema, raw)
-	err := r.Create(d, &providerMeta{retry: providerCfg})
-	return calls, err
+	diags := r.CreateContext(context.Background(), d, &providerMeta{retry: providerCfg})
+	return calls, diagsError(diags)
 }
