@@ -18,7 +18,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // default: public API Gateway
@@ -43,13 +42,7 @@ func Provider() *schema.Provider {
 			"uid_login":      uidLoginSchema,
 			"cert_login":     certLoginSchema,
 			"token_login":    tokenLoginSchema,
-			"maximum_busy_retry_attempts": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				DefaultFunc:  schema.EnvDefaultFunc("AKEYLESS_MAXIMUM_BUSY_RETRY_ATTEMPTS", 0),
-				ValidateFunc: validation.IntAtLeast(0),
-				Description:  "Maximum retries for busy API responses (HTTP 429, 500, 502, 503, 504 and rate-limit errors). 0 disables it. Env: AKEYLESS_MAXIMUM_BUSY_RETRY_ATTEMPTS.",
-			},
+			"retry":          retrySchema("Default retry for all resources when the error matches error_message_regex. A resource retry block overrides it. See the Customized Retry guide."),
 		},
 		//ConfigureFunc: configureProvider,
 		ConfigureContextFunc: configureProvider,
@@ -428,6 +421,7 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 type providerMeta struct {
 	client *akeyless_api.V2ApiService
 	token  *string
+	retry  *retryConfig
 }
 
 func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, error) {
@@ -511,12 +505,8 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 func getProviderClient(_ context.Context, d *schema.ResourceData) *akeyless_api.V2ApiService {
 	apiGwAddress := d.Get("api_gateway_address").(string)
 
-	var transport http.RoundTripper = &retryTransport{base: http.DefaultTransport, retries: 3}
-	if attempts := d.Get("maximum_busy_retry_attempts").(int); attempts > 0 {
-		transport = newBusyRetryTransport(transport, attempts)
-	}
 	httpClient := &http.Client{
-		Transport: transport,
+		Transport: &retryTransport{base: http.DefaultTransport, retries: 3},
 	}
 
 	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
@@ -581,11 +571,16 @@ func isTransientConnError(err error) bool {
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diagnostic diag.Diagnostics
 
+	retry, err := retryConfigFromData(d)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+
 	client := getProviderClient(ctx, d)
 
 	token, err := getProviderToken(ctx, d, client)
 	if err != nil {
 		diagnostic = diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error()}}
 	}
-	return &providerMeta{client: client, token: &token}, diagnostic
+	return &providerMeta{client: client, token: &token, retry: retry}, diagnostic
 }

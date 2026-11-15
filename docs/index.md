@@ -30,9 +30,11 @@ provider "akeyless" {
 //    access_key = ""
   }
 
-  # Optional: retry busy responses (429/5xx). Off by default.
+  # Optional: default retry for all resources. A resource retry {} block overrides it.
   # See docs/guides/customized_retry.md
-  # maximum_busy_retry_attempts = 3
+  # retry {
+  #   error_message_regex = ["Too Many Requests"]
+  # }
 }
 
 resource "akeyless_auth_method" "api_key" {
@@ -121,7 +123,7 @@ output "auth_method" {
 - `email_login` (Block List) A configuration block, described below, that attempts to authenticate using email and password. (see [below for nested schema](#nestedblock--email_login))
 - `gcp_login` (Block List) A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials. (see [below for nested schema](#nestedblock--gcp_login))
 - `jwt_login` (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT. (see [below for nested schema](#nestedblock--jwt_login))
-- `maximum_busy_retry_attempts` (Number) Maximum retries for busy API responses (HTTP 429, 500, 502, 503, 504 and rate-limit errors). 0 disables it. Env: AKEYLESS_MAXIMUM_BUSY_RETRY_ATTEMPTS. See the [Customized Retry](guides/customized_retry.md) guide.
+- `retry` (Block List, Max: 1) Default retry for all resources when the error matches `error_message_regex`. A resource `retry` block overrides it. Same fields as the resource `retry` block. See the [Customized Retry](guides/customized_retry.md) guide.
 - `token_login` (Block List) A configuration block, described below, that attempts to authenticate using akeyless token. The token can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_TOKEN. (see [below for nested schema](#nestedblock--token_login))
 - `uid_login` (Block List) A configuration block, described below, that attempts to authenticate using Universal Identity authentication. (see [below for nested schema](#nestedblock--uid_login))
 
