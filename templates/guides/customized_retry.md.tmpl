@@ -32,7 +32,7 @@ Set at least one of `error_message_regex` and `retry_on_status_codes`.
 
 - `error_message_regex`: regular expressions matched against the error message.
 - `retry_on_status_codes`: HTTP status codes of the failed API call, for example `[429, 503]`.
-- `interval_seconds` (default `10`): wait before the first retry. The wait doubles on each retry.
+- `interval_seconds` (default `3`): wait before the first retry. The wait doubles on each retry.
 - `max_interval_seconds` (default `180`): maximum wait between retries.
 - `max_retries` (default `3`): maximum retries after the first attempt.
 

@@ -269,6 +269,29 @@ func TestRetryOnlyRetryChangeSkipsUpdate(t *testing.T) {
 	}
 }
 
+func TestOpenAITargetRetryOnlyChange(t *testing.T) {
+	r := resourceOpenAITarget()
+	EnableResourceRetry(r)
+
+	state := &terraform.InstanceState{
+		ID: "/test",
+		Attributes: map[string]string{
+			"name":             "/test",
+			"codex_oauth_mode": codexOauthModeChatGPT,
+		},
+	}
+	_, err := r.Diff(context.Background(), state, terraform.NewResourceConfigRaw(map[string]interface{}{
+		"name":             "/test",
+		"codex_oauth_mode": codexOauthModeChatGPT,
+		"retry": []interface{}{map[string]interface{}{
+			"error_message_regex": []interface{}{"Too Many Requests"},
+		}},
+	}), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestRetryEmptyRegexRejected(t *testing.T) {
 	r := &schema.Resource{Schema: map[string]*schema.Schema{}}
 	EnableResourceRetry(r)

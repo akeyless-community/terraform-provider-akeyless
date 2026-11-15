@@ -3,6 +3,7 @@ package akeyless
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -301,7 +302,7 @@ func resourceOpenAITargetCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 // The SDK diff lists write-only attributes as changed on every plan, because they are never stored in state.
 func hasNonWriteOnlyChange(d *schema.ResourceDiff) bool {
 	for _, key := range d.GetChangedKeysPrefix("") {
-		if key != "codex_oauth_access_token_wo" && key != "codex_oauth_refresh_token_wo" {
+		if key != "codex_oauth_access_token_wo" && key != "codex_oauth_refresh_token_wo" && !strings.HasPrefix(key, "retry") {
 			return true
 		}
 	}
