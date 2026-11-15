@@ -1,27 +1,15 @@
 # Customized Retry
 
-The Akeyless Terraform provider retries transient failures at two layers:
+By default the provider retries only connection errors (`EOF`, `connection reset by peer`,
+`connection refused`), up to 3 attempts. Busy responses such as HTTP `429` are returned as errors.
 
-1. **Provider HTTP transport** (all API calls) — connection errors + busy HTTP statuses by default
-2. **Resource `retry`** (optional) — when set on a resource, **overrides** provider HTTP retry for that resource's CRUD calls
+Two optional settings add more retries. Both are off unless you set them.
 
-Only one layer runs per resource operation: resource `retry {}` wins over provider `retry {}`.
+1. **Provider `maximum_busy_retry_attempts`**: retries every API call that gets a busy response.
+2. **Resource `retry {}`**: reruns one resource's operation when its error matches a regex.
+   It runs after the provider-level retries are used up.
 
-## Provider-level retry (default on)
-
-By default the provider retries:
-
-- Connection errors: `EOF`, `connection reset by peer`, `connection refused`
-- HTTP statuses: `429`, `500`, `502`, `503`, `504` (see `busyHTTPStatusCodes` in code)
-- Wrapped SaaS rate-limit bodies (e.g. outer `403` with `429 Too Many Requests` / `will be released in Ns`)
-
-Backoff order:
-
-1. `Retry-After` header
-2. SaaS body release delay (`will be released in Ns`)
-3. Exponential backoff
-
-Optional knobs:
+## Provider-level retry
 
 ```terraform
 provider "akeyless" {
@@ -32,70 +20,51 @@ provider "akeyless" {
     access_key = var.access_key
   }
 
-  retry {
-    max_retries           = 5
-    retry_on_status_codes = [429, 500, 502, 503, 504]
-    interval_seconds      = 2
-    max_backoff_seconds   = 60
-    multiplier            = 2
-    retry_on_messages     = [".*temporary.*"]
-  }
+  maximum_busy_retry_attempts = 3
 }
 ```
 
-When `retry {}` is omitted, defaults apply: `max_retries = 3`, `interval_seconds = 2`, `max_backoff_seconds = 60`, `multiplier = 2`.
+When `maximum_busy_retry_attempts` is greater than `0`, the provider retries:
 
-Plain **401** / **403** without a rate-limit body are not retried.
+- HTTP statuses `429`, `500`, `502`, `503`, `504`
+- SaaS rate-limit errors, also when wrapped in another status (for example a `403` with
+  `Too Many Requests` or `will be released in Ns` in the body)
 
-Notes:
+The wait before each retry is:
 
-- `retry_on_messages` are error-message texts, matched as **regular expressions** (plain text works; regex is supported). Note that regex metacharacters (`.`, `(`, `*`, ...) in the text are interpreted as regex.
-- Passing an empty `retry_on_status_codes = []` keeps the defaults (429/5xx); it does not disable status-code retries.
-- Wrapped SaaS rate-limit bodies are always retried and cannot be turned off.
+1. The `Retry-After` header, when present
+2. The delay in `will be released in Ns`, when present
+3. Otherwise 1s, doubled on each retry, up to 30s
 
-### Environment overrides
+`401` and `403` without a rate-limit message are not retried.
 
-- `AKEYLESS_MAX_RETRIES`
-- `AKEYLESS_RETRY_INTERVAL_SECONDS`
-- `AKEYLESS_MAX_BACKOFF_SECONDS`
-- `AKEYLESS_RETRY_MULTIPLIER`
+You can also set it with the `AKEYLESS_MAXIMUM_BUSY_RETRY_ATTEMPTS` environment variable.
 
 ## Resource-level retry
 
-When a resource sets `retry {}`, its API calls retry at the HTTP transport level using
-these settings **instead of** the provider defaults (the same request-level mechanism as
-provider retry, just per-resource). The retry happens on individual API calls, so a create
-is never re-run as a whole.
+Every resource supports an optional `retry {}` block. When Create, Read, Update or Delete
+fails with an error that matches `error_message_regex`, the whole operation runs again.
 
 ```terraform
-resource "akeyless_dynamic_secret_aws" "example" {
-  name        = "aws-ds"
-  target_name = akeyless_target_aws.example.name
+resource "akeyless_dynamic_secret_mysql" "example" {
+  name        = "mysql-ds"
+  target_name = "my-mysql-target"
 
   retry {
-    interval_seconds      = 2
-    max_backoff_seconds   = 60
-    multiplier            = 2
-    max_retries           = 3
-    retry_on_status_codes = [429, 500, 502, 503, 504]
+    error_message_regex  = ["Too Many Requests", "will be released in"]
+    interval_seconds     = 10
+    max_interval_seconds = 180
+    max_retries          = 3
   }
 }
 ```
 
-Like provider retry, connection errors (`EOF`, `connection reset by peer`,
-`connection refused`), busy HTTP statuses (`429`, `5xx`), and wrapped SaaS rate-limit
-bodies are retried by default. Override statuses with `retry_on_status_codes`, and add
-extra body/text matches with `retry_on_messages` (matched as regular expressions):
+- `error_message_regex` (required): regular expressions matched against the error message.
+- `interval_seconds` (default `10`): wait before the first retry. The wait doubles on each retry.
+- `max_interval_seconds` (default `180`): maximum wait between retries.
+- `max_retries` (default `3`): maximum retries after the first attempt.
 
-```terraform
-  retry {
-    retry_on_status_codes = [429, 503]
-    retry_on_messages     = [".*temporary.*"]
-    max_retries           = 5
-  }
-```
+Changing only the `retry` block never recreates the resource.
 
-**Note:** on resources without an update operation (create-only), the `retry` block is
-`ForceNew` — changing any retry setting triggers a destroy + recreate of the item. This is
-a Terraform SDK constraint for create-only resources. Set retry once at creation, or expect
-recreation when you change it.
+**Note:** if a Create fails after the item was already created on the server, a rerun can
+fail with an "already exists" error. Use regexes that match only busy or temporary errors.
