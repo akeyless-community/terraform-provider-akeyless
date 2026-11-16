@@ -30,7 +30,7 @@ Dockerhub dynamic secret resource
 - `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `producer_encryption_key_name` (String) Dynamic producer encryption key
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name

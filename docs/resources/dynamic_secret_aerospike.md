@@ -32,7 +32,7 @@ Aerospike dynamic secret resource
 - `item_custom_fields` (Map of String) Custom fields
 - `output_rule` (List of String) Password output rules
 - `password_length` (String) Generated password length
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `skip_dry_run` (Boolean) Skip dry run
 - `target_name` (String) Target name
 - `use_capital_letters` (String) Require capital letters

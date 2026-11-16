@@ -29,7 +29,7 @@ AWS Target resource
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `region` (String) AWS region
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `role_arn` (String) AWS IAM role identifier that Gateway will assume in your AWS account, relevant only when using external ID
 - `session_token` (String) Required only for temporary security credentials retrieved using STS
 - `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM

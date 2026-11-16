@@ -781,11 +781,35 @@ func (e *APIError) Error() string { return e.err.Error() }
 
 func (e *APIError) Unwrap() error { return e.err }
 
+// APIErrorFromMetadata builds an APIError. Its message stays err.Error().
+func APIErrorFromMetadata(statusCode int, retryAfter time.Duration, err error) error {
+	if err == nil {
+		return nil
+	}
+	return &APIError{StatusCode: statusCode, RetryAfter: retryAfter, err: err}
+}
+
+// DiagnosticsFromErr keeps HTTP metadata in the diagnostic detail.
+func DiagnosticsFromErr(err error) diag.Diagnostics {
+	if err == nil {
+		return nil
+	}
+	d := diag.Diagnostic{Severity: diag.Error, Summary: err.Error()}
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		d.Detail = fmt.Sprintf("http_status=%d", apiErr.StatusCode)
+		if apiErr.RetryAfter > 0 {
+			d.Detail += " retry_after=" + apiErr.RetryAfter.String()
+		}
+	}
+	return diag.Diagnostics{d}
+}
+
 func withResponseInfo(resp *http.Response, err error) error {
 	if err == nil || resp == nil {
 		return err
 	}
-	return &APIError{StatusCode: resp.StatusCode, RetryAfter: parseRetryAfter(resp.Header.Get("Retry-After")), err: err}
+	return APIErrorFromMetadata(resp.StatusCode, parseRetryAfter(resp.Header.Get("Retry-After")), err)
 }
 
 // parseRetryAfter reads a Retry-After header in seconds or as an HTTP date.

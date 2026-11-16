@@ -22,7 +22,7 @@ Defaults settings
 - `hvp_route_version` (Number) Hvp route version to use [1/2]
 - `key` (String) The name of the gateway default encryption key
 - `oidc_access_id` (String) Default OIDC access-id for UI login
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `saml_access_id` (String) Default SAML access-id for UI login
 
 ### Read-Only

@@ -21,7 +21,7 @@ Cache settings
 - `enable_cache` (String) Enable cache [true/false]
 - `enable_proactive` (String) Enable proactive caching [true/false]
 - `minimum_fetch_interval` (String) When using Cache or/and Proactive Cache, additional secrets will be fetched upon requesting a secret, based on the requestor's access policy. Define minimum fetching interval to avoid over fetching in a given time frame
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `stale_timeout` (String) Stale timeout in minutes, cache entries which are not accessed within timeout will be removed from cache
 
 ### Read-Only

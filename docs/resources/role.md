@@ -86,7 +86,7 @@ output "demo-role" {
 - `event_forwarders_name` (Set of String) Allow this role to manage the following Event Forwarders.
 - `gw_analytics_access` (String) Allow this role to view gw analytics. Currently only 'none', 'scoped', 'all' values are supported, allowing associated auth methods to view reports produced by the same auth methods.
 - `isi_access` (String) Allow this role to access Identity & Secrets Intelligence. Currently only 'none', 'scoped' and 'all' values are supported.
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `reverse_rbac_access` (String) Allow this role to view Reverse RBAC. Supported values: 'scoped', 'all'.
 - `rules` (Block Set) Set a rule to a role (see [below for nested schema](#nestedblock--rules))
 - `sra_reports_access` (String) Allow this role to view SRA Clusters. Currently only 'none', 'scoped', 'all' values are supported.

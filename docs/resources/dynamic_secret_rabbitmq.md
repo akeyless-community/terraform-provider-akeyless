@@ -38,7 +38,7 @@ RabbitMQ dynamic secret resource
 - `rabbitmq_user_tags` (String) User Tags
 - `rabbitmq_user_vhost` (String) User Virtual Host
 - `rabbitmq_user_write_permission` (String) User write permission
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `secure_access_url` (String) Destination URL to inject secrets
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access

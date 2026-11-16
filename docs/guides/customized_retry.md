@@ -30,7 +30,7 @@ The block has the same fields in two places:
 
 Set at least one of `error_message_regex` and `retry_on_status_codes`.
 
-- `error_message_regex`: regular expressions matched against the error message.
+- `error_message_regex`: regular expressions matched against the full provider error, for example `can't create item: Too Many Requests`. A pattern anchored with `^` does not match that prefix.
 - `retry_on_status_codes`: HTTP status codes of the failed API call, for example `[429, 503]`.
 - `interval_seconds` (default `3`): wait before the first retry. The wait doubles on each retry.
 - `max_interval_seconds` (default `180`): maximum wait between retries.
@@ -86,7 +86,9 @@ resource "akeyless_dynamic_secret_mysql" "example" {
 }
 ```
 
-To turn off the provider retry for one resource, set `max_retries = 0` in its `retry {}` block.
+To turn off the provider retry for one resource, set `max_retries = 0` and still set
+`error_message_regex` or `retry_on_status_codes`. A `retry` block with only
+`max_retries` is rejected.
 
 Changing only the `retry` block never recreates the resource. The plan shows an in-place
 update, but the provider only saves the new retry settings and does not call the update API.

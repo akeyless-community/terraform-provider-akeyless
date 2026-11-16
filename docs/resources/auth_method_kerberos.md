@@ -42,7 +42,7 @@ Kerberos Auth Method Resource
 - `ldap_ca_cert` (String) LDAP CA certificate
 - `ldap_url` (String) LDAP URL
 - `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `subclaims_delimiters` (Set of String) A list of additional sub claims delimiters
 - `unique_identifier` (String) A unique identifier (ID) value should be configured. Whenever a user logs in with a token, these authentication types issue a sub claim that contains details uniquely identifying that user. This sub claim includes a key containing the ID value that you configured, and is used to distinguish between different users from within the same organization.
 - `user_attribute` (String) User attribute

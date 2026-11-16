@@ -44,7 +44,7 @@ AWS dynamic secret resource
 - `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
 - `region` (String) Region
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `secure_access_aws_account_id` (String) The aws account id
 - `secure_access_aws_native_cli` (Boolean) The aws native cli
 - `secure_access_aws_region` (String)

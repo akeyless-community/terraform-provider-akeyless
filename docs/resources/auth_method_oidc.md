@@ -40,7 +40,7 @@ OIDC Auth Method Resource
 - `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
 - `required_scopes` (Set of String) RequiredScopes is a list of required scopes that the oidc method will request from the oidc provider and the user must approve
 - `required_scopes_prefix` (String) RequiredScopesPrefix is a a prefix to add to all required-scopes when requesting them from the oidc server (for example, azures' Application ID URI)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `subclaims_delimiters` (Set of String) A list of additional sub claims delimiters (relevant only for SAML, OIDC, OAuth2/JWT)
 
 ### Read-Only

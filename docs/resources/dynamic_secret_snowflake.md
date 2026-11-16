@@ -38,7 +38,7 @@ Snowflake dynamic secret resource
 - `password_length` (String) The length of the password to be generated
 - `private_key` (String, Sensitive) RSA Private key (base64 encoded)
 - `private_key_passphrase` (String, Sensitive) The Private key passphrase
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `role` (String) User role
 - `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object

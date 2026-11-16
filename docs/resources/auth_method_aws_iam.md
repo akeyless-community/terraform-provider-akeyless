@@ -39,7 +39,7 @@ AWS IAM Auth Method Resource
 - `gw_bound_ips` (Set of String) A CIDR whitelist with the GW IPs that the access is restricted to
 - `jwt_ttl` (Number) Jwt TTL
 - `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `sts_url` (String) sts URL
 - `unique_identifier` (String) A unique identifier (ID) value which is a "sub claim" name that contains details uniquely identifying that resource. This "sub claim" is used to distinguish between different identities.
 

@@ -33,7 +33,7 @@ Custom dynamic secret resource
 - `encryption_key_name` (String) Dynamic producer encryption key
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `payload` (String) Secret payload to be sent with each create/revoke webhook request
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `rotate_sync_url` (String) URL of an endpoint that implements /sync/rotate method, for example https://webhook.example.com/sync/rotate
 - `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object

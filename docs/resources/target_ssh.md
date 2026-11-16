@@ -29,7 +29,7 @@ SSH Target resource
 - `port` (String) SSH port
 - `private_key` (String) SSH private key
 - `private_key_password` (String) SSH private key password
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `ssh_password` (String) SSH password to rotate
 - `ssh_username` (String) SSH username
 

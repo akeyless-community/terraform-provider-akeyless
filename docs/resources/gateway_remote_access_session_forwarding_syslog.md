@@ -24,7 +24,7 @@ Session Forwarding config for syslog
 - `network` (String) Syslog network [tcp/udp]
 - `output_format` (String) Logs format [text/json]
 - `pull_interval` (String) Pull interval in seconds
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `target_tag` (String) Syslog target tag
 - `tls_certificate` (String, Sensitive) Syslog tls certificate (PEM format) in a Base64 format
 

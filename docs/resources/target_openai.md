@@ -35,7 +35,7 @@ OpenAI Target resource. In ChatGPT OAuth mode, every update requires a new Codex
 - `model` (String) Default model to use with OpenAI
 - `openai_url` (String) Base URL of the OpenAI API
 - `organization_id` (String) Organization ID
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 

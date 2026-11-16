@@ -20,7 +20,7 @@ TLS certificate config for gateway
 - `cert_data` (String, Sensitive) TLS certificate data (PEM format)
 - `expiration_event_in` (List of String) How many days before the TLS certificate expiration to trigger an expiration event (e.g. [60, 30, 10])
 - `key_data` (String, Sensitive) TLS private key data (PEM format)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 

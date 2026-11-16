@@ -44,7 +44,7 @@ resource "akeyless_auth_method_saml" "saml_auth" {
 - `idp_metadata_xml_data` (String) IDP metadata xml data
 - `jwt_ttl` (Number) Creds expiration time in minutes
 - `product_type` (Set of String) Choose the relevant product type for the auth method [sm, sra, pm, dp, ca]
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `subclaims_delimiters` (Set of String) A list of additional sub claims delimiters (relevant only for SAML, OIDC, OAuth2/JWT)
 - `use_dedicated_saml_urls` (Boolean) Use dedicated SAML URLs
 

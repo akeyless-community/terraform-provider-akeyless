@@ -42,7 +42,7 @@ func Provider() *schema.Provider {
 			"uid_login":      uidLoginSchema,
 			"cert_login":     certLoginSchema,
 			"token_login":    tokenLoginSchema,
-			"retry":          retrySchema("Default retry for all resources when the error matches error_message_regex. A resource retry block overrides it. See the Customized Retry guide."),
+			"retry":          retrySchema("Default retry for all resources when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. A resource retry block overrides it. See the Customized Retry guide."),
 		},
 		//ConfigureFunc: configureProvider,
 		ConfigureContextFunc: configureProvider,

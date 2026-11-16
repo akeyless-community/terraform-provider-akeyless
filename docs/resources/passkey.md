@@ -27,7 +27,7 @@ Passkey resource
 - `description` (String) Description of the object
 - `origin_url` (List of String) Originating websites for this passkey
 - `protection_key_name` (String) The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `tags` (Set of String) Add tags attached to this object
 - `username` (String) For Password Management use
 

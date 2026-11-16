@@ -30,7 +30,7 @@ Sync Static Secret with Universal Secrets Connector resource
 - `gcp_project_id` (String) GCP project to sync the secret to. Relevant only for GCP USCs; must be a project available on the USC
 - `namespace` (String) Vault namespace, releavnt only for Hashicorp Vault Target
 - `repositories` (String) GitHub repositories to sync to, relevant only for GitHub targets (e.g. repo1,repo2). Syncs to all repositories defined on the USC by default
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 

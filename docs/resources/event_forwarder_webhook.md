@@ -35,7 +35,7 @@ Event Forwarder Webhook resource
 - `key` (String) The name of a key that used to encrypt the EventForwarder secret value (if empty, the account default protectionKey key will be used)
 - `password` (String, Sensitive) Password for authentication relevant for user-pass auth-type
 - `private_key_data` (String, Sensitive) Base64 encoded PEM RSA Private Key, relevant for certificate auth-type
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `runner_type` (String) Event Forwarder runner type [immediate/periodic]
 - `server_certificates` (String, Sensitive) Base64 encoded PEM certificate of the Webhook
 - `targets_event_source_locations` (Set of String) Targets event sources to forward events about, for example: /abc/*

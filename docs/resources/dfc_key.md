@@ -40,7 +40,7 @@ DFC Key resource
 - `generate_self_signed_certificate` (Boolean) Whether to generate a self signed certificate with the key. If set, certificate-ttl must be provided.
 - `hash_algorithm` (String) Specifies the hash algorithm used for the encryption key's operations, available options: [SHA256, SHA384, SHA512]
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `rotation_event_in` (Set of String) How many days before the rotation of the item would you like to be notified.
 - `rotation_interval` (String) The number of days to wait between every automatic rotation (7-365)
 - `split_level` (Number) The number of fragments that the item will be split into (not includes customer fragment)

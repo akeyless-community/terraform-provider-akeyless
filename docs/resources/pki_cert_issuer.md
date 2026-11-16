@@ -59,7 +59,7 @@ PKI Cert Issuer  resource
 - `postal_code` (String) A comma-separated list of postal codes that will be set in the issued certificate
 - `protect_certificates` (Boolean) Whether to protect generated certificates from deletion
 - `province` (String) A comma-separated list of provinces that will be set in the issued certificate
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `scheduled_renew` (Number) Number of days before expiration to renew certificates
 - `server_flag` (Boolean) If set, certificates will be flagged for server auth use
 - `signer_key_name` (String) A key to sign the certificate with, required in Private CA mode

@@ -37,7 +37,7 @@ Account Settings resource
 - `password_expiration_days` (String) Number of days before password expires
 - `password_expiration_notification_days` (String) Number of days before password expiration to send notification
 - `password_length` (Number) Minimum password length
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `use_capital_letters` (String) Require capital letters in passwords [true/false]
 - `use_lower_letters` (String) Require lower-case letters in passwords [true/false]
 - `use_numbers` (String) Require numbers in passwords [true/false]

@@ -124,7 +124,7 @@ output "auth_method" {
 - `email_login` (Block List) A configuration block, described below, that attempts to authenticate using email and password. (see [below for nested schema](#nestedblock--email_login))
 - `gcp_login` (Block List) A configuration block, described below, that attempts to authenticate using GCP-IAM authentication credentials. (see [below for nested schema](#nestedblock--gcp_login))
 - `jwt_login` (Block List) A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT. (see [below for nested schema](#nestedblock--jwt_login))
-- `retry` (Block List, Max: 1) Default retry for all resources when the error matches error_message_regex. A resource retry block overrides it. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Default retry for all resources when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. A resource retry block overrides it. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `token_login` (Block List) A configuration block, described below, that attempts to authenticate using akeyless token. The token can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_TOKEN. (see [below for nested schema](#nestedblock--token_login))
 - `uid_login` (Block List) A configuration block, described below, that attempts to authenticate using Universal Identity authentication. (see [below for nested schema](#nestedblock--uid_login))
 

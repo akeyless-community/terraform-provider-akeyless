@@ -26,7 +26,7 @@ LDAP auth config for gateway
 - `ldap_ca_cert` (String) LDAP CA Certificate (base64 encoded)
 - `ldap_enable` (String) Enable LDAP auth [true/false]
 - `ldap_url` (String) LDAP server URL
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `signing_key_data` (String, Sensitive) The private key (base64 encoded), associated with the public key defined in the Ldap auth
 - `user_attribute` (String) LDAP user attribute
 - `user_dn` (String) LDAP user DN

@@ -32,7 +32,7 @@ Remote access rdp recording config
 - `rdp_session_recording_encryption_key` (String, Sensitive) If provided, this key will be used to encrypt uploaded recordings.
 - `rdp_session_recording_quality` (String) RDP session recording quality [low/medium/high]
 - `rdp_session_storage` (String) Rdp session recording storage destination [local/aws/azure]
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 

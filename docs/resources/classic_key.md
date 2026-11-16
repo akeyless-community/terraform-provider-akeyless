@@ -42,7 +42,7 @@ Classic Key resource
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `key_data` (String, Sensitive) Base64-encoded classic key value
 - `protection_key_name` (String) The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `rotation_event_in` (Set of String) How many days before the rotation of the item would you like to be notified
 - `rotation_interval` (String) The number of days to wait between every automatic rotation (1-365)
 - `tags` (Set of String) Add tags attached to this object

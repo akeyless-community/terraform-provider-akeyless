@@ -32,7 +32,7 @@ K8S Auth config
 - `k8s_issuer` (String) The Kubernetes JWT issuer name. K8SIssuer is the claim that specifies who issued the Kubernetes token
 - `rancher_api_key` (String) The api key used to access the TokenReview API to validate other JWTs (relevant for "rancher" only)
 - `rancher_cluster_id` (String) The cluster id as define in rancher (relevant for "rancher" only)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `signing_key` (String, Sensitive) The private key (in base64 encoded of the PEM format) associated with the public key defined in the Kubernetes auth
 - `token_exp` (Number) Time in seconds of expiration of the Akeyless Kube Auth Method token
 - `token_reviewer_jwt` (String, Sensitive) A Kubernetes service account JWT used to access the TokenReview API to validate other JWTs (relevant for "native_k8s" only). If not set, the JWT submitted in the authentication process will be used to access the Kubernetes TokenReview API.

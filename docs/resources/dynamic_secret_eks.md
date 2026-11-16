@@ -35,7 +35,7 @@ Amazon Elastic Kubernetes Service (Amazon EKS) dynamic secret
 - `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `secure_access_allow_port_forwading` (Boolean) Enable Port forwarding while using CLI access.
 - `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access

@@ -41,7 +41,7 @@ Aerospike target resource
 - `namespace` (String) Aerospike namespace
 - `password` (String, Sensitive) Aerospike admin password
 - `port` (String) Aerospike port
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `rotate_on_unlock` (String) Rotate after unlock
 - `skip_server_name_validation` (String) Skip server name validation
 - `ssl` (Boolean) Enable SSL

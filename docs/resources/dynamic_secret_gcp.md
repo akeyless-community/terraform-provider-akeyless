@@ -38,7 +38,7 @@ Google Cloud Provider (GCP) dynamic secret resource
 - `gcp_token_scopes` (String) Access token scopes list, e.g. scope1,scope2 (Relevant only when --access-type=sa; required when --gcp-cred-type=token)
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `project_id` (String) GCP Project ID override for dynamic secret operations
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `role_binding` (String) Role binding definitions in JSON format (Relevant only when --access-type=sa and --service-account-type=dynamic)
 - `role_names` (String) Comma-separated list of GCP roles to assign to the user (Relevant only when --access-type=external)
 - `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds

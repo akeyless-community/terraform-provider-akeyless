@@ -25,7 +25,7 @@ Session Forwarding config for datadog
 - `log_tags` (String) A comma-separated list of Datadog log tags formatted as key:value strings
 - `output_format` (String) Logs format [text/json]
 - `pull_interval` (String) Pull interval in seconds
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 

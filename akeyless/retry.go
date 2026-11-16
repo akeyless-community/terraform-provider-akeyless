@@ -20,6 +20,7 @@ const (
 	defaultRetryIntervalSeconds    = 3
 	defaultRetryMaxIntervalSeconds = 180
 	defaultRetryMaxRetries         = 3
+	maxRetryIntervalSeconds        = 24 * 60 * 60
 )
 
 // retrySleep is replaced in tests.
@@ -66,14 +67,14 @@ func retrySchema(description string) *schema.Schema {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Default:      defaultRetryIntervalSeconds,
-					ValidateFunc: validation.IntAtLeast(1),
+					ValidateFunc: validation.IntBetween(1, maxRetryIntervalSeconds),
 					Description:  "Wait before the first retry, in seconds. The wait doubles on each retry.",
 				},
 				"max_interval_seconds": {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Default:      defaultRetryMaxIntervalSeconds,
-					ValidateFunc: validation.IntAtLeast(1),
+					ValidateFunc: validation.IntBetween(1, maxRetryIntervalSeconds),
 					Description:  "Maximum wait between retries, in seconds.",
 				},
 				"max_retries": {
@@ -103,11 +104,16 @@ func retryConfigFromData(d *schema.ResourceData) (*retryConfig, error) {
 		return nil, nil
 	}
 	m := raw[0].(map[string]interface{})
+	intervalSeconds := m["interval_seconds"].(int)
+	maxIntervalSeconds := m["max_interval_seconds"].(int)
+	if maxIntervalSeconds < intervalSeconds {
+		return nil, fmt.Errorf("retry.max_interval_seconds (%d) must be >= retry.interval_seconds (%d)", maxIntervalSeconds, intervalSeconds)
+	}
 
 	cfg := &retryConfig{
 		statusCodes: map[int]bool{},
-		interval:    time.Duration(m["interval_seconds"].(int)) * time.Second,
-		maxInterval: time.Duration(m["max_interval_seconds"].(int)) * time.Second,
+		interval:    time.Duration(intervalSeconds) * time.Second,
+		maxInterval: time.Duration(maxIntervalSeconds) * time.Second,
 		maxRetries:  m["max_retries"].(int),
 	}
 	for _, p := range m["error_message_regex"].([]interface{}) {
@@ -204,22 +210,62 @@ func runDiagsWithRetry(ctx context.Context, d *schema.ResourceData, m interface{
 		return diagsError(diags)
 	})
 	if err != nil && !diags.HasError() {
-		return append(diags, diag.FromErr(err)...)
+		diags = append(diags, diag.FromErr(err)...)
 	}
-	return diags
+	return stripRetryMetadata(diags)
 }
 
 func diagsError(diags diag.Diagnostics) error {
 	var msgs []string
+	var status int
+	var retryAfter time.Duration
 	for _, dg := range diags {
-		if dg.Severity == diag.Error {
-			msgs = append(msgs, strings.TrimSpace(dg.Summary+" "+dg.Detail))
+		if dg.Severity != diag.Error {
+			continue
+		}
+		diagStatus, diagRetryAfter := diagRetryMeta(dg.Detail)
+		message := dg.Summary
+		if diagStatus == 0 {
+			message += " " + dg.Detail
+		}
+		msgs = append(msgs, strings.TrimSpace(message))
+		if status == 0 {
+			status, retryAfter = diagStatus, diagRetryAfter
 		}
 	}
 	if len(msgs) == 0 {
 		return nil
 	}
-	return errors.New(strings.Join(msgs, "; "))
+	err := errors.New(strings.Join(msgs, "; "))
+	if status == 0 {
+		return err
+	}
+	return common.APIErrorFromMetadata(status, retryAfter, err)
+}
+
+func diagRetryMeta(detail string) (int, time.Duration) {
+	statusText, retryAfterText, hasRetryAfter := strings.Cut(strings.TrimPrefix(detail, "http_status="), " retry_after=")
+	if statusText == detail {
+		return 0, 0
+	}
+	status, err := strconv.Atoi(statusText)
+	if err != nil {
+		return 0, 0
+	}
+	if hasRetryAfter {
+		retryAfter, _ := time.ParseDuration(retryAfterText)
+		return status, retryAfter
+	}
+	return status, 0
+}
+
+func stripRetryMetadata(diags diag.Diagnostics) diag.Diagnostics {
+	for i := range diags {
+		if status, _ := diagRetryMeta(diags[i].Detail); status != 0 {
+			diags[i].Detail = ""
+		}
+	}
+	return diags
 }
 
 // backoffWait returns initial * 2^retry, capped at max.
@@ -257,13 +303,13 @@ func EnableResourceRetry(r *schema.Resource) {
 	if _, exists := r.Schema["retry"]; exists {
 		return
 	}
-	r.Schema["retry"] = retrySchema("Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide.")
+	r.Schema["retry"] = retrySchema("Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide.")
 
-	// Changing only retry {} must not recreate the item, so resources without
-	// Update get one that just stores the new retry settings.
+	// Changing only retry {} must not recreate the item. Resources without an
+	// Update reject other in-place changes.
 	if r.Update == nil && r.UpdateContext == nil {
 		r.UpdateContext = func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
-			return nil
+			return diag.Errorf("this resource cannot be updated in place")
 		}
 	}
 

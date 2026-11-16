@@ -20,7 +20,7 @@ Remote access desktop app config
 - `desktop_app_secure_web_access_url` (String) Specify the Web Access URL to be used by the Desktop Application
 - `desktop_app_secure_web_proxy` (String) Specify the URL for secure web proxy to be used by the Desktop Application
 - `desktop_app_ssh_cert_issuer` (String) Specify the default SSH-CERT-ISSUER that will be used as a fallback for Desktop Application
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 

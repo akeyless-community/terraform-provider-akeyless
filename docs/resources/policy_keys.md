@@ -26,7 +26,7 @@ Policy Keys Resource
 - `allowed_key_types` (List of String) Specify allowed key protection types (dfc, classic-key)
 - `max_rotation_interval_days` (Number) Set the maximum rotation interval for automatic key rotation
 - `object_types` (List of String) The object types this policy will apply to (items, targets)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 

@@ -33,7 +33,7 @@ windows Target resource
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `parent_target_name` (String) Name of the parent target, relevant only when connection-type is parent-target
 - `port` (String) Server WinRM port
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `use_tls` (String) Enable/Disable TLS for WinRM over HTTPS [true/false]
 
 ### Read-Only

@@ -39,7 +39,7 @@ Snowflake rotated secret resource
 - `password_length` (String) The length of the password to be generated
 - `private_key` (String, Sensitive) RSA Private key (base64 encoded) to rotate (relevant only for rotator-type=key)
 - `private_key_file_name` (String) The path to the file containing the private key (relevant only for rotator-type=key)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `rotated_password` (String) rotated-username password (relevant only for rotator-type=password)
 - `rotated_username` (String) username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=password or rotator-type=key)
 - `rotation_event_in` (List of String) How many days before the rotation of the item would you like to be notified

@@ -39,7 +39,7 @@ Azure AD dynamic secret resource
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `output_rule` (List of String) Password output rule definitions
 - `password_length` (String) The length of the password to be generated
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `secure_access_url` (String)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access

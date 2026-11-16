@@ -26,7 +26,7 @@ Certificate Migration resource
 - `expiration_event_in` (List of String) How many days before the expiration of the certificate would you like to be notified
 - `port_ranges` (String) A comma separated list of port ranges Examples: "80,443" or "80,443,8080-8090" or "443"
 - `protection_key` (String) The name of the key that protects the classic key value (if empty, the account default key will be used)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 

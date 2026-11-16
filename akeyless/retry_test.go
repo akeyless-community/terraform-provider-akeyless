@@ -171,6 +171,89 @@ func TestRetryStatusCodes(t *testing.T) {
 	})
 }
 
+func TestRetryStatusCodeSurvivesDiagnostics(t *testing.T) {
+	waits := captureWaits(t)
+	calls := 0
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+		CreateContext: func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+			calls++
+			if calls == 1 {
+				return common.DiagnosticsFromErr(apiError(http.StatusTooManyRequests, "15"))
+			}
+			return nil
+		},
+	}
+	EnableResourceRetry(r)
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
+		"retry": []interface{}{map[string]interface{}{
+			"retry_on_status_codes": []interface{}{http.StatusTooManyRequests},
+			"interval_seconds":      2,
+			"max_interval_seconds":  60,
+			"max_retries":           1,
+		}},
+	})
+
+	if diags := r.CreateContext(context.Background(), d, nil); diags.HasError() {
+		t.Fatal(diags)
+	}
+	if calls != 2 {
+		t.Errorf("calls=%d want 2", calls)
+	}
+	if len(*waits) != 1 || (*waits)[0] != 15*time.Second {
+		t.Errorf("waits=%v want [15s] from Retry-After", *waits)
+	}
+}
+
+func TestRetryDiagnosticsDetailIsMatched(t *testing.T) {
+	calls := 0
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+		CreateContext: func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+			calls++
+			if calls == 1 {
+				return diag.Diagnostics{{Severity: diag.Error, Summary: "can't create role", Detail: "temporarily unavailable"}}
+			}
+			return nil
+		},
+	}
+	EnableResourceRetry(r)
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
+		"retry": []interface{}{map[string]interface{}{
+			"error_message_regex": []interface{}{"temporarily unavailable"},
+			"max_retries":         1,
+		}},
+	})
+
+	if diags := r.CreateContext(context.Background(), d, nil); diags.HasError() {
+		t.Fatal(diags)
+	}
+	if calls != 2 {
+		t.Errorf("calls=%d want 2", calls)
+	}
+}
+
+func TestRetryMetadataIsNotReturned(t *testing.T) {
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+		CreateContext: func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+			return common.DiagnosticsFromErr(apiError(http.StatusTooManyRequests, "15"))
+		},
+	}
+	EnableResourceRetry(r)
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
+		"retry": []interface{}{map[string]interface{}{
+			"retry_on_status_codes": []interface{}{http.StatusTooManyRequests},
+			"max_retries":           0,
+		}},
+	})
+
+	diags := r.CreateContext(context.Background(), d, nil)
+	if !diags.HasError() || diags[0].Detail != "" {
+		t.Errorf("diags=%v want original error without retry metadata", diags)
+	}
+}
+
 func TestRetryAfter(t *testing.T) {
 	waits := captureWaits(t)
 	block := map[string]interface{}{
@@ -269,6 +352,38 @@ func TestRetryOnlyRetryChangeSkipsUpdate(t *testing.T) {
 	}
 }
 
+func TestRetryOnlyChangeDoesNotNeedUpdate(t *testing.T) {
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"description": {Type: schema.TypeString, Optional: true},
+		},
+		Create: func(*schema.ResourceData, interface{}) error { return nil },
+		Read:   func(*schema.ResourceData, interface{}) error { return nil },
+		Delete: func(*schema.ResourceData, interface{}) error { return nil },
+	}
+	EnableResourceRetry(r)
+
+	state := &terraform.InstanceState{ID: "x", Attributes: map[string]string{"description": "a"}}
+	run := func(raw map[string]interface{}) diag.Diagnostics {
+		diff, err := r.Diff(context.Background(), state, terraform.NewResourceConfigRaw(raw), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		d, err := schema.InternalMap(r.Schema).Data(state, diff)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return r.UpdateContext(context.Background(), d, nil)
+	}
+
+	if diags := run(map[string]interface{}{"description": "a", "retry": []interface{}{map[string]interface{}{"retry_on_status_codes": []interface{}{429}}}}); diags.HasError() {
+		t.Fatalf("retry-only update returned diagnostics: %v", diags)
+	}
+	if diags := run(map[string]interface{}{"description": "b"}); !diags.HasError() {
+		t.Fatal("expected an error for a real in-place update")
+	}
+}
+
 func TestOpenAITargetRetryOnlyChange(t *testing.T) {
 	r := resourceOpenAITarget()
 	EnableResourceRetry(r)
@@ -333,6 +448,37 @@ func TestRetryBlockNeedsTrigger(t *testing.T) {
 	})
 	if diags := r.Validate(cfg); !diags.HasError() {
 		t.Error("expected an error for a retry block without error_message_regex or retry_on_status_codes")
+	}
+}
+
+func TestRetryIntervalValidation(t *testing.T) {
+	t.Run("maximum is not smaller than interval", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, Provider().Schema, map[string]interface{}{
+			"retry": []interface{}{map[string]interface{}{
+				"error_message_regex":  []interface{}{"Too Many Requests"},
+				"interval_seconds":     10,
+				"max_interval_seconds": 3,
+			}},
+		})
+		if _, err := retryConfigFromData(d); err == nil {
+			t.Error("expected an error when max_interval_seconds is smaller than interval_seconds")
+		}
+	})
+
+	for _, field := range []string{"interval_seconds", "max_interval_seconds"} {
+		t.Run(field+" is capped", func(t *testing.T) {
+			r := &schema.Resource{Schema: map[string]*schema.Schema{}}
+			EnableResourceRetry(r)
+			cfg := terraform.NewResourceConfigRaw(map[string]interface{}{
+				"retry": []interface{}{map[string]interface{}{
+					"error_message_regex": []interface{}{"Too Many Requests"},
+					field:                 maxRetryIntervalSeconds + 1,
+				}},
+			})
+			if diags := r.Validate(cfg); !diags.HasError() {
+				t.Errorf("expected an error for retry.%s above %d", field, maxRetryIntervalSeconds)
+			}
+		})
 	}
 }
 

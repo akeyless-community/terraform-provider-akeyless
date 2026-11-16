@@ -25,7 +25,7 @@ Remote access config
 - `keyboard_layout` (String) Enable support for additional keyboard layouts
 - `legacy_ssh_algorithm` (String) Signs SSH certificates using legacy ssh-rsa-cert-01@openssh.com signing algorithm [true/false]
 - `rdp_target_configuration` (String) Specify the usernameSubClaim that exists inside the IDP JWT, e.g. email
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `ssh_target_configuration` (String) Specify the usernameSubClaim that exists inside the IDP JWT, e.g. email
 
 ### Read-Only

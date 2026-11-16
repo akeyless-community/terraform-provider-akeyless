@@ -38,7 +38,7 @@ PostgreSQL dynamic secret resource
 - `postgresql_password` (String, Sensitive) PostgreSQL Password
 - `postgresql_port` (String) PostgreSQL Port
 - `postgresql_username` (String) PostgreSQL Username
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `revocation_statements` (String) PostgreSQL Revocation statements
 - `secure_access_bastion_issuer` (String, Deprecated) Path to the SSH Certificate Issuer for your Akeyless Bastion
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access

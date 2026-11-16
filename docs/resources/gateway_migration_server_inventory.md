@@ -26,7 +26,7 @@ Server Inventory Migration resource
 ### Optional
 
 - `protection_key` (String) The name of a key that used to encrypt the secret value (if empty, the account default protectionKey key will be used)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `si_auto_rotate` (String) Enable/Disable automatic/recurrent rotation for migrated secrets. Default is false: only manual rotation is allowed for migrated secrets. If set to true, this command should be combined with --si-rotation-interval and --si-rotation-hour parameters (Relevant only for Server Inventory migration)
 - `si_rotation_hour` (Number) The hour of the scheduled rotation in UTC (Relevant only for Server Inventory migration)
 - `si_rotation_interval` (Number) The number of days to wait between every automatic rotation [1-365] (Relevant only for Server Inventory migration)

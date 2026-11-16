@@ -31,7 +31,7 @@ Event Forwarder Slack resource
 - `items_event_source_locations` (Set of String) Items Event sources
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) Key name. The key will be used to encrypt the Event Forwarder secret value. If key name is not specified, the account default protection key is used
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `runner_type` (String) Event Forwarder runner type [immediate/periodic]
 - `targets_event_source_locations` (Set of String) Targets Event sources
 

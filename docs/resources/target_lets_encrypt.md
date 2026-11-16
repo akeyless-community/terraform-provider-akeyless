@@ -33,7 +33,7 @@ Let's Encrypt Target resource
 - `lets_encrypt_url` (String) Let's Encrypt directory environment
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `resource_group` (String) Azure resource group name. Required when dns-target-creds points to Azure target
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `timeout` (String) Timeout for challenge validation
 
 ### Read-Only

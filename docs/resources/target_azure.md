@@ -30,7 +30,7 @@ Azure Target resource
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `resource_group_name` (String) The Resource Group name in your Azure subscription
 - `resource_name` (String) The name of the relevant Resource
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `subscription_id` (String) Azure Subscription Id
 - `tenant_id` (String) Azure tenant id
 - `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM

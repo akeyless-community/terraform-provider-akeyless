@@ -35,7 +35,7 @@ Gitlab dynamic secret resource.
 - `group_name` (String) Gitlab group name, required for access-type=group
 - `installation_organization` (String) Gitlab project name, required for access-type=project
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name

@@ -26,7 +26,7 @@ Certificate Discovery resource. Starts a certificate discovery scan and saves re
 - `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified. To specify multiple events, repeat this argument.
 - `port_ranges` (String) A comma separated list of port ranges. Example: 80,8080-8085
 - `protection_key` (String) The name of the key that protects the certificate value (if empty, the account default key will be used)
-- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 
 ### Read-Only
 
