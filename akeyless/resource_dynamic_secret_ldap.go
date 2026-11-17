@@ -25,6 +25,18 @@ func resourceDynamicSecretLdap() *schema.Resource {
 			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("bind_dn_password"), cty.GetAttrPath("bind_dn_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -141,6 +153,11 @@ func resourceDynamicSecretLdap() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Enable/Disable secure remote access [true/false]",
+			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed Secure Remote Access hosts",
 			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
@@ -289,6 +306,24 @@ func resourceDynamicSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 		body.ItemCustomFields = &fields
 	}
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
+		}
+	}
 	_, resp, err := client.GatewayCreateProducerLdap(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create dynamic secret", resp, err)
@@ -373,8 +408,20 @@ func resourceDynamicSecretLdapRead(d *schema.ResourceData, m interface{}) error 
 	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
 		return err
 	}
+	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
+		return err
+	}
+	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
+		return err
+	}
 	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
 		return err
+	}
+	if sra := rOut.SecureRemoteAccessDetails; sra != nil {
+		err = d.Set("secure_access_enforce_hosts_restriction", sra.GetEnforceHostsRestriction())
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(path)
@@ -465,6 +512,24 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 		body.ItemCustomFields = &fields
 	}
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
+		}
+	}
 	_, resp, err := client.GatewayUpdateProducerLdap(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update dynamic secret", resp, err)

@@ -27,6 +27,18 @@ func resourceDynamicSecretRdp() *schema.Resource {
 			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("rdp_admin_pwd"), cty.GetAttrPath("rdp_admin_pwd_wo")),
 		},
 		Schema: map[string]*schema.Schema{
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -171,6 +183,28 @@ func resourceDynamicSecretRdp() *schema.Resource {
 				Optional:    true,
 				Description: "Override the RDP Domain username",
 			},
+			"host_provider": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access",
+			},
+			"target": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of linked targets to be associated, Relevant only for Secure Remote Access",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"block_parent_target_access": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Block access to the parent target when using a linked target [true/false]",
+			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed Secure Remote Access hosts",
+			},
 			"secure_access_host": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -285,7 +319,28 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessDelay, int64(secureAccessDelay))
 	common.GetAkeylessPtr(&body.SecureAccessRdGatewayServer, secureAccessRdGatewayServer)
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
+	common.GetAkeylessPtr(&body.BlockParentTargetAccess, d.Get("block_parent_target_access").(string))
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
+		}
+	}
 	_, resp, err := client.DynamicSecretCreateRdp(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create dynamic secret", resp, err)
@@ -417,8 +472,23 @@ func resourceDynamicSecretRdpRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	common.GetSra(d, rOut.SecureRemoteAccessDetails, "DYNAMIC_SECERT")
+	if err = common.SetSraHostProvider(d, rOut.SecureRemoteAccessDetails); err != nil {
+		return err
+	}
+	if rOut.BlockParentTargetAccess != nil {
+		err = d.Set("block_parent_target_access", strconv.FormatBool(*rOut.BlockParentTargetAccess))
+		if err != nil {
+			return err
+		}
+	}
 
 	if err = setAgenticRulesReadFields(d, rOut.AgenticRules); err != nil {
+		return err
+	}
+	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
+		return err
+	}
+	if err = setDynamicSecretSkipDryRunReadField(d, rOut.SkipDryRun); err != nil {
 		return err
 	}
 	if err = setDynamicSecretPasswordPolicyReadFields(d, rOut); err != nil {
@@ -507,7 +577,28 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessCertificateIssuer, secureAccessCertificateIssuer)
 	common.GetAkeylessPtr(&body.SecureAccessDelay, int64(secureAccessDelay))
 	common.GetAkeylessPtr(&body.SecureAccessRdGatewayServer, secureAccessRdGatewayServer)
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
+	common.GetAkeylessPtr(&body.BlockParentTargetAccess, d.Get("block_parent_target_access").(string))
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
+		}
+	}
 	_, resp, err := client.DynamicSecretUpdateRdp(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update dynamic secret", resp, err)

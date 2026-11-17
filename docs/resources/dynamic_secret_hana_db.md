@@ -21,8 +21,11 @@ HanaDb dynamic secret resource
 
 ### Optional
 
+- `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
+- `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
+- `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `hana_dbname` (String) HanaDb Name
 - `hanadb_create_statements` (String) HanaDb Creation statements
 - `hanadb_host` (String) HanaDb Host
@@ -41,6 +44,7 @@ HanaDb dynamic secret resource
 - `secure_access_enable` (String) Enable/Disable secure remote access [true/false]
 - `secure_access_host` (Set of String) Target DB servers for connections (In case of Linked Target association, host(s) will inherit Linked Target hosts)
 - `secure_access_web` (Boolean) Enable Web Secure Remote Access
+- `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object
 - `target_name` (String) Target name
 - `user_ttl` (String) User TTL

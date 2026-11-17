@@ -3,6 +3,7 @@ package akeyless
 
 import (
 	"context"
+	"strconv"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
@@ -126,6 +127,12 @@ func resourceDigicertTarget() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to keep previous version [true/false]. If not set, use default according to account settings",
 			},
+			"delete_protection": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "false",
+				Description: "Protection from accidental deletion of this object [true/false]",
+			},
 		},
 	}
 }
@@ -154,6 +161,7 @@ func resourceDigicertTargetCreate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
 	maxVersions := d.Get("max_versions").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.TargetCreateDigiCert{
 		Name:  name,
@@ -173,6 +181,7 @@ func resourceDigicertTargetCreate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, resp, err := client.TargetCreateDigiCert(ctx).Body(body).Execute()
 	if err != nil {
@@ -288,6 +297,12 @@ func resourceDigicertTargetRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
+		if rOut.Target.DeleteProtection != nil {
+			err = d.Set("delete_protection", strconv.FormatBool(*rOut.Target.DeleteProtection))
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(path)
@@ -320,6 +335,7 @@ func resourceDigicertTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	key := d.Get("key").(string)
 	maxVersions := d.Get("max_versions").(string)
 	keepPrevVersion := d.Get("keep_prev_version").(string)
+	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.TargetUpdateDigiCert{
 		Name:  name,
@@ -340,6 +356,7 @@ func resourceDigicertTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, resp, err := client.TargetUpdateDigiCert(ctx).Body(body).Execute()
 	if err != nil {

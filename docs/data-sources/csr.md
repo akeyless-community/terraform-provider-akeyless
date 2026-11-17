@@ -28,11 +28,14 @@ Generate a new CSR data source
 - `city` (String) The city to be included in the CSR
 - `country` (String) The country to be included in the CSR
 - `critical` (Boolean) Add critical to the key usage extension (will be false if not added)
+- `customer_frg_id` (String) The customer fragment ID that will be used to create the key (if empty, the key will be created independently of a customer fragment)
 - `dep` (String) The department to be included in the CSR
 - `email_addresses` (String) A comma-separated list of email addresses alternative names
+- `ext_key_usage` (String) A comma-separated list of extended key usages to include in the CSR certificate
 - `generate_key` (Boolean) Generate a new classic key for the csr
 - `ip_addresses` (String) A comma-separated list of ip addresses alternative names
 - `key_type` (String) The type of the key to generate (classic-key/dfc)
+- `key_usage` (String) A comma-separated list of key usages to include in the CSR certificate
 - `org` (String) The organization to be included in the CSR
 - `split_level` (Number) The number of fragments that the item will be split into (not includes customer fragment, relevant only for dfc keys)
 - `state` (String) The state to be included in the CSR

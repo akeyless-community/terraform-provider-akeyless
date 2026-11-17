@@ -175,6 +175,16 @@ func resourceRole() *schema.Resource {
 				Optional:    true,
 				Description: "Allow this role to access Identity & Secrets Intelligence. Currently only 'none', 'scoped' and 'all' values are supported.",
 			},
+			"unlock_secrets": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Allow this role to force-unlock locked secrets. Currently only 'none', 'scoped' and 'all' values are supported.",
+			},
+			"approve_access_request": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Allow this role to approve Access Requests for items. Currently only 'none', 'scoped' and 'all' values are supported.",
+			},
 			"delete_protection": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -227,6 +237,8 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	eventForwardersName := common.ExpandStringList(eventForwardersNameSet.List())
 	reverseRbacAccess := d.Get("reverse_rbac_access").(string)
 	isiAccess := d.Get("isi_access").(string)
+	unlockSecrets := d.Get("unlock_secrets").(string)
+	approveAccessRequest := d.Get("approve_access_request").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 
 	body := akeyless_api.CreateRole{
@@ -246,6 +258,8 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	common.GetAkeylessPtr(&body.ReverseRbacAccess, reverseRbacAccess)
 	common.GetAkeylessPtr(&body.IsiAccess, isiAccess)
+	common.GetAkeylessPtr(&body.UnlockSecrets, unlockSecrets)
+	common.GetAkeylessPtr(&body.ApproveAccessRequest, approveAccessRequest)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 
 	_, resp, err := client.CreateRole(ctx).Body(body).Execute()
@@ -361,10 +375,12 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			// default rules the user never authored would be written to state and cause a perpetual diff
 			rulesSet := d.Get("rules").(*schema.Set)
 			if len(rulesSet.List()) > 0 {
-				err := readRules(d, role.Rules.PathRules)
-				if err != nil {
-					return diag.FromErr(err)
-				}
+				err = readRules(d, role.Rules.PathRules)
+			} else {
+				err = readAdministrativeRules(d, role.Rules.PathRules)
+			}
+			if err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -598,17 +614,32 @@ func readAuthMethodsAssoc(d *schema.ResourceData, authMethodsAssoc []akeyless_ap
 	return nil
 }
 
+func readAdministrativeRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
+	for _, ruleSrc := range rules {
+		if ruleSrc.Type == nil || ruleSrc.Path == nil || !isAccessRule(*ruleSrc.Type) {
+			continue
+		}
+		err := setAccessRuleField(d, *ruleSrc.Type, *ruleSrc.Path)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
-	var err error
+	if err := readAdministrativeRules(d, rules); err != nil {
+		return err
+	}
+
+	return readObjectRules(d, rules)
+}
+
+func readObjectRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 	var roleRules []interface{}
 
 	for _, ruleSrc := range rules {
-		if isAccessRule(*ruleSrc.Type) {
-			err = setAccessRuleField(d, *ruleSrc.Type, *ruleSrc.Path)
-			if err != nil {
-				return err
-			}
-		} else {
+		if !isAccessRule(*ruleSrc.Type) {
 			isRestrictedRule := false
 			restrictedRules := extractRestrictedRules(d)
 			for _, restrictedRule := range restrictedRules {
@@ -634,12 +665,7 @@ func readRules(d *schema.ResourceData, rules []akeyless_api.PathRule) error {
 		}
 	}
 
-	err = d.Set("rules", roleRules)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("rules", roleRules)
 }
 
 func convertSraCapabilities(capabilities []string) []string {
@@ -1001,6 +1027,20 @@ func getNewAccessRules(d *schema.ResourceData) []interface{} {
 		accessRules = append(accessRules, isiAccessMap)
 	}
 
+	unlockSecrets := d.Get("unlock_secrets").(string)
+	if unlockSecrets != "" {
+		path := convertPathNameOpposite(unlockSecrets)
+		unlockSecretsMap := map[string]interface{}{"capability": "read", "path": path, "rule_type": "unlock-secrets-rule"}
+		accessRules = append(accessRules, unlockSecretsMap)
+	}
+
+	approveAccessRequest := d.Get("approve_access_request").(string)
+	if approveAccessRequest != "" {
+		path := convertPathNameOpposite(approveAccessRequest)
+		approveAccessRequestMap := map[string]interface{}{"capability": "read", "path": path, "rule_type": "approve-access-request-rule"}
+		accessRules = append(accessRules, approveAccessRequestMap)
+	}
+
 	return accessRules
 }
 
@@ -1020,6 +1060,8 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 		eventCenterAccess     = "none"
 		eventForwardersAccess = "none"
 		isiAccess             = "none"
+		unlockSecrets         = "none"
+		approveAccessRequest  = "none"
 	)
 
 	for _, rule := range accessRules {
@@ -1043,6 +1085,10 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 			eventForwardersAccess = rulePath
 		case "isi-rule":
 			isiAccess = rulePath
+		case "unlock-secrets-rule":
+			unlockSecrets = rulePath
+		case "approve-access-request-rule":
+			approveAccessRequest = rulePath
 		}
 	}
 
@@ -1057,6 +1103,8 @@ func updateRoleAccessRules(ctx context.Context, name, description, deleteProtect
 		EventCenterAccess:    akeyless_api.PtrString(eventCenterAccess),
 		EventForwarderAccess: akeyless_api.PtrString(eventForwardersAccess),
 		IsiAccess:            akeyless_api.PtrString(isiAccess),
+		UnlockSecrets:        akeyless_api.PtrString(unlockSecrets),
+		ApproveAccessRequest: akeyless_api.PtrString(approveAccessRequest),
 	}
 	common.GetAkeylessPtr(&updateBody.Description, description)
 	common.GetAkeylessPtr(&updateBody.DeleteProtection, deleteProtection)
@@ -1162,8 +1210,10 @@ func generateEmptyAccessRulesSet() []any {
 	eventRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "event-rule"}
 	eventForwarderRule := map[string]any{"capability": accessCapAll, "path": "", "rule_type": "event-forwarder-rule"}
 	isiRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "isi-rule"}
+	unlockSecretsRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "unlock-secrets-rule"}
+	approveAccessRequestRule := map[string]any{"capability": accessCap, "path": "", "rule_type": "approve-access-request-rule"}
 
-	return []any{searchRule, reportsRule, gwReportsRule, sraReportsRule, UsageReportRule, eventRule, eventForwarderRule, isiRule}
+	return []any{searchRule, reportsRule, gwReportsRule, sraReportsRule, UsageReportRule, eventRule, eventForwarderRule, isiRule, unlockSecretsRule, approveAccessRequestRule}
 }
 
 func isAccessRule(ruleType string) bool {
@@ -1174,7 +1224,9 @@ func isAccessRule(ruleType string) bool {
 		ruleType == "usage-reports-rule" ||
 		ruleType == "event-rule" ||
 		ruleType == "event-forwarder-rule" ||
-		ruleType == "isi-rule"
+		ruleType == "isi-rule" ||
+		ruleType == "unlock-secrets-rule" ||
+		ruleType == "approve-access-request-rule"
 }
 
 func setAccessRuleField(d *schema.ResourceData, roleType, rolePath string) error {
@@ -1197,6 +1249,10 @@ func setAccessRuleField(d *schema.ResourceData, roleType, rolePath string) error
 		return d.Set("event_forwarders_access", rolePath)
 	case "isi-rule":
 		return d.Set("isi_access", rolePath)
+	case "unlock-secrets-rule":
+		return d.Set("unlock_secrets", rolePath)
+	case "approve-access-request-rule":
+		return d.Set("approve_access_request", rolePath)
 	default:
 		return nil
 	}

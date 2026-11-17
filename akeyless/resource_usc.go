@@ -53,6 +53,24 @@ func resourceUsc() *schema.Resource {
 				Optional:    true,
 				Description: "GCP Secret Manager regions to query for regional secrets (comma-separated, e.g., us-east1,us-west1). Max 12 regions. Required when listing with object-type=regional-secrets",
 			},
+			"gcp_scope": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The GCP USC scope [project/folder/organization]. With folder/organization, all projects under the folder/org are manageable. Relevant only for GCP targets. Defaults to project when empty",
+			},
+			"gcp_folder_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "GCP Folder ID (Relevant only for GCP targets with folder scope)",
+			},
+			"gcp_organization_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "GCP Organization ID (Relevant only for GCP targets with folder or organization scope)",
+			},
 			"usc_prefix": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -103,6 +121,9 @@ func resourceUscCreate(d *schema.ResourceData, m any) error {
 	k8sNamespace := d.Get("k8s_namespace").(string)
 	gcpProjectId := d.Get("gcp_project_id").(string)
 	gcpSmRegions := d.Get("gcp_sm_regions").(string)
+	gcpScope := d.Get("gcp_scope").(string)
+	gcpFolderId := d.Get("gcp_folder_id").(string)
+	gcpOrganizationId := d.Get("gcp_organization_id").(string)
 	uscPrefix := d.Get("usc_prefix").(string)
 	usePrefixAsFilter := d.Get("use_prefix_as_filter").(string)
 	description := d.Get("description").(string)
@@ -119,6 +140,9 @@ func resourceUscCreate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.K8sNamespace, k8sNamespace)
 	common.GetAkeylessPtr(&body.GcpProjectId, gcpProjectId)
 	common.GetAkeylessPtr(&body.GcpSmRegions, gcpSmRegions)
+	common.GetAkeylessPtr(&body.GcpScope, gcpScope)
+	common.GetAkeylessPtr(&body.GcpFolderId, gcpFolderId)
+	common.GetAkeylessPtr(&body.GcpOrganizationId, gcpOrganizationId)
 	common.GetAkeylessPtr(&body.UscPrefix, uscPrefix)
 	common.GetAkeylessPtr(&body.UsePrefixAsFilter, usePrefixAsFilter)
 	common.GetAkeylessPtr(&body.Description, description)
@@ -197,8 +221,9 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 					return err
 				}
 			}
+			attr := make(map[string]string)
 			if assoc.Attributes != nil {
-				attr := *assoc.Attributes
+				attr = *assoc.Attributes
 				if k8sNamespace, ok := attr["k8s_namespace"]; ok {
 					err := d.Set("k8s_namespace", k8sNamespace)
 					if err != nil {
@@ -211,18 +236,6 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 						return err
 					}
 				}
-				if gcpProjectId, ok := attr["gcp_project_id"]; ok {
-					err := d.Set("gcp_project_id", gcpProjectId)
-					if err != nil {
-						return err
-					}
-				}
-				if gcpSmRegions, ok := attr["gcp_sm_regions"]; ok {
-					err := d.Set("gcp_sm_regions", gcpSmRegions)
-					if err != nil {
-						return err
-					}
-				}
 				if uscPrefix, ok := attr["usc_prefix"]; ok {
 					err := d.Set("usc_prefix", uscPrefix)
 					if err != nil {
@@ -231,6 +244,36 @@ func resourceUscRead(d *schema.ResourceData, m any) error {
 				}
 				if usePrefixAsFilter, ok := attr["use_prefix_as_filter"]; ok {
 					err := d.Set("use_prefix_as_filter", usePrefixAsFilter)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpProjectID, ok := attr["gcp_project_id"]; ok {
+					err := d.Set("gcp_project_id", gcpProjectID)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpSMRegions, ok := attr["gcp_sm_regions"]; ok {
+					err := d.Set("gcp_sm_regions", gcpSMRegions)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpScope, ok := attr["gcp_scope"]; ok {
+					err := d.Set("gcp_scope", gcpScope)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpFolderID, ok := attr["gcp_folder_id"]; ok {
+					err := d.Set("gcp_folder_id", gcpFolderID)
+					if err != nil {
+						return err
+					}
+				}
+				if gcpOrganizationID, ok := attr["gcp_organization_id"]; ok {
+					err := d.Set("gcp_organization_id", gcpOrganizationID)
 					if err != nil {
 						return err
 					}

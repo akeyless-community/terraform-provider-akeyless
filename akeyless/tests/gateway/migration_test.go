@@ -158,8 +158,6 @@ func TestGatewayMigrationConjur(t *testing.T) {
 
 func TestGatewayMigrationK8s(t *testing.T) {
 
-	t.Skip("TODO: GW is broken. Next release will fix this.")
-
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_k8s"
@@ -192,7 +190,6 @@ func TestGatewayMigrationK8s(t *testing.T) {
 }
 
 func TestGatewayMigrationCertificate(t *testing.T) {
-
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_cert"
@@ -220,7 +217,6 @@ func TestGatewayMigrationCertificate(t *testing.T) {
 }
 
 func TestGatewayMigrationActiveDirectory(t *testing.T) {
-
 	testutils.SkipIfNoGateway(t)
 
 	targetName := testPath("ad-ldap-target")
@@ -277,7 +273,6 @@ func TestGatewayMigrationActiveDirectory(t *testing.T) {
 }
 
 func TestGatewayMigrationServerInventory(t *testing.T) {
-
 	testutils.SkipIfNoGateway(t)
 
 	name := "migration_si"

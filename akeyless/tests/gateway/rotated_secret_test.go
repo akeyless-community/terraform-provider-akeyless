@@ -40,6 +40,10 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "aaaa"
+			ara_enabled 				= true
+			enable_agentic_runtime_authority = true
+			enable_ai_quorum 			= true
+			skip_dry_run 				= true
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -53,6 +57,10 @@ func TestRotatedSecretAwsResource(t *testing.T) {
 			api_key 					= "test"
 			grace_rotation 				= "true"
 			description 				= "bbbb"
+			ara_enabled 				= false
+			enable_agentic_runtime_authority = false
+			enable_ai_quorum 			= false
+			skip_dry_run 				= false
 		}
 	`, rsName, rsPath, targetPath)
 
@@ -1116,7 +1124,8 @@ func TestRotatedSecretOpenAIResource(t *testing.T) {
 	targetDetailsType := "openai_target_details"
 
 	expect := map[string]any{
-		"api_key": "sk-test-key-12345",
+		"api_key":    "sk-test-key-12345",
+		"openai_url": "https://api.openai.com",
 	}
 
 	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
@@ -1413,6 +1422,115 @@ func TestRotatedSecretHashiVaultResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "output_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_rule.0", "name=out1,rule=mask output updated"),
 				),
+			},
+		},
+	})
+}
+
+func TestRotatedSecretAerospikeResource(t *testing.T) {
+	// TODO: Re-enable after Aerospike target validation receives BYPASS_DRY_RUN.
+	t.Skip("Aerospike target creation requires a reachable Aerospike service")
+	testutils.SkipIfNoGateway(t)
+
+	name := "rs_aerospike"
+	path := testPath(name)
+	targetPath := testPath("aerospike_target_for_rs")
+	targetDetailsType := "aerospike_target_details"
+	expect := map[string]any{
+		"admin_username": "admin",
+		"password":       "password",
+		"hostname":       "127.0.0.1",
+		"port":           "3000",
+		"namespace":      "test",
+	}
+	testutils.CreateTargetByType(t, targetPath, targetDetailsType, expect)
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_aerospike" "%v" {
+			name           = "%v"
+			target_name    = "%v"
+			rotator_type   = "password"
+			skip_dry_run   = true
+			rotated_username = "user"
+			rotated_password = "password"
+		}
+	`, name, path, targetPath)
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_aerospike" "%v" {
+			name           = "%v"
+			target_name    = "%v"
+			rotator_type   = "password"
+			skip_dry_run   = false
+			rotated_username = "user"
+			rotated_password = "password"
+			description    = "updated"
+		}
+	`, name, path, targetPath)
+
+	testutils.TestItemResource(t, providerFactories, path, config, configUpdate)
+}
+
+func TestRotatedSecretSshSecureAccess(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetPath := testPath("test-target-ssh-sra")
+	testutils.CreateTargetByType(t, targetPath, "ssh_target_details", map[string]any{
+		"host":     "ssh.example.com",
+		"port":     "22",
+		"username": "admin",
+		"password": "DummyPass123",
+	})
+	t.Cleanup(func() {
+		testutils.DeleteTarget(t, targetPath)
+	})
+
+	rsName := "test-rs-ssh-sra"
+	rsPath := testPath(rsName)
+	resourceName := "akeyless_rotated_secret_ssh." + rsName
+
+	config := `
+		resource "akeyless_rotated_secret_ssh" "` + rsName + `" {
+			name                                    = "` + rsPath + `"
+			target_name                             = "` + targetPath + `"
+			rotator_type                            = "target"
+			authentication_credentials              = "use-target-creds"
+			secure_access_enable                    = "true"
+			secure_access_host                      = ["ssh.example.com"]
+			secure_access_target_type               = "rdp"
+			host_provider                           = "explicit"
+			secure_access_enforce_hosts_restriction = true
+		}
+	`
+	configUpdate := `
+		resource "akeyless_rotated_secret_ssh" "` + rsName + `" {
+			name                                    = "` + rsPath + `"
+			target_name                             = "` + targetPath + `"
+			rotator_type                            = "target"
+			authentication_credentials              = "use-target-creds"
+			secure_access_enable                    = "true"
+			secure_access_host                      = ["ssh.example.com"]
+			secure_access_target_type               = "rdp"
+			host_provider                           = "explicit"
+			secure_access_enforce_hosts_restriction = false
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckResourceAttr(resourceName, "host_provider", "explicit"),
+					resource.TestCheckResourceAttr(resourceName, "secure_access_enforce_hosts_restriction", "true"),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check:  resource.TestCheckResourceAttr(resourceName, "secure_access_enforce_hosts_restriction", "false"),
 			},
 		},
 	})

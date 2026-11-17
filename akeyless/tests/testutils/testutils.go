@@ -1101,6 +1101,66 @@ func CheckAssocExistsRemotely2(t *testing.T, roleName, authMethodPath string) re
 	}
 }
 
+func pathEqualIgnoreLeadingSlash(a, b string) bool {
+	return common.EnsureLeadingSlash(a) == common.EnsureLeadingSlash(b)
+}
+
+// CheckAssocExistsOnRole asserts the role has exactly one auth-method association
+// whose auth method name matches authMethodPath (leading-slash insensitive).
+func CheckAssocExistsOnRole(t *testing.T, roleName, authMethodPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, token, err := GetClient()
+		if err != nil {
+			return err
+		}
+
+		res, _, err := client.GetRole(context.Background()).Body(akeyless_api.GetRole{
+			Name:  roleName,
+			Token: &token,
+		}).Execute()
+		if err != nil {
+			return fmt.Errorf("get role %q: %w", roleName, err)
+		}
+
+		assocs := res.GetRoleAuthMethodsAssoc()
+		if len(assocs) != 1 {
+			return fmt.Errorf("role %q: expected 1 assoc, got %d", roleName, len(assocs))
+		}
+		amName := ""
+		if assocs[0].AuthMethodName != nil {
+			amName = *assocs[0].AuthMethodName
+		}
+		if !pathEqualIgnoreLeadingSlash(amName, authMethodPath) {
+			return fmt.Errorf("role %q: assoc am_name %q != %q", roleName, amName, authMethodPath)
+		}
+		return nil
+	}
+}
+
+// CheckAssocAbsentOnRole asserts the role has no auth-method associations.
+func CheckAssocAbsentOnRole(t *testing.T, roleName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, token, err := GetClient()
+		if err != nil {
+			return err
+		}
+
+		res, _, err := client.GetRole(context.Background()).Body(akeyless_api.GetRole{
+			Name:  roleName,
+			Token: &token,
+		}).Execute()
+		if err != nil {
+			return fmt.Errorf("get role %q: %w", roleName, err)
+		}
+
+		assocs := res.GetRoleAuthMethodsAssoc()
+		if len(assocs) != 0 {
+			return fmt.Errorf("role %q: expected 0 assocs after recreate, got %d", roleName, len(assocs))
+		}
+		return nil
+	}
+}
+
 func CheckAddRoleRemotely(t *testing.T, roleName string, rulesNum int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client, token, err := GetClient()

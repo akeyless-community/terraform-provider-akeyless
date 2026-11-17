@@ -3,6 +3,8 @@ package akeyless
 import (
 	"fmt"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func getServiceAccountType(k8sDynamicMode bool) string {
@@ -68,4 +70,12 @@ func splitPermissionEntry(entry string) (string, string) {
 		value = strings.TrimSpace(parts[1])
 	}
 	return key, value
+}
+
+func setDynamicSecretSkipDryRunReadField(d *schema.ResourceData, value *bool) error {
+	if value == nil {
+		return nil
+	}
+
+	return d.Set("skip_dry_run", *value)
 }

@@ -26,6 +26,18 @@ func resourceRotatedSecretSsh() *schema.Resource {
 			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("rotated_password"), cty.GetAttrPath("rotated_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
+			"ara_enabled": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_agentic_runtime_authority": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable Agentic Runtime Authority",
+			},
+			"enable_ai_quorum": {
+				Type: schema.TypeBool, Optional: true, Description: "Enable AI Quorum",
+			},
+			"skip_dry_run": {
+				Type: schema.TypeBool, Optional: true, Description: "Skip dry run",
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -201,6 +213,54 @@ func resourceRotatedSecretSsh() *schema.Resource {
 				Optional:    true,
 				Description: "Enable/Disable secure remote access [true/false]",
 			},
+			"host_provider": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Host provider type [explicit/target], Default Host provider is explicit, Relevant only for Secure Remote Access",
+			},
+			"target": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of linked targets to be associated, Relevant only for Secure Remote Access",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"key_algorithm": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "ED25519",
+				Description: "The key algorithm to generate with when no private key is supplied. options: [ED25519/RSA2048/RSA3072/RSA4096/ECDSA256/ECDSA384/ECDSA521]",
+			},
+			"secure_access_enforce_hosts_restriction": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce connections only to allowed Secure Remote Access hosts",
+			},
+			"secure_access_ssh_creds": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Secret values contains SSH Credentials, either Private Key or Password [password/private-key]",
+			},
+			"secure_access_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Destination URL to inject secrets",
+			},
+			"secure_access_web": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable Web Secure Remote Access",
+			},
+			"secure_access_web_browsing": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Secure browser via Akeyless's Secure Remote Access (SRA)",
+			},
+			"secure_access_web_proxy": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Web-Proxy via Akeyless's Secure Remote Access (SRA)",
+			},
 			"secure_access_host": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -335,7 +395,39 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessRdpUser, secureAccessRdpUser)
 	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
 	common.GetAkeylessPtr(&body.SecureAccessTargetType, secureAccessTargetType)
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
+	common.GetAkeylessPtr(&body.KeyAlgorithm, d.Get("key_algorithm").(string))
+	common.GetAkeylessPtr(&body.SecureAccessSshCreds, d.Get("secure_access_ssh_creds").(string))
+	common.GetAkeylessPtr(&body.SecureAccessUrl, d.Get("secure_access_url").(string))
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_web"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessWeb, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_web_browsing"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_web_proxy"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessWebProxy, raw.True())
+		}
+	}
 	_, resp, err := client.RotatedSecretCreateSsh(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't create rotated secret", resp, err)
@@ -444,6 +536,12 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 				return err
 			}
 		}
+		if rsd.KeyAlgorithm != nil {
+			err = d.Set("key_algorithm", *rsd.KeyAlgorithm)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	if itemOut.ItemCustomFieldsDetails != nil {
@@ -502,6 +600,27 @@ func resourceRotatedSecretSshRead(d *schema.ResourceData, m interface{}) error {
 	}
 	if err = setRotatedSecretPasswordPolicyReadFields(d, itemOut.ItemGeneralInfo); err != nil {
 		return err
+	}
+	if err = common.SetSraHostProvider(d, itemOut.ItemGeneralInfo.SecureRemoteAccessDetails); err != nil {
+		return err
+	}
+	if sra := itemOut.ItemGeneralInfo.SecureRemoteAccessDetails; sra != nil {
+		err = d.Set("secure_access_url", sra.GetUrl())
+		if err != nil {
+			return err
+		}
+		err = d.Set("secure_access_web", sra.GetIsWeb())
+		if err != nil {
+			return err
+		}
+		err = d.Set("secure_access_web_browsing", sra.GetIsolated())
+		if err != nil {
+			return err
+		}
+		err = d.Set("secure_access_web_proxy", sra.GetWebProxy())
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(path)
@@ -619,7 +738,39 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.SecureAccessSshUser, secureAccessSshUser)
 	common.GetAkeylessPtr(&body.SecureAccessTargetType, secureAccessTargetType)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
+	common.GetAkeylessPtr(&body.HostProvider, d.Get("host_provider").(string))
+	common.GetAkeylessPtr(&body.Target, common.ExpandStringList(d.Get("target").([]interface{})))
+	common.GetAkeylessPtr(&body.KeyAlgorithm, d.Get("key_algorithm").(string))
+	common.GetAkeylessPtr(&body.SecureAccessSshCreds, d.Get("secure_access_ssh_creds").(string))
+	common.GetAkeylessPtr(&body.SecureAccessUrl, d.Get("secure_access_url").(string))
 
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if raw := rawConfig.GetAttr("ara_enabled"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.AraEnabled, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_agentic_runtime_authority"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAgenticRuntimeAuthority, raw.True())
+		}
+		if raw := rawConfig.GetAttr("enable_ai_quorum"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.EnableAiQuorum, raw.True())
+		}
+		if raw := rawConfig.GetAttr("skip_dry_run"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SkipDryRun, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_enforce_hosts_restriction"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessEnforceHostsRestriction, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_web"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessWeb, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_web_browsing"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessWebBrowsing, raw.True())
+		}
+		if raw := rawConfig.GetAttr("secure_access_web_proxy"); raw.IsKnown() && !raw.IsNull() {
+			common.GetAkeylessPtr(&body.SecureAccessWebProxy, raw.True())
+		}
+	}
 	_, resp, err := client.RotatedSecretUpdateSsh(ctx).Body(body).Execute()
 	if err != nil {
 		return common.HandleError("can't update rotated secret", resp, err)
