@@ -420,6 +420,32 @@ func TestTargetGitlabResource(t *testing.T) {
 	testutils.TesTargetResource(t, providerFactories, config, configUpdate, secretPath)
 }
 
+func TestTargetAtlassianResource(t *testing.T) {
+	secretName := "atlassian_test"
+	secretPath := testPath("atlassian_target1")
+	config := fmt.Sprintf(`
+		resource "akeyless_target_atlassian" "%v" {
+			name            = "%v"
+			atlassian_url   = "https://acme.atlassian.net"
+			atlassian_email = "ops@acme.example"
+			atlassian_token = "aaaaa"
+			description     = "eeeee"
+		}
+	`, secretName, secretPath)
+
+	configUpdate := fmt.Sprintf(`
+		resource "akeyless_target_atlassian" "%v" {
+			name                     = "%v"
+			atlassian_url            = "https://jira.corp.example/jira"
+			atlassian_token          = "bbbbb"
+			atlassian_automation_key = "ccccc"
+			description              = "ddddd"
+		}
+	`, secretName, secretPath)
+
+	testutils.TesTargetResource(t, providerFactories, config, configUpdate, secretPath)
+}
+
 func TestTargetGkeResource(t *testing.T) {
 	secretName := "gke-target"
 	secretPath := testPath(secretName)

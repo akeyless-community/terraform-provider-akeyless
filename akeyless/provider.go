@@ -178,6 +178,7 @@ func Provider() *schema.Provider {
 			"akeyless_target_anthropic":                                          resourceAnthropicTarget(),
 			"akeyless_target_aerospike":                                          resourceAerospikeTarget(),
 			"akeyless_target_artifactory":                                        resourceArtifactoryTarget(),
+			"akeyless_target_atlassian":                                          resourceAtlassianTarget(),
 			"akeyless_target_aws":                                                resourceAwsTarget(),
 			"akeyless_target_azure":                                              resourceAzureTarget(),
 			"akeyless_target_bedrock":                                            resourceBedrockTarget(),

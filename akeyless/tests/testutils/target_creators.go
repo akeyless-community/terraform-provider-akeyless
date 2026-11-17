@@ -15,6 +15,7 @@ type CreateTargetFunc func(t *testing.T, name string, details map[string]any)
 var CreateTargetByTypeMap = map[string]CreateTargetFunc{
 	"aerospike_target_details":        CreateAerospikeTarget,
 	"artifactory_target_details":      CreateArtifactoryTarget,
+	"atlassian_target_details":        CreateAtlassianTarget,
 	"aws_target_details":              CreateAwsTarget,
 	"azure_target_details":            CreateAzureTarget,
 	"db_target_details":               CreateDbTarget,
@@ -208,6 +209,23 @@ func CreateGithubTarget(t *testing.T, name string, details map[string]any) {
 
 	_, resp, err := client.TargetCreateGithub(context.Background()).Body(body).Execute()
 	require.NoError(t, common.HandleError("can't create github target for test", resp, err))
+}
+
+func CreateAtlassianTarget(t *testing.T, name string, details map[string]any) {
+	client, token, err := GetClient()
+	require.NoError(t, err)
+
+	body := akeyless_api.TargetCreateAtlassian{
+		Name:  name,
+		Token: &token,
+	}
+	common.GetAkeylessPtr(&body.AtlassianUrl, details["url"])
+	common.GetAkeylessPtr(&body.AtlassianEmail, details["email"])
+	common.GetAkeylessPtr(&body.AtlassianToken, details["token"])
+	common.GetAkeylessPtr(&body.AtlassianAutomationKey, details["automation_key"])
+
+	_, resp, err := client.TargetCreateAtlassian(context.Background()).Body(body).Execute()
+	require.NoError(t, common.HandleError("can't create atlassian target for test", resp, err))
 }
 
 func CreateGitlabTarget(t *testing.T, name string, details map[string]any) {
