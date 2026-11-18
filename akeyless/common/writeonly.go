@@ -19,6 +19,14 @@ func writeOnlyRaw(d *schema.ResourceData, woField string) (string, bool) {
 	return rawString(raw)
 }
 
+func configuredString(d *schema.ResourceData, field string) (string, bool) {
+	raw, diags := d.GetRawConfigAt(cty.GetAttrPath(field))
+	if diags.HasError() {
+		return "", false
+	}
+	return rawString(raw)
+}
+
 func rawString(raw cty.Value) (string, bool) {
 	if raw.IsNull() || !raw.IsKnown() || raw.Type() != cty.String {
 		return "", false
@@ -45,11 +53,17 @@ func EffectiveSecretValue(d *schema.ResourceData, field, woField string) (string
 // secret from the update request to avoid replacing it with an empty string.
 func SecretValueForUpdate(d *schema.ResourceData, field, woField string) (*string, error) {
 	if value, ok := writeOnlyRaw(d, woField); ok {
+		if err := d.Set(field, nil); err != nil {
+			return nil, err
+		}
 		return &value, nil
 	}
 
 	versionField := woField + "_version"
 	if UsingWriteOnly(d, woField, versionField) || writeOnlyVersionWasRemoved(d, versionField) {
+		if value, ok := configuredString(d, field); ok {
+			return &value, nil
+		}
 		return nil, nil
 	}
 
@@ -108,7 +122,7 @@ func UsingWriteOnly(d *schema.ResourceData, woField, woVersionField string) bool
 // behavior (value is written to state).
 func SetSecretFromRead(d *schema.ResourceData, field, woField, woVersionField, value string) error {
 	if UsingWriteOnly(d, woField, woVersionField) {
-		return d.Set(field, "")
+		return d.Set(field, nil)
 	}
 	return d.Set(field, value)
 }

@@ -274,7 +274,11 @@ func extractTokenFromInput(tokenLogin []interface{}) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("wrong login detais")
 	}
-	return login["token"].(string), nil
+	token := withEnvFallback(login["token"].(string), "AKEYLESS_AUTH_TOKEN")
+	if token == "" {
+		return "", fmt.Errorf("token is required (set it directly or via AKEYLESS_AUTH_TOKEN)")
+	}
+	return token, nil
 }
 
 // withEnvFallback returns val if non-empty, otherwise the value of the given

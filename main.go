@@ -27,6 +27,8 @@ func main() {
 	ctx := context.Background()
 
 	sdkProvider := akeyless.Provider()
+	// The existing SDKv2 provider speaks protocol v5. Upgrade it to v6 so it
+	// can be muxed with the Framework provider that serves ephemeral resources.
 	upgradedSdkServer, err := tf5to6server.UpgradeServer(ctx, func() tfprotov5.ProviderServer {
 		return schema.NewGRPCProviderServer(sdkProvider)
 	})

@@ -104,3 +104,17 @@ func TestCertLogin_FallsBackToEnvVars(t *testing.T) {
 		t.Fatalf("got cert_data=%q key_data=%q, want env fallback values", authBody.GetCertData(), authBody.GetKeyData())
 	}
 }
+
+func TestTokenLogin_FallsBackToEnvVar(t *testing.T) {
+	t.Setenv("AKEYLESS_AUTH_TOKEN", "token-env")
+
+	token, err := extractTokenFromInput([]interface{}{map[string]interface{}{
+		"token": "",
+	}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if token != "token-env" {
+		t.Fatalf("got token=%q, want env fallback value", token)
+	}
+}
