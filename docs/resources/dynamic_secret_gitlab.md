@@ -27,8 +27,12 @@ Gitlab dynamic secret resource.
 - `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
 - `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `gitlab_access_token` (String, Sensitive) Gitlab access token
+- `gitlab_access_token_wo` (String, Sensitive) Gitlab access token (write-only, not stored in state). Requires Terraform 1.11+. Bump gitlab_access_token_wo_version to change it.
+- `gitlab_access_token_wo_version` (Number) Version trigger for gitlab_access_token_wo. Increment to update the password.
 - `gitlab_access_type` (String) Gitlab access token type [project,group]
 - `gitlab_certificate` (String, Sensitive) Gitlab tls certificate (base64 encoded)
+- `gitlab_certificate_wo` (String, Sensitive) Gitlab tls certificate (base64 encoded) (write-only, not stored in state). Requires Terraform 1.11+. Bump gitlab_certificate_wo_version to change it.
+- `gitlab_certificate_wo_version` (Number) Version trigger for gitlab_certificate_wo. Increment to update the password.
 - `gitlab_role` (String) Gitlab role
 - `gitlab_token_scopes` (String) Comma-separated list of access token scopes to grant
 - `gitlab_url` (String) Gitlab base url

@@ -1,18 +1,27 @@
 package main
 
 import (
-	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	"context"
+	"log"
+
+	fwprovider "github.com/akeylesslabs/terraform-provider-akeyless/internal/framework"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 )
 
 // Generate docs for website
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 func main() {
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: func() *schema.Provider {
-			return akeyless.Provider()
-		},
-	})
+	providerServer, err := fwprovider.NewMuxServer(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = tf6server.Serve(
+		"registry.terraform.io/akeyless-community/akeyless",
+		providerServer,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

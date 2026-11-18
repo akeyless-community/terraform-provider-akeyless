@@ -7,6 +7,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,6 +20,9 @@ func resourceRotatedSecretOpenAI() *schema.Resource {
 		Delete:      resourceRotatedSecretOpenAIDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRotatedSecretOpenAIImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -98,6 +102,20 @@ func resourceRotatedSecretOpenAI() *schema.Resource {
 				Sensitive:   true,
 				Description: "Admin API key value to rotate (relevant only for rotator-type=api-key)",
 			},
+			"api_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "Admin API key value to rotate (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
+			},
+			"api_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"api_key_wo"},
+				Description:  "Version trigger for api_key_wo. Increment to update the value.",
+			},
 			"api_key_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -169,7 +187,7 @@ func resourceRotatedSecretOpenAICreate(d *schema.ResourceData, m interface{}) er
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
-	apiKey := d.Get("api_key").(string)
+	apiKey := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
 	apiKeyId := d.Get("api_key_id").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
@@ -377,7 +395,7 @@ func resourceRotatedSecretOpenAIRead(d *schema.ResourceData, m interface{}) erro
 					}
 				}
 				if password, ok := value["password"]; ok {
-					err = d.Set("api_key", password.(string))
+					err = common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", password.(string))
 					if err != nil {
 						return err
 					}
@@ -414,7 +432,10 @@ func resourceRotatedSecretOpenAIUpdate(d *schema.ResourceData, m interface{}) er
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
-	apiKey := d.Get("api_key").(string)
+	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
+	if err != nil {
+		return err
+	}
 	apiKeyId := d.Get("api_key_id").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -449,7 +470,7 @@ func resourceRotatedSecretOpenAIUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
-	common.GetAkeylessPtr(&body.ApiKey, apiKey)
+	common.SetOptionalString(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.ApiKeyId, apiKeyId)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)

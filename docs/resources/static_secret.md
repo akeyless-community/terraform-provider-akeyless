@@ -65,6 +65,8 @@ resource "akeyless_static_secret" "secret" {
 ')
 - `output_rule` (List of String) Password output rule definitions
 - `password` (String, Sensitive) Password value (relevant only for type 'password')
+- `password_wo` (String, Sensitive) password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.
+- `password_wo_version` (Number) Version trigger for password_wo. Increment to update the value.
 - `protection_key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_enable` (String) Enable/Disable secure remote access, [true/false]
@@ -83,6 +85,8 @@ resource "akeyless_static_secret" "secret" {
 - `type` (String) Secret type [generic/password]
 - `username` (String) Username value (relevant only for type 'password')
 - `value` (String, Sensitive) The secret content.
+- `value_wo` (String, Sensitive) The secret content (write-only, not stored in state). Requires Terraform 1.11+. Bump value_wo_version to change it.
+- `value_wo_version` (Number) Version trigger for value_wo. Increment to update the secret value.
 
 ### Read-Only
 

@@ -8,6 +8,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -20,6 +21,10 @@ func resourceCertificate() *schema.Resource {
 		Delete:      resourceCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceCertificateImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("key_data"), cty.GetAttrPath("key_data_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("certificate_data"), cty.GetAttrPath("certificate_data_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -35,6 +40,20 @@ func resourceCertificate() *schema.Resource {
 				Computed:    true,
 				Description: "Content of the certificate in a Base64 format.",
 			},
+			"certificate_data_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"certificate_data_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "certificate_data (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_data_wo_version to change it.",
+			},
+			"certificate_data_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"certificate_data_wo"},
+				Description:  "Version trigger for certificate_data_wo. Increment to update the value.",
+			},
 			"format": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -46,6 +65,20 @@ func resourceCertificate() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Content of the certificate's private key in a Base64 format.",
+			},
+			"key_data_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"key_data_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "key_data (write-only, not stored in state). Requires Terraform 1.11+. Bump key_data_wo_version to change it.",
+			},
+			"key_data_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"key_data_wo"},
+				Description:  "Version trigger for key_data_wo. Increment to update the value.",
 			},
 			"expiration_event_in": {
 				Type:        schema.TypeSet,
@@ -98,9 +131,9 @@ func resourceCertificateCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	certificateData := d.Get("certificate_data").(string)
+	certificateData := common.EffectiveSecretValue(d, "certificate_data", "certificate_data_wo")
 	format := d.Get("format").(string)
-	keyData := d.Get("key_data").(string)
+	keyData := common.EffectiveSecretValue(d, "key_data", "key_data_wo")
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	key := d.Get("key").(string)
@@ -214,14 +247,14 @@ func resourceCertificateRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if certOut.CertificatePem != nil {
-		err = d.Set("certificate_data", base64.StdEncoding.EncodeToString([]byte(*certOut.CertificatePem)))
+		err = common.SetSecretFromRead(d, "certificate_data", "certificate_data_wo", "certificate_data_wo_version", base64.StdEncoding.EncodeToString([]byte(*certOut.CertificatePem)))
 		if err != nil {
 			return err
 		}
 	}
 
 	if certOut.PrivateKeyPem != nil {
-		err = d.Set("key_data", base64.StdEncoding.EncodeToString([]byte(*certOut.PrivateKeyPem)))
+		err = common.SetSecretFromRead(d, "key_data", "key_data_wo", "key_data_wo_version", base64.StdEncoding.EncodeToString([]byte(*certOut.PrivateKeyPem)))
 		if err != nil {
 			return err
 		}
@@ -239,9 +272,9 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	certificateData := d.Get("certificate_data").(string)
+	certificateData := common.EffectiveSecretValue(d, "certificate_data", "certificate_data_wo")
 	format := d.Get("format").(string)
-	keyData := d.Get("key_data").(string)
+	keyData := common.EffectiveSecretValue(d, "key_data", "key_data_wo")
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	key := d.Get("key").(string)

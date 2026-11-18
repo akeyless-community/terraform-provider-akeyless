@@ -7,6 +7,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,6 +20,9 @@ func resourceDynamicSecretGoogleWorkspace() *schema.Resource {
 		Delete:      resourceDynamicSecretGoogleWorkspaceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretGoogleWorkspaceImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("gcp_key"), cty.GetAttrPath("gcp_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -42,6 +46,20 @@ func resourceDynamicSecretGoogleWorkspace() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Base64-encoded service account private key text",
+			},
+			"gcp_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"gcp_key_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.",
+			},
+			"gcp_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"gcp_key_wo"},
+				Description:  "Version trigger for gcp_key_wo. Increment to update the password.",
 			},
 			"group_email": {
 				Type:        schema.TypeString,
@@ -160,7 +178,7 @@ func resourceDynamicSecretGoogleWorkspaceCreate(d *schema.ResourceData, m interf
 	name := d.Get("name").(string)
 	accessMode := d.Get("access_mode").(string)
 	adminEmail := d.Get("admin_email").(string)
-	gcpKey := d.Get("gcp_key").(string)
+	gcpKey := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
 	groupEmail := d.Get("group_email").(string)
 	groupRole := d.Get("group_role").(string)
 	roleName := d.Get("role_name").(string)
@@ -374,7 +392,7 @@ func resourceDynamicSecretGoogleWorkspaceUpdate(d *schema.ResourceData, m interf
 	name := d.Get("name").(string)
 	accessMode := d.Get("access_mode").(string)
 	adminEmail := d.Get("admin_email").(string)
-	gcpKey := d.Get("gcp_key").(string)
+	gcpKey := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
 	groupEmail := d.Get("group_email").(string)
 	groupRole := d.Get("group_role").(string)
 	roleName := d.Get("role_name").(string)

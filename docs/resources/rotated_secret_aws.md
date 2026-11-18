@@ -25,6 +25,8 @@ Aws rotated secret resource
 
 - `api_id` (String) API ID to rotate (relevant only for rotator-type=api-key)
 - `api_key` (String) API key to rotate (relevant only for rotator-type=api-key)
+- `api_key_wo` (String, Sensitive) api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.
+- `api_key_wo_version` (Number) Version trigger for api_key_wo. Increment to update the value.
 - `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `authentication_credentials` (String) The credentials to connect with use-self-creds/use-target-creds
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]

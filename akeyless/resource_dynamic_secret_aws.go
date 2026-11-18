@@ -7,6 +7,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,6 +20,9 @@ func resourceDynamicSecretAws() *schema.Resource {
 		Delete:      resourceDynamicSecretAwsDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretAwsImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("aws_access_secret_key"), cty.GetAttrPath("aws_access_secret_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -42,6 +46,20 @@ func resourceDynamicSecretAws() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Access Secret Key",
+			},
+			"aws_access_secret_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"aws_access_secret_key_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "Access Secret Key (write-only, not stored in state). Requires Terraform 1.11+. Bump aws_access_secret_key_wo_version to change it.",
+			},
+			"aws_access_secret_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"aws_access_secret_key_wo"},
+				Description:  "Version trigger for aws_access_secret_key_wo. Increment to update the password.",
 			},
 			"access_mode": {
 				Type:        schema.TypeString,
@@ -251,7 +269,7 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	awsAccessKeyId := d.Get("aws_access_key_id").(string)
-	awsAccessSecretKey := d.Get("aws_access_secret_key").(string)
+	awsAccessSecretKey := common.EffectiveSecretValue(d, "aws_access_secret_key", "aws_access_secret_key_wo")
 	accessMode := d.Get("access_mode").(string)
 	region := d.Get("region").(string)
 	awsUserPolicies := d.Get("aws_user_policies").(string)
@@ -391,7 +409,7 @@ func resourceDynamicSecretAwsRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.AwsSecretAccessKey != nil {
-		err = d.Set("aws_access_secret_key", *rOut.AwsSecretAccessKey)
+		err = common.SetSecretFromRead(d, "aws_access_secret_key", "aws_access_secret_key_wo", "aws_access_secret_key_wo_version", *rOut.AwsSecretAccessKey)
 		if err != nil {
 			return err
 		}
@@ -555,7 +573,7 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	awsAccessKeyId := d.Get("aws_access_key_id").(string)
-	awsAccessSecretKey := d.Get("aws_access_secret_key").(string)
+	awsAccessSecretKey := common.EffectiveSecretValue(d, "aws_access_secret_key", "aws_access_secret_key_wo")
 	accessMode := d.Get("access_mode").(string)
 	region := d.Get("region").(string)
 	awsUserPolicies := d.Get("aws_user_policies").(string)

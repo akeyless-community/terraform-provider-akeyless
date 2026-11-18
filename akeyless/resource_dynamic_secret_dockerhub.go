@@ -6,6 +6,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,6 +19,9 @@ func resourceDynamicSecretDockerhub() *schema.Resource {
 		Delete:      resourceDynamicSecretDockerhubDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretDockerhubImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("dockerhub_password"), cty.GetAttrPath("dockerhub_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -43,6 +47,20 @@ func resourceDynamicSecretDockerhub() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "DockerhubPassword is either the user's password access token to manage the repository",
+			},
+			"dockerhub_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"dockerhub_password_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "DockerhubPassword (write-only, not stored in state). Requires Terraform 1.11+. Bump dockerhub_password_wo_version to change it.",
+			},
+			"dockerhub_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"dockerhub_password_wo"},
+				Description:  "Version trigger for dockerhub_password_wo. Increment to update the password.",
 			},
 			"dockerhub_token_scopes": {
 				Type:        schema.TypeString,
@@ -103,7 +121,7 @@ func resourceDynamicSecretDockerhubCreate(d *schema.ResourceData, m interface{})
 	deleteProtection := d.Get("delete_protection").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	dockerhubPassword := d.Get("dockerhub_password").(string)
+	dockerhubPassword := common.EffectiveSecretValue(d, "dockerhub_password", "dockerhub_password_wo")
 	dockerhubTokenScopes := d.Get("dockerhub_token_scopes").(string)
 	dockerhubUsername := d.Get("dockerhub_username").(string)
 	targetName := d.Get("target_name").(string)
@@ -245,7 +263,7 @@ func resourceDynamicSecretDockerhubUpdate(d *schema.ResourceData, m interface{})
 	deleteProtection := d.Get("delete_protection").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	dockerhubPassword := d.Get("dockerhub_password").(string)
+	dockerhubPassword := common.EffectiveSecretValue(d, "dockerhub_password", "dockerhub_password_wo")
 	dockerhubTokenScopes := d.Get("dockerhub_token_scopes").(string)
 	dockerhubUsername := d.Get("dockerhub_username").(string)
 	targetName := d.Get("target_name").(string)

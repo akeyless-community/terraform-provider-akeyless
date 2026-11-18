@@ -6,6 +6,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,6 +19,9 @@ func resourceRotatedSecretHanaDb() *schema.Resource {
 		Delete:      resourceRotatedSecretHanaDbDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRotatedSecretHanaDbImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("rotated_password"), cty.GetAttrPath("rotated_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -58,6 +62,20 @@ func resourceRotatedSecretHanaDb() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "rotated-username password (relevant only for rotator-type=password)",
+			},
+			"rotated_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.",
+			},
+			"rotated_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"rotated_password_wo"},
+				Description:  "Version trigger for rotated_password_wo. Increment to update the value.",
 			},
 			"auto_rotate": {
 				Type:        schema.TypeString,
@@ -170,7 +188,7 @@ func resourceRotatedSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword := d.Get("rotated_password").(string)
+	rotatedPassword := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	maxVersions := d.Get("max_versions").(string)
@@ -352,7 +370,7 @@ func resourceRotatedSecretHanaDbRead(d *schema.ResourceData, m interface{}) erro
 					}
 				}
 				if password, ok := value["password"]; ok {
-					err := d.Set("rotated_password", password.(string))
+					err := common.SetSecretFromRead(d, "rotated_password", "rotated_password_wo", "rotated_password_wo_version", password.(string))
 					if err != nil {
 						return err
 					}
@@ -400,7 +418,10 @@ func resourceRotatedSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword := d.Get("rotated_password").(string)
+	rotatedPassword, err := common.SecretValueForUpdate(d, "rotated_password", "rotated_password_wo")
+	if err != nil {
+		return err
+	}
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
@@ -431,7 +452,7 @@ func resourceRotatedSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.RotationHour, rotationHour)
 	common.GetAkeylessPtr(&body.AuthenticationCredentials, authenticationCredentials)
 	common.GetAkeylessPtr(&body.RotatedUsername, rotatedUsername)
-	common.GetAkeylessPtr(&body.RotatedPassword, rotatedPassword)
+	common.SetOptionalString(&body.RotatedPassword, rotatedPassword)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)

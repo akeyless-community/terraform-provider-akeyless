@@ -36,6 +36,8 @@ PostgreSQL dynamic secret resource
 - `postgresql_db_name` (String) PostgreSQL DB Name
 - `postgresql_host` (String) PostgreSQL Host
 - `postgresql_password` (String, Sensitive) PostgreSQL Password
+- `postgresql_password_wo` (String, Sensitive) PostgreSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump postgresql_password_wo_version to change it.
+- `postgresql_password_wo_version` (Number) Version trigger for postgresql_password_wo. Increment to update the value.
 - `postgresql_port` (String) PostgreSQL Port
 - `postgresql_username` (String) PostgreSQL Username
 - `revocation_statements` (String) PostgreSQL Revocation statements

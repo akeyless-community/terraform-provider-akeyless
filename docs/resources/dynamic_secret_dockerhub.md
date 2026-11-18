@@ -24,6 +24,8 @@ Dockerhub dynamic secret resource
 - `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `dockerhub_password` (String, Sensitive) DockerhubPassword is either the user's password access token to manage the repository
+- `dockerhub_password_wo` (String, Sensitive) DockerhubPassword (write-only, not stored in state). Requires Terraform 1.11+. Bump dockerhub_password_wo_version to change it.
+- `dockerhub_password_wo_version` (Number) Version trigger for dockerhub_password_wo. Increment to update the password.
 - `dockerhub_token_scopes` (String) Access token scopes list (comma-separated) to give the dynamic secret valid options are in "repo:admin", "repo:write", "repo:read", "repo:public_read"
 - `dockerhub_username` (String) DockerhubUsername is the name of the user in dockerhub
 - `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority

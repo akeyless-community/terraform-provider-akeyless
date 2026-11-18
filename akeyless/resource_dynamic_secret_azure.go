@@ -7,6 +7,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,6 +20,9 @@ func resourceDynamicSecretAzure() *schema.Resource {
 		Delete:      resourceDynamicSecretAzureDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretAzureImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("azure_client_secret"), cty.GetAttrPath("azure_client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -47,6 +51,20 @@ func resourceDynamicSecretAzure() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Azure Client Secret",
+			},
+			"azure_client_secret_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"azure_client_secret_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "Azure Client Secret (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_client_secret_wo_version to change it.",
+			},
+			"azure_client_secret_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"azure_client_secret_wo"},
+				Description:  "Version trigger for azure_client_secret_wo. Increment to update the password.",
 			},
 			"user_portal_access": {
 				Type:        schema.TypeBool,
@@ -204,7 +222,7 @@ func resourceDynamicSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	azureTenantId := d.Get("azure_tenant_id").(string)
 	azureClientId := d.Get("azure_client_id").(string)
-	azureClientSecret := d.Get("azure_client_secret").(string)
+	azureClientSecret := common.EffectiveSecretValue(d, "azure_client_secret", "azure_client_secret_wo")
 	userPortalAccess := d.Get("user_portal_access").(bool)
 	userProgrammaticAccess := d.Get("user_programmatic_access").(bool)
 	appObjId := d.Get("app_obj_id").(string)
@@ -323,7 +341,7 @@ func resourceDynamicSecretAzureRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 	if rOut.AzureClientSecret != nil {
-		err = d.Set("azure_client_secret", *rOut.AzureClientSecret)
+		err = common.SetSecretFromRead(d, "azure_client_secret", "azure_client_secret_wo", "azure_client_secret_wo_version", *rOut.AzureClientSecret)
 		if err != nil {
 			return err
 		}
@@ -473,7 +491,7 @@ func resourceDynamicSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	azureTenantId := d.Get("azure_tenant_id").(string)
 	azureClientId := d.Get("azure_client_id").(string)
-	azureClientSecret := d.Get("azure_client_secret").(string)
+	azureClientSecret := common.EffectiveSecretValue(d, "azure_client_secret", "azure_client_secret_wo")
 	userPortalAccess := d.Get("user_portal_access").(bool)
 	userProgrammaticAccess := d.Get("user_programmatic_access").(bool)
 	appObjId := d.Get("app_obj_id").(string)

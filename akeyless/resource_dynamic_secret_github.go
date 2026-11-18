@@ -6,6 +6,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,6 +19,9 @@ func resourceDynamicSecretGithub() *schema.Resource {
 		Delete:      resourceDynamicSecretGithubDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretGithubImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("github_app_private_key"), cty.GetAttrPath("github_app_private_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -72,6 +76,20 @@ func resourceDynamicSecretGithub() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "App private key",
+			},
+			"github_app_private_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"github_app_private_key_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.",
+			},
+			"github_app_private_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"github_app_private_key_wo"},
+				Description:  "Version trigger for github_app_private_key_wo. Increment to update the value.",
 			},
 			"github_base_url": {
 				Type:        schema.TypeString,
@@ -135,7 +153,7 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	installationRepository := d.Get("installation_repository").(string)
 	targetName := d.Get("target_name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey := d.Get("github_app_private_key").(string)
+	githubAppPrivateKey := common.EffectiveSecretValue(d, "github_app_private_key", "github_app_private_key_wo")
 	githubBaseUrl := d.Get("github_base_url").(string)
 	tokenPermissionsSet := d.Get("token_permissions").(*schema.Set)
 	tokenPermissions := common.ExpandStringList(tokenPermissionsSet.List())
@@ -238,7 +256,7 @@ func resourceDynamicSecretGithubRead(d *schema.ResourceData, m interface{}) erro
 		}
 	}
 	if rOut.GithubAppPrivateKey != nil {
-		err = d.Set("github_app_private_key", *rOut.GithubAppPrivateKey)
+		err = common.SetSecretFromRead(d, "github_app_private_key", "github_app_private_key_wo", "github_app_private_key_wo_version", *rOut.GithubAppPrivateKey)
 		if err != nil {
 			return err
 		}
@@ -351,7 +369,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	installationRepository := d.Get("installation_repository").(string)
 	targetName := d.Get("target_name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey := d.Get("github_app_private_key").(string)
+	githubAppPrivateKey := common.EffectiveSecretValue(d, "github_app_private_key", "github_app_private_key_wo")
 	githubBaseUrl := d.Get("github_base_url").(string)
 	tokenPermissionsSet := d.Get("token_permissions").(*schema.Set)
 	tokenPermissions := common.ExpandStringList(tokenPermissionsSet.List())

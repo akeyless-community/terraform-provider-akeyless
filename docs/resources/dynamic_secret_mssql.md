@@ -35,6 +35,8 @@ Microsoft SQL Server dynamic secret resource
 - `mssql_dbname` (String) MSSQL Name
 - `mssql_host` (String) MSSQL Host
 - `mssql_password` (String, Sensitive) MSSQL Password
+- `mssql_password_wo` (String, Sensitive) MSSQL Password (write-only, not stored in state). Requires Terraform 1.11+. Bump mssql_password_wo_version to change it.
+- `mssql_password_wo_version` (Number) Version trigger for mssql_password_wo. Increment to update the value.
 - `mssql_port` (String) MSSQL Port
 - `mssql_revocation_statements` (String) MSSQL Revocation statements
 - `mssql_username` (String) MSSQL Username

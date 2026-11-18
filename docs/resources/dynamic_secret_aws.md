@@ -26,6 +26,8 @@ AWS dynamic secret resource
 - `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `aws_access_key_id` (String) Access Key ID
 - `aws_access_secret_key` (String, Sensitive) Access Secret Key
+- `aws_access_secret_key_wo` (String, Sensitive) Access Secret Key (write-only, not stored in state). Requires Terraform 1.11+. Bump aws_access_secret_key_wo_version to change it.
+- `aws_access_secret_key_wo_version` (Number) Version trigger for aws_access_secret_key_wo. Increment to update the password.
 - `aws_external_id` (String) The AWS External ID associated with the AWS role (relevant only for assume_role mode)
 - `aws_role_arns` (String) AWS Role ARNs to be use in the Assume Role operation. Multiple values should be separated by comma
 - `aws_user_console_access` (Boolean) Enable AWS User console access

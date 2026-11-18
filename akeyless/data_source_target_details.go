@@ -159,13 +159,11 @@ func dataSourceGetTargetDetailsRead(d *schema.ResourceData, m interface{}) error
 		return fmt.Errorf("can't get target details: empty details")
 	}
 
-	targetType, err := getTargetType(rOut.Target)
+	value, err := ExtractTargetDetailsValue(rOut.Value, rOut.Target)
 	if err != nil {
 		return err
 	}
-
-	err = setTargetDetailsByType(d, rOut.Value, targetType)
-	if err != nil {
+	if err = d.Set("value", value); err != nil {
 		return err
 	}
 
@@ -283,17 +281,14 @@ func getTargetType(targetOut *akeyless_api.Target) (string, error) {
 	return *targetType, nil
 }
 
-func setTargetDetailsByType(d *schema.ResourceData, details *akeyless_api.TargetTypeDetailsInput, targetType string) error {
-	value, err := extractTargetDetailsByType(details, targetType)
+// ExtractTargetDetailsValue returns the same map as the data source "value" attribute
+// (e.g. {"aws_target_details": "{...}"}). Used by the ephemeral resource.
+func ExtractTargetDetailsValue(details *akeyless_api.TargetTypeDetailsInput, target *akeyless_api.Target) (map[string]string, error) {
+	targetType, err := getTargetType(target)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	err = d.Set("value", value)
-	if err != nil {
-		return err
-	}
-	return nil
+	return extractTargetDetailsByType(details, targetType)
 }
 
 func extractTargetDetailsByType(details *akeyless_api.TargetTypeDetailsInput, targetType string) (map[string]string, error) {

@@ -39,6 +39,8 @@ RDP dynamic secret resource
 - `password_length` (String) The length of the password to be generated
 - `rdp_admin_name` (String) RDP Admin Name
 - `rdp_admin_pwd` (String) RDP Admin password
+- `rdp_admin_pwd_wo` (String, Sensitive) rdp_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump rdp_admin_pwd_wo_version to change it.
+- `rdp_admin_pwd_wo_version` (Number) Version trigger for rdp_admin_pwd_wo. Increment to update the value.
 - `rdp_host_name` (String) Hostname
 - `rdp_host_port` (String) Port
 - `rdp_user_groups` (String) Groups
