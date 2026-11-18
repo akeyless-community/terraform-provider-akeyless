@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // rawConfigString returns a string attribute from the raw configuration.
@@ -28,10 +27,8 @@ func rawString(raw cty.Value) (string, bool) {
 }
 
 // ValidateWriteOnlyAttribute rejects configs that set both the legacy and the
-// write-only attribute, and warns when only the legacy attribute is used.
+// write-only attribute. Legacy-only configs are unchanged (no warning).
 func ValidateWriteOnlyAttribute(oldField, woField cty.Path) schema.ValidateRawResourceConfigFunc {
-	preferWO := validation.PreferWriteOnlyAttribute(oldField, woField)
-
 	return func(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
 		oldValue, oldErr := oldField.Apply(req.RawConfig)
 		woValue, woErr := woField.Apply(req.RawConfig)
@@ -42,10 +39,7 @@ func ValidateWriteOnlyAttribute(oldField, woField cty.Path) schema.ValidateRawRe
 				Detail:        "Use either the legacy or write-only secret attribute, not both.",
 				AttributePath: woField,
 			}}
-			return
 		}
-
-		preferWO(ctx, req, resp)
 	}
 }
 
