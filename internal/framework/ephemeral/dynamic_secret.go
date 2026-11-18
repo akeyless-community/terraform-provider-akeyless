@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -27,7 +29,7 @@ func (r *dynamicSecretEphemeral) Metadata(_ context.Context, req ephemeral.Metad
 
 func (r *dynamicSecretEphemeral) Schema(_ context.Context, _ ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Fetches a dynamic secret value without storing it in Terraform state.",
+		Description: "Fetches a dynamic secret value without storing it in Terraform state. Each plan and apply opens a new credential that expires according to the secret TTL.",
 		Attributes: map[string]schema.Attribute{
 			"path":    schema.StringAttribute{Required: true, Description: "The path where the secret is stored."},
 			"args":    schema.ListAttribute{Optional: true, ElementType: types.StringType, Description: "Optional arguments as key=value pairs or JSON strings."},
@@ -92,16 +94,11 @@ func (r *dynamicSecretEphemeral) Open(ctx context.Context, req ephemeral.OpenReq
 	}
 
 	var gsvOutIntr map[string]any
-	gsvOut, _, err := r.client.Client.GetDynamicSecretValue(ctx).Body(body).Execute()
+	gsvOut, res, err := r.client.Client.GetDynamicSecretValue(ctx).Body(body).Execute()
 	if err != nil {
 		var apiErr akeyless_api.GenericOpenAPIError
-		if errors.As(err, &apiErr) {
-			if uerr := json.Unmarshal(apiErr.Body(), &gsvOutIntr); uerr != nil {
-				resp.Diagnostics.AddError("Get dynamic secret failed", string(apiErr.Body()))
-				return
-			}
-		} else {
-			resp.Diagnostics.AddError("Get dynamic secret failed", err.Error())
+		if res == nil || res.StatusCode != http.StatusBadRequest || !errors.As(err, &apiErr) || json.Unmarshal(apiErr.Body(), &gsvOutIntr) != nil {
+			resp.Diagnostics.AddError("Get dynamic secret failed", common.HandleError("get dynamic secret", res, err).Error())
 			return
 		}
 	}

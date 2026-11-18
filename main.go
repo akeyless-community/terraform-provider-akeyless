@@ -36,6 +36,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// The SDK server must configure first so Framework ephemerals can reuse its
+	// authenticated provider metadata.
 	providers := []func() tfprotov6.ProviderServer{
 		func() tfprotov6.ProviderServer { return upgradedSdkServer },
 		providerserver.NewProtocol6(fwprovider.New(sdkProvider)),

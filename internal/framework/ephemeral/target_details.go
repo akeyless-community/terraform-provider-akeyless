@@ -2,7 +2,6 @@ package ephemeral
 
 import (
 	"context"
-	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
@@ -79,7 +78,7 @@ func (r *targetDetailsEphemeral) Open(ctx context.Context, req ephemeral.OpenReq
 
 	rOut, res, err := r.client.Client.TargetGetDetails(ctx).Body(body).Execute()
 	if err != nil {
-		resp.Diagnostics.AddError("Get target details failed", fmt.Sprintf("%v (status=%v)", err, res))
+		resp.Diagnostics.AddError("Get target details failed", common.HandleError("get target details", res, err).Error())
 		return
 	}
 	if rOut.Value == nil {

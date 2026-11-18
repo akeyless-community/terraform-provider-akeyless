@@ -448,7 +448,7 @@ type providerMeta struct {
 }
 
 func (m *providerMeta) ApiClient() *ApiClient {
-	if m == nil || m.client == nil || m.token == nil {
+	if m == nil || m.client == nil || m.token == nil || *m.token == "" {
 		return nil
 	}
 	return &ApiClient{Client: m.client, Token: *m.token}

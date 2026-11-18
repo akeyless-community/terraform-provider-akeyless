@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
@@ -75,11 +76,11 @@ func (r *rotatedSecretEphemeral) Open(ctx context.Context, req ephemeral.OpenReq
 	}
 	common.GetAkeylessPtr(&body.IgnoreCache, ignoreCache)
 
-	rOut, _, err := r.client.Client.GetRotatedSecretValue(ctx).Body(body).Execute()
+	rOut, res, err := r.client.Client.GetRotatedSecretValue(ctx).Body(body).Execute()
 	if err != nil {
 		var apiErr akeyless_api.GenericOpenAPIError
-		if !errors.As(err, &apiErr) || json.Unmarshal(apiErr.Body(), &rOut) != nil {
-			resp.Diagnostics.AddError("Get rotated secret failed", err.Error())
+		if res == nil || res.StatusCode != http.StatusBadRequest || !errors.As(err, &apiErr) || json.Unmarshal(apiErr.Body(), &rOut) != nil {
+			resp.Diagnostics.AddError("Get rotated secret failed", common.HandleError("get rotated secret", res, err).Error())
 			return
 		}
 	}

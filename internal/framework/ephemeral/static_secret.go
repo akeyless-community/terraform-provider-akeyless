@@ -2,7 +2,6 @@ package ephemeral
 
 import (
 	"context"
-	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
@@ -73,7 +72,7 @@ func (r *staticSecretEphemeral) Open(ctx context.Context, req ephemeral.OpenRequ
 
 	gsvOut, res, err := r.client.Client.GetSecretValue(ctx).Body(body).Execute()
 	if err != nil {
-		resp.Diagnostics.AddError("Get static secret failed", fmt.Sprintf("%v (status=%v)", err, res))
+		resp.Diagnostics.AddError("Get static secret failed", common.HandleError("get static secret", res, err).Error())
 		return
 	}
 	value, ok := gsvOut[path]
