@@ -6,7 +6,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,9 +18,6 @@ func resourceDynamicSecretChef() *schema.Resource {
 		Delete:      resourceDynamicSecretChefDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretChefImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("chef_server_key"), cty.GetAttrPath("chef_server_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -57,20 +53,6 @@ func resourceDynamicSecretChef() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Server key",
-			},
-			"chef_server_key_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"chef_server_key_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "Server key (write-only, not stored in state). Requires Terraform 1.11+. Bump chef_server_key_wo_version to change it.",
-			},
-			"chef_server_key_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"chef_server_key_wo"},
-				Description:  "Version trigger for chef_server_key_wo. Increment to update the password.",
 			},
 			"chef_server_url": {
 				Type:        schema.TypeString,
@@ -159,10 +141,7 @@ func resourceDynamicSecretChefCreate(d *schema.ResourceData, m interface{}) erro
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	chefOrgs := d.Get("chef_orgs").(string)
-	chefServerKey, err := common.EffectiveSecretValue(d, "chef_server_key", "chef_server_key_wo")
-	if err != nil {
-		return err
-	}
+	chefServerKey := d.Get("chef_server_key").(string)
 	chefServerUrl := d.Get("chef_server_url").(string)
 	chefServerUsername := d.Get("chef_server_username").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -341,10 +320,7 @@ func resourceDynamicSecretChefUpdate(d *schema.ResourceData, m interface{}) erro
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	chefOrgs := d.Get("chef_orgs").(string)
-	chefServerKey, err := common.SecretValueForUpdate(d, "chef_server_key", "chef_server_key_wo")
-	if err != nil {
-		return err
-	}
+	chefServerKey := d.Get("chef_server_key").(string)
 	chefServerUrl := d.Get("chef_server_url").(string)
 	chefServerUsername := d.Get("chef_server_username").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -364,7 +340,7 @@ func resourceDynamicSecretChefUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ChefOrgs, chefOrgs)
-	common.SetOptionalString(&body.ChefServerKey, chefServerKey)
+	common.GetAkeylessPtr(&body.ChefServerKey, chefServerKey)
 	common.GetAkeylessPtr(&body.ChefServerUrl, chefServerUrl)
 	common.GetAkeylessPtr(&body.ChefServerUsername, chefServerUsername)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
