@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDbTarget() *schema.Resource {
@@ -22,15 +21,15 @@ func resourceDbTarget() *schema.Resource {
 			State: resourceDbTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("pwd"), cty.GetAttrPath("pwd_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("client_certificate"), cty.GetAttrPath("client_certificate_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("client_private_key"), cty.GetAttrPath("client_private_key_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("client_key_passphrase"), cty.GetAttrPath("client_key_passphrase_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("snowflake_api_private_key"), cty.GetAttrPath("snowflake_api_private_key_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("snowflake_api_private_key_password"), cty.GetAttrPath("snowflake_api_private_key_password_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mongodb_atlas_api_private_key"), cty.GetAttrPath("mongodb_atlas_api_private_key_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("oracle_wallet_p12_file_data"), cty.GetAttrPath("oracle_wallet_p12_file_data_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("azure_client_secret"), cty.GetAttrPath("azure_client_secret_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("pwd"), cty.GetAttrPath("pwd_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("client_certificate"), cty.GetAttrPath("client_certificate_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("client_private_key"), cty.GetAttrPath("client_private_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("client_key_passphrase"), cty.GetAttrPath("client_key_passphrase_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("snowflake_api_private_key"), cty.GetAttrPath("snowflake_api_private_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("snowflake_api_private_key_password"), cty.GetAttrPath("snowflake_api_private_key_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("mongodb_atlas_api_private_key"), cty.GetAttrPath("mongodb_atlas_api_private_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("oracle_wallet_p12_file_data"), cty.GetAttrPath("oracle_wallet_p12_file_data_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("azure_client_secret"), cty.GetAttrPath("azure_client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -77,9 +77,9 @@ func (r *sshCertificateEphemeral) Open(ctx context.Context, req ephemeral.OpenRe
 		common.GetAkeylessPtr(&body.LegacySigningAlgName, data.LegacySigningAlgName.ValueBool())
 	}
 
-	rOut, _, err := r.client.Client.GetSSHCertificate(ctx).Body(body).Execute()
+	rOut, res, err := r.client.Client.GetSSHCertificate(ctx).Body(body).Execute()
 	if err != nil {
-		resp.Diagnostics.AddError("Get SSH certificate failed", err.Error())
+		resp.Diagnostics.AddError("Get SSH certificate failed", common.HandleError("get SSH certificate", res, err).Error())
 		return
 	}
 	if rOut.Data != nil {

@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretSnowflake() *schema.Resource {
@@ -22,9 +21,9 @@ func resourceDynamicSecretSnowflake() *schema.Resource {
 			State: resourceDynamicSecretSnowflakeImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("private_key_passphrase"), cty.GetAttrPath("private_key_passphrase_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("private_key"), cty.GetAttrPath("private_key_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("account_password"), cty.GetAttrPath("account_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("private_key_passphrase"), cty.GetAttrPath("private_key_passphrase_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("private_key"), cty.GetAttrPath("private_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("account_password"), cty.GetAttrPath("account_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

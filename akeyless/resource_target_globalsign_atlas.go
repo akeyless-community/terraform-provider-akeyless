@@ -7,7 +7,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGlobalsignAtlasTarget() *schema.Resource {
@@ -21,10 +20,10 @@ func resourceGlobalsignAtlasTarget() *schema.Resource {
 			State: resourceGlobalsignAtlasTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mtls_cert_data_base64"), cty.GetAttrPath("mtls_cert_data_base64_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_secret"), cty.GetAttrPath("api_secret_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mtls_key_data_base64"), cty.GetAttrPath("mtls_key_data_base64_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("mtls_cert_data_base64"), cty.GetAttrPath("mtls_cert_data_base64_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("api_secret"), cty.GetAttrPath("api_secret_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("mtls_key_data_base64"), cty.GetAttrPath("mtls_key_data_base64_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

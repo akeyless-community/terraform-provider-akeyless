@@ -28,7 +28,7 @@ func (r *certificateEphemeral) Schema(_ context.Context, _ ephemeral.SchemaReque
 	resp.Schema = schema.Schema{
 		Description: "Fetches a certificate value without storing it in Terraform state.",
 		Attributes: map[string]schema.Attribute{
-			"name":            schema.StringAttribute{Optional: true, Description: "Certificate name"},
+			"name":            schema.StringAttribute{Required: true, Description: "Certificate name"},
 			"version":         schema.Int64Attribute{Optional: true, Description: "Certificate version"},
 			"ignore_cache":    schema.StringAttribute{Optional: true, Description: "Retrieve without checking Gateway cache [true/false]"},
 			"certificate_pem": schema.StringAttribute{Computed: true, Sensitive: true, Description: "The certificate value in pem format"},
@@ -73,9 +73,9 @@ func (r *certificateEphemeral) Open(ctx context.Context, req ephemeral.OpenReque
 	}
 	common.GetAkeylessPtr(&body.IgnoreCache, ignoreCache)
 
-	rOut, _, err := r.client.Client.GetCertificateValue(ctx).Body(body).Execute()
+	rOut, res, err := r.client.Client.GetCertificateValue(ctx).Body(body).Execute()
 	if err != nil {
-		resp.Diagnostics.AddError("Get certificate failed", err.Error())
+		resp.Diagnostics.AddError("Get certificate failed", common.HandleError("get certificate", res, err).Error())
 		return
 	}
 	if rOut.CertificatePem != nil {

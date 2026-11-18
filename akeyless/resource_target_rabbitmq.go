@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceRabbitmqTarget() *schema.Resource {
@@ -22,7 +21,7 @@ func resourceRabbitmqTarget() *schema.Resource {
 			State: resourceRabbitmqTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("rabbitmq_server_password"), cty.GetAttrPath("rabbitmq_server_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("rabbitmq_server_password"), cty.GetAttrPath("rabbitmq_server_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

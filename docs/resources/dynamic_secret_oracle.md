@@ -35,6 +35,8 @@ Oracle DB dynamic secret resource
 - `oracle_creation_statements` (String) Oracle Creation statements
 - `oracle_host` (String) Oracle Host
 - `oracle_password` (String) Oracle Password
+- `oracle_password_wo` (String, Sensitive) Oracle Password (write-only, not stored in state). Requires Terraform 1.11+. Bump oracle_password_wo_version to change it.
+- `oracle_password_wo_version` (Number) Version trigger for oracle_password_wo. Increment to update the value.
 - `oracle_port` (String) Oracle Port
 - `oracle_revocation_statements` (String) Oracle Revocation statements
 - `oracle_service_name` (String) Oracle DB Name

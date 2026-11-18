@@ -25,7 +25,11 @@ ZeroSSL Target resource
 
 ### Optional
 
+- `api_key_wo` (String, Sensitive) api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.
+- `api_key_wo_version` (Number) Version trigger for api_key_wo. Increment to update the value.
 - `description` (String) Description of the object
+- `imap_password_wo` (String, Sensitive) imap_password (write-only, not stored in state). Requires Terraform 1.11+. Bump imap_password_wo_version to change it.
+- `imap_password_wo_version` (Number) Version trigger for imap_password_wo. Increment to update the value.
 - `imap_port` (String) Port of the IMAP service
 - `imap_target_email` (String) Validation email to use when asking ZeroSSL to send a validation email, if empty will use imap-username
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings

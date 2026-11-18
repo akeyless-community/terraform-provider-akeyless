@@ -1,12 +1,40 @@
 package gateway
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/tests/testutils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func rotatedSecretPassword(path string) (string, error) {
+	client, token, err := testutils.GetClient()
+	if err != nil {
+		return "", err
+	}
+
+	out, _, err := client.GetRotatedSecretValue(context.Background()).Body(akeyless_api.GetRotatedSecretValue{
+		Names: path,
+		Token: &token,
+	}).Execute()
+	if err != nil {
+		return "", err
+	}
+
+	value, ok := out["value"].(map[string]any)
+	if !ok {
+		return "", fmt.Errorf("rotated secret %s: value is missing", path)
+	}
+	password, ok := value["password"].(string)
+	if !ok {
+		return "", fmt.Errorf("rotated secret %s: password is missing", path)
+	}
+	return password, nil
+}
 
 // Verify mysql_password_wo writes the secret and version changes update it.
 func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
@@ -171,6 +199,21 @@ func TestRotatedSecretMysqlWriteOnly(t *testing.T) {
 		}
 	`, rsName, rsPath, targetPath)
 
+	configDescriptionUpdate := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mysql" "%v" {
+			name                        = "%v"
+			target_name                 = "%v"
+			rotator_type                = "target"
+			authentication_credentials  = "use-target-creds"
+			rotated_username            = "test"
+			rotated_password_wo         = "test-updated"
+			rotated_password_wo_version = 2
+			password_length             = "9"
+			description                 = "description-only-update"
+		}
+	`, rsName, rsPath, targetPath)
+
+	var passwordAfterWO string
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
@@ -193,6 +236,27 @@ func TestRotatedSecretMysqlWriteOnly(t *testing.T) {
 					testutils.CheckItemExistsRemotely(rsPath),
 					testutils.CheckSecretNotInState(addr, "rotated_password"),
 					resource.TestCheckResourceAttr(addr, "rotated_password_wo_version", "2"),
+					func(_ *terraform.State) error {
+						var err error
+						passwordAfterWO, err = rotatedSecretPassword(rsPath)
+						return err
+					},
+				),
+			},
+			{
+				Config: configDescriptionUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					func(_ *terraform.State) error {
+						password, err := rotatedSecretPassword(rsPath)
+						if err != nil {
+							return err
+						}
+						if password != passwordAfterWO {
+							return fmt.Errorf("rotated secret password changed during description update")
+						}
+						return nil
+					},
 				),
 			},
 			{

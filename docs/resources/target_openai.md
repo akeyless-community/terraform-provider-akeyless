@@ -23,6 +23,8 @@ OpenAI Target resource. In ChatGPT OAuth mode, every update requires a new Codex
 
 - `api_key` (String, Sensitive) API key for OpenAI
 - `api_key_id` (String) API key ID
+- `api_key_wo` (String, Sensitive) api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.
+- `api_key_wo_version` (Number) Version trigger for api_key_wo. Increment to update the value.
 - `codex_oauth_access_token_wo` (String, Sensitive) Codex OAuth access token (auth.json tokens.access_token), used when codex_oauth_mode=chatgpt_oauth. Optional, the gateway populates it during refresh. Write-only, not stored in state; sent only when codex_oauth_token_wo_version changes. Requires Terraform 1.11 or later
 - `codex_oauth_account_id` (String) Codex OAuth account id (auth.json tokens.account_id), used when codex_oauth_mode=chatgpt_oauth
 - `codex_oauth_mode` (String) Auth mode: empty (default, static api-key) or chatgpt_oauth

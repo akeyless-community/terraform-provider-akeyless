@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceSSHTarget() *schema.Resource {
@@ -22,9 +21,9 @@ func resourceSSHTarget() *schema.Resource {
 			State: resourceSSHTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("private_key_password"), cty.GetAttrPath("private_key_password_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("private_key"), cty.GetAttrPath("private_key_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("ssh_password"), cty.GetAttrPath("ssh_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("private_key_password"), cty.GetAttrPath("private_key_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("private_key"), cty.GetAttrPath("private_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("ssh_password"), cty.GetAttrPath("ssh_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

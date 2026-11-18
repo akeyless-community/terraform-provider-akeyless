@@ -23,6 +23,8 @@ Azure Target resource
 
 - `client_id` (String) Azure client/application id
 - `client_secret` (String) Azure client secret
+- `client_secret_wo` (String, Sensitive) client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.
+- `client_secret_wo_version` (Number) Version trigger for client_secret_wo. Increment to update the value.
 - `connection_type` (String) Type of connection [credentials/cloud-identity]
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings

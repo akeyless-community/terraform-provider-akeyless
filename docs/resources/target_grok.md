@@ -22,6 +22,8 @@ Grok Target resource
 ### Optional
 
 - `api_key` (String, Sensitive) API key for Grok
+- `api_key_wo` (String, Sensitive) API key for Grok (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.
+- `api_key_wo_version` (Number) Version trigger for api_key_wo. Increment to update the key.
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `grok_url` (String) Base URL of the Grok API

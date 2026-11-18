@@ -26,15 +26,25 @@ Salesforce Target resource
 ### Optional
 
 - `app_private_key_data` (String, Sensitive) Base64 encoded PEM of the connected app private key (relevant for JWT auth only)
+- `app_private_key_data_wo` (String, Sensitive) app_private_key_data (write-only, not stored in state). Requires Terraform 1.11+. Bump app_private_key_data_wo_version to change it.
+- `app_private_key_data_wo_version` (Number) Version trigger for app_private_key_data_wo. Increment to update the value.
 - `ca_cert_data` (String) Base64 encoded PEM cert to use when uploading a new key to Salesforce
+- `ca_cert_data_wo` (String, Sensitive) ca_cert_data (write-only, not stored in state). Requires Terraform 1.11+. Bump ca_cert_data_wo_version to change it.
+- `ca_cert_data_wo_version` (Number) Version trigger for ca_cert_data_wo. Increment to update the value.
 - `ca_cert_name` (String) name of the certificate in Salesforce tenant to use when uploading new key
 - `client_secret` (String, Sensitive) Client secret of the oauth2 app to use for connecting to Salesforce (required for password flow)
+- `client_secret_wo` (String, Sensitive) client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.
+- `client_secret_wo_version` (Number) Version trigger for client_secret_wo. Increment to update the value.
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `password` (String, Sensitive) The password of the user attached to the oauth2 app used for connecting to Salesforce (required for user-password flow)
+- `password_wo` (String, Sensitive) password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.
+- `password_wo_version` (Number) Version trigger for password_wo. Increment to update the value.
 - `security_token` (String, Sensitive) The security token of the user attached to the oauth2 app used for connecting to Salesforce  (required for user-password flow)
+- `security_token_wo` (String, Sensitive) security_token (write-only, not stored in state). Requires Terraform 1.11+. Bump security_token_wo_version to change it.
+- `security_token_wo_version` (Number) Version trigger for security_token_wo. Increment to update the value.
 
 ### Read-Only
 

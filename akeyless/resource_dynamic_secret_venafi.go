@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretVenafi() *schema.Resource {
@@ -22,9 +21,9 @@ func resourceDynamicSecretVenafi() *schema.Resource {
 			State: resourceDynamicSecretVenafiImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("venafi_refresh_token"), cty.GetAttrPath("venafi_refresh_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("venafi_api_key"), cty.GetAttrPath("venafi_api_key_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("venafi_access_token"), cty.GetAttrPath("venafi_access_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("venafi_refresh_token"), cty.GetAttrPath("venafi_refresh_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("venafi_api_key"), cty.GetAttrPath("venafi_api_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("venafi_access_token"), cty.GetAttrPath("venafi_access_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

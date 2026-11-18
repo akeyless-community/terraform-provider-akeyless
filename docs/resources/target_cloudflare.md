@@ -23,6 +23,8 @@ Cloudflare Target resource
 
 ### Optional
 
+- `api_token_wo` (String, Sensitive) Cloudflare API token (write-only, not stored in state). Requires Terraform 1.11+. Bump api_token_wo_version to change it.
+- `api_token_wo_version` (Number) Version trigger for api_token_wo. Increment to update the value.
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)

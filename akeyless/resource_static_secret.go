@@ -10,7 +10,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceStaticSecret() *schema.Resource {
@@ -24,8 +23,8 @@ func resourceStaticSecret() *schema.Resource {
 			State: resourceStaticSecretImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("value"), cty.GetAttrPath("value_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("value"), cty.GetAttrPath("value_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"ara_enabled": {
@@ -564,7 +563,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	}
 
 	if d.HasChanges("value", "value_wo_version", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field", "password_wo_version") {
-		value, err := common.RequiredSecretValueForUpdate(d, "value", "value_wo")
+		value, err := common.EffectiveSecretValue(d, "value", "value_wo")
 		if err != nil {
 			return err
 		}

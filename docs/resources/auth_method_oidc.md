@@ -30,6 +30,8 @@ OIDC Auth Method Resource
 - `bound_ips` (Set of String) A CIDR whitelist with the IPs that the access is restricted to
 - `client_id` (String) Client ID
 - `client_secret` (String) Client Secret
+- `client_secret_wo` (String, Sensitive) client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.
+- `client_secret_wo_version` (Number) Version trigger for client_secret_wo. Increment to update the value.
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Auth Method description
 - `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified.

@@ -26,6 +26,8 @@ Azure AD dynamic secret resource
 - `azure_administrative_unit` (String) Azure AD administrative unit (relevant only when azure-user-portal-access=true)
 - `azure_client_id` (String) Azure Client ID
 - `azure_client_secret` (String, Sensitive) Azure Client Secret
+- `azure_client_secret_wo` (String, Sensitive) Azure Client Secret (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_client_secret_wo_version to change it.
+- `azure_client_secret_wo_version` (Number) Version trigger for azure_client_secret_wo. Increment to update the password.
 - `azure_tenant_id` (String) Azure Tenant ID
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]

@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceSalesforceTarget() *schema.Resource {
@@ -22,11 +21,11 @@ func resourceSalesforceTarget() *schema.Resource {
 			State: resourceSalesforceTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("ca_cert_data"), cty.GetAttrPath("ca_cert_data_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("app_private_key_data"), cty.GetAttrPath("app_private_key_data_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("security_token"), cty.GetAttrPath("security_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("client_secret"), cty.GetAttrPath("client_secret_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("ca_cert_data"), cty.GetAttrPath("ca_cert_data_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("app_private_key_data"), cty.GetAttrPath("app_private_key_data_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("security_token"), cty.GetAttrPath("security_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("client_secret"), cty.GetAttrPath("client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -23,6 +23,8 @@ Snowflake dynamic secret resource
 
 - `account` (String) Account name
 - `account_password` (String, Sensitive) Database Password
+- `account_password_wo` (String, Sensitive) account_password (write-only, not stored in state). Requires Terraform 1.11+. Bump account_password_wo_version to change it.
+- `account_password_wo_version` (Number) Version trigger for account_password_wo. Increment to update the value.
 - `account_username` (String) Database Username
 - `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `auth_mode` (String) The authentication mode for the temporary user [password/key]
@@ -38,6 +40,10 @@ Snowflake dynamic secret resource
 - `password_length` (String) The length of the password to be generated
 - `private_key` (String, Sensitive) RSA Private key (base64 encoded)
 - `private_key_passphrase` (String, Sensitive) The Private key passphrase
+- `private_key_passphrase_wo` (String, Sensitive) private_key_passphrase (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_passphrase_wo_version to change it.
+- `private_key_passphrase_wo_version` (Number) Version trigger for private_key_passphrase_wo. Increment to update the value.
+- `private_key_wo` (String, Sensitive) private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_wo_version to change it.
+- `private_key_wo_version` (Number) Version trigger for private_key_wo. Increment to update the value.
 - `role` (String) User role
 - `skip_dry_run` (Boolean) Skip dry run
 - `tags` (Set of String) Add tags attached to this object

@@ -28,6 +28,8 @@ Github dynamic secret resource
 - `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `github_app_id` (Number) Github app id
 - `github_app_private_key` (String) App private key
+- `github_app_private_key_wo` (String, Sensitive) github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.
+- `github_app_private_key_wo_version` (Number) Version trigger for github_app_private_key_wo. Increment to update the value.
 - `github_base_url` (String) Base URL
 - `installation_id` (Number) GitHub application installation id
 - `installation_organization` (String) Optional, mutually exclusive with installation id, GitHub organization name

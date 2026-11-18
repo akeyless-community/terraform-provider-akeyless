@@ -41,10 +41,16 @@ Venafi dynamic secret resource
 - `target_name` (String) Target name
 - `user_ttl` (String) User TTL in time.Duration format (2160h / 129600m / etc...). When using sign-using-akeyless-pki certificates created will have this validity period, otherwise the user-ttl is taken from the Validity Period field of the Zone's' Issuing Template. When using cert-manager it is advised to have a TTL of above 60 days (1440h). For more information - https://cert-manager.io/docs/usage/certificate/
 - `venafi_access_token` (String, Sensitive) Venafi Access Token to use to access the TPP environment (Relevant when using TPP)
+- `venafi_access_token_wo` (String, Sensitive) venafi_access_token (write-only, not stored in state). Requires Terraform 1.11+. Bump venafi_access_token_wo_version to change it.
+- `venafi_access_token_wo_version` (Number) Version trigger for venafi_access_token_wo. Increment to update the value.
 - `venafi_api_key` (String, Sensitive) Venafi API key
+- `venafi_api_key_wo` (String, Sensitive) venafi_api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump venafi_api_key_wo_version to change it.
+- `venafi_api_key_wo_version` (Number) Version trigger for venafi_api_key_wo. Increment to update the value.
 - `venafi_baseurl` (String) Venafi Baseurl
 - `venafi_client_id` (String) Venafi Client ID that was used when the access token was generated
 - `venafi_refresh_token` (String, Sensitive) Venafi Refresh Token to use when the Access Token is expired (Relevant when using TPP)
+- `venafi_refresh_token_wo` (String, Sensitive) venafi_refresh_token (write-only, not stored in state). Requires Terraform 1.11+. Bump venafi_refresh_token_wo_version to change it.
+- `venafi_refresh_token_wo_version` (Number) Version trigger for venafi_refresh_token_wo. Increment to update the value.
 - `venafi_use_tpp` (Boolean) Venafi using TPP
 - `venafi_zone` (String) Venafi Zone
 

@@ -23,6 +23,8 @@ Keycloak Target resource
 
 - `client_id` (String) Keycloak client ID
 - `client_secret` (String, Sensitive) Keycloak client secret
+- `client_secret_wo` (String, Sensitive) Keycloak client secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.
+- `client_secret_wo_version` (Number) Version trigger for client_secret_wo. Increment to update the secret.
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings

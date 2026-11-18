@@ -40,6 +40,8 @@ Ldap rotated secret resource
 - `password_length` (String) The length of the password to be generated
 - `rotate_after_disconnect` (String) Rotate the value of the secret after SRA session ends [true/false]
 - `rotated_password` (String) rotated-username password (relevant only for rotator-type=ldap)
+- `rotated_password_wo` (String, Sensitive) rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.
+- `rotated_password_wo_version` (Number) Version trigger for rotated_password_wo. Increment to update the value.
 - `rotated_username` (String) username to be rotated, if selected use-self-creds at rotator-creds-type, this username will try to rotate it's own password, if use-target-creds is selected, target credentials will be use to rotate the rotated-password (relevant only for rotator-type=ldap)
 - `rotation_event_in` (List of String) How many days before the rotation of the item would you like to be notified
 - `rotation_hour` (Number) The Hour of the rotation in UTC

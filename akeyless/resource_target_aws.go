@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsTarget() *schema.Resource {
@@ -22,8 +21,8 @@ func resourceAwsTarget() *schema.Resource {
 			State: resourceAwsTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("session_token"), cty.GetAttrPath("session_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("access_key"), cty.GetAttrPath("access_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("session_token"), cty.GetAttrPath("session_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("access_key"), cty.GetAttrPath("access_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

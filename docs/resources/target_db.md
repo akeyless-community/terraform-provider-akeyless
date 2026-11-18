@@ -24,10 +24,18 @@ DB Target resource
 
 - `azure_client_id` (String) (Optional) Client id (relevant for "cloud-service-provider" only)
 - `azure_client_secret` (String, Sensitive) (Optional) Client secret (relevant for "cloud-service-provider" only)
+- `azure_client_secret_wo` (String, Sensitive) (Optional) Client secret (relevant for "cloud-service-provider" only) (write-only, not stored in state). Requires Terraform 1.11+. Bump azure_client_secret_wo_version to change it.
+- `azure_client_secret_wo_version` (Number) Version trigger for azure_client_secret_wo. Increment to update the value.
 - `azure_tenant_id` (String) (Optional) Tenant id (relevant for "cloud-service-provider" only)
 - `client_certificate` (String, Sensitive) Content of the client certificate (PEM format) in a Base64 format
+- `client_certificate_wo` (String, Sensitive) Content of the client certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump client_certificate_wo_version to change it.
+- `client_certificate_wo_version` (Number) Version trigger for client_certificate_wo. Increment to update the value.
 - `client_key_passphrase` (String, Sensitive) Passphrase for the client private key
+- `client_key_passphrase_wo` (String, Sensitive) Passphrase for the client private key (write-only, not stored in state). Requires Terraform 1.11+. Bump client_key_passphrase_wo_version to change it.
+- `client_key_passphrase_wo_version` (Number) Version trigger for client_key_passphrase_wo. Increment to update the value.
 - `client_private_key` (String, Sensitive) Content of the client private key (PEM format) in a Base64 format
+- `client_private_key_wo` (String, Sensitive) Content of the client private key (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump client_private_key_wo_version to change it.
+- `client_private_key_wo_version` (Number) Version trigger for client_private_key_wo. Increment to update the value.
 - `cloud_service_provider` (String) (Optional) Cloud service provider (currently only supports Azure)
 - `cluster_mode` (Boolean) Cluster Mode
 - `connection_type` (String) Type of connection to mssql database [credentials/cloud-identity/wallet/parent-target]
@@ -41,6 +49,8 @@ DB Target resource
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `mongodb_atlas` (Boolean) Flag, set database type to mongodb and the flag to true to create Mongo Atlas target
 - `mongodb_atlas_api_private_key` (String, Sensitive) MongoDB Atlas private key
+- `mongodb_atlas_api_private_key_wo` (String, Sensitive) MongoDB Atlas private key (write-only, not stored in state). Requires Terraform 1.11+. Bump mongodb_atlas_api_private_key_wo_version to change it.
+- `mongodb_atlas_api_private_key_wo_version` (Number) Version trigger for mongodb_atlas_api_private_key_wo. Increment to update the value.
 - `mongodb_atlas_api_public_key` (String) MongoDB Atlas public key
 - `mongodb_atlas_project_id` (String) MongoDB Atlas project ID
 - `mongodb_default_auth_db` (String) MongoDB server default authentication database
@@ -48,14 +58,22 @@ DB Target resource
 - `oracle_service_name` (String) Oracle db service name
 - `oracle_wallet_login_type` (String) Oracle Wallet login type (password/mtls)
 - `oracle_wallet_p12_file_data` (String, Sensitive) Oracle wallet p12 file data in base64
+- `oracle_wallet_p12_file_data_wo` (String, Sensitive) Oracle wallet p12 file data in base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump oracle_wallet_p12_file_data_wo_version to change it.
+- `oracle_wallet_p12_file_data_wo_version` (Number) Version trigger for oracle_wallet_p12_file_data_wo. Increment to update the value.
 - `oracle_wallet_sso_file_data` (String) Oracle wallet sso file data in base64
 - `parent_target_name` (String) Name of the parent target, relevant only when connection-type is parent-target
 - `port` (String) Database port
 - `pwd` (String, Sensitive) Database password
+- `pwd_wo` (String, Sensitive) Database password (write-only, not stored in state). Requires Terraform 1.11+. Bump pwd_wo_version to change it.
+- `pwd_wo_version` (Number) Version trigger for pwd_wo. Increment to update the value.
 - `skip_server_name_validation` (String) Skip server name verification while still validating the certificate chain [true/false]
 - `snowflake_account` (String) Snowflake account name
 - `snowflake_api_private_key` (String, Sensitive) RSA Private key (base64 encoded)
 - `snowflake_api_private_key_password` (String, Sensitive) The Private key passphrase
+- `snowflake_api_private_key_password_wo` (String, Sensitive) The Private key passphrase (write-only, not stored in state). Requires Terraform 1.11+. Bump snowflake_api_private_key_password_wo_version to change it.
+- `snowflake_api_private_key_password_wo_version` (Number) Version trigger for snowflake_api_private_key_password_wo. Increment to update the value.
+- `snowflake_api_private_key_wo` (String, Sensitive) RSA Private key (base64 encoded) (write-only, not stored in state). Requires Terraform 1.11+. Bump snowflake_api_private_key_wo_version to change it.
+- `snowflake_api_private_key_wo_version` (Number) Version trigger for snowflake_api_private_key_wo. Increment to update the value.
 - `ssl` (Boolean) Enable/Disable SSL [true/false]
 - `ssl_certificate` (String) SSL connection certificate
 - `user_name` (String) Database user name

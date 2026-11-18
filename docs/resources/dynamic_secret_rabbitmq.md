@@ -31,6 +31,8 @@ RabbitMQ dynamic secret resource
 - `password_length` (String) The length of the password to be generated
 - `producer_encryption_key_name` (String) Dynamic producer encryption key
 - `rabbitmq_admin_pwd` (String, Sensitive) RabbitMQ Admin password
+- `rabbitmq_admin_pwd_wo` (String, Sensitive) rabbitmq_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_admin_pwd_wo_version to change it.
+- `rabbitmq_admin_pwd_wo_version` (Number) Version trigger for rabbitmq_admin_pwd_wo. Increment to update the value.
 - `rabbitmq_admin_user` (String) RabbitMQ Admin User
 - `rabbitmq_server_uri` (String) Server URI
 - `rabbitmq_user_conf_permission` (String) User configuration permission

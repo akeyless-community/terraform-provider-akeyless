@@ -28,6 +28,8 @@ Ping Federate Target resource
 - `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `password` (String, Sensitive) Ping Federate privileged user password
+- `password_wo` (String, Sensitive) password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.
+- `password_wo_version` (Number) Version trigger for password_wo. Increment to update the value.
 - `ping_url` (String) Ping URL
 - `privileged_user` (String) Ping Federate privileged user
 

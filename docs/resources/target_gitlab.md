@@ -23,7 +23,11 @@ Gitlab Target resource
 
 - `description` (String) Description of the object
 - `gitlab_access_token` (String, Sensitive) Gitlab access token
+- `gitlab_access_token_wo` (String, Sensitive) gitlab_access_token (write-only, not stored in state). Requires Terraform 1.11+. Bump gitlab_access_token_wo_version to change it.
+- `gitlab_access_token_wo_version` (Number) Version trigger for gitlab_access_token_wo. Increment to update the value.
 - `gitlab_certificate` (String, Sensitive) Gitlab tls certificate (base64 encoded)
+- `gitlab_certificate_wo` (String, Sensitive) gitlab_certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump gitlab_certificate_wo_version to change it.
+- `gitlab_certificate_wo_version` (Number) Version trigger for gitlab_certificate_wo. Increment to update the value.
 - `gitlab_url` (String) Gitlab base url
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used.

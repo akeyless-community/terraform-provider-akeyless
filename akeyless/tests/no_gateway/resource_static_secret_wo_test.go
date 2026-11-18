@@ -3,6 +3,7 @@ package no_gateway
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -75,10 +76,23 @@ func TestStaticSecretWriteOnly(t *testing.T) {
 		}
 	`, secretName, secretPath)
 
+	configBoth := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path             = "%v"
+			value            = "legacy-secret"
+			value_wo         = "write-only-secret"
+			value_wo_version = 1
+		}
+	`, secretName, secretPath)
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
 		CheckDestroy:      checkStaticSecretDestroyed,
 		Steps: []resource.TestStep{
+			{
+				Config:      configBoth,
+				ExpectError: regexp.MustCompile("Conflicting configuration arguments"),
+			},
 			{
 				Config: configLegacy,
 				Check:  checkSecretValueRemotely(secretPath, "legacy-secret"),

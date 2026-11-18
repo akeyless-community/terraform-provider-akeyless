@@ -33,6 +33,8 @@ Redis dynamic secret resource
 - `output_rule` (List of String) Password output rule definitions
 - `password` (String, Sensitive) Redis Password
 - `password_length` (String) The length of the password to be generated
+- `password_wo` (String, Sensitive) Password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.
+- `password_wo_version` (Number) Version trigger for password_wo. Increment to update the value.
 - `port` (String) Redis Port
 - `producer_encryption_key_name` (String) Dynamic producer encryption key
 - `skip_dry_run` (Boolean) Skip dry run

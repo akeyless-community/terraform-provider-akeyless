@@ -9,7 +9,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretGitlab() *schema.Resource {
@@ -23,8 +22,8 @@ func resourceDynamicSecretGitlab() *schema.Resource {
 			State: resourceDynamicSecretGitlabImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gitlab_access_token"), cty.GetAttrPath("gitlab_access_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gitlab_certificate"), cty.GetAttrPath("gitlab_certificate_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("gitlab_access_token"), cty.GetAttrPath("gitlab_access_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("gitlab_certificate"), cty.GetAttrPath("gitlab_certificate_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

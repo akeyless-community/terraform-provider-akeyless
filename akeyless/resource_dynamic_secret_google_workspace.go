@@ -9,7 +9,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretGoogleWorkspace() *schema.Resource {
@@ -23,7 +22,7 @@ func resourceDynamicSecretGoogleWorkspace() *schema.Resource {
 			State: resourceDynamicSecretGoogleWorkspaceImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("gcp_key"), cty.GetAttrPath("gcp_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("gcp_key"), cty.GetAttrPath("gcp_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

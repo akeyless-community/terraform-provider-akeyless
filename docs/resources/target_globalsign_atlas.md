@@ -23,12 +23,20 @@ GlobalSign Atlas Target resource
 
 ### Optional
 
+- `api_key_wo` (String, Sensitive) api_key (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.
+- `api_key_wo_version` (Number) Version trigger for api_key_wo. Increment to update the value.
+- `api_secret_wo` (String, Sensitive) API Secret of the GlobalSign Atlas account (write-only, not stored in state). Requires Terraform 1.11+. Bump api_secret_wo_version to change it.
+- `api_secret_wo_version` (Number) Version trigger for api_secret_wo. Increment to update the API secret.
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) Key name. The key will be used to encrypt the target secret value. If key name is not specified, the account default protection key is used
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `mtls_cert_data_base64` (String) Mutual TLS Certificate contents of the GlobalSign Atlas account encoded in base64
+- `mtls_cert_data_base64_wo` (String, Sensitive) mtls_cert_data_base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump mtls_cert_data_base64_wo_version to change it.
+- `mtls_cert_data_base64_wo_version` (Number) Version trigger for mtls_cert_data_base64_wo. Increment to update the value.
 - `mtls_key_data_base64` (String, Sensitive) Mutual TLS Key contents of the GlobalSign Atlas account encoded in base64
+- `mtls_key_data_base64_wo` (String, Sensitive) Mutual TLS Key contents of the GlobalSign Atlas account encoded in base64 (write-only, not stored in state). Requires Terraform 1.11+. Bump mtls_key_data_base64_wo_version to change it.
+- `mtls_key_data_base64_wo_version` (Number) Version trigger for mtls_key_data_base64_wo. Increment to update the value.
 - `timeout` (String) Timeout waiting for certificate validation in Duration format (1h - 1 Hour, 20m - 20 Minutes, 33m3s - 33 Minutes and 3 Seconds), maximum 1h
 
 ### Read-Only

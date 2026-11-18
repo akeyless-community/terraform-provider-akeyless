@@ -23,6 +23,8 @@ GCP Target resource
 
 - `description` (String) Description of the object
 - `gcp_key` (String, Sensitive) Base64-encoded service account private key text
+- `gcp_key_wo` (String, Sensitive) Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.
+- `gcp_key_wo_version` (Number) Version trigger for gcp_key_wo. Increment to update the value.
 - `gcp_sa_email` (String) GCP service account email
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)

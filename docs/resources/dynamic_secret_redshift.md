@@ -36,6 +36,8 @@ Redshift dynamic secret resource
 - `redshift_db_name` (String) Redshift DB Name
 - `redshift_host` (String) Redshift Host
 - `redshift_password` (String) Redshift Password
+- `redshift_password_wo` (String, Sensitive) redshift_password (write-only, not stored in state). Requires Terraform 1.11+. Bump redshift_password_wo_version to change it.
+- `redshift_password_wo_version` (Number) Version trigger for redshift_password_wo. Increment to update the value.
 - `redshift_port` (String) Redshift Port
 - `redshift_username` (String) Redshift Username
 - `secure_access_db_name` (String) The DB Name

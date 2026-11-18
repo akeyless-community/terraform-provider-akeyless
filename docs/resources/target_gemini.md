@@ -22,6 +22,8 @@ Gemini Target resource
 ### Optional
 
 - `api_key` (String, Sensitive) API key for Gemini
+- `api_key_wo` (String, Sensitive) API key for Gemini (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.
+- `api_key_wo_version` (Number) Version trigger for api_key_wo. Increment to update the value.
 - `description` (String) Description of the object
 - `gemini_url` (String) Base URL of the Gemini API
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings

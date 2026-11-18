@@ -32,6 +32,8 @@ GlobalSign Target resource
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
+- `password_wo` (String, Sensitive) password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.
+- `password_wo_version` (Number) Version trigger for password_wo. Increment to update the value.
 - `timeout` (String) Timeout waiting for certificate validation in Duration format (1h - 1 Hour, 20m - 20 Minutes, 33m3s - 33 Minutes and 3 Seconds), maximum 1h.
 
 ### Read-Only

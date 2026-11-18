@@ -34,6 +34,8 @@ Cert Auth Method Resource
 - `bound_organizational_units` (Set of String) A list of Organizational Units names. At least one must exist in the OU field.
 - `bound_uri_sans` (Set of String) A list of URIs. At least one must exist in the SANs. Supports globbing.
 - `certificate_data` (String) The certificate data in base64, if no file was provided
+- `certificate_data_wo` (String, Sensitive) certificate_data (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_data_wo_version to change it.
+- `certificate_data_wo_version` (Number) Version trigger for certificate_data_wo. Increment to update the value.
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Auth Method description
 - `expiration_event_in` (Set of String) How many days before the expiration of the auth method would you like to be notified.

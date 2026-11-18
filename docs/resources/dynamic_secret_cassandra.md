@@ -25,6 +25,8 @@ Cassandra dynamic secret resource
 - `cassandra_creation_statements` (String) Cassandra creation statements
 - `cassandra_hosts` (String) Cassandra hosts IP or addresses, comma separated
 - `cassandra_password` (String) Cassandra superuser password
+- `cassandra_password_wo` (String, Sensitive) Cassandra Password (write-only, not stored in state). Requires Terraform 1.11+. Bump cassandra_password_wo_version to change it.
+- `cassandra_password_wo_version` (Number) Version trigger for cassandra_password_wo. Increment to update the value.
 - `cassandra_port` (String) Cassandra port
 - `cassandra_username` (String) Cassandra superuser username
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template

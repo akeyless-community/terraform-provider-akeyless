@@ -10,7 +10,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceCertificate() *schema.Resource {
@@ -24,8 +23,8 @@ func resourceCertificate() *schema.Resource {
 			State: resourceCertificateImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("key_data"), cty.GetAttrPath("key_data_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("certificate_data"), cty.GetAttrPath("certificate_data_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("key_data"), cty.GetAttrPath("key_data_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("certificate_data"), cty.GetAttrPath("certificate_data_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

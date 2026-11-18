@@ -25,6 +25,8 @@ windows Target resource
 ### Optional
 
 - `certificate` (String, Sensitive) SSL CA certificate in base64 encoding generated from a trusted Certificate Authority (CA)
+- `certificate_wo` (String, Sensitive) certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_wo_version to change it.
+- `certificate_wo_version` (Number) Version trigger for certificate_wo. Increment to update the value.
 - `connection_type` (String) Type of connection to Windows Server [credentials/parent-target]
 - `description` (String) Description of the object
 - `domain` (String) User domain name
@@ -32,6 +34,8 @@ windows Target resource
 - `key` (String) Key name. The key is used to encrypt the target secret value. If the key name is not specified, the account default protection key is used
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `parent_target_name` (String) Name of the parent target, relevant only when connection-type is parent-target
+- `password_wo` (String, Sensitive) password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.
+- `password_wo_version` (Number) Version trigger for password_wo. Increment to update the value.
 - `port` (String) Server WinRM port
 - `use_tls` (String) Enable/Disable TLS for WinRM over HTTPS [true/false]
 

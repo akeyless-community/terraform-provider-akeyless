@@ -9,7 +9,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceRotatedSecretSplunk() *schema.Resource {
@@ -23,8 +22,8 @@ func resourceRotatedSecretSplunk() *schema.Resource {
 			State: resourceRotatedSecretSplunkImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("hec_token"), cty.GetAttrPath("hec_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("splunk_token"), cty.GetAttrPath("splunk_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("hec_token"), cty.GetAttrPath("hec_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("splunk_token"), cty.GetAttrPath("splunk_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

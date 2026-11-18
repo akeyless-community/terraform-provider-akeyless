@@ -9,7 +9,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretMssql() *schema.Resource {
@@ -23,7 +22,7 @@ func resourceDynamicSecretMssql() *schema.Resource {
 			State: resourceDynamicSecretMssqlImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("mssql_password"), cty.GetAttrPath("mssql_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("mssql_password"), cty.GetAttrPath("mssql_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

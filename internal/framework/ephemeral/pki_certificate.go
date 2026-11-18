@@ -101,9 +101,9 @@ func (r *pkiCertificateEphemeral) Open(ctx context.Context, req ephemeral.OpenRe
 		common.GetAkeylessPtr(&body.ExtendedKeyUsage, data.ExtendedKeyUsage.ValueString())
 	}
 
-	rOut, _, err := r.client.Client.GetPKICertificate(ctx).Body(body).Execute()
+	rOut, res, err := r.client.Client.GetPKICertificate(ctx).Body(body).Execute()
 	if err != nil {
-		resp.Diagnostics.AddError("Get PKI certificate failed", err.Error())
+		resp.Diagnostics.AddError("Get PKI certificate failed", common.HandleError("get PKI certificate", res, err).Error())
 		return
 	}
 	if rOut.Data != nil {

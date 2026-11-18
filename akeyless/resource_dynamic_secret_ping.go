@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretPing() *schema.Resource {
@@ -22,7 +21,7 @@ func resourceDynamicSecretPing() *schema.Resource {
 			State: resourceDynamicSecretPingImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("ping_password"), cty.GetAttrPath("ping_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("ping_password"), cty.GetAttrPath("ping_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

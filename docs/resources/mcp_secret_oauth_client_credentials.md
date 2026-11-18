@@ -32,6 +32,8 @@ MCP secret using OAuth 2.0 Client Credentials authentication
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `oauth_client_id` (String) OAuth client ID
 - `oauth_client_secret` (String, Sensitive) OAuth client secret
+- `oauth_client_secret_wo` (String, Sensitive) oauth_client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump oauth_client_secret_wo_version to change it.
+- `oauth_client_secret_wo_version` (Number) Version trigger for oauth_client_secret_wo. Increment to update the value.
 - `oauth_scopes` (List of String) OAuth scopes
 - `oauth_token_url` (String) OAuth token URL
 - `output_rule` (List of String) Agentic output rule in name=...,rule=... format

@@ -27,10 +27,14 @@ Amazon Elastic Kubernetes Service (Amazon EKS) dynamic secret
 - `eks_access_key_id` (String) EKS Access Key ID
 - `eks_assume_role` (String) Role ARN. Role to assume when connecting to the EKS cluster
 - `eks_cluster_ca_cert` (String, Sensitive) EKS Cluster certificate. Base 64 encoded certificate.
+- `eks_cluster_ca_cert_wo` (String, Sensitive) EKS Cluster certificate. Base 64 encoded certificate. (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_cluster_ca_cert_wo_version to change it.
+- `eks_cluster_ca_cert_wo_version` (Number) Version trigger for eks_cluster_ca_cert_wo. Increment to update the password.
 - `eks_cluster_endpoint` (String) EKS Cluster endpoint. https:// , <DNS / IP> of the cluster.
 - `eks_cluster_name` (String) EKS cluster name. Must match the EKS cluster name you want to connect to.
 - `eks_region` (String) EKS Region
 - `eks_secret_access_key` (String, Sensitive) EKS Secret Access Key
+- `eks_secret_access_key_wo` (String, Sensitive) EKS Secret Access Key (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_secret_access_key_wo_version to change it.
+- `eks_secret_access_key_wo_version` (Number) Version trigger for eks_secret_access_key_wo. Increment to update the password.
 - `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority
 - `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `encryption_key_name` (String) Encrypt dynamic secret details with following key

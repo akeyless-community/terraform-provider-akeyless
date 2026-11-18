@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceMcpSecretBearerToken() *schema.Resource {
@@ -22,7 +21,7 @@ func resourceMcpSecretBearerToken() *schema.Resource {
 			State: resourceMcpSecretImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("bearer_token"), cty.GetAttrPath("bearer_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("bearer_token"), cty.GetAttrPath("bearer_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

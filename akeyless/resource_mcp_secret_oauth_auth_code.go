@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceMcpSecretOAuthAuthCode() *schema.Resource {
@@ -22,8 +21,8 @@ func resourceMcpSecretOAuthAuthCode() *schema.Resource {
 			State: resourceMcpSecretImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("oauth_refresh_token"), cty.GetAttrPath("oauth_refresh_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("oauth_client_secret"), cty.GetAttrPath("oauth_client_secret_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("oauth_refresh_token"), cty.GetAttrPath("oauth_refresh_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("oauth_client_secret"), cty.GetAttrPath("oauth_client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

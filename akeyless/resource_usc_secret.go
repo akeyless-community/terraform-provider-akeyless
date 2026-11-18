@@ -10,7 +10,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceUscSecret() *schema.Resource {
@@ -24,8 +23,8 @@ func resourceUscSecret() *schema.Resource {
 			State: resourceUscSecretImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("pfx_password"), cty.GetAttrPath("pfx_password_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("value"), cty.GetAttrPath("value_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("pfx_password"), cty.GetAttrPath("pfx_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("value"), cty.GetAttrPath("value_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"usc_name": {

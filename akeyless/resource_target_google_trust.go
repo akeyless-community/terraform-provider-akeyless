@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceGoogleTrustTarget() *schema.Resource {
@@ -22,7 +21,7 @@ func resourceGoogleTrustTarget() *schema.Resource {
 			State: resourceGoogleTrustTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("eab_hmac_key"), cty.GetAttrPath("eab_hmac_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("eab_hmac_key"), cty.GetAttrPath("eab_hmac_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -9,7 +9,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceOktaTarget() *schema.Resource {
@@ -23,7 +22,7 @@ func resourceOktaTarget() *schema.Resource {
 			State: resourceOktaTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("api_token"), cty.GetAttrPath("api_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("api_token"), cty.GetAttrPath("api_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

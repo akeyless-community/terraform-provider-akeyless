@@ -26,6 +26,8 @@ Artifactory dynamic secret resource
 - `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `artifactory_admin_name` (String) Admin name
 - `artifactory_admin_pwd` (String) Admin API Key/Password
+- `artifactory_admin_pwd_wo` (String, Sensitive) artifactory_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump artifactory_admin_pwd_wo_version to change it.
+- `artifactory_admin_pwd_wo_version` (Number) Version trigger for artifactory_admin_pwd_wo. Increment to update the value.
 - `base_url` (String) Artifactory REST URL, must end with artifactory postfix
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (Boolean) Protection from accidental deletion of this item

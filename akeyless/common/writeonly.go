@@ -1,10 +1,13 @@
 package common
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // writeOnlyRaw returns the configured write-only value when raw config is
@@ -34,6 +37,26 @@ func rawString(raw cty.Value) (string, bool) {
 	return raw.AsString(), true
 }
 
+func ValidateWriteOnlyAttribute(oldField, woField cty.Path) schema.ValidateRawResourceConfigFunc {
+	preferWO := validation.PreferWriteOnlyAttribute(oldField, woField)
+
+	return func(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+		oldValue, oldErr := oldField.Apply(req.RawConfig)
+		woValue, woErr := woField.Apply(req.RawConfig)
+		if oldErr == nil && woErr == nil && !oldValue.IsNull() && !woValue.IsNull() {
+			resp.Diagnostics = diag.Diagnostics{{
+				Severity:      diag.Error,
+				Summary:       "Conflicting configuration arguments",
+				Detail:        "Use either the legacy or write-only secret attribute, not both.",
+				AttributePath: woField,
+			}}
+			return
+		}
+
+		preferWO(ctx, req, resp)
+	}
+}
+
 // EffectiveSecretValue resolves a sensitive field that has both a regular
 // (state-persisted) variant and a write-only variant (e.g. "mysql_password"
 // and "mysql_password_wo"). The write-only value takes precedence when set,
@@ -52,14 +75,17 @@ func EffectiveSecretValue(d *schema.ResourceData, field, woField string) (string
 // but is unavailable in the current configuration. Callers must then omit the
 // secret from the update request to avoid replacing it with an empty string.
 func SecretValueForUpdate(d *schema.ResourceData, field, woField string) (*string, error) {
+	versionField := woField + "_version"
 	if value, ok := writeOnlyRaw(d, woField); ok {
+		if !d.HasChange(versionField) {
+			return nil, nil
+		}
 		if err := d.Set(field, nil); err != nil {
 			return nil, err
 		}
 		return &value, nil
 	}
 
-	versionField := woField + "_version"
 	if UsingWriteOnly(d, woField, versionField) || writeOnlyVersionWasRemoved(d, versionField) {
 		if value, ok := configuredString(d, field); ok {
 			return &value, nil

@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretGithub() *schema.Resource {
@@ -22,7 +21,7 @@ func resourceDynamicSecretGithub() *schema.Resource {
 			State: resourceDynamicSecretGithubImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("github_app_private_key"), cty.GetAttrPath("github_app_private_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("github_app_private_key"), cty.GetAttrPath("github_app_private_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

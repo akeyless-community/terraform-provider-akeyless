@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceHashiVaultTarget() *schema.Resource {
@@ -22,7 +21,7 @@ func resourceHashiVaultTarget() *schema.Resource {
 			State: resourceHashiVaultTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("vault_token"), cty.GetAttrPath("vault_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("vault_token"), cty.GetAttrPath("vault_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

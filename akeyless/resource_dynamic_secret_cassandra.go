@@ -9,7 +9,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretCassandra() *schema.Resource {
@@ -23,7 +22,7 @@ func resourceDynamicSecretCassandra() *schema.Resource {
 			State: resourceDynamicSecretCassandraImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("cassandra_password"), cty.GetAttrPath("cassandra_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("cassandra_password"), cty.GetAttrPath("cassandra_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

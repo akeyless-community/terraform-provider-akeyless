@@ -8,7 +8,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceK8sTarget() *schema.Resource {
@@ -22,10 +21,10 @@ func resourceK8sTarget() *schema.Resource {
 			State: resourceK8sTargetImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("k8s_cluster_token"), cty.GetAttrPath("k8s_cluster_token_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("k8s_cluster_ca_cert"), cty.GetAttrPath("k8s_cluster_ca_cert_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("k8s_client_certificate"), cty.GetAttrPath("k8s_client_certificate_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("k8s_client_key"), cty.GetAttrPath("k8s_client_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("k8s_cluster_token"), cty.GetAttrPath("k8s_cluster_token_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("k8s_cluster_ca_cert"), cty.GetAttrPath("k8s_cluster_ca_cert_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("k8s_client_certificate"), cty.GetAttrPath("k8s_client_certificate_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("k8s_client_key"), cty.GetAttrPath("k8s_client_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

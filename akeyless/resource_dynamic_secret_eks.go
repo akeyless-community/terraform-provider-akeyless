@@ -9,7 +9,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretEks() *schema.Resource {
@@ -23,8 +22,8 @@ func resourceDynamicSecretEks() *schema.Resource {
 			State: resourceDynamicSecretEksImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("eks_cluster_ca_cert"), cty.GetAttrPath("eks_cluster_ca_cert_wo")),
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("eks_secret_access_key"), cty.GetAttrPath("eks_secret_access_key_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("eks_cluster_ca_cert"), cty.GetAttrPath("eks_cluster_ca_cert_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("eks_secret_access_key"), cty.GetAttrPath("eks_secret_access_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

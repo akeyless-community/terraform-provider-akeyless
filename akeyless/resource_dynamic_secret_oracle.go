@@ -9,7 +9,6 @@ import (
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceDynamicSecretOracle() *schema.Resource {
@@ -23,7 +22,7 @@ func resourceDynamicSecretOracle() *schema.Resource {
 			State: resourceDynamicSecretOracleImport,
 		},
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("oracle_password"), cty.GetAttrPath("oracle_password_wo")),
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("oracle_password"), cty.GetAttrPath("oracle_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
