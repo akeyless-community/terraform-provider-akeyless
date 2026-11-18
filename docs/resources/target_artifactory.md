@@ -24,8 +24,6 @@ Artifactory Target resource
 
 ### Optional
 
-- `artifactory_admin_pwd_wo` (String, Sensitive) artifactory_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump artifactory_admin_pwd_wo_version to change it.
-- `artifactory_admin_pwd_wo_version` (Number) Version trigger for artifactory_admin_pwd_wo. Increment to update the value.
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key used to encrypt the target secret value (if empty, the account default protectionKey key will be used)

@@ -6,7 +6,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,10 +18,6 @@ func resourceAwsTarget() *schema.Resource {
 		Delete:      resourceAwsTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("session_token"), cty.GetAttrPath("session_token_wo")),
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("access_key"), cty.GetAttrPath("access_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -41,38 +36,10 @@ func resourceAwsTarget() *schema.Resource {
 				Optional:    true,
 				Description: "AWS secret access key",
 			},
-			"access_key_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"access_key_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "access_key (write-only, not stored in state). Requires Terraform 1.11+. Bump access_key_wo_version to change it.",
-			},
-			"access_key_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"access_key_wo"},
-				Description:  "Version trigger for access_key_wo. Increment to update the value.",
-			},
 			"session_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Required only for temporary security credentials retrieved using STS",
-			},
-			"session_token_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"session_token_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "session_token (write-only, not stored in state). Requires Terraform 1.11+. Bump session_token_wo_version to change it.",
-			},
-			"session_token_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"session_token_wo"},
-				Description:  "Version trigger for session_token_wo. Increment to update the value.",
 			},
 			"region": {
 				Type:        schema.TypeString,
@@ -128,14 +95,8 @@ func resourceAwsTargetCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	accessKeyId := d.Get("access_key_id").(string)
-	accessKey, err := common.EffectiveSecretValue(d, "access_key", "access_key_wo")
-	if err != nil {
-		return err
-	}
-	sessionToken, err := common.EffectiveSecretValue(d, "session_token", "session_token_wo")
-	if err != nil {
-		return err
-	}
+	accessKey := d.Get("access_key").(string)
+	sessionToken := d.Get("session_token").(string)
 	region := d.Get("region").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
@@ -210,13 +171,13 @@ func resourceAwsTargetRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if rOut.Value.AwsTargetDetails.AwsSecretAccessKey != nil {
-		err = common.SetSecretFromRead(d, "access_key", "access_key_wo", "access_key_wo_version", *rOut.Value.AwsTargetDetails.AwsSecretAccessKey)
+		err = d.Set("access_key", *rOut.Value.AwsTargetDetails.AwsSecretAccessKey)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.Value.AwsTargetDetails.AwsSessionToken != nil {
-		err = common.SetSecretFromRead(d, "session_token", "session_token_wo", "session_token_wo_version", *rOut.Value.AwsTargetDetails.AwsSessionToken)
+		err = d.Set("session_token", *rOut.Value.AwsTargetDetails.AwsSessionToken)
 		if err != nil {
 			return err
 		}
@@ -254,14 +215,8 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	accessKeyId := d.Get("access_key_id").(string)
-	accessKey, err := common.SecretValueForUpdate(d, "access_key", "access_key_wo")
-	if err != nil {
-		return err
-	}
-	sessionToken, err := common.SecretValueForUpdate(d, "session_token", "session_token_wo")
-	if err != nil {
-		return err
-	}
+	accessKey := d.Get("access_key").(string)
+	sessionToken := d.Get("session_token").(string)
 	region := d.Get("region").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	key := d.Get("key").(string)
@@ -276,8 +231,8 @@ func resourceAwsTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.AccessKeyId, accessKeyId)
-	common.SetOptionalString(&body.AccessKey, accessKey)
-	common.SetOptionalString(&body.SessionToken, sessionToken)
+	common.GetAkeylessPtr(&body.AccessKey, accessKey)
+	common.GetAkeylessPtr(&body.SessionToken, sessionToken)
 	common.GetAkeylessPtr(&body.Region, region)
 	common.GetAkeylessPtr(&body.UseGwCloudIdentity, useGwCloudIdentity)
 	common.GetAkeylessPtr(&body.Key, key)

@@ -252,10 +252,7 @@ func resourceDynamicSecretRdpCreate(d *schema.ResourceData, m interface{}) error
 	rdpUserGroups := d.Get("rdp_user_groups").(string)
 	rdpHostName := d.Get("rdp_host_name").(string)
 	rdpAdminName := d.Get("rdp_admin_name").(string)
-	rdpAdminPwd, err := common.EffectiveSecretValue(d, "rdp_admin_pwd", "rdp_admin_pwd_wo")
-	if err != nil {
-		return err
-	}
+	rdpAdminPwd := common.EffectiveSecretValue(d, "rdp_admin_pwd", "rdp_admin_pwd_wo")
 	rdpHostPort := d.Get("rdp_host_port").(string)
 	fixedUserOnly := d.Get("fixed_user_only").(string)
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
@@ -510,10 +507,7 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	rdpUserGroups := d.Get("rdp_user_groups").(string)
 	rdpHostName := d.Get("rdp_host_name").(string)
 	rdpAdminName := d.Get("rdp_admin_name").(string)
-	rdpAdminPwd, err := common.SecretValueForUpdate(d, "rdp_admin_pwd", "rdp_admin_pwd_wo")
-	if err != nil {
-		return err
-	}
+	rdpAdminPwd := common.EffectiveSecretValue(d, "rdp_admin_pwd", "rdp_admin_pwd_wo")
 	rdpHostPort := d.Get("rdp_host_port").(string)
 	fixedUserOnly := d.Get("fixed_user_only").(string)
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
@@ -552,7 +546,7 @@ func resourceDynamicSecretRdpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.RdpUserGroups, rdpUserGroups)
 	common.GetAkeylessPtr(&body.RdpHostName, rdpHostName)
 	common.GetAkeylessPtr(&body.RdpAdminName, rdpAdminName)
-	common.SetOptionalString(&body.RdpAdminPwd, rdpAdminPwd)
+	common.GetAkeylessPtr(&body.RdpAdminPwd, rdpAdminPwd)
 	common.GetAkeylessPtr(&body.RdpHostPort, rdpHostPort)
 	common.GetAkeylessPtr(&body.FixedUserOnly, fixedUserOnly)
 	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)

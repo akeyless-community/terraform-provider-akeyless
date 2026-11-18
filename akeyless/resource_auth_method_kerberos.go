@@ -9,7 +9,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -22,10 +21,6 @@ func resourceAuthMethodKerberos() *schema.Resource {
 		Delete:      resourceAuthMethodKerberosDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAuthMethodKerberosImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("keytab_file_data"), cty.GetAttrPath("keytab_file_data_wo")),
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("bind_dn_password"), cty.GetAttrPath("bind_dn_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -110,20 +105,6 @@ func resourceAuthMethodKerberos() *schema.Resource {
 				Sensitive:   true,
 				Description: "Bind DN password",
 			},
-			"bind_dn_password_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"bind_dn_password_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "bind_dn_password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.",
-			},
-			"bind_dn_password_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"bind_dn_password_wo"},
-				Description:  "Version trigger for bind_dn_password_wo. Increment to update the value.",
-			},
 			"group_attr": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -144,20 +125,6 @@ func resourceAuthMethodKerberos() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Keytab file data (base64 encoded)",
-			},
-			"keytab_file_data_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"keytab_file_data_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "keytab_file_data (write-only, not stored in state). Requires Terraform 1.11+. Bump keytab_file_data_wo_version to change it.",
-			},
-			"keytab_file_data_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"keytab_file_data_wo"},
-				Description:  "Version trigger for keytab_file_data_wo. Increment to update the value.",
 			},
 			"krb5_conf_data": {
 				Type:        schema.TypeString,
@@ -234,17 +201,11 @@ func resourceAuthMethodKerberosCreate(d *schema.ResourceData, m interface{}) err
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword, err := common.EffectiveSecretValue(d, "bind_dn_password", "bind_dn_password_wo")
-	if err != nil {
-		return err
-	}
+	bindDnPassword := d.Get("bind_dn_password").(string)
 	groupAttr := d.Get("group_attr").(string)
 	groupDn := d.Get("group_dn").(string)
 	groupFilter := d.Get("group_filter").(string)
-	keytabFileData, err := common.EffectiveSecretValue(d, "keytab_file_data", "keytab_file_data_wo")
-	if err != nil {
-		return err
-	}
+	keytabFileData := d.Get("keytab_file_data").(string)
 	krb5ConfData := d.Get("krb5_conf_data").(string)
 	ldapAnonymousSearch := d.Get("ldap_anonymous_search").(bool)
 	ldapCaCert := d.Get("ldap_ca_cert").(string)
@@ -469,12 +430,12 @@ func resourceAuthMethodKerberosRead(d *schema.ResourceData, m interface{}) error
 			}
 		}
 		if kd.LdapBindPassword != nil {
-			if err := common.SetSecretFromRead(d, "bind_dn_password", "bind_dn_password_wo", "bind_dn_password_wo_version", *kd.LdapBindPassword); err != nil {
+			if err := d.Set("bind_dn_password", *kd.LdapBindPassword); err != nil {
 				return err
 			}
 		}
 		if kd.KerberosKeytab != nil {
-			if err := common.SetSecretFromRead(d, "keytab_file_data", "keytab_file_data_wo", "keytab_file_data_wo_version", *kd.KerberosKeytab); err != nil {
+			if err := d.Set("keytab_file_data", *kd.KerberosKeytab); err != nil {
 				return err
 			}
 		}
@@ -527,17 +488,11 @@ func resourceAuthMethodKerberosUpdate(d *schema.ResourceData, m interface{}) err
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	deleteProtection := d.Get("delete_protection").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword, err := common.SecretValueForUpdate(d, "bind_dn_password", "bind_dn_password_wo")
-	if err != nil {
-		return err
-	}
+	bindDnPassword := d.Get("bind_dn_password").(string)
 	groupAttr := d.Get("group_attr").(string)
 	groupDn := d.Get("group_dn").(string)
 	groupFilter := d.Get("group_filter").(string)
-	keytabFileData, err := common.SecretValueForUpdate(d, "keytab_file_data", "keytab_file_data_wo")
-	if err != nil {
-		return err
-	}
+	keytabFileData := d.Get("keytab_file_data").(string)
 	krb5ConfData := d.Get("krb5_conf_data").(string)
 	ldapAnonymousSearch := d.Get("ldap_anonymous_search").(bool)
 	ldapCaCert := d.Get("ldap_ca_cert").(string)
@@ -564,11 +519,11 @@ func resourceAuthMethodKerberosUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.BindDn, bindDn)
-	common.SetOptionalString(&body.BindDnPassword, bindDnPassword)
+	common.GetAkeylessPtr(&body.BindDnPassword, bindDnPassword)
 	common.GetAkeylessPtr(&body.GroupAttr, groupAttr)
 	common.GetAkeylessPtr(&body.GroupDn, groupDn)
 	common.GetAkeylessPtr(&body.GroupFilter, groupFilter)
-	common.SetOptionalString(&body.KeytabFileData, keytabFileData)
+	common.GetAkeylessPtr(&body.KeytabFileData, keytabFileData)
 	common.GetAkeylessPtr(&body.Krb5ConfData, krb5ConfData)
 	common.GetAkeylessPtr(&body.LdapAnonymousSearch, ldapAnonymousSearch)
 	common.GetAkeylessPtr(&body.LdapCaCert, ldapCaCert)

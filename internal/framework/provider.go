@@ -130,12 +130,9 @@ func (p *Provider) Configure(_ context.Context, _ provider.ConfigureRequest, res
 		resp.Diagnostics.AddError("Provider not configured", "Akeyless SDK provider metadata is unavailable")
 		return
 	}
-	client := meta.ApiClient()
-	if client == nil {
-		resp.Diagnostics.AddError("Provider not configured", "Akeyless SDK provider authentication is unavailable")
-		return
-	}
-	resp.EphemeralResourceData = client
+	// A nil client must not fail Configure: it would fail every plan, including
+	// configs without ephemeral resources. requireClient reports it on Open.
+	resp.EphemeralResourceData = meta.ApiClient()
 }
 
 func (p *Provider) Resources(_ context.Context) []func() resource.Resource { return nil }

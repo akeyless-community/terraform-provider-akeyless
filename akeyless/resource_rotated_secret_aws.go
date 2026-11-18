@@ -233,10 +233,7 @@ func resourceRotatedSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	apiId := d.Get("api_id").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
-	if err != nil {
-		return err
-	}
+	apiKey := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
 	graceRotation := d.Get("grace_rotation").(string)
 	awsRegion := d.Get("aws_region").(string)
 	deleteProtection := d.Get("delete_protection").(string)

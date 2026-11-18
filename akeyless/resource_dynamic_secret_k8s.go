@@ -252,14 +252,8 @@ func resourceDynamicSecretK8sCreate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
-	k8sClusterCaCert, err := common.EffectiveSecretValue(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
-	if err != nil {
-		return err
-	}
-	k8sClusterToken, err := common.EffectiveSecretValue(d, "k8s_cluster_token", "k8s_cluster_token_wo")
-	if err != nil {
-		return err
-	}
+	k8sClusterCaCert := common.EffectiveSecretValue(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
+	k8sClusterToken := common.EffectiveSecretValue(d, "k8s_cluster_token", "k8s_cluster_token_wo")
 	k8sClusterName := d.Get("k8s_cluster_name").(string)
 	k8sServiceAccount := d.Get("k8s_service_account").(string)
 	k8sNamespace := d.Get("k8s_namespace").(string)
@@ -530,14 +524,8 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
-	k8sClusterCaCert, err := common.SecretValueForUpdate(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
-	if err != nil {
-		return err
-	}
-	k8sClusterToken, err := common.SecretValueForUpdate(d, "k8s_cluster_token", "k8s_cluster_token_wo")
-	if err != nil {
-		return err
-	}
+	k8sClusterCaCert := common.EffectiveSecretValue(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
+	k8sClusterToken := common.EffectiveSecretValue(d, "k8s_cluster_token", "k8s_cluster_token_wo")
 	k8sClusterName := d.Get("k8s_cluster_name").(string)
 	k8sServiceAccount := d.Get("k8s_service_account").(string)
 	k8sNamespace := d.Get("k8s_namespace").(string)
@@ -579,8 +567,8 @@ func resourceDynamicSecretK8sUpdate(d *schema.ResourceData, m interface{}) error
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.K8sClusterEndpoint, k8sClusterEndpoint)
-	common.SetOptionalString(&body.K8sClusterCaCert, k8sClusterCaCert)
-	common.SetOptionalString(&body.K8sClusterToken, k8sClusterToken)
+	common.GetAkeylessPtr(&body.K8sClusterCaCert, k8sClusterCaCert)
+	common.GetAkeylessPtr(&body.K8sClusterToken, k8sClusterToken)
 	common.GetAkeylessPtr(&body.K8sClusterName, k8sClusterName)
 	common.GetAkeylessPtr(&body.K8sServiceAccount, k8sServiceAccount)
 	common.GetAkeylessPtr(&body.K8sNamespace, k8sNamespace)

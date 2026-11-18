@@ -236,15 +236,9 @@ func resourceRotatedSecretSplunkCreate(d *schema.ResourceData, m interface{}) er
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
 	rotatedPassword := d.Get("rotated_password").(string)
-	hecToken, err := common.EffectiveSecretValue(d, "hec_token", "hec_token_wo")
-	if err != nil {
-		return err
-	}
+	hecToken := common.EffectiveSecretValue(d, "hec_token", "hec_token_wo")
 	hecTokenName := d.Get("hec_token_name").(string)
-	splunkToken, err := common.EffectiveSecretValue(d, "splunk_token", "splunk_token_wo")
-	if err != nil {
-		return err
-	}
+	splunkToken := common.EffectiveSecretValue(d, "splunk_token", "splunk_token_wo")
 	tokenOwner := d.Get("token_owner").(string)
 	audience := d.Get("audience").(string)
 	expirationDate := d.Get("expiration_date").(string)

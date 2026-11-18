@@ -168,14 +168,8 @@ func resourceDynamicSecretGitlabCreate(d *schema.ResourceData, m interface{}) er
 	gitlabRole := d.Get("gitlab_role").(string)
 	gitlabTokenScopes := d.Get("gitlab_token_scopes").(string)
 	ttl := d.Get("ttl").(string)
-	gitlabAccessToken, err := common.EffectiveSecretValue(d, "gitlab_access_token", "gitlab_access_token_wo")
-	if err != nil {
-		return err
-	}
-	gitlabCertificate, err := common.EffectiveSecretValue(d, "gitlab_certificate", "gitlab_certificate_wo")
-	if err != nil {
-		return err
-	}
+	gitlabAccessToken := common.EffectiveSecretValue(d, "gitlab_access_token", "gitlab_access_token_wo")
+	gitlabCertificate := common.EffectiveSecretValue(d, "gitlab_certificate", "gitlab_certificate_wo")
 	gitlabUrl := d.Get("gitlab_url").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -367,14 +361,8 @@ func resourceDynamicSecretGitlabUpdate(d *schema.ResourceData, m interface{}) er
 	gitlabRole := d.Get("gitlab_role").(string)
 	gitlabTokenScopes := d.Get("gitlab_token_scopes").(string)
 	ttl := d.Get("ttl").(string)
-	gitlabAccessToken, err := common.SecretValueForUpdate(d, "gitlab_access_token", "gitlab_access_token_wo")
-	if err != nil {
-		return err
-	}
-	gitlabCertificate, err := common.SecretValueForUpdate(d, "gitlab_certificate", "gitlab_certificate_wo")
-	if err != nil {
-		return err
-	}
+	gitlabAccessToken := common.EffectiveSecretValue(d, "gitlab_access_token", "gitlab_access_token_wo")
+	gitlabCertificate := common.EffectiveSecretValue(d, "gitlab_certificate", "gitlab_certificate_wo")
 	gitlabUrl := d.Get("gitlab_url").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -393,8 +381,8 @@ func resourceDynamicSecretGitlabUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.GitlabRole, gitlabRole)
 	common.GetAkeylessPtr(&body.GitlabTokenScopes, gitlabTokenScopes)
 	common.GetAkeylessPtr(&body.Ttl, ttl)
-	common.SetOptionalString(&body.GitlabAccessToken, gitlabAccessToken)
-	common.SetOptionalString(&body.GitlabCertificate, gitlabCertificate)
+	common.GetAkeylessPtr(&body.GitlabAccessToken, gitlabAccessToken)
+	common.GetAkeylessPtr(&body.GitlabCertificate, gitlabCertificate)
 	common.GetAkeylessPtr(&body.GitlabUrl, gitlabUrl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.Description, description)

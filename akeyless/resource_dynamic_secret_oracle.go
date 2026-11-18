@@ -203,10 +203,7 @@ func resourceDynamicSecretOracleCreate(d *schema.ResourceData, m interface{}) er
 	targetName := d.Get("target_name").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 	oracleUsername := d.Get("oracle_username").(string)
-	oraclePassword, err := common.EffectiveSecretValue(d, "oracle_password", "oracle_password_wo")
-	if err != nil {
-		return err
-	}
+	oraclePassword := common.EffectiveSecretValue(d, "oracle_password", "oracle_password_wo")
 	oracleHost := d.Get("oracle_host").(string)
 	oraclePort := d.Get("oracle_port").(string)
 	oracleScreationStatements := d.Get("oracle_creation_statements").(string)
@@ -454,10 +451,7 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	targetName := d.Get("target_name").(string)
 	oracleServiceName := d.Get("oracle_service_name").(string)
 	oracleUsername := d.Get("oracle_username").(string)
-	oraclePassword, err := common.SecretValueForUpdate(d, "oracle_password", "oracle_password_wo")
-	if err != nil {
-		return err
-	}
+	oraclePassword := common.EffectiveSecretValue(d, "oracle_password", "oracle_password_wo")
 	oracleHost := d.Get("oracle_host").(string)
 	oraclePort := d.Get("oracle_port").(string)
 	oracleScreationStatements := d.Get("oracle_creation_statements").(string)
@@ -488,7 +482,7 @@ func resourceDynamicSecretOracleUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.OracleServiceName, oracleServiceName)
 	common.GetAkeylessPtr(&body.OracleUsername, oracleUsername)
-	common.SetOptionalString(&body.OraclePassword, oraclePassword)
+	common.GetAkeylessPtr(&body.OraclePassword, oraclePassword)
 	common.GetAkeylessPtr(&body.OracleHost, oracleHost)
 	common.GetAkeylessPtr(&body.OraclePort, oraclePort)
 	common.GetAkeylessPtr(&body.OracleScreationStatements, oracleScreationStatements)

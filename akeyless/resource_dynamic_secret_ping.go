@@ -204,10 +204,7 @@ func resourceDynamicSecretPingCreate(d *schema.ResourceData, m interface{}) erro
 	pingIssuerDn := d.Get("ping_issuer_dn").(string)
 	pingJwks := d.Get("ping_jwks").(string)
 	pingJwksUrl := d.Get("ping_jwks_url").(string)
-	pingPassword, err := common.EffectiveSecretValue(d, "ping_password", "ping_password_wo")
-	if err != nil {
-		return err
-	}
+	pingPassword := common.EffectiveSecretValue(d, "ping_password", "ping_password_wo")
 	pingPrivilegedUser := d.Get("ping_privileged_user").(string)
 	pingRedirectUrisSet := d.Get("ping_redirect_uris").(*schema.Set)
 	pingRedirectUris := common.ExpandStringList(pingRedirectUrisSet.List())
@@ -378,10 +375,7 @@ func resourceDynamicSecretPingUpdate(d *schema.ResourceData, m interface{}) erro
 	pingIssuerDn := d.Get("ping_issuer_dn").(string)
 	pingJwks := d.Get("ping_jwks").(string)
 	pingJwksUrl := d.Get("ping_jwks_url").(string)
-	pingPassword, err := common.SecretValueForUpdate(d, "ping_password", "ping_password_wo")
-	if err != nil {
-		return err
-	}
+	pingPassword := common.EffectiveSecretValue(d, "ping_password", "ping_password_wo")
 	pingPrivilegedUser := d.Get("ping_privileged_user").(string)
 	pingRedirectUrisSet := d.Get("ping_redirect_uris").(*schema.Set)
 	pingRedirectUris := common.ExpandStringList(pingRedirectUrisSet.List())
@@ -410,7 +404,7 @@ func resourceDynamicSecretPingUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.PingIssuerDn, pingIssuerDn)
 	common.GetAkeylessPtr(&body.PingJwks, pingJwks)
 	common.GetAkeylessPtr(&body.PingJwksUrl, pingJwksUrl)
-	common.SetOptionalString(&body.PingPassword, pingPassword)
+	common.GetAkeylessPtr(&body.PingPassword, pingPassword)
 	common.GetAkeylessPtr(&body.PingPrivilegedUser, pingPrivilegedUser)
 	common.GetAkeylessPtr(&body.PingRedirectUris, pingRedirectUris)
 	common.GetAkeylessPtr(&body.PingRestrictedScopes, pingRestrictedScopes)

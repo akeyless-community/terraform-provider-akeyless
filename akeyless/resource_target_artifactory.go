@@ -5,7 +5,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,9 +17,6 @@ func resourceArtifactoryTarget() *schema.Resource {
 		Delete:      resourceArtifactoryTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceArtifactoryTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("artifactory_admin_pwd"), cty.GetAttrPath("artifactory_admin_pwd_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -43,20 +39,6 @@ func resourceArtifactoryTarget() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Artifactory Admin password",
-			},
-			"artifactory_admin_pwd_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"artifactory_admin_pwd_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "artifactory_admin_pwd (write-only, not stored in state). Requires Terraform 1.11+. Bump artifactory_admin_pwd_wo_version to change it.",
-			},
-			"artifactory_admin_pwd_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"artifactory_admin_pwd_wo"},
-				Description:  "Version trigger for artifactory_admin_pwd_wo. Increment to update the value.",
 			},
 			"key": {
 				Type:        schema.TypeString,
@@ -93,10 +75,7 @@ func resourceArtifactoryTargetCreate(d *schema.ResourceData, m interface{}) erro
 	name := d.Get("name").(string)
 	baseUrl := d.Get("base_url").(string)
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
-	artifactoryAdminPwd, err := common.EffectiveSecretValue(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
-	if err != nil {
-		return err
-	}
+	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 	maxVersions := d.Get("max_versions").(string)
@@ -153,7 +132,7 @@ func resourceArtifactoryTargetRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 	if rOut.Value.ArtifactoryTargetDetails.ArtifactoryAdminApikey != nil {
-		err = common.SetSecretFromRead(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo", "artifactory_admin_pwd_wo_version", *rOut.Value.ArtifactoryTargetDetails.ArtifactoryAdminApikey)
+		err = d.Set("artifactory_admin_pwd", *rOut.Value.ArtifactoryTargetDetails.ArtifactoryAdminApikey)
 		if err != nil {
 			return err
 		}
@@ -185,10 +164,7 @@ func resourceArtifactoryTargetUpdate(d *schema.ResourceData, m interface{}) erro
 	name := d.Get("name").(string)
 	baseUrl := d.Get("base_url").(string)
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
-	artifactoryAdminPwd, err := common.RequiredSecretValueForUpdate(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
-	if err != nil {
-		return err
-	}
+	artifactoryAdminPwd := d.Get("artifactory_admin_pwd").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
 	maxVersions := d.Get("max_versions").(string)

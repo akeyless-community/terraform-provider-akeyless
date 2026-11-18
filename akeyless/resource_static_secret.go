@@ -286,19 +286,13 @@ func resourceStaticSecretCreate(d *schema.ResourceData, m any) error {
 
 	path := d.Get("path").(string)
 	secretType := d.Get("type").(string)
-	value, err := common.EffectiveSecretValue(d, "value", "value_wo")
-	if err != nil {
-		return err
-	}
+	value := common.EffectiveSecretValue(d, "value", "value_wo")
 	format := d.Get("format").(string)
 	accessibility := d.Get("accessibility").(string)
 	changeEvent := d.Get("change_event").(string)
 	injectUrlSet := d.Get("inject_url").(*schema.Set)
 	injectUrl := common.ExpandStringList(injectUrlSet.List())
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
+	password := common.EffectiveSecretValue(d, "password", "password_wo")
 	username := d.Get("username").(string)
 	customField := d.Get("custom_field").(map[string]any)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
@@ -563,9 +557,9 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 	}
 
 	if d.HasChanges("value", "value_wo_version", "multiline_value", "protection_key", "format", "inject_url", "password", "username", "custom_field", "password_wo_version") {
-		value, err := common.EffectiveSecretValue(d, "value", "value_wo")
-		if err != nil {
-			return err
+		value := common.EffectiveSecretValue(d, "value", "value_wo")
+		if value == "" && d.HasChange("value_wo_version") {
+			return fmt.Errorf("value or value_wo must be set")
 		}
 		format := d.Get("format").(string)
 		protectionKey := d.Get("protection_key").(string)
@@ -574,10 +568,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 		injectUrlSet := d.Get("inject_url").(*schema.Set)
 		injectUrl := common.ExpandStringList(injectUrlSet.List())
 		username := d.Get("username").(string)
-		password, err := common.SecretValueForUpdate(d, "password", "password_wo")
-		if err != nil {
-			return err
-		}
+		password := common.EffectiveSecretValue(d, "password", "password_wo")
 		customField := d.Get("custom_field").(map[string]any)
 
 		body := akeyless_api.UpdateSecretVal{
@@ -592,7 +583,7 @@ func resourceStaticSecretUpdate(d *schema.ResourceData, m any) error {
 		common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)
 		common.GetAkeylessPtr(&body.InjectUrl, injectUrl)
 		common.GetAkeylessPtr(&body.Username, username)
-		common.SetOptionalString(&body.Password, password)
+		common.GetAkeylessPtr(&body.Password, password)
 		if len(customField) > 0 {
 			common.GetAkeylessPtr(&body.CustomField, customField)
 		}

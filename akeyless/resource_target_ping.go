@@ -5,7 +5,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,9 +17,6 @@ func resourcePingTarget() *schema.Resource {
 		Delete:      resourcePingTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourcePingTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -44,20 +40,6 @@ func resourcePingTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Ping Federate privileged user password",
-			},
-			"password_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"password_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
-			},
-			"password_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"password_wo"},
-				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"administrative_port": {
 				Type:        schema.TypeString,
@@ -105,10 +87,7 @@ func resourcePingTargetCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	pingUrl := d.Get("ping_url").(string)
 	privilegedUser := d.Get("privileged_user").(string)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
+	password := d.Get("password").(string)
 	administrativePort := d.Get("administrative_port").(string)
 	authorizationPort := d.Get("authorization_port").(string)
 	key := d.Get("key").(string)
@@ -174,7 +153,7 @@ func resourcePingTargetRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if targetDetails.PingTargetDetails.UserPassword != nil {
-				err := common.SetSecretFromRead(d, "password", "password_wo", "password_wo_version", *targetDetails.PingTargetDetails.UserPassword)
+				err := d.Set("password", *targetDetails.PingTargetDetails.UserPassword)
 				if err != nil {
 					return err
 				}
@@ -225,10 +204,7 @@ func resourcePingTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	pingUrl := d.Get("ping_url").(string)
 	privilegedUser := d.Get("privileged_user").(string)
-	password, err := common.SecretValueForUpdate(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
+	password := d.Get("password").(string)
 	administrativePort := d.Get("administrative_port").(string)
 	authorizationPort := d.Get("authorization_port").(string)
 	key := d.Get("key").(string)
@@ -242,7 +218,7 @@ func resourcePingTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.PingUrl, pingUrl)
 	common.GetAkeylessPtr(&body.PrivilegedUser, privilegedUser)
-	common.SetOptionalString(&body.Password, password)
+	common.GetAkeylessPtr(&body.Password, password)
 	common.GetAkeylessPtr(&body.AdministrativePort, administrativePort)
 	common.GetAkeylessPtr(&body.AuthorizationPort, authorizationPort)
 	common.GetAkeylessPtr(&body.Key, key)

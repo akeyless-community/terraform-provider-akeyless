@@ -171,10 +171,7 @@ func resourceDynamicSecretCassandraCreate(d *schema.ResourceData, m interface{})
 	targetName := d.Get("target_name").(string)
 	cassandraHosts := d.Get("cassandra_hosts").(string)
 	cassandraUsername := d.Get("cassandra_username").(string)
-	cassandraPassword, err := common.EffectiveSecretValue(d, "cassandra_password", "cassandra_password_wo")
-	if err != nil {
-		return err
-	}
+	cassandraPassword := common.EffectiveSecretValue(d, "cassandra_password", "cassandra_password_wo")
 	cassandraPort := d.Get("cassandra_port").(string)
 	creationStatements := d.Get("cassandra_creation_statements").(string)
 	ssl := d.Get("ssl").(bool)
@@ -386,10 +383,7 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	targetName := d.Get("target_name").(string)
 	cassandraHosts := d.Get("cassandra_hosts").(string)
 	cassandraUsername := d.Get("cassandra_username").(string)
-	cassandraPassword, err := common.SecretValueForUpdate(d, "cassandra_password", "cassandra_password_wo")
-	if err != nil {
-		return err
-	}
+	cassandraPassword := common.EffectiveSecretValue(d, "cassandra_password", "cassandra_password_wo")
 	cassandraPort := d.Get("cassandra_port").(string)
 	creationStatements := d.Get("cassandra_creation_statements").(string)
 	ssl := d.Get("ssl").(bool)
@@ -413,7 +407,7 @@ func resourceDynamicSecretCassandraUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.CassandraHosts, cassandraHosts)
 	common.GetAkeylessPtr(&body.CassandraUsername, cassandraUsername)
-	common.SetOptionalString(&body.CassandraPassword, cassandraPassword)
+	common.GetAkeylessPtr(&body.CassandraPassword, cassandraPassword)
 	common.GetAkeylessPtr(&body.CassandraPort, cassandraPort)
 	common.GetAkeylessPtr(&body.CassandraCreationStatements, creationStatements)
 	common.GetAkeylessPtr(&body.Ssl, ssl)

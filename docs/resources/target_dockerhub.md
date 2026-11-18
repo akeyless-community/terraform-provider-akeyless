@@ -23,8 +23,6 @@ Docker Hub Target resource
 
 - `description` (String) Description of the object
 - `dockerhub_password` (String, Sensitive) Password for docker repository
-- `dockerhub_password_wo` (String, Sensitive) Password for docker repository (write-only, not stored in state). Requires Terraform 1.11+. Bump dockerhub_password_wo_version to change it.
-- `dockerhub_password_wo_version` (Number) Version trigger for dockerhub_password_wo. Increment to update the value.
 - `dockerhub_username` (String) Username for docker repository
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)

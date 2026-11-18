@@ -24,8 +24,6 @@ Github Target resource
 - `description` (String) Description of the object
 - `github_app_id` (Number) Github application id
 - `github_app_private_key` (String) App private key
-- `github_app_private_key_wo` (String, Sensitive) github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.
-- `github_app_private_key_wo_version` (Number) Version trigger for github_app_private_key_wo. Increment to update the value.
 - `github_base_url` (String) Base URL
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)

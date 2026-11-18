@@ -27,8 +27,6 @@ Google Trust Target resource
 - `dns_target_creds` (String) Name of existing cloud target for DNS credentials. Required when challenge type is dns. Supported providers: AWS, Azure, GCP, Cloudflare
 - `dns_zone` (String) Cloudflare DNS zone identifier. Required when DNS credentials target is Cloudflare
 - `eab_hmac_key` (String, Sensitive) External Account Binding HMAC key (required for ACME account bootstrap on create)
-- `eab_hmac_key_wo` (String, Sensitive) External Account Binding HMAC key (write-only, not stored in state). Requires Terraform 1.11+. Bump eab_hmac_key_wo_version to change it.
-- `eab_hmac_key_wo_version` (Number) Version trigger for eab_hmac_key_wo. Increment to update the key.
 - `eab_key_id` (String) External Account Binding key identifier (required for ACME account bootstrap on create)
 - `gcp_project` (String) GCP Cloud DNS project ID. Optional and can be derived from service account
 - `google_trust_url` (String) Google Trust directory environment. Options: [production/staging]

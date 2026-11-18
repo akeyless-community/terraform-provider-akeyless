@@ -121,10 +121,7 @@ func resourceDynamicSecretDockerhubCreate(d *schema.ResourceData, m interface{})
 	deleteProtection := d.Get("delete_protection").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	dockerhubPassword, err := common.EffectiveSecretValue(d, "dockerhub_password", "dockerhub_password_wo")
-	if err != nil {
-		return err
-	}
+	dockerhubPassword := common.EffectiveSecretValue(d, "dockerhub_password", "dockerhub_password_wo")
 	dockerhubTokenScopes := d.Get("dockerhub_token_scopes").(string)
 	dockerhubUsername := d.Get("dockerhub_username").(string)
 	targetName := d.Get("target_name").(string)
@@ -266,10 +263,7 @@ func resourceDynamicSecretDockerhubUpdate(d *schema.ResourceData, m interface{})
 	deleteProtection := d.Get("delete_protection").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	dockerhubPassword, err := common.SecretValueForUpdate(d, "dockerhub_password", "dockerhub_password_wo")
-	if err != nil {
-		return err
-	}
+	dockerhubPassword := common.EffectiveSecretValue(d, "dockerhub_password", "dockerhub_password_wo")
 	dockerhubTokenScopes := d.Get("dockerhub_token_scopes").(string)
 	dockerhubUsername := d.Get("dockerhub_username").(string)
 	targetName := d.Get("target_name").(string)
@@ -283,7 +277,7 @@ func resourceDynamicSecretDockerhubUpdate(d *schema.ResourceData, m interface{})
 	}
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tags)
-	common.SetOptionalString(&body.DockerhubPassword, dockerhubPassword)
+	common.GetAkeylessPtr(&body.DockerhubPassword, dockerhubPassword)
 	common.GetAkeylessPtr(&body.DockerhubTokenScopes, dockerhubTokenScopes)
 	common.GetAkeylessPtr(&body.DockerhubUsername, dockerhubUsername)
 	common.GetAkeylessPtr(&body.TargetName, targetName)

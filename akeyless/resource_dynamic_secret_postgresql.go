@@ -222,10 +222,7 @@ func resourceDynamicSecretPostgresqlCreate(d *schema.ResourceData, m interface{}
 	targetName := d.Get("target_name").(string)
 	postgresqlDbName := d.Get("postgresql_db_name").(string)
 	postgresqlUsername := d.Get("postgresql_username").(string)
-	postgresqlPassword, err := common.EffectiveSecretValue(d, "postgresql_password", "postgresql_password_wo")
-	if err != nil {
-		return err
-	}
+	postgresqlPassword := common.EffectiveSecretValue(d, "postgresql_password", "postgresql_password_wo")
 	postgresqlHost := d.Get("postgresql_host").(string)
 	postgresqlPort := d.Get("postgresql_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
@@ -486,10 +483,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	targetName := d.Get("target_name").(string)
 	postgresqlDbName := d.Get("postgresql_db_name").(string)
 	postgresqlUsername := d.Get("postgresql_username").(string)
-	postgresqlPassword, err := common.SecretValueForUpdate(d, "postgresql_password", "postgresql_password_wo")
-	if err != nil {
-		return err
-	}
+	postgresqlPassword := common.EffectiveSecretValue(d, "postgresql_password", "postgresql_password_wo")
 	postgresqlHost := d.Get("postgresql_host").(string)
 	postgresqlPort := d.Get("postgresql_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
@@ -524,7 +518,7 @@ func resourceDynamicSecretPostgresqlUpdate(d *schema.ResourceData, m interface{}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.PostgresqlDbName, postgresqlDbName)
 	common.GetAkeylessPtr(&body.PostgresqlUsername, postgresqlUsername)
-	common.SetOptionalString(&body.PostgresqlPassword, postgresqlPassword)
+	common.GetAkeylessPtr(&body.PostgresqlPassword, postgresqlPassword)
 	common.GetAkeylessPtr(&body.PostgresqlHost, postgresqlHost)
 	common.GetAkeylessPtr(&body.PostgresqlPort, postgresqlPort)
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)

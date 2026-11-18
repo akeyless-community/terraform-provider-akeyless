@@ -24,8 +24,6 @@ LDAP Target resource
 
 ### Optional
 
-- `bind_dn_password_wo` (String, Sensitive) bind_dn_password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.
-- `bind_dn_password_wo_version` (Number) Version trigger for bind_dn_password_wo. Increment to update the value.
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)

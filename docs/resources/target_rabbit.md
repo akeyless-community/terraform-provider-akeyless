@@ -28,8 +28,6 @@ RabbitMQT Target resource
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
 - `rabbitmq_server_password` (String) RabbitMQ server password
-- `rabbitmq_server_password_wo` (String, Sensitive) rabbitmq_server_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_server_password_wo_version to change it.
-- `rabbitmq_server_password_wo_version` (Number) Version trigger for rabbitmq_server_password_wo. Increment to update the value.
 
 ### Read-Only
 

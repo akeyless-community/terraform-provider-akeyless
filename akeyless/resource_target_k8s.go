@@ -6,7 +6,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,12 +18,6 @@ func resourceK8sTarget() *schema.Resource {
 		Delete:      resourceK8sTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceK8sTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("k8s_cluster_token"), cty.GetAttrPath("k8s_cluster_token_wo")),
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("k8s_cluster_ca_cert"), cty.GetAttrPath("k8s_cluster_ca_cert_wo")),
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("k8s_client_certificate"), cty.GetAttrPath("k8s_client_certificate_wo")),
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("k8s_client_key"), cty.GetAttrPath("k8s_client_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -44,38 +37,10 @@ func resourceK8sTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "K8S cluster CA certificate",
 			},
-			"k8s_cluster_ca_cert_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"k8s_cluster_ca_cert_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "K8S cluster CA certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_ca_cert_wo_version to change it.",
-			},
-			"k8s_cluster_ca_cert_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"k8s_cluster_ca_cert_wo"},
-				Description:  "Version trigger for k8s_cluster_ca_cert_wo. Increment to update the certificate.",
-			},
 			"k8s_cluster_token": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "K8S cluster Bearer token",
-			},
-			"k8s_cluster_token_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"k8s_cluster_token_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "k8s_cluster_token (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_token_wo_version to change it.",
-			},
-			"k8s_cluster_token_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"k8s_cluster_token_wo"},
-				Description:  "Version trigger for k8s_cluster_token_wo. Increment to update the value.",
 			},
 			"k8s_auth_type": {
 				Type:        schema.TypeString,
@@ -88,39 +53,11 @@ func resourceK8sTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "Content of the k8 client certificate (PEM format) in a Base64 format",
 			},
-			"k8s_client_certificate_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"k8s_client_certificate_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "Content of the k8 client certificate (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_client_certificate_wo_version to change it.",
-			},
-			"k8s_client_certificate_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"k8s_client_certificate_wo"},
-				Description:  "Version trigger for k8s_client_certificate_wo. Increment to update the certificate.",
-			},
 			"k8s_client_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Content of the k8 client private key (PEM format) in a Base64 format",
-			},
-			"k8s_client_key_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"k8s_client_key_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "Content of the k8 client private key (PEM format) in a Base64 format (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_client_key_wo_version to change it.",
-			},
-			"k8s_client_key_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"k8s_client_key_wo"},
-				Description:  "Version trigger for k8s_client_key_wo. Increment to update the key.",
 			},
 			"k8s_cluster_name": {
 				Type:        schema.TypeString,
@@ -165,23 +102,11 @@ func resourceK8sTargetCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
-	k8sClusterCaCert, err := common.EffectiveSecretValue(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
-	if err != nil {
-		return err
-	}
-	k8sClusterToken, err := common.EffectiveSecretValue(d, "k8s_cluster_token", "k8s_cluster_token_wo")
-	if err != nil {
-		return err
-	}
+	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
+	k8sClusterToken := d.Get("k8s_cluster_token").(string)
 	k8sAuthType := d.Get("k8s_auth_type").(string)
-	k8sClientCertificate, err := common.EffectiveSecretValue(d, "k8s_client_certificate", "k8s_client_certificate_wo")
-	if err != nil {
-		return err
-	}
-	k8sClientKey, err := common.EffectiveSecretValue(d, "k8s_client_key", "k8s_client_key_wo")
-	if err != nil {
-		return err
-	}
+	k8sClientCertificate := d.Get("k8s_client_certificate").(string)
+	k8sClientKey := d.Get("k8s_client_key").(string)
 	k8sClusterName := d.Get("k8s_cluster_name").(string)
 	useGwServiceAccount := d.Get("use_gw_service_account").(bool)
 	key := d.Get("key").(string)
@@ -242,13 +167,13 @@ func resourceK8sTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.NativeK8sTargetDetails.K8sClusterCaCertificate != nil {
-		err = common.SetSecretFromRead(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo", "k8s_cluster_ca_cert_wo_version", *rOut.Value.NativeK8sTargetDetails.K8sClusterCaCertificate)
+		err = d.Set("k8s_cluster_ca_cert", *rOut.Value.NativeK8sTargetDetails.K8sClusterCaCertificate)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.Value.NativeK8sTargetDetails.K8sBearerToken != nil {
-		err = common.SetSecretFromRead(d, "k8s_cluster_token", "k8s_cluster_token_wo", "k8s_cluster_token_wo_version", *rOut.Value.NativeK8sTargetDetails.K8sBearerToken)
+		err = d.Set("k8s_cluster_token", *rOut.Value.NativeK8sTargetDetails.K8sBearerToken)
 		if err != nil {
 			return err
 		}
@@ -263,13 +188,13 @@ func resourceK8sTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.NativeK8sTargetDetails.K8sClientCertData != nil {
-		err = common.SetSecretFromRead(d, "k8s_client_certificate", "k8s_client_certificate_wo", "k8s_client_certificate_wo_version", *rOut.Value.NativeK8sTargetDetails.K8sClientCertData)
+		err = d.Set("k8s_client_certificate", *rOut.Value.NativeK8sTargetDetails.K8sClientCertData)
 		if err != nil {
 			return err
 		}
 	}
 	if rOut.Value.NativeK8sTargetDetails.K8sClientKeyData != nil {
-		err = common.SetSecretFromRead(d, "k8s_client_key", "k8s_client_key_wo", "k8s_client_key_wo_version", *rOut.Value.NativeK8sTargetDetails.K8sClientKeyData)
+		err = d.Set("k8s_client_key", *rOut.Value.NativeK8sTargetDetails.K8sClientKeyData)
 		if err != nil {
 			return err
 		}
@@ -312,23 +237,11 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	k8sClusterEndpoint := d.Get("k8s_cluster_endpoint").(string)
-	k8sClusterCaCert, err := common.SecretValueForUpdate(d, "k8s_cluster_ca_cert", "k8s_cluster_ca_cert_wo")
-	if err != nil {
-		return err
-	}
-	k8sClusterToken, err := common.SecretValueForUpdate(d, "k8s_cluster_token", "k8s_cluster_token_wo")
-	if err != nil {
-		return err
-	}
+	k8sClusterCaCert := d.Get("k8s_cluster_ca_cert").(string)
+	k8sClusterToken := d.Get("k8s_cluster_token").(string)
 	k8sAuthType := d.Get("k8s_auth_type").(string)
-	k8sClientCertificate, err := common.SecretValueForUpdate(d, "k8s_client_certificate", "k8s_client_certificate_wo")
-	if err != nil {
-		return err
-	}
-	k8sClientKey, err := common.SecretValueForUpdate(d, "k8s_client_key", "k8s_client_key_wo")
-	if err != nil {
-		return err
-	}
+	k8sClientCertificate := d.Get("k8s_client_certificate").(string)
+	k8sClientKey := d.Get("k8s_client_key").(string)
 	k8sClusterName := d.Get("k8s_cluster_name").(string)
 	useGwServiceAccount := d.Get("use_gw_service_account").(bool)
 	key := d.Get("key").(string)
@@ -343,11 +256,11 @@ func resourceK8sTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.K8sClusterEndpoint, k8sClusterEndpoint)
-	common.SetOptionalString(&body.K8sClusterCaCert, k8sClusterCaCert)
-	common.SetOptionalString(&body.K8sClusterToken, k8sClusterToken)
+	common.GetAkeylessPtr(&body.K8sClusterCaCert, k8sClusterCaCert)
+	common.GetAkeylessPtr(&body.K8sClusterToken, k8sClusterToken)
 	common.GetAkeylessPtr(&body.K8sAuthType, k8sAuthType)
-	common.SetOptionalString(&body.K8sClientCertificate, k8sClientCertificate)
-	common.SetOptionalString(&body.K8sClientKey, k8sClientKey)
+	common.GetAkeylessPtr(&body.K8sClientCertificate, k8sClientCertificate)
+	common.GetAkeylessPtr(&body.K8sClientKey, k8sClientKey)
 	common.GetAkeylessPtr(&body.K8sClusterName, k8sClusterName)
 	common.GetAkeylessPtr(&body.MaxVersions, maxVersions)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)

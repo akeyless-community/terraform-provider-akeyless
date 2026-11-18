@@ -210,10 +210,7 @@ func resourceRotatedSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
-	if err != nil {
-		return err
-	}
+	rotatedPassword := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	maxVersions := d.Get("max_versions").(string)

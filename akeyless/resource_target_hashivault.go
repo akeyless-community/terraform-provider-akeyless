@@ -6,7 +6,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,9 +18,6 @@ func resourceHashiVaultTarget() *schema.Resource {
 		Delete:      resourceHashiVaultTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceHashiVaultTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("vault_token"), cty.GetAttrPath("vault_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,20 +36,6 @@ func resourceHashiVaultTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Vault access token with sufficient permissions",
-			},
-			"vault_token_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"vault_token_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "Vault access token with sufficient permissions (write-only, not stored in state). Requires Terraform 1.11+. Bump vault_token_wo_version to change it.",
-			},
-			"vault_token_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"vault_token_wo"},
-				Description:  "Version trigger for vault_token_wo. Increment to update the token.",
 			},
 			"namespace": {
 				Type:        schema.TypeSet,
@@ -94,10 +76,7 @@ func resourceHashiVaultTargetCreate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	hashiUrl := d.Get("hashi_url").(string)
-	vaultToken, err := common.EffectiveSecretValue(d, "vault_token", "vault_token_wo")
-	if err != nil {
-		return err
-	}
+	vaultToken := d.Get("vault_token").(string)
 	namespaceSet := d.Get("namespace").(*schema.Set)
 	namespace := common.ExpandStringList(namespaceSet.List())
 	key := d.Get("key").(string)
@@ -155,7 +134,7 @@ func resourceHashiVaultTargetRead(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if targetDetails.HashiVaultTargetDetails.VaultToken != nil {
-				err := common.SetSecretFromRead(d, "vault_token", "vault_token_wo", "vault_token_wo_version", *targetDetails.HashiVaultTargetDetails.VaultToken)
+				err := d.Set("vault_token", *targetDetails.HashiVaultTargetDetails.VaultToken)
 				if err != nil {
 					return err
 				}
@@ -201,10 +180,7 @@ func resourceHashiVaultTargetUpdate(d *schema.ResourceData, m interface{}) error
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	hashiUrl := d.Get("hashi_url").(string)
-	vaultToken, err := common.SecretValueForUpdate(d, "vault_token", "vault_token_wo")
-	if err != nil {
-		return err
-	}
+	vaultToken := d.Get("vault_token").(string)
 	namespaceSet := d.Get("namespace").(*schema.Set)
 	namespace := common.ExpandStringList(namespaceSet.List())
 	key := d.Get("key").(string)
@@ -217,7 +193,7 @@ func resourceHashiVaultTargetUpdate(d *schema.ResourceData, m interface{}) error
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.HashiUrl, hashiUrl)
-	common.SetOptionalString(&body.VaultToken, vaultToken)
+	common.GetAkeylessPtr(&body.VaultToken, vaultToken)
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

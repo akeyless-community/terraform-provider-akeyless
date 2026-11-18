@@ -195,10 +195,7 @@ func resourceDynamicSecretRedshiftCreate(d *schema.ResourceData, m interface{}) 
 	targetName := d.Get("target_name").(string)
 	redshiftDbName := d.Get("redshift_db_name").(string)
 	redshiftUsername := d.Get("redshift_username").(string)
-	redshiftPassword, err := common.EffectiveSecretValue(d, "redshift_password", "redshift_password_wo")
-	if err != nil {
-		return err
-	}
+	redshiftPassword := common.EffectiveSecretValue(d, "redshift_password", "redshift_password_wo")
 	redshiftHost := d.Get("redshift_host").(string)
 	redshiftPort := d.Get("redshift_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
@@ -423,10 +420,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	targetName := d.Get("target_name").(string)
 	redshiftDbName := d.Get("redshift_db_name").(string)
 	redshiftUsername := d.Get("redshift_username").(string)
-	redshiftPassword, err := common.SecretValueForUpdate(d, "redshift_password", "redshift_password_wo")
-	if err != nil {
-		return err
-	}
+	redshiftPassword := common.EffectiveSecretValue(d, "redshift_password", "redshift_password_wo")
 	redshiftHost := d.Get("redshift_host").(string)
 	redshiftPort := d.Get("redshift_port").(string)
 	creationStatements := d.Get("creation_statements").(string)
@@ -453,7 +447,7 @@ func resourceDynamicSecretRedshiftUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.RedshiftDbName, redshiftDbName)
 	common.GetAkeylessPtr(&body.RedshiftUsername, redshiftUsername)
-	common.SetOptionalString(&body.RedshiftPassword, redshiftPassword)
+	common.GetAkeylessPtr(&body.RedshiftPassword, redshiftPassword)
 	common.GetAkeylessPtr(&body.RedshiftHost, redshiftHost)
 	common.GetAkeylessPtr(&body.RedshiftPort, redshiftPort)
 	common.GetAkeylessPtr(&body.CreationStatements, creationStatements)

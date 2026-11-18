@@ -233,10 +233,7 @@ func resourceDynamicSecretMysqlCreate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mysqlDbname := d.Get("mysql_dbname").(string)
 	mysqlUsername := d.Get("mysql_username").(string)
-	mysqlPassword, err := common.EffectiveSecretValue(d, "mysql_password", "mysql_password_wo")
-	if err != nil {
-		return err
-	}
+	mysqlPassword := common.EffectiveSecretValue(d, "mysql_password", "mysql_password_wo")
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
 	creationStatements := d.Get("mysql_creation_statements").(string)
@@ -499,10 +496,7 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mysqlDbname := d.Get("mysql_dbname").(string)
 	mysqlUsername := d.Get("mysql_username").(string)
-	mysqlPassword, err := common.SecretValueForUpdate(d, "mysql_password", "mysql_password_wo")
-	if err != nil {
-		return err
-	}
+	mysqlPassword := common.EffectiveSecretValue(d, "mysql_password", "mysql_password_wo")
 	mysqlHost := d.Get("mysql_host").(string)
 	mysqlPort := d.Get("mysql_port").(string)
 	creationStatements := d.Get("mysql_creation_statements").(string)
@@ -539,7 +533,7 @@ func resourceDynamicSecretMysqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.MysqlDbname, mysqlDbname)
 	common.GetAkeylessPtr(&body.MysqlUsername, mysqlUsername)
-	common.SetOptionalString(&body.MysqlPassword, mysqlPassword)
+	common.GetAkeylessPtr(&body.MysqlPassword, mysqlPassword)
 	common.GetAkeylessPtr(&body.MysqlHost, mysqlHost)
 	common.GetAkeylessPtr(&body.MysqlPort, mysqlPort)
 	common.GetAkeylessPtr(&body.MysqlScreationStatements, creationStatements)

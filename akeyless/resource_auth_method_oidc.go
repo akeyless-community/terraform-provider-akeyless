@@ -7,7 +7,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -20,9 +19,6 @@ func resourceAuthMethodOidc() *schema.Resource {
 		Delete:      resourceAuthMethodOidcDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAuthMethodOidcImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("client_secret"), cty.GetAttrPath("client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -69,20 +65,6 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Client Secret",
-			},
-			"client_secret_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"client_secret_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
-			},
-			"client_secret_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"client_secret_wo"},
-				Description:  "Version trigger for client_secret_wo. Increment to update the value.",
 			},
 			"unique_identifier": {
 				Type:        schema.TypeString,
@@ -181,10 +163,7 @@ func resourceAuthMethodOidcCreate(d *schema.ResourceData, m interface{}) error {
 	jwtTtl := d.Get("jwt_ttl").(int)
 	issuer := d.Get("issuer").(string)
 	clientId := d.Get("client_id").(string)
-	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
-	if err != nil {
-		return err
-	}
+	clientSecret := d.Get("client_secret").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
@@ -322,7 +301,7 @@ func resourceAuthMethodOidcRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.AccessInfo.OidcAccessRules.ClientSecret != nil {
-		err = common.SetSecretFromRead(d, "client_secret", "client_secret_wo", "client_secret_wo_version", *rOut.AccessInfo.OidcAccessRules.ClientSecret)
+		err = d.Set("client_secret", *rOut.AccessInfo.OidcAccessRules.ClientSecret)
 		if err != nil {
 			return err
 		}
@@ -435,10 +414,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	jwtTtl := d.Get("jwt_ttl").(int)
 	issuer := d.Get("issuer").(string)
 	clientId := d.Get("client_id").(string)
-	clientSecret, err := common.SecretValueForUpdate(d, "client_secret", "client_secret_wo")
-	if err != nil {
-		return err
-	}
+	clientSecret := d.Get("client_secret").(string)
 	uniqueIdentifier := d.Get("unique_identifier").(string)
 	allowedRedirectUriSet := d.Get("allowed_redirect_uri").(*schema.Set)
 	allowedRedirectUri := common.ExpandStringList(allowedRedirectUriSet.List())
@@ -472,7 +448,7 @@ func resourceAuthMethodOidcUpdate(d *schema.ResourceData, m interface{}) error {
 	common.GetAkeylessPtr(&body.JwtTtl, jwtTtl)
 	common.GetAkeylessPtr(&body.Issuer, issuer)
 	common.GetAkeylessPtr(&body.ClientId, clientId)
-	common.SetOptionalString(&body.ClientSecret, clientSecret)
+	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
 	common.GetAkeylessPtr(&body.AllowedRedirectUri, allowedRedirectUri)
 	common.GetAkeylessPtr(&body.RequiredScopes, requiredScopes)
 	common.GetAkeylessPtr(&body.RequiredScopesPrefix, requiredScopesPrefix)

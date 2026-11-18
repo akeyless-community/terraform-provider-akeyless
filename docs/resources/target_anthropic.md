@@ -23,8 +23,6 @@ Anthropic Target resource
 
 - `anthropic_url` (String) Base URL of the Anthropic API
 - `api_key` (String, Sensitive) API key for Anthropic
-- `api_key_wo` (String, Sensitive) API key for Anthropic (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.
-- `api_key_wo_version` (Number) Version trigger for api_key_wo. Increment to update the value.
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings

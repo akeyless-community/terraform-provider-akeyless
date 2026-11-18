@@ -169,10 +169,7 @@ func resourceDynamicSecretRedisCreate(d *schema.ResourceData, m interface{}) err
 	aclRules := d.Get("acl_rules").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	host := d.Get("host").(string)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
+	password := common.EffectiveSecretValue(d, "password", "password_wo")
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
@@ -336,10 +333,7 @@ func resourceDynamicSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	aclRules := d.Get("acl_rules").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	host := d.Get("host").(string)
-	password, err := common.SecretValueForUpdate(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
+	password := common.EffectiveSecretValue(d, "password", "password_wo")
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
@@ -361,7 +355,7 @@ func resourceDynamicSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.AclRules, aclRules)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.Host, host)
-	common.SetOptionalString(&body.Password, password)
+	common.GetAkeylessPtr(&body.Password, password)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)

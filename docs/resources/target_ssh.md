@@ -29,13 +29,7 @@ SSH Target resource
 - `port` (String) SSH port
 - `private_key` (String) SSH private key
 - `private_key_password` (String) SSH private key password
-- `private_key_password_wo` (String, Sensitive) private_key_password (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_password_wo_version to change it.
-- `private_key_password_wo_version` (Number) Version trigger for private_key_password_wo. Increment to update the value.
-- `private_key_wo` (String, Sensitive) private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_wo_version to change it.
-- `private_key_wo_version` (Number) Version trigger for private_key_wo. Increment to update the value.
 - `ssh_password` (String) SSH password to rotate
-- `ssh_password_wo` (String, Sensitive) ssh_password (write-only, not stored in state). Requires Terraform 1.11+. Bump ssh_password_wo_version to change it.
-- `ssh_password_wo_version` (Number) Version trigger for ssh_password_wo. Increment to update the value.
 - `ssh_username` (String) SSH username
 
 ### Read-Only

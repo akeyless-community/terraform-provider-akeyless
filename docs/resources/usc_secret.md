@@ -28,16 +28,12 @@ Universal Secrets Connector secret resource
 - `namespace` (String) The namespace (relevant for Hashi vault target)
 - `object_type` (String) Either secret or certificate (Relevant only for Azure KV targets)
 - `pfx_password` (String, Sensitive) Optional, the passphrase that protects the private key within the pfx certificate (Relevant only for Azure KV certificates)
-- `pfx_password_wo` (String, Sensitive) pfx_password (write-only, not stored in state). Requires Terraform 1.11+. Bump pfx_password_wo_version to change it.
-- `pfx_password_wo_version` (Number) Version trigger for pfx_password_wo. Increment to update the value.
 - `region` (String) Optional, create secret in a specific region (GCP only). If empty, a global secret will be created (provider default).
 - `remote_secret_activation_date` (String) Activation date for the secret on the remote endpoint, in UTC format: YYYY-MM-DDTHH:MM:SSZ
 - `remote_secret_expires` (String) Expiration time for the secret on the remote endpoint, in UTC format: YYYY-MM-DDTHH:MM:SSZ
 - `tags` (Set of String) Tags for the universal secrets
 - `usc_encryption_key` (String) Optional, The name of the remote key that used to encrypt the secret value (if empty, the default key will be used)
 - `value` (String, Sensitive) Value of the universal secrets item, either text or base64 encoded binary
-- `value_wo` (String, Sensitive) value (write-only, not stored in state). Requires Terraform 1.11+. Bump value_wo_version to change it.
-- `value_wo_version` (Number) Version trigger for value_wo. Increment to update the value.
 - `version_id` (String) The version id (if not specified, will retrieve the last version)
 
 ### Read-Only

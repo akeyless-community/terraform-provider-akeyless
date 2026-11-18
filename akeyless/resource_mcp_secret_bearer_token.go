@@ -6,7 +6,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,9 +18,6 @@ func resourceMcpSecretBearerToken() *schema.Resource {
 		Delete:      resourceMcpSecretDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceMcpSecretImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("bearer_token"), cty.GetAttrPath("bearer_token_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -41,20 +37,6 @@ func resourceMcpSecretBearerToken() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Bearer token value",
-			},
-			"bearer_token_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"bearer_token_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "bearer_token (write-only, not stored in state). Requires Terraform 1.11+. Bump bearer_token_wo_version to change it.",
-			},
-			"bearer_token_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"bearer_token_wo"},
-				Description:  "Version trigger for bearer_token_wo. Increment to update the value.",
 			},
 			"accessibility": {
 				Type:        schema.TypeString,
@@ -139,11 +121,7 @@ func resourceMcpSecretBearerTokenCreate(d *schema.ResourceData, m interface{}) e
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
-	bearerToken, err := common.EffectiveSecretValue(d, "bearer_token", "bearer_token_wo")
-	if err != nil {
-		return err
-	}
-	common.GetAkeylessPtr(&body.BearerToken, bearerToken)
+	common.GetAkeylessPtr(&body.BearerToken, d.Get("bearer_token").(string))
 	common.GetAkeylessPtr(&body.ProtectionKey, d.Get("protection_key").(string))
 	common.GetAkeylessPtr(&body.Description, d.Get("description").(string))
 	common.GetAkeylessPtr(&body.Accessibility, d.Get("accessibility").(string))
@@ -183,7 +161,7 @@ func resourceMcpSecretBearerTokenRead(d *schema.ResourceData, m interface{}) err
 		if err := d.Set("url", cfg.URL); err != nil {
 			return err
 		}
-		if err := common.SetSecretFromRead(d, "bearer_token", "bearer_token_wo", "bearer_token_wo_version", cfg.BearerToken); err != nil {
+		if err := d.Set("bearer_token", cfg.BearerToken); err != nil {
 			return err
 		}
 	}
@@ -197,17 +175,13 @@ func resourceMcpSecretBearerTokenUpdate(d *schema.ResourceData, m interface{}) e
 	ctx := context.Background()
 	name := d.Id()
 
-	if d.HasChanges("url", "bearer_token", "protection_key", "keep_prev_version", "input_rule", "output_rule", "bearer_token_wo_version", "ara_enabled", "enable_agentic_runtime_authority", "enable_ai_quorum") {
+	if d.HasChanges("url", "bearer_token", "protection_key", "keep_prev_version", "input_rule", "output_rule", "ara_enabled", "enable_agentic_runtime_authority", "enable_ai_quorum") {
 		body := akeyless_api.UpdateMcpSecretBearerToken{
 			Name:  name,
 			Token: &token,
 		}
 		common.GetAkeylessPtr(&body.Url, d.Get("url").(string))
-		bearerToken, err := common.SecretValueForUpdate(d, "bearer_token", "bearer_token_wo")
-		if err != nil {
-			return err
-		}
-		common.SetOptionalString(&body.BearerToken, bearerToken)
+		common.GetAkeylessPtr(&body.BearerToken, d.Get("bearer_token").(string))
 		common.GetAkeylessPtr(&body.Key, d.Get("protection_key").(string))
 		common.GetAkeylessPtr(&body.KeepPrevVersion, d.Get("keep_prev_version").(string))
 		common.GetAkeylessPtr(&body.InputRule, expandOptionalStringList(d, "input_rule"))

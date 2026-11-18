@@ -8,7 +8,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -21,10 +20,6 @@ func resourceUscSecret() *schema.Resource {
 		Delete:      resourceUscSecretDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceUscSecretImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("pfx_password"), cty.GetAttrPath("pfx_password_wo")),
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("value"), cty.GetAttrPath("value_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"usc_name": {
@@ -59,20 +54,6 @@ func resourceUscSecret() *schema.Resource {
 				Sensitive:   true,
 				Description: "Value of the universal secrets item, either text or base64 encoded binary",
 			},
-			"value_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"value_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "value (write-only, not stored in state). Requires Terraform 1.11+. Bump value_wo_version to change it.",
-			},
-			"value_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"value_wo"},
-				Description:  "Version trigger for value_wo. Increment to update the value.",
-			},
 			"binary_value": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -105,20 +86,6 @@ func resourceUscSecret() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Optional, the passphrase that protects the private key within the pfx certificate (Relevant only for Azure KV certificates)",
-			},
-			"pfx_password_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"pfx_password_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "pfx_password (write-only, not stored in state). Requires Terraform 1.11+. Bump pfx_password_wo_version to change it.",
-			},
-			"pfx_password_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"pfx_password_wo"},
-				Description:  "Version trigger for pfx_password_wo. Increment to update the value.",
 			},
 			"region": {
 				Type:        schema.TypeString,
@@ -153,10 +120,7 @@ func resourceUscSecretCreate(d *schema.ResourceData, m any) error {
 	ctx := context.Background()
 	uscName := d.Get("usc_name").(string)
 	secretName := d.Get("secret_name").(string)
-	value, err := common.EffectiveSecretValue(d, "value", "value_wo")
-	if err != nil {
-		return err
-	}
+	value := d.Get("value").(string)
 	binaryValue := d.Get("binary_value").(bool)
 	namespace := d.Get("namespace").(string)
 	remoteSecretActivationDate := d.Get("remote_secret_activation_date").(string)
@@ -165,10 +129,7 @@ func resourceUscSecretCreate(d *schema.ResourceData, m any) error {
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	objectType := d.Get("object_type").(string)
-	pfxPassword, err := common.EffectiveSecretValue(d, "pfx_password", "pfx_password_wo")
-	if err != nil {
-		return err
-	}
+	pfxPassword := d.Get("pfx_password").(string)
 	region := d.Get("region").(string)
 	uscEncryptionKey := d.Get("usc_encryption_key").(string)
 
@@ -265,7 +226,7 @@ func resourceUscSecretRead(d *schema.ResourceData, m any) error {
 			value = decoded
 		}
 
-		err := common.SetSecretFromRead(d, "value", "value_wo", "value_wo_version", value)
+		err := d.Set("value", value)
 		if err != nil {
 			return err
 		}
@@ -307,10 +268,7 @@ func resourceUscSecretUpdate(d *schema.ResourceData, m any) error {
 	ctx := context.Background()
 	uscName := d.Get("usc_name").(string)
 	secretName := d.Get("secret_name").(string)
-	value, err := common.RequiredSecretValueForUpdate(d, "value", "value_wo")
-	if err != nil {
-		return err
-	}
+	value := d.Get("value").(string)
 	binaryValue := d.Get("binary_value").(bool)
 	namespace := d.Get("namespace").(string)
 	remoteSecretActivationDate := d.Get("remote_secret_activation_date").(string)
@@ -318,10 +276,7 @@ func resourceUscSecretUpdate(d *schema.ResourceData, m any) error {
 	description := d.Get("description").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
-	pfxPassword, err := common.SecretValueForUpdate(d, "pfx_password", "pfx_password_wo")
-	if err != nil {
-		return err
-	}
+	pfxPassword := d.Get("pfx_password").(string)
 	uscEncryptionKey := d.Get("usc_encryption_key").(string)
 
 	body := akeyless_api.UscUpdate{
@@ -334,7 +289,7 @@ func resourceUscSecretUpdate(d *schema.ResourceData, m any) error {
 	common.GetAkeylessPtr(&body.Namespace, namespace)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Tags, tags)
-	common.SetOptionalString(&body.PfxPassword, pfxPassword)
+	common.GetAkeylessPtr(&body.PfxPassword, pfxPassword)
 	common.GetAkeylessPtr(&body.RemoteSecretActivationDate, remoteSecretActivationDate)
 	common.GetAkeylessPtr(&body.RemoteSecretExpires, remoteSecretExpires)
 	common.GetAkeylessPtr(&body.UscEncryptionKey, uscEncryptionKey)
@@ -447,7 +402,7 @@ func resourceUscSecretImport(d *schema.ResourceData, m any) ([]*schema.ResourceD
 			value = decoded
 		}
 
-		err := common.SetSecretFromRead(d, "value", "value_wo", "value_wo_version", value)
+		err := d.Set("value", value)
 		if err != nil {
 			return nil, err
 		}

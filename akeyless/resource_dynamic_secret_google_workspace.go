@@ -178,10 +178,7 @@ func resourceDynamicSecretGoogleWorkspaceCreate(d *schema.ResourceData, m interf
 	name := d.Get("name").(string)
 	accessMode := d.Get("access_mode").(string)
 	adminEmail := d.Get("admin_email").(string)
-	gcpKey, err := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
-	if err != nil {
-		return err
-	}
+	gcpKey := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
 	groupEmail := d.Get("group_email").(string)
 	groupRole := d.Get("group_role").(string)
 	roleName := d.Get("role_name").(string)
@@ -395,10 +392,7 @@ func resourceDynamicSecretGoogleWorkspaceUpdate(d *schema.ResourceData, m interf
 	name := d.Get("name").(string)
 	accessMode := d.Get("access_mode").(string)
 	adminEmail := d.Get("admin_email").(string)
-	gcpKey, err := common.SecretValueForUpdate(d, "gcp_key", "gcp_key_wo")
-	if err != nil {
-		return err
-	}
+	gcpKey := common.EffectiveSecretValue(d, "gcp_key", "gcp_key_wo")
 	groupEmail := d.Get("group_email").(string)
 	groupRole := d.Get("group_role").(string)
 	roleName := d.Get("role_name").(string)
@@ -424,7 +418,7 @@ func resourceDynamicSecretGoogleWorkspaceUpdate(d *schema.ResourceData, m interf
 		AdminEmail: adminEmail,
 		Token:      &token,
 	}
-	common.SetOptionalString(&body.GcpKey, gcpKey)
+	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.GroupEmail, groupEmail)
 	common.GetAkeylessPtr(&body.GroupRole, groupRole)
 	common.GetAkeylessPtr(&body.RoleName, roleName)

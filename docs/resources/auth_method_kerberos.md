@@ -26,8 +26,6 @@ Kerberos Auth Method Resource
 - `audit_logs_claims` (Set of String) Subclaims to include in audit logs
 - `bind_dn` (String) Bind DN
 - `bind_dn_password` (String, Sensitive) Bind DN password
-- `bind_dn_password_wo` (String, Sensitive) bind_dn_password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.
-- `bind_dn_password_wo_version` (Number) Version trigger for bind_dn_password_wo. Increment to update the value.
 - `bound_ips` (Set of String) A comma-separated CIDR block list to allow client access
 - `delete_protection` (String) Protection from accidental deletion of this object, [true/false]
 - `description` (String) Auth Method description
@@ -39,8 +37,6 @@ Kerberos Auth Method Resource
 - `gw_bound_ips` (Set of String) A comma-separated CIDR block list as a trusted Gateway entity
 - `jwt_ttl` (Number) creds expiration time in minutes. If not set, use default according to account settings (see get-account-settings)
 - `keytab_file_data` (String, Sensitive) Keytab file data (base64 encoded)
-- `keytab_file_data_wo` (String, Sensitive) keytab_file_data (write-only, not stored in state). Requires Terraform 1.11+. Bump keytab_file_data_wo_version to change it.
-- `keytab_file_data_wo_version` (Number) Version trigger for keytab_file_data_wo. Increment to update the value.
 - `krb5_conf_data` (String) Kerberos configuration file data (base64 encoded)
 - `ldap_anonymous_search` (Boolean) Enable LDAP anonymous search
 - `ldap_ca_cert` (String) LDAP CA certificate

@@ -115,28 +115,13 @@ func TestRawString_UnknownValue(t *testing.T) {
 	}
 }
 
-func TestRequiredSecretValueForUpdate_RejectsMissingWriteOnlyValue(t *testing.T) {
-	d := writeOnlyTestResource().Data(nil)
-	if err := d.Set("mysql_password_wo_version", 1); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := RequiredSecretValueForUpdate(d, "mysql_password", "mysql_password_wo"); err == nil {
-		t.Fatal("expected error for missing write-only value")
-	}
-}
-
 // Refresh/import with empty raw config must fall back to the legacy value.
 func TestEffectiveSecretValue_EmptyRawConfigFallsBack(t *testing.T) {
 	d := writeOnlyTestResource().Data(nil)
 	if err := d.Set("tls_certificate", "legacy-cert"); err != nil {
 		t.Fatal(err)
 	}
-	got, err := EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo")
-	if err != nil {
-		t.Fatalf("expected no error on empty raw config, got %v", err)
-	}
-	if got != "legacy-cert" {
+	if got := EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo"); got != "legacy-cert" {
 		t.Fatalf("expected legacy fallback, got %q", got)
 	}
 }

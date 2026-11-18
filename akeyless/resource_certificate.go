@@ -131,15 +131,9 @@ func resourceCertificateCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	certificateData, err := common.EffectiveSecretValue(d, "certificate_data", "certificate_data_wo")
-	if err != nil {
-		return err
-	}
+	certificateData := common.EffectiveSecretValue(d, "certificate_data", "certificate_data_wo")
 	format := d.Get("format").(string)
-	keyData, err := common.EffectiveSecretValue(d, "key_data", "key_data_wo")
-	if err != nil {
-		return err
-	}
+	keyData := common.EffectiveSecretValue(d, "key_data", "key_data_wo")
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	key := d.Get("key").(string)
@@ -278,15 +272,9 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	certificateData, err := common.SecretValueForUpdate(d, "certificate_data", "certificate_data_wo")
-	if err != nil {
-		return err
-	}
+	certificateData := common.EffectiveSecretValue(d, "certificate_data", "certificate_data_wo")
 	format := d.Get("format").(string)
-	keyData, err := common.SecretValueForUpdate(d, "key_data", "key_data_wo")
-	if err != nil {
-		return err
-	}
+	keyData := common.EffectiveSecretValue(d, "key_data", "key_data_wo")
 	expirationEventInSet := d.Get("expiration_event_in").(*schema.Set)
 	expirationEventIn := common.ExpandStringList(expirationEventInSet.List())
 	key := d.Get("key").(string)
@@ -300,9 +288,9 @@ func resourceCertificateUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.SetOptionalString(&body.CertificateData, certificateData)
+	common.GetAkeylessPtr(&body.CertificateData, certificateData)
 	common.GetAkeylessPtr(&body.Format, format)
-	common.SetOptionalString(&body.KeyData, keyData)
+	common.GetAkeylessPtr(&body.KeyData, keyData)
 	common.GetAkeylessPtr(&body.ExpirationEventIn, expirationEventIn)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.KeepPrevVersion, keepPrevVersion)

@@ -5,7 +5,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,9 +17,6 @@ func resourceSectigoTarget() *schema.Resource {
 		Delete:      resourceSectigoTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSectigoTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -54,20 +50,6 @@ func resourceSectigoTarget() *schema.Resource {
 				Required:    true,
 				Sensitive:   true,
 				Description: "Password for Sectigo account",
-			},
-			"password_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"password_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
-			},
-			"password_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"password_wo"},
-				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"username": {
 				Type:        schema.TypeString,
@@ -117,10 +99,7 @@ func resourceSectigoTargetCreate(d *schema.ResourceData, m interface{}) error {
 	customerUri := d.Get("customer_uri").(string)
 	externalRequester := d.Get("external_requester").(string)
 	organizationId := d.Get("organization_id").(int)
-	password, err := common.EffectiveSecretValue(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
+	password := d.Get("password").(string)
 	username := d.Get("username").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -197,7 +176,7 @@ func resourceSectigoTargetRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if rOut.Value.SectigoTargetDetails.Password != nil {
-			err = common.SetSecretFromRead(d, "password", "password_wo", "password_wo_version", *rOut.Value.SectigoTargetDetails.Password)
+			err = d.Set("password", *rOut.Value.SectigoTargetDetails.Password)
 			if err != nil {
 				return err
 			}
@@ -247,10 +226,7 @@ func resourceSectigoTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	customerUri := d.Get("customer_uri").(string)
 	externalRequester := d.Get("external_requester").(string)
 	organizationId := d.Get("organization_id").(int)
-	password, err := common.RequiredSecretValueForUpdate(d, "password", "password_wo")
-	if err != nil {
-		return err
-	}
+	password := d.Get("password").(string)
 	username := d.Get("username").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)

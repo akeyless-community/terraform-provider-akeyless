@@ -234,20 +234,11 @@ func resourceDynamicSecretVenafiCreate(d *schema.ResourceData, m interface{}) er
 	storePrivateKey := d.Get("store_private_key").(bool)
 	targetName := d.Get("target_name").(string)
 	userTtl := d.Get("user_ttl").(string)
-	venafiAccessToken, err := common.EffectiveSecretValue(d, "venafi_access_token", "venafi_access_token_wo")
-	if err != nil {
-		return err
-	}
-	venafiApiKey, err := common.EffectiveSecretValue(d, "venafi_api_key", "venafi_api_key_wo")
-	if err != nil {
-		return err
-	}
+	venafiAccessToken := common.EffectiveSecretValue(d, "venafi_access_token", "venafi_access_token_wo")
+	venafiApiKey := common.EffectiveSecretValue(d, "venafi_api_key", "venafi_api_key_wo")
 	venafiBaseurl := d.Get("venafi_baseurl").(string)
 	venafiClientId := d.Get("venafi_client_id").(string)
-	venafiRefreshToken, err := common.EffectiveSecretValue(d, "venafi_refresh_token", "venafi_refresh_token_wo")
-	if err != nil {
-		return err
-	}
+	venafiRefreshToken := common.EffectiveSecretValue(d, "venafi_refresh_token", "venafi_refresh_token_wo")
 	venafiUseTpp := d.Get("venafi_use_tpp").(bool)
 	venafiZone := d.Get("venafi_zone").(string)
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
@@ -412,20 +403,11 @@ func resourceDynamicSecretVenafiUpdate(d *schema.ResourceData, m interface{}) er
 	storePrivateKey := d.Get("store_private_key").(bool)
 	targetName := d.Get("target_name").(string)
 	userTtl := d.Get("user_ttl").(string)
-	venafiAccessToken, err := common.SecretValueForUpdate(d, "venafi_access_token", "venafi_access_token_wo")
-	if err != nil {
-		return err
-	}
-	venafiApiKey, err := common.SecretValueForUpdate(d, "venafi_api_key", "venafi_api_key_wo")
-	if err != nil {
-		return err
-	}
+	venafiAccessToken := common.EffectiveSecretValue(d, "venafi_access_token", "venafi_access_token_wo")
+	venafiApiKey := common.EffectiveSecretValue(d, "venafi_api_key", "venafi_api_key_wo")
 	venafiBaseurl := d.Get("venafi_baseurl").(string)
 	venafiClientId := d.Get("venafi_client_id").(string)
-	venafiRefreshToken, err := common.SecretValueForUpdate(d, "venafi_refresh_token", "venafi_refresh_token_wo")
-	if err != nil {
-		return err
-	}
+	venafiRefreshToken := common.EffectiveSecretValue(d, "venafi_refresh_token", "venafi_refresh_token_wo")
 	venafiUseTpp := d.Get("venafi_use_tpp").(bool)
 	venafiZone := d.Get("venafi_zone").(string)
 	producerEncryptionKeyName := d.Get("producer_encryption_key_name").(string)
@@ -448,11 +430,11 @@ func resourceDynamicSecretVenafiUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.StorePrivateKey, storePrivateKey)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
-	common.SetOptionalString(&body.VenafiAccessToken, venafiAccessToken)
-	common.SetOptionalString(&body.VenafiApiKey, venafiApiKey)
+	common.GetAkeylessPtr(&body.VenafiAccessToken, venafiAccessToken)
+	common.GetAkeylessPtr(&body.VenafiApiKey, venafiApiKey)
 	common.GetAkeylessPtr(&body.VenafiBaseurl, venafiBaseurl)
 	common.GetAkeylessPtr(&body.VenafiClientId, venafiClientId)
-	common.SetOptionalString(&body.VenafiRefreshToken, venafiRefreshToken)
+	common.GetAkeylessPtr(&body.VenafiRefreshToken, venafiRefreshToken)
 	common.GetAkeylessPtr(&body.VenafiUseTpp, venafiUseTpp)
 	common.GetAkeylessPtr(&body.VenafiZone, venafiZone)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)

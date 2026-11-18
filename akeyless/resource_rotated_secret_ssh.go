@@ -316,10 +316,7 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
-	if err != nil {
-		return err
-	}
+	rotatedPassword := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
 	rotatorCustomCmd := d.Get("rotator_custom_cmd").(string)
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
@@ -327,10 +324,7 @@ func resourceRotatedSecretSshCreate(d *schema.ResourceData, m interface{}) error
 	for k, v := range itemCustomFieldsMap {
 		itemCustomFields[k] = v.(string)
 	}
-	keyDataBase64, err := common.EffectiveSecretValue(d, "key_data_base64", "key_data_base64_wo")
-	if err != nil {
-		return err
-	}
+	keyDataBase64 := common.EffectiveSecretValue(d, "key_data_base64", "key_data_base64_wo")
 	maxVersions := d.Get("max_versions").(string)
 	publicKeyRemotePath := d.Get("public_key_remote_path").(string)
 	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)

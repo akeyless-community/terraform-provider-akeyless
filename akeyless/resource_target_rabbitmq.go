@@ -6,7 +6,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,9 +18,6 @@ func resourceRabbitmqTarget() *schema.Resource {
 		Delete:      resourceRabbitmqTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRabbitmqTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("rabbitmq_server_password"), cty.GetAttrPath("rabbitmq_server_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,20 +36,6 @@ func resourceRabbitmqTarget() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "RabbitMQ server password",
-			},
-			"rabbitmq_server_password_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"rabbitmq_server_password_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "rabbitmq_server_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rabbitmq_server_password_wo_version to change it.",
-			},
-			"rabbitmq_server_password_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"rabbitmq_server_password_wo"},
-				Description:  "Version trigger for rabbitmq_server_password_wo. Increment to update the value.",
 			},
 			"rabbitmq_server_uri": {
 				Type:        schema.TypeString,
@@ -93,10 +75,7 @@ func resourceRabbitmqTargetCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	rabbitmqServerUser := d.Get("rabbitmq_server_user").(string)
-	rabbitmqServerPassword, err := common.EffectiveSecretValue(d, "rabbitmq_server_password", "rabbitmq_server_password_wo")
-	if err != nil {
-		return err
-	}
+	rabbitmqServerPassword := d.Get("rabbitmq_server_password").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
@@ -149,7 +128,7 @@ func resourceRabbitmqTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value != nil && rOut.Value.RabbitMqTargetDetails != nil && rOut.Value.RabbitMqTargetDetails.RabbitmqServerPassword != nil {
-		err = common.SetSecretFromRead(d, "rabbitmq_server_password", "rabbitmq_server_password_wo", "rabbitmq_server_password_wo_version", *rOut.Value.RabbitMqTargetDetails.RabbitmqServerPassword)
+		err = d.Set("rabbitmq_server_password", *rOut.Value.RabbitMqTargetDetails.RabbitmqServerPassword)
 		if err != nil {
 			return err
 		}
@@ -186,10 +165,7 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	rabbitmqServerUser := d.Get("rabbitmq_server_user").(string)
-	rabbitmqServerPassword, err := common.SecretValueForUpdate(d, "rabbitmq_server_password", "rabbitmq_server_password_wo")
-	if err != nil {
-		return err
-	}
+	rabbitmqServerPassword := d.Get("rabbitmq_server_password").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	key := d.Get("key").(string)
 	description := d.Get("description").(string)
@@ -201,7 +177,7 @@ func resourceRabbitmqTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Token: &token,
 	}
 	common.GetAkeylessPtr(&body.RabbitmqServerUser, rabbitmqServerUser)
-	common.SetOptionalString(&body.RabbitmqServerPassword, rabbitmqServerPassword)
+	common.GetAkeylessPtr(&body.RabbitmqServerPassword, rabbitmqServerPassword)
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.Key, key)
 	common.GetAkeylessPtr(&body.Description, description)

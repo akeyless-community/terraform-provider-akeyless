@@ -5,7 +5,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,9 +17,6 @@ func resourceGithubTarget() *schema.Resource {
 		Delete:      resourceGithubTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceGithubTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("github_app_private_key"), cty.GetAttrPath("github_app_private_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,20 +36,6 @@ func resourceGithubTarget() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "App private key",
-			},
-			"github_app_private_key_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"github_app_private_key_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "github_app_private_key (write-only, not stored in state). Requires Terraform 1.11+. Bump github_app_private_key_wo_version to change it.",
-			},
-			"github_app_private_key_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"github_app_private_key_wo"},
-				Description:  "Version trigger for github_app_private_key_wo. Increment to update the value.",
 			},
 			"github_base_url": {
 				Type:        schema.TypeString,
@@ -95,10 +77,7 @@ func resourceGithubTargetCreate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey, err := common.EffectiveSecretValue(d, "github_app_private_key", "github_app_private_key_wo")
-	if err != nil {
-		return err
-	}
+	githubAppPrivateKey := d.Get("github_app_private_key").(string)
 	githubBaseUrl := d.Get("github_base_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -152,7 +131,7 @@ func resourceGithubTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.GithubTargetDetails.GithubAppPrivateKey != nil {
-		err = common.SetSecretFromRead(d, "github_app_private_key", "github_app_private_key_wo", "github_app_private_key_wo_version", *rOut.Value.GithubTargetDetails.GithubAppPrivateKey)
+		err = d.Set("github_app_private_key", *rOut.Value.GithubTargetDetails.GithubAppPrivateKey)
 		if err != nil {
 			return err
 		}
@@ -189,10 +168,7 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey, err := common.SecretValueForUpdate(d, "github_app_private_key", "github_app_private_key_wo")
-	if err != nil {
-		return err
-	}
+	githubAppPrivateKey := d.Get("github_app_private_key").(string)
 	githubBaseUrl := d.Get("github_base_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -205,7 +181,7 @@ func resourceGithubTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
-	common.SetOptionalString(&body.GithubAppPrivateKey, githubAppPrivateKey)
+	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)

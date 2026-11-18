@@ -6,7 +6,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,9 +18,6 @@ func resourceAzureTarget() *schema.Resource {
 		Delete:      resourceAzureTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAzureTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("client_secret"), cty.GetAttrPath("client_secret_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -47,20 +43,6 @@ func resourceAzureTarget() *schema.Resource {
 				Required:    false,
 				Optional:    true,
 				Description: "Azure client secret",
-			},
-			"client_secret_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"client_secret_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "client_secret (write-only, not stored in state). Requires Terraform 1.11+. Bump client_secret_wo_version to change it.",
-			},
-			"client_secret_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"client_secret_wo"},
-				Description:  "Version trigger for client_secret_wo. Increment to update the value.",
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
@@ -123,10 +105,7 @@ func resourceAzureTargetCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	clientId := d.Get("client_id").(string)
 	tenantId := d.Get("tenant_id").(string)
-	clientSecret, err := common.EffectiveSecretValue(d, "client_secret", "client_secret_wo")
-	if err != nil {
-		return err
-	}
+	clientSecret := d.Get("client_secret").(string)
 	connectionType := d.Get("connection_type").(string)
 	subscriptionId := d.Get("subscription_id").(string)
 	resourceGroupName := d.Get("resource_group_name").(string)
@@ -194,7 +173,7 @@ func resourceAzureTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.AzureTargetDetails.AzureClientSecret != nil {
-		err = common.SetSecretFromRead(d, "client_secret", "client_secret_wo", "client_secret_wo_version", *rOut.Value.AzureTargetDetails.AzureClientSecret)
+		err = d.Set("client_secret", *rOut.Value.AzureTargetDetails.AzureClientSecret)
 		if err != nil {
 			return err
 		}
@@ -250,10 +229,7 @@ func resourceAzureTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	clientId := d.Get("client_id").(string)
 	tenantId := d.Get("tenant_id").(string)
-	clientSecret, err := common.SecretValueForUpdate(d, "client_secret", "client_secret_wo")
-	if err != nil {
-		return err
-	}
+	clientSecret := d.Get("client_secret").(string)
 	connectionType := d.Get("connection_type").(string)
 	subscriptionId := d.Get("subscription_id").(string)
 	resourceGroupName := d.Get("resource_group_name").(string)
@@ -270,7 +246,7 @@ func resourceAzureTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	common.GetAkeylessPtr(&body.ClientId, clientId)
 	common.GetAkeylessPtr(&body.TenantId, tenantId)
-	common.SetOptionalString(&body.ClientSecret, clientSecret)
+	common.GetAkeylessPtr(&body.ClientSecret, clientSecret)
 	common.GetAkeylessPtr(&body.ConnectionType, connectionType)
 	common.GetAkeylessPtr(&body.SubscriptionId, subscriptionId)
 	common.GetAkeylessPtr(&body.ResourceGroupName, resourceGroupName)

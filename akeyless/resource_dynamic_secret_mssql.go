@@ -222,10 +222,7 @@ func resourceDynamicSecretMssqlCreate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mssqlDbname := d.Get("mssql_dbname").(string)
 	mssqlUsername := d.Get("mssql_username").(string)
-	mssqlPassword, err := common.EffectiveSecretValue(d, "mssql_password", "mssql_password_wo")
-	if err != nil {
-		return err
-	}
+	mssqlPassword := common.EffectiveSecretValue(d, "mssql_password", "mssql_password_wo")
 	mssqlHost := d.Get("mssql_host").(string)
 	mssqlPort := d.Get("mssql_port").(string)
 	mssqlCreateStatements := d.Get("mssql_create_statements").(string)
@@ -468,10 +465,7 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	targetName := d.Get("target_name").(string)
 	mssqlDbname := d.Get("mssql_dbname").(string)
 	mssqlUsername := d.Get("mssql_username").(string)
-	mssqlPassword, err := common.SecretValueForUpdate(d, "mssql_password", "mssql_password_wo")
-	if err != nil {
-		return err
-	}
+	mssqlPassword := common.EffectiveSecretValue(d, "mssql_password", "mssql_password_wo")
 	mssqlHost := d.Get("mssql_host").(string)
 	mssqlPort := d.Get("mssql_port").(string)
 	mssqlCreateStatements := d.Get("mssql_create_statements").(string)
@@ -510,7 +504,7 @@ func resourceDynamicSecretMssqlUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.MssqlDbname, mssqlDbname)
 	common.GetAkeylessPtr(&body.MssqlUsername, mssqlUsername)
-	common.SetOptionalString(&body.MssqlPassword, mssqlPassword)
+	common.GetAkeylessPtr(&body.MssqlPassword, mssqlPassword)
 	common.GetAkeylessPtr(&body.MssqlHost, mssqlHost)
 	common.GetAkeylessPtr(&body.MssqlPort, mssqlPort)
 	common.GetAkeylessPtr(&body.MssqlCreateStatements, mssqlCreateStatements)

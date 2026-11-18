@@ -142,10 +142,7 @@ func resourceDynamicSecretArtifactoryCreate(d *schema.ResourceData, m interface{
 	targetName := d.Get("target_name").(string)
 	baseUrl := d.Get("base_url").(string)
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
-	artifactoryAdminPwd, err := common.EffectiveSecretValue(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
-	if err != nil {
-		return err
-	}
+	artifactoryAdminPwd := common.EffectiveSecretValue(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -340,10 +337,7 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	targetName := d.Get("target_name").(string)
 	baseUrl := d.Get("base_url").(string)
 	artifactoryAdminName := d.Get("artifactory_admin_name").(string)
-	artifactoryAdminPwd, err := common.SecretValueForUpdate(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
-	if err != nil {
-		return err
-	}
+	artifactoryAdminPwd := common.EffectiveSecretValue(d, "artifactory_admin_pwd", "artifactory_admin_pwd_wo")
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
 	userTtl := d.Get("user_ttl").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -366,7 +360,7 @@ func resourceDynamicSecretArtifactoryUpdate(d *schema.ResourceData, m interface{
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.BaseUrl, baseUrl)
 	common.GetAkeylessPtr(&body.ArtifactoryAdminName, artifactoryAdminName)
-	common.SetOptionalString(&body.ArtifactoryAdminPwd, artifactoryAdminPwd)
+	common.GetAkeylessPtr(&body.ArtifactoryAdminPwd, artifactoryAdminPwd)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)

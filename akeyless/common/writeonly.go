@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -10,19 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// writeOnlyRaw returns the configured write-only value when raw config is
-// available and the attribute is set. On refresh/import, older Terraform, or
-// legacy configs, GetRawConfigAt may return diagnostics or a null value —
-// callers should treat that as "WO not present" and fall back.
-func writeOnlyRaw(d *schema.ResourceData, woField string) (string, bool) {
-	raw, diags := d.GetRawConfigAt(cty.GetAttrPath(woField))
-	if diags.HasError() {
-		return "", false
-	}
-	return rawString(raw)
-}
-
-func configuredString(d *schema.ResourceData, field string) (string, bool) {
+// rawConfigString returns a string attribute from the raw configuration.
+// Write-only values are never stored in state or plan, so d.Get cannot read
+// them. On refresh/import the raw config is null and this returns false.
+func rawConfigString(d *schema.ResourceData, field string) (string, bool) {
 	raw, diags := d.GetRawConfigAt(cty.GetAttrPath(field))
 	if diags.HasError() {
 		return "", false
@@ -37,6 +27,8 @@ func rawString(raw cty.Value) (string, bool) {
 	return raw.AsString(), true
 }
 
+// ValidateWriteOnlyAttribute rejects configs that set both the legacy and the
+// write-only attribute, and warns when only the legacy attribute is used.
 func ValidateWriteOnlyAttribute(oldField, woField cty.Path) schema.ValidateRawResourceConfigFunc {
 	preferWO := validation.PreferWriteOnlyAttribute(oldField, woField)
 
@@ -57,26 +49,23 @@ func ValidateWriteOnlyAttribute(oldField, woField cty.Path) schema.ValidateRawRe
 	}
 }
 
-// EffectiveSecretValue resolves a sensitive field that has both a regular
-// (state-persisted) variant and a write-only variant (e.g. "mysql_password"
-// and "mysql_password_wo"). The write-only value takes precedence when set,
-// since it is the one Terraform 1.11+ practitioners are expected to use.
-//
-// Write-only values never appear in state or plan, so they must be read from
-// the raw configuration via GetRawConfigAt rather than d.Get().
-func EffectiveSecretValue(d *schema.ResourceData, field, woField string) (string, error) {
-	if v, ok := writeOnlyRaw(d, woField); ok {
-		return v, nil
+// EffectiveSecretValue returns the write-only value when it is configured,
+// otherwise the legacy value. Use it in Create, and in Update when the API
+// replaces the stored secret with whatever is sent.
+func EffectiveSecretValue(d *schema.ResourceData, field, woField string) string {
+	if v, ok := rawConfigString(d, woField); ok {
+		return v
 	}
-	return d.Get(field).(string), nil
+	return d.Get(field).(string)
 }
 
-// SecretValueForUpdate returns nil when a write-only value was previously used
-// but is unavailable in the current configuration. Callers must then omit the
-// secret from the update request to avoid replacing it with an empty string.
+// SecretValueForUpdate is for update APIs that keep the stored secret when it
+// is omitted (rotated secrets). It returns nil, meaning "omit the secret",
+// when the write-only path is in use and *_wo_version did not change, so a
+// rotated value is not overwritten with a stale one from the config.
 func SecretValueForUpdate(d *schema.ResourceData, field, woField string) (*string, error) {
 	versionField := woField + "_version"
-	if value, ok := writeOnlyRaw(d, woField); ok {
+	if value, ok := rawConfigString(d, woField); ok {
 		if !d.HasChange(versionField) {
 			return nil, nil
 		}
@@ -87,7 +76,7 @@ func SecretValueForUpdate(d *schema.ResourceData, field, woField string) (*strin
 	}
 
 	if UsingWriteOnly(d, woField, versionField) || writeOnlyVersionWasRemoved(d, versionField) {
-		if value, ok := configuredString(d, field); ok {
+		if value, ok := rawConfigString(d, field); ok {
 			return &value, nil
 		}
 		return nil, nil
@@ -95,19 +84,6 @@ func SecretValueForUpdate(d *schema.ResourceData, field, woField string) (*strin
 
 	value := d.Get(field).(string)
 	return &value, nil
-}
-
-// RequiredSecretValueForUpdate returns an error rather than sending an empty
-// secret when an API request cannot omit its secret field.
-func RequiredSecretValueForUpdate(d *schema.ResourceData, field, woField string) (string, error) {
-	value, err := SecretValueForUpdate(d, field, woField)
-	if err != nil {
-		return "", err
-	}
-	if value == nil {
-		return "", fmt.Errorf("%s must be set when updating a write-only secret", woField)
-	}
-	return *value, nil
 }
 
 func writeOnlyVersionWasRemoved(d *schema.ResourceData, versionField string) bool {
@@ -135,7 +111,7 @@ func SetOptionalString(destination interface{}, value *string) {
 // *_wo_version is non-zero in state (the version survives refresh; the WO
 // value itself never does).
 func UsingWriteOnly(d *schema.ResourceData, woField, woVersionField string) bool {
-	if _, ok := writeOnlyRaw(d, woField); ok {
+	if _, ok := rawConfigString(d, woField); ok {
 		return true
 	}
 	v, ok := d.Get(woVersionField).(int)

@@ -26,18 +26,12 @@ GoDaddy Target resource
 
 ### Optional
 
-- `api_key_wo` (String, Sensitive) Key of the api credentials to the Godaddy account (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.
-- `api_key_wo_version` (Number) Version trigger for api_key_wo. Increment to update the key.
 - `customer_id` (String) Customer ID (ShopperId) required for renewal of imported certificates
 - `description` (String) Description of the object
-- `imap_password_wo` (String, Sensitive) ImapPassword to access the IMAP service (write-only, not stored in state). Requires Terraform 1.11+. Bump imap_password_wo_version to change it.
-- `imap_password_wo_version` (Number) Version trigger for imap_password_wo. Increment to update the password.
 - `imap_port` (String) ImapPort of the IMAP service
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.
-- `secret_wo` (String, Sensitive) Secret of the api credentials to the Godaddy account (write-only, not stored in state). Requires Terraform 1.11+. Bump secret_wo_version to change it.
-- `secret_wo_version` (Number) Version trigger for secret_wo. Increment to update the secret.
 - `timeout` (String) Timeout waiting for certificate validation in Duration format (1h - 1 Hour, 20m - 20 Minutes, 33m3s - 33 Minutes and 3 Seconds), maximum 1h.
 - `validation_email` (String) Email address for certificate validation
 

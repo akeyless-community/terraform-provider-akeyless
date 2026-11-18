@@ -269,10 +269,7 @@ func resourceDynamicSecretAwsCreate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	awsAccessKeyId := d.Get("aws_access_key_id").(string)
-	awsAccessSecretKey, err := common.EffectiveSecretValue(d, "aws_access_secret_key", "aws_access_secret_key_wo")
-	if err != nil {
-		return err
-	}
+	awsAccessSecretKey := common.EffectiveSecretValue(d, "aws_access_secret_key", "aws_access_secret_key_wo")
 	accessMode := d.Get("access_mode").(string)
 	region := d.Get("region").(string)
 	awsUserPolicies := d.Get("aws_user_policies").(string)
@@ -576,10 +573,7 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	name := d.Get("name").(string)
 	targetName := d.Get("target_name").(string)
 	awsAccessKeyId := d.Get("aws_access_key_id").(string)
-	awsAccessSecretKey, err := common.SecretValueForUpdate(d, "aws_access_secret_key", "aws_access_secret_key_wo")
-	if err != nil {
-		return err
-	}
+	awsAccessSecretKey := common.EffectiveSecretValue(d, "aws_access_secret_key", "aws_access_secret_key_wo")
 	accessMode := d.Get("access_mode").(string)
 	region := d.Get("region").(string)
 	awsUserPolicies := d.Get("aws_user_policies").(string)
@@ -625,7 +619,7 @@ func resourceDynamicSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	}
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.AwsAccessKeyId, awsAccessKeyId)
-	common.SetOptionalString(&body.AwsAccessSecretKey, awsAccessSecretKey)
+	common.GetAkeylessPtr(&body.AwsAccessSecretKey, awsAccessSecretKey)
 	common.GetAkeylessPtr(&body.AccessMode, accessMode)
 	common.GetAkeylessPtr(&body.Region, region)
 	common.GetAkeylessPtr(&body.AwsUserPolicies, awsUserPolicies)

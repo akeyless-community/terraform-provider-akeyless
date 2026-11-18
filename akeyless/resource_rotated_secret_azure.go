@@ -269,10 +269,7 @@ func resourceRotatedSecretAzureCreate(d *schema.ResourceData, m interface{}) err
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	appId := d.Get("app_id").(string)
 	apiId := d.Get("api_id").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
-	if err != nil {
-		return err
-	}
+	apiKey := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
 	storageAccountKeyName := d.Get("storage_account_key_name").(string)
 	username := d.Get("username").(string)
 	deleteProtection := d.Get("delete_protection").(string)

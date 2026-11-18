@@ -5,15 +5,8 @@ import (
 	"flag"
 	"log"
 
-	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless"
 	fwprovider "github.com/akeylesslabs/terraform-provider-akeyless/internal/framework"
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
-	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
-	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Generate docs for website
@@ -24,26 +17,7 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
-	ctx := context.Background()
-
-	sdkProvider := akeyless.Provider()
-	// The existing SDKv2 provider speaks protocol v5. Upgrade it to v6 so it
-	// can be muxed with the Framework provider that serves ephemeral resources.
-	upgradedSdkServer, err := tf5to6server.UpgradeServer(ctx, func() tfprotov5.ProviderServer {
-		return schema.NewGRPCProviderServer(sdkProvider)
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// The SDK server must configure first so Framework ephemerals can reuse its
-	// authenticated provider metadata.
-	providers := []func() tfprotov6.ProviderServer{
-		func() tfprotov6.ProviderServer { return upgradedSdkServer },
-		providerserver.NewProtocol6(fwprovider.New(sdkProvider)),
-	}
-
-	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+	providerServer, err := fwprovider.NewMuxServer(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +29,7 @@ func main() {
 
 	err = tf6server.Serve(
 		"registry.terraform.io/akeyless-community/akeyless",
-		muxServer.ProviderServer,
+		providerServer,
 		serveOpts...,
 	)
 	if err != nil {

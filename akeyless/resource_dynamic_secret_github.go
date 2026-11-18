@@ -153,10 +153,7 @@ func resourceDynamicSecretGithubCreate(d *schema.ResourceData, m interface{}) er
 	installationRepository := d.Get("installation_repository").(string)
 	targetName := d.Get("target_name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey, err := common.EffectiveSecretValue(d, "github_app_private_key", "github_app_private_key_wo")
-	if err != nil {
-		return err
-	}
+	githubAppPrivateKey := common.EffectiveSecretValue(d, "github_app_private_key", "github_app_private_key_wo")
 	githubBaseUrl := d.Get("github_base_url").(string)
 	tokenPermissionsSet := d.Get("token_permissions").(*schema.Set)
 	tokenPermissions := common.ExpandStringList(tokenPermissionsSet.List())
@@ -372,10 +369,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	installationRepository := d.Get("installation_repository").(string)
 	targetName := d.Get("target_name").(string)
 	githubAppId := d.Get("github_app_id").(int)
-	githubAppPrivateKey, err := common.SecretValueForUpdate(d, "github_app_private_key", "github_app_private_key_wo")
-	if err != nil {
-		return err
-	}
+	githubAppPrivateKey := common.EffectiveSecretValue(d, "github_app_private_key", "github_app_private_key_wo")
 	githubBaseUrl := d.Get("github_base_url").(string)
 	tokenPermissionsSet := d.Get("token_permissions").(*schema.Set)
 	tokenPermissions := common.ExpandStringList(tokenPermissionsSet.List())
@@ -396,7 +390,7 @@ func resourceDynamicSecretGithubUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.InstallationRepository, installationRepository)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.GithubAppId, githubAppId)
-	common.SetOptionalString(&body.GithubAppPrivateKey, githubAppPrivateKey)
+	common.GetAkeylessPtr(&body.GithubAppPrivateKey, githubAppPrivateKey)
 	common.GetAkeylessPtr(&body.GithubBaseUrl, githubBaseUrl)
 	common.GetAkeylessPtr(&body.TokenPermissions, tokenPermissions)
 	common.GetAkeylessPtr(&body.TokenRepositories, tokenRepositories)

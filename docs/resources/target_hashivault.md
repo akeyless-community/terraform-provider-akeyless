@@ -28,8 +28,6 @@ HashiCorp Vault Target resource
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults
 - `namespace` (Set of String) Comma-separated list of vault namespaces
 - `vault_token` (String, Sensitive) Vault access token with sufficient permissions
-- `vault_token_wo` (String, Sensitive) Vault access token with sufficient permissions (write-only, not stored in state). Requires Terraform 1.11+. Bump vault_token_wo_version to change it.
-- `vault_token_wo_version` (Number) Version trigger for vault_token_wo. Increment to update the token.
 
 ### Read-Only
 

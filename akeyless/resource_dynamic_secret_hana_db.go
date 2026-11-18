@@ -201,10 +201,7 @@ func resourceDynamicSecretHanaDbCreate(d *schema.ResourceData, m interface{}) er
 	hanaDbname := d.Get("hana_dbname").(string)
 	hanadbCreateStatements := d.Get("hanadb_create_statements").(string)
 	hanadbHost := d.Get("hanadb_host").(string)
-	hanadbPassword, err := common.EffectiveSecretValue(d, "hanadb_password", "hanadb_password_wo")
-	if err != nil {
-		return err
-	}
+	hanadbPassword := common.EffectiveSecretValue(d, "hanadb_password", "hanadb_password_wo")
 	hanadbPort := d.Get("hanadb_port").(string)
 	hanadbRevocationStatements := d.Get("hanadb_revocation_statements").(string)
 	hanadbUsername := d.Get("hanadb_username").(string)
@@ -381,10 +378,7 @@ func resourceDynamicSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	hanaDbname := d.Get("hana_dbname").(string)
 	hanadbCreateStatements := d.Get("hanadb_create_statements").(string)
 	hanadbHost := d.Get("hanadb_host").(string)
-	hanadbPassword, err := common.SecretValueForUpdate(d, "hanadb_password", "hanadb_password_wo")
-	if err != nil {
-		return err
-	}
+	hanadbPassword := common.EffectiveSecretValue(d, "hanadb_password", "hanadb_password_wo")
 	hanadbPort := d.Get("hanadb_port").(string)
 	hanadbRevocationStatements := d.Get("hanadb_revocation_statements").(string)
 	hanadbUsername := d.Get("hanadb_username").(string)
@@ -413,7 +407,7 @@ func resourceDynamicSecretHanaDbUpdate(d *schema.ResourceData, m interface{}) er
 	common.GetAkeylessPtr(&body.HanaDbname, hanaDbname)
 	common.GetAkeylessPtr(&body.HanadbCreateStatements, hanadbCreateStatements)
 	common.GetAkeylessPtr(&body.HanadbHost, hanadbHost)
-	common.SetOptionalString(&body.HanadbPassword, hanadbPassword)
+	common.GetAkeylessPtr(&body.HanadbPassword, hanadbPassword)
 	common.GetAkeylessPtr(&body.HanadbPort, hanadbPort)
 	common.GetAkeylessPtr(&body.HanadbRevocationStatements, hanadbRevocationStatements)
 	common.GetAkeylessPtr(&body.HanadbUsername, hanadbUsername)

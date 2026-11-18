@@ -201,15 +201,9 @@ func resourceDynamicSecretEksCreate(d *schema.ResourceData, m interface{}) error
 	targetName := d.Get("target_name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
 	eksClusterEndpoint := d.Get("eks_cluster_endpoint").(string)
-	eksClusterCaCert, err := common.EffectiveSecretValue(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
-	if err != nil {
-		return err
-	}
+	eksClusterCaCert := common.EffectiveSecretValue(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
 	eksAccessKeyId := d.Get("eks_access_key_id").(string)
-	eksSecretAccessKey, err := common.EffectiveSecretValue(d, "eks_secret_access_key", "eks_secret_access_key_wo")
-	if err != nil {
-		return err
-	}
+	eksSecretAccessKey := common.EffectiveSecretValue(d, "eks_secret_access_key", "eks_secret_access_key_wo")
 	eksRegion := d.Get("eks_region").(string)
 	eksAssumeRole := d.Get("eks_assume_role").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
@@ -423,15 +417,9 @@ func resourceDynamicSecretEksUpdate(d *schema.ResourceData, m interface{}) error
 	targetName := d.Get("target_name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
 	eksClusterEndpoint := d.Get("eks_cluster_endpoint").(string)
-	eksClusterCaCert, err := common.SecretValueForUpdate(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
-	if err != nil {
-		return err
-	}
+	eksClusterCaCert := common.EffectiveSecretValue(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
 	eksAccessKeyId := d.Get("eks_access_key_id").(string)
-	eksSecretAccessKey, err := common.SecretValueForUpdate(d, "eks_secret_access_key", "eks_secret_access_key_wo")
-	if err != nil {
-		return err
-	}
+	eksSecretAccessKey := common.EffectiveSecretValue(d, "eks_secret_access_key", "eks_secret_access_key_wo")
 	eksRegion := d.Get("eks_region").(string)
 	eksAssumeRole := d.Get("eks_assume_role").(string)
 	producerEncryptionKeyName := d.Get("encryption_key_name").(string)
@@ -462,9 +450,9 @@ func resourceDynamicSecretEksUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.EksClusterName, eksClusterName)
 	common.GetAkeylessPtr(&body.EksClusterEndpoint, eksClusterEndpoint)
-	common.SetOptionalString(&body.EksClusterCaCert, eksClusterCaCert)
+	common.GetAkeylessPtr(&body.EksClusterCaCert, eksClusterCaCert)
 	common.GetAkeylessPtr(&body.EksAccessKeyId, eksAccessKeyId)
-	common.SetOptionalString(&body.EksSecretAccessKey, eksSecretAccessKey)
+	common.GetAkeylessPtr(&body.EksSecretAccessKey, eksSecretAccessKey)
 	common.GetAkeylessPtr(&body.EksRegion, eksRegion)
 	common.GetAkeylessPtr(&body.EksAssumeRole, eksAssumeRole)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)

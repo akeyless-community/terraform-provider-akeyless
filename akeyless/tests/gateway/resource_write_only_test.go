@@ -36,6 +36,26 @@ func rotatedSecretPassword(path string) (string, error) {
 	return password, nil
 }
 
+func checkDynamicSecretDbPwd(path, want string) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		client, token, err := testutils.GetClient()
+		if err != nil {
+			return err
+		}
+		out, _, err := client.DynamicSecretGet(context.Background()).Body(akeyless_api.DynamicSecretGet{
+			Name:  path,
+			Token: &token,
+		}).Execute()
+		if err != nil {
+			return err
+		}
+		if out.GetDbPwd() != want {
+			return fmt.Errorf("dynamic secret %s: unexpected db password", path)
+		}
+		return nil
+	}
+}
+
 // Verify mysql_password_wo writes the secret and version changes update it.
 func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
@@ -89,6 +109,21 @@ func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
 		}
 	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
 
+	configDescriptionUpdate := fmt.Sprintf(`
+		resource "akeyless_dynamic_secret_mysql" "%v" {
+			name                      = "%v"
+			target_name               = "%v"
+			mysql_username            = "%v"
+			mysql_password_wo         = "%v"
+			mysql_password_wo_version = 1
+			mysql_host                = "%v"
+			mysql_port                = "%v"
+			mysql_dbname              = "%v"
+			user_ttl                  = "30m"
+			description               = "description-only-update"
+		}
+	`, dsName, dsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword, testutils.DockerMysqlHost, testutils.DockerMysqlPort, testutils.DockerMysqlDB)
+
 	configLegacyAgain := fmt.Sprintf(`
 		resource "akeyless_dynamic_secret_mysql" "%v" {
 			name           = "%v"
@@ -116,6 +151,13 @@ func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
 					testutils.CheckSecretNotInState(resourceAddr, "mysql_password"),
 					resource.TestCheckNoResourceAttr(resourceAddr, "mysql_password_wo"),
 					resource.TestCheckResourceAttr(resourceAddr, "mysql_password_wo_version", "1"),
+				),
+			},
+			{
+				Config: configDescriptionUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					checkDynamicSecretDbPwd(dsPath, testutils.DockerMysqlPassword),
+					testutils.CheckSecretNotInState(resourceAddr, "mysql_password"),
 				),
 			},
 			{

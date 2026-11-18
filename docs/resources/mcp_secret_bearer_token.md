@@ -24,8 +24,6 @@ MCP secret using Bearer Token authentication
 - `accessibility` (String) For personal password manager
 - `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `bearer_token` (String, Sensitive) Bearer token value
-- `bearer_token_wo` (String, Sensitive) bearer_token (write-only, not stored in state). Requires Terraform 1.11+. Bump bearer_token_wo_version to change it.
-- `bearer_token_wo_version` (Number) Version trigger for bearer_token_wo. Increment to update the value.
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `description` (String) Description of the object
 - `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority

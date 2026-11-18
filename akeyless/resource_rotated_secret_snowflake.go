@@ -219,10 +219,7 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
-	if err != nil {
-		return err
-	}
+	rotatedPassword := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
 	deleteProtection := d.Get("delete_protection").(string)
 	itemCustomFieldsMap := d.Get("item_custom_fields").(map[string]interface{})
 	itemCustomFields := make(map[string]string)
@@ -230,10 +227,7 @@ func resourceRotatedSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 		itemCustomFields[k] = v.(string)
 	}
 	maxVersions := d.Get("max_versions").(string)
-	privateKey, err := common.EffectiveSecretValue(d, "private_key", "private_key_wo")
-	if err != nil {
-		return err
-	}
+	privateKey := common.EffectiveSecretValue(d, "private_key", "private_key_wo")
 	privateKeyFileName := d.Get("private_key_file_name").(string)
 	rotationStatement := d.Get("rotation_statement").(string)
 	rotationEventInList := d.Get("rotation_event_in").([]interface{})

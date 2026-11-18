@@ -194,10 +194,7 @@ func resourceDynamicSecretRabbitmqCreate(d *schema.ResourceData, m interface{}) 
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
-	rabbitmqAdminPwd, err := common.EffectiveSecretValue(d, "rabbitmq_admin_pwd", "rabbitmq_admin_pwd_wo")
-	if err != nil {
-		return err
-	}
+	rabbitmqAdminPwd := common.EffectiveSecretValue(d, "rabbitmq_admin_pwd", "rabbitmq_admin_pwd_wo")
 	rabbitmqAdminUser := d.Get("rabbitmq_admin_user").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	rabbitmqUserConfPermission := d.Get("rabbitmq_user_conf_permission").(string)
@@ -371,10 +368,7 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
-	rabbitmqAdminPwd, err := common.SecretValueForUpdate(d, "rabbitmq_admin_pwd", "rabbitmq_admin_pwd_wo")
-	if err != nil {
-		return err
-	}
+	rabbitmqAdminPwd := common.EffectiveSecretValue(d, "rabbitmq_admin_pwd", "rabbitmq_admin_pwd_wo")
 	rabbitmqAdminUser := d.Get("rabbitmq_admin_user").(string)
 	rabbitmqServerUri := d.Get("rabbitmq_server_uri").(string)
 	rabbitmqUserConfPermission := d.Get("rabbitmq_user_conf_permission").(string)
@@ -401,7 +395,7 @@ func resourceDynamicSecretRabbitmqUpdate(d *schema.ResourceData, m interface{}) 
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
-	common.SetOptionalString(&body.RabbitmqAdminPwd, rabbitmqAdminPwd)
+	common.GetAkeylessPtr(&body.RabbitmqAdminPwd, rabbitmqAdminPwd)
 	common.GetAkeylessPtr(&body.RabbitmqAdminUser, rabbitmqAdminUser)
 	common.GetAkeylessPtr(&body.RabbitmqServerUri, rabbitmqServerUri)
 	common.GetAkeylessPtr(&body.RabbitmqUserConfPermission, rabbitmqUserConfPermission)

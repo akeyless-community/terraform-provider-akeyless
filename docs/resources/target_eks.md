@@ -27,11 +27,7 @@ EKS Target resource
 ### Optional
 
 - `description` (String) Description of the object
-- `eks_cluster_ca_cert_wo` (String, Sensitive) EKS cluster CA certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_cluster_ca_cert_wo_version to change it.
-- `eks_cluster_ca_cert_wo_version` (Number) Version trigger for eks_cluster_ca_cert_wo. Increment to update the value.
 - `eks_region` (String) Region
-- `eks_secret_access_key_wo` (String, Sensitive) Secret Access Key (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_secret_access_key_wo_version to change it.
-- `eks_secret_access_key_wo_version` (Number) Version trigger for eks_secret_access_key_wo. Increment to update the value.
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key that used to encrypt the target secret value (if empty, the account default protectionKey key will be used)
 - `max_versions` (String) Set the maximum number of versions, limited by the account settings defaults.

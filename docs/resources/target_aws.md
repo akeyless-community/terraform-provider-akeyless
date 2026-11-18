@@ -23,8 +23,6 @@ AWS Target resource
 ### Optional
 
 - `access_key` (String) AWS secret access key
-- `access_key_wo` (String, Sensitive) access_key (write-only, not stored in state). Requires Terraform 1.11+. Bump access_key_wo_version to change it.
-- `access_key_wo_version` (Number) Version trigger for access_key_wo. Increment to update the value.
 - `description` (String) Description of the object
 - `generate_external_id` (Boolean) A unique auto-generated value used in your AWS account when configuring your AWS IAM role to securely delegate access to Akeyless. Relevant only when using GW cloud ID
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
@@ -33,8 +31,6 @@ AWS Target resource
 - `region` (String) AWS region
 - `role_arn` (String) AWS IAM role identifier that Gateway will assume in your AWS account, relevant only when using external ID
 - `session_token` (String) Required only for temporary security credentials retrieved using STS
-- `session_token_wo` (String, Sensitive) session_token (write-only, not stored in state). Requires Terraform 1.11+. Bump session_token_wo_version to change it.
-- `session_token_wo_version` (Number) Version trigger for session_token_wo. Increment to update the value.
 - `use_gw_cloud_identity` (Boolean) Use the GW's Cloud IAM
 
 ### Read-Only

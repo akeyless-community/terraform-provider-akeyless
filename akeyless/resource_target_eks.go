@@ -5,7 +5,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,10 +17,6 @@ func resourceEksTarget() *schema.Resource {
 		Delete:      resourceEksTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceEksTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("eks_cluster_ca_cert"), cty.GetAttrPath("eks_cluster_ca_cert_wo")),
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("eks_secret_access_key"), cty.GetAttrPath("eks_secret_access_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -46,20 +41,6 @@ func resourceEksTarget() *schema.Resource {
 				Sensitive:   true,
 				Description: "EKS cluster CA certificate",
 			},
-			"eks_cluster_ca_cert_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"eks_cluster_ca_cert_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "EKS cluster CA certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_cluster_ca_cert_wo_version to change it.",
-			},
-			"eks_cluster_ca_cert_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"eks_cluster_ca_cert_wo"},
-				Description:  "Version trigger for eks_cluster_ca_cert_wo. Increment to update the value.",
-			},
 			"eks_access_key_id": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -70,20 +51,6 @@ func resourceEksTarget() *schema.Resource {
 				Required:    true,
 				Sensitive:   true,
 				Description: "Secret Access Key",
-			},
-			"eks_secret_access_key_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"eks_secret_access_key_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "Secret Access Key (write-only, not stored in state). Requires Terraform 1.11+. Bump eks_secret_access_key_wo_version to change it.",
-			},
-			"eks_secret_access_key_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"eks_secret_access_key_wo"},
-				Description:  "Version trigger for eks_secret_access_key_wo. Increment to update the value.",
 			},
 			"use_gw_cloud_identity": {
 				Type:        schema.TypeBool,
@@ -133,15 +100,9 @@ func resourceEksTargetCreate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
 	eksClusterEndpoint := d.Get("eks_cluster_endpoint").(string)
-	eksClusterCaCert, err := common.EffectiveSecretValue(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
-	if err != nil {
-		return err
-	}
+	eksClusterCaCert := d.Get("eks_cluster_ca_cert").(string)
 	eksAccessKeyId := d.Get("eks_access_key_id").(string)
-	eksSecretAccessKey, err := common.EffectiveSecretValue(d, "eks_secret_access_key", "eks_secret_access_key_wo")
-	if err != nil {
-		return err
-	}
+	eksSecretAccessKey := d.Get("eks_secret_access_key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	eksRegion := d.Get("eks_region").(string)
 	key := d.Get("key").(string)
@@ -205,7 +166,7 @@ func resourceEksTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.EksTargetDetails.EksClusterCaCertificate != nil {
-		err = common.SetSecretFromRead(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo", "eks_cluster_ca_cert_wo_version", *rOut.Value.EksTargetDetails.EksClusterCaCertificate)
+		err = d.Set("eks_cluster_ca_cert", *rOut.Value.EksTargetDetails.EksClusterCaCertificate)
 		if err != nil {
 			return err
 		}
@@ -217,7 +178,7 @@ func resourceEksTargetRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	if rOut.Value.EksTargetDetails.EksSecretAccessKey != nil {
-		err = common.SetSecretFromRead(d, "eks_secret_access_key", "eks_secret_access_key_wo", "eks_secret_access_key_wo_version", *rOut.Value.EksTargetDetails.EksSecretAccessKey)
+		err = d.Set("eks_secret_access_key", *rOut.Value.EksTargetDetails.EksSecretAccessKey)
 		if err != nil {
 			return err
 		}
@@ -261,15 +222,9 @@ func resourceEksTargetUpdate(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	eksClusterName := d.Get("eks_cluster_name").(string)
 	eksClusterEndpoint := d.Get("eks_cluster_endpoint").(string)
-	eksClusterCaCert, err := common.RequiredSecretValueForUpdate(d, "eks_cluster_ca_cert", "eks_cluster_ca_cert_wo")
-	if err != nil {
-		return err
-	}
+	eksClusterCaCert := d.Get("eks_cluster_ca_cert").(string)
 	eksAccessKeyId := d.Get("eks_access_key_id").(string)
-	eksSecretAccessKey, err := common.RequiredSecretValueForUpdate(d, "eks_secret_access_key", "eks_secret_access_key_wo")
-	if err != nil {
-		return err
-	}
+	eksSecretAccessKey := d.Get("eks_secret_access_key").(string)
 	useGwCloudIdentity := d.Get("use_gw_cloud_identity").(bool)
 	eksRegion := d.Get("eks_region").(string)
 	key := d.Get("key").(string)

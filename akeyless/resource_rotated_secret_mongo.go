@@ -221,10 +221,7 @@ func resourceRotatedSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
-	if err != nil {
-		return err
-	}
+	rotatedPassword := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
 	deleteProtection := d.Get("delete_protection").(string)
 	maxVersions := d.Get("max_versions").(string)
 	rotateAfterDisconnect := d.Get("rotate_after_disconnect").(string)

@@ -234,10 +234,7 @@ func resourceDynamicSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	tags := common.ExpandStringList(tagsSet.List())
 	providerType := d.Get("provider_type").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword, err := common.EffectiveSecretValue(d, "bind_dn_password", "bind_dn_password_wo")
-	if err != nil {
-		return err
-	}
+	bindDnPassword := common.EffectiveSecretValue(d, "bind_dn_password", "bind_dn_password_wo")
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	externalUsername := d.Get("external_username").(string)
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
@@ -440,10 +437,7 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	tags := common.ExpandStringList(tagsSet.List())
 	providerType := d.Get("provider_type").(string)
 	bindDn := d.Get("bind_dn").(string)
-	bindDnPassword, err := common.SecretValueForUpdate(d, "bind_dn_password", "bind_dn_password_wo")
-	if err != nil {
-		return err
-	}
+	bindDnPassword := common.EffectiveSecretValue(d, "bind_dn_password", "bind_dn_password_wo")
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	externalUsername := d.Get("external_username").(string)
 	fixedUserClaimKeyname := d.Get("fixed_user_claim_keyname").(string)
@@ -479,7 +473,7 @@ func resourceDynamicSecretLdapUpdate(d *schema.ResourceData, m interface{}) erro
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProviderType, providerType)
 	common.GetAkeylessPtr(&body.BindDn, bindDn)
-	common.SetOptionalString(&body.BindDnPassword, bindDnPassword)
+	common.GetAkeylessPtr(&body.BindDnPassword, bindDnPassword)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
 	common.GetAkeylessPtr(&body.ExternalUsername, externalUsername)
 	common.GetAkeylessPtr(&body.FixedUserClaimKeyname, fixedUserClaimKeyname)

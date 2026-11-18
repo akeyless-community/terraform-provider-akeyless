@@ -257,19 +257,13 @@ func resourceDynamicSecretMongoCreate(d *schema.ResourceData, m interface{}) err
 	mongodbRoles := d.Get("mongodb_roles").(string)
 	mongodbServerUri := d.Get("mongodb_server_uri").(string)
 	mongodbUsername := d.Get("mongodb_username").(string)
-	mongodbPassword, err := common.EffectiveSecretValue(d, "mongodb_password", "mongodb_password_wo")
-	if err != nil {
-		return err
-	}
+	mongodbPassword := common.EffectiveSecretValue(d, "mongodb_password", "mongodb_password_wo")
 	mongodbHostPort := d.Get("mongodb_host_port").(string)
 	mongodbDefaultAuthDb := d.Get("mongodb_default_auth_db").(string)
 	mongodbUriOptions := d.Get("mongodb_uri_options").(string)
 	mongodbAtlasProjectId := d.Get("mongodb_atlas_project_id").(string)
 	mongodbAtlasApiPublicKey := d.Get("mongodb_atlas_api_public_key").(string)
-	mongodbAtlasApiPrivateKey, err := common.EffectiveSecretValue(d, "mongodb_atlas_api_private_key", "mongodb_atlas_api_private_key_wo")
-	if err != nil {
-		return err
-	}
+	mongodbAtlasApiPrivateKey := common.EffectiveSecretValue(d, "mongodb_atlas_api_private_key", "mongodb_atlas_api_private_key_wo")
 	mongodbCustomData := d.Get("mongodb_custom_data").(string)
 	mongodbScopes := d.Get("mongodb_scopes").(string)
 	passwordLength := d.Get("password_length").(string)
@@ -546,19 +540,13 @@ func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	mongodbRoles := d.Get("mongodb_roles").(string)
 	mongodbServerUri := d.Get("mongodb_server_uri").(string)
 	mongodbUsername := d.Get("mongodb_username").(string)
-	mongodbPassword, err := common.SecretValueForUpdate(d, "mongodb_password", "mongodb_password_wo")
-	if err != nil {
-		return err
-	}
+	mongodbPassword := common.EffectiveSecretValue(d, "mongodb_password", "mongodb_password_wo")
 	mongodbHostPort := d.Get("mongodb_host_port").(string)
 	mongodbDefaultAuthDb := d.Get("mongodb_default_auth_db").(string)
 	mongodbUriOptions := d.Get("mongodb_uri_options").(string)
 	mongodbAtlasProjectId := d.Get("mongodb_atlas_project_id").(string)
 	mongodbAtlasApiPublicKey := d.Get("mongodb_atlas_api_public_key").(string)
-	mongodbAtlasApiPrivateKey, err := common.SecretValueForUpdate(d, "mongodb_atlas_api_private_key", "mongodb_atlas_api_private_key_wo")
-	if err != nil {
-		return err
-	}
+	mongodbAtlasApiPrivateKey := common.EffectiveSecretValue(d, "mongodb_atlas_api_private_key", "mongodb_atlas_api_private_key_wo")
 	mongodbCustomData := d.Get("mongodb_custom_data").(string)
 	mongodbScopes := d.Get("mongodb_scopes").(string)
 	passwordLength := d.Get("password_length").(string)
@@ -595,13 +583,13 @@ func resourceDynamicSecretMongoUpdate(d *schema.ResourceData, m interface{}) err
 	common.GetAkeylessPtr(&body.MongodbRoles, mongodbRoles)
 	common.GetAkeylessPtr(&body.MongodbServerUri, mongodbServerUri)
 	common.GetAkeylessPtr(&body.MongodbUsername, mongodbUsername)
-	common.SetOptionalString(&body.MongodbPassword, mongodbPassword)
+	common.GetAkeylessPtr(&body.MongodbPassword, mongodbPassword)
 	common.GetAkeylessPtr(&body.MongodbHostPort, mongodbHostPort)
 	common.GetAkeylessPtr(&body.MongodbDefaultAuthDb, mongodbDefaultAuthDb)
 	common.GetAkeylessPtr(&body.MongodbUriOptions, mongodbUriOptions)
 	common.GetAkeylessPtr(&body.MongodbAtlasProjectId, mongodbAtlasProjectId)
 	common.GetAkeylessPtr(&body.MongodbAtlasApiPublicKey, mongodbAtlasApiPublicKey)
-	common.SetOptionalString(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
+	common.GetAkeylessPtr(&body.MongodbAtlasApiPrivateKey, mongodbAtlasApiPrivateKey)
 	common.GetAkeylessPtr(&body.MongodbCustomData, mongodbCustomData)
 	common.GetAkeylessPtr(&body.MongodbScopes, mongodbScopes)
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)

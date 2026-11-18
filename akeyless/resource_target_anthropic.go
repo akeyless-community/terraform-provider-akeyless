@@ -7,7 +7,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -20,9 +19,6 @@ func resourceAnthropicTarget() *schema.Resource {
 		Delete:      resourceAnthropicTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAnthropicTargetImport,
-		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -37,20 +33,6 @@ func resourceAnthropicTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "API key for Anthropic",
-			},
-			"api_key_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"api_key_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "API key for Anthropic (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
-			},
-			"api_key_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"api_key_wo"},
-				Description:  "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"anthropic_url": {
 				Type:        schema.TypeString,
@@ -95,10 +77,7 @@ func resourceAnthropicTargetCreate(d *schema.ResourceData, m interface{}) error 
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
-	if err != nil {
-		return err
-	}
+	apiKey := d.Get("api_key").(string)
 	anthropicUrl := d.Get("anthropic_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -140,7 +119,7 @@ func resourceAnthropicTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	if rOut.Value != nil && rOut.Value.AnthropicTargetDetails != nil {
 		if rOut.Value.AnthropicTargetDetails.ApiKey != nil {
-			if err = common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *rOut.Value.AnthropicTargetDetails.ApiKey); err != nil {
+			if err = d.Set("api_key", *rOut.Value.AnthropicTargetDetails.ApiKey); err != nil {
 				return err
 			}
 		}
@@ -179,10 +158,7 @@ func resourceAnthropicTargetUpdate(d *schema.ResourceData, m interface{}) error 
 	ctx := context.Background()
 
 	name := d.Get("name").(string)
-	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
-	if err != nil {
-		return err
-	}
+	apiKey := d.Get("api_key").(string)
 	anthropicUrl := d.Get("anthropic_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -191,7 +167,7 @@ func resourceAnthropicTargetUpdate(d *schema.ResourceData, m interface{}) error 
 	keepPrevVersion := d.Get("keep_prev_version").(string)
 
 	body := akeyless_api.TargetUpdateAnthropic{Name: name, Token: &token}
-	common.SetOptionalString(&body.ApiKey, apiKey)
+	common.GetAkeylessPtr(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.AnthropicUrl, anthropicUrl)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)

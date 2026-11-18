@@ -5,7 +5,6 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,9 +18,6 @@ func resourceGeminiTarget() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceGeminiTargetImport,
 		},
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("api_key"), cty.GetAttrPath("api_key_wo")),
-		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -34,20 +30,6 @@ func resourceGeminiTarget() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "API key for Gemini",
-			},
-			"api_key_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"api_key_wo_version"},
-				Sensitive:    true,
-				WriteOnly:    true,
-				Description:  "API key for Gemini (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.",
-			},
-			"api_key_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"api_key_wo"},
-				Description:  "Version trigger for api_key_wo. Increment to update the value.",
 			},
 			"gemini_url": {
 				Type:        schema.TypeString,
@@ -86,10 +68,7 @@ func resourceGeminiTargetCreate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey, err := common.EffectiveSecretValue(d, "api_key", "api_key_wo")
-	if err != nil {
-		return err
-	}
+	apiKey := d.Get("api_key").(string)
 	geminiUrl := d.Get("gemini_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -136,7 +115,7 @@ func resourceGeminiTargetRead(d *schema.ResourceData, m interface{}) error {
 
 	if rOut.Value != nil && rOut.Value.GeminiTargetDetails != nil {
 		if rOut.Value.GeminiTargetDetails.ApiKey != nil {
-			err = common.SetSecretFromRead(d, "api_key", "api_key_wo", "api_key_wo_version", *rOut.Value.GeminiTargetDetails.ApiKey)
+			err = d.Set("api_key", *rOut.Value.GeminiTargetDetails.ApiKey)
 			if err != nil {
 				return err
 			}
@@ -173,10 +152,7 @@ func resourceGeminiTargetUpdate(d *schema.ResourceData, m interface{}) error {
 
 	ctx := context.Background()
 	name := d.Get("name").(string)
-	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
-	if err != nil {
-		return err
-	}
+	apiKey := d.Get("api_key").(string)
 	geminiUrl := d.Get("gemini_url").(string)
 	description := d.Get("description").(string)
 	key := d.Get("key").(string)
@@ -187,7 +163,7 @@ func resourceGeminiTargetUpdate(d *schema.ResourceData, m interface{}) error {
 		Name:  name,
 		Token: &token,
 	}
-	common.SetOptionalString(&body.ApiKey, apiKey)
+	common.GetAkeylessPtr(&body.ApiKey, apiKey)
 	common.GetAkeylessPtr(&body.GeminiUrl, geminiUrl)
 	common.GetAkeylessPtr(&body.Description, description)
 	common.GetAkeylessPtr(&body.Key, key)

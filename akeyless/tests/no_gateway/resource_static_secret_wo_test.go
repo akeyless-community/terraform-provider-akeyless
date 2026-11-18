@@ -69,6 +69,15 @@ func TestStaticSecretWriteOnly(t *testing.T) {
 		}
 	`, secretName, secretPath)
 
+	configNonSecretUpdate := fmt.Sprintf(`
+		resource "akeyless_static_secret" "%v" {
+			path             = "%v"
+			value_wo         = "write-only-secret-v2"
+			value_wo_version = 2
+			multiline_value  = true
+		}
+	`, secretName, secretPath)
+
 	configLegacyAgain := fmt.Sprintf(`
 		resource "akeyless_static_secret" "%v" {
 			path  = "%v"
@@ -111,6 +120,10 @@ func TestStaticSecretWriteOnly(t *testing.T) {
 					checkSecretValueRemotely(secretPath, "write-only-secret-v2"),
 					testutils.CheckSecretNotInState(resourceAddr, "value"),
 				),
+			},
+			{
+				Config: configNonSecretUpdate,
+				Check:  checkSecretValueRemotely(secretPath, "write-only-secret-v2"),
 			},
 			{
 				Config: configLegacyAgain,

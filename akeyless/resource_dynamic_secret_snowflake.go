@@ -206,10 +206,7 @@ func resourceDynamicSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	account := d.Get("account").(string)
-	accountPassword, err := common.EffectiveSecretValue(d, "account_password", "account_password_wo")
-	if err != nil {
-		return err
-	}
+	accountPassword := common.EffectiveSecretValue(d, "account_password", "account_password_wo")
 	accountUsername := d.Get("account_username").(string)
 	authMode := d.Get("auth_mode").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -218,14 +215,8 @@ func resourceDynamicSecretSnowflakeCreate(d *schema.ResourceData, m interface{})
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
-	privateKey, err := common.EffectiveSecretValue(d, "private_key", "private_key_wo")
-	if err != nil {
-		return err
-	}
-	privateKeyPassphrase, err := common.EffectiveSecretValue(d, "private_key_passphrase", "private_key_passphrase_wo")
-	if err != nil {
-		return err
-	}
+	privateKey := common.EffectiveSecretValue(d, "private_key", "private_key_wo")
+	privateKeyPassphrase := common.EffectiveSecretValue(d, "private_key_passphrase", "private_key_passphrase_wo")
 	role := d.Get("role").(string)
 	targetName := d.Get("target_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -376,10 +367,7 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
 	account := d.Get("account").(string)
-	accountPassword, err := common.SecretValueForUpdate(d, "account_password", "account_password_wo")
-	if err != nil {
-		return err
-	}
+	accountPassword := common.EffectiveSecretValue(d, "account_password", "account_password_wo")
 	accountUsername := d.Get("account_username").(string)
 	authMode := d.Get("auth_mode").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
@@ -388,14 +376,8 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
-	privateKey, err := common.SecretValueForUpdate(d, "private_key", "private_key_wo")
-	if err != nil {
-		return err
-	}
-	privateKeyPassphrase, err := common.SecretValueForUpdate(d, "private_key_passphrase", "private_key_passphrase_wo")
-	if err != nil {
-		return err
-	}
+	privateKey := common.EffectiveSecretValue(d, "private_key", "private_key_wo")
+	privateKeyPassphrase := common.EffectiveSecretValue(d, "private_key_passphrase", "private_key_passphrase_wo")
 	role := d.Get("role").(string)
 	targetName := d.Get("target_name").(string)
 	userTtl := d.Get("user_ttl").(string)
@@ -409,7 +391,7 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.DeleteProtection, deleteProtection)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.Account, account)
-	common.SetOptionalString(&body.AccountPassword, accountPassword)
+	common.GetAkeylessPtr(&body.AccountPassword, accountPassword)
 	common.GetAkeylessPtr(&body.AccountUsername, accountUsername)
 	common.GetAkeylessPtr(&body.AuthMode, authMode)
 	common.GetAkeylessPtr(&body.CustomUsernameTemplate, customUsernameTemplate)
@@ -418,8 +400,8 @@ func resourceDynamicSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	common.GetAkeylessPtr(&body.PasswordLength, passwordLength)
 	common.GetAkeylessPtr(&body.InputRule, inputRule)
 	common.GetAkeylessPtr(&body.OutputRule, outputRule)
-	common.SetOptionalString(&body.PrivateKey, privateKey)
-	common.SetOptionalString(&body.PrivateKeyPassphrase, privateKeyPassphrase)
+	common.GetAkeylessPtr(&body.PrivateKey, privateKey)
+	common.GetAkeylessPtr(&body.PrivateKeyPassphrase, privateKeyPassphrase)
 	common.GetAkeylessPtr(&body.Role, role)
 	common.GetAkeylessPtr(&body.TargetName, targetName)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)

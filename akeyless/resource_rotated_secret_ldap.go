@@ -265,10 +265,7 @@ func resourceRotatedSecretLdapCreate(d *schema.ResourceData, m interface{}) erro
 	rotatorType := d.Get("rotator_type").(string)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
-	if err != nil {
-		return err
-	}
+	rotatedPassword := common.EffectiveSecretValue(d, "rotated_password", "rotated_password_wo")
 	userDn := d.Get("user_dn").(string)
 	userAttribute := d.Get("user_attribute").(string)
 	deleteProtection := d.Get("delete_protection").(string)
