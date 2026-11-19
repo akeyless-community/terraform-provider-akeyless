@@ -432,7 +432,7 @@ func resourceRotatedSecretOpenAIUpdate(d *schema.ResourceData, m interface{}) er
 	rotationInterval := d.Get("rotation_interval").(string)
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
-	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
+	apiKey, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "api_key", "api_key_wo", "password")
 	if err != nil {
 		return err
 	}

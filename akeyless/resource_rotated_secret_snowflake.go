@@ -467,7 +467,7 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.SecretValueForUpdate(d, "rotated_password", "rotated_password_wo")
+	rotatedPassword, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "rotated_password", "rotated_password_wo", "password")
 	if err != nil {
 		return err
 	}
@@ -480,7 +480,7 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 		itemCustomFields[k] = v.(string)
 	}
 	maxVersions := d.Get("max_versions").(string)
-	privateKey, err := common.SecretValueForUpdate(d, "private_key", "private_key_wo")
+	privateKey, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "private_key", "private_key_wo", "private_key")
 	if err != nil {
 		return err
 	}

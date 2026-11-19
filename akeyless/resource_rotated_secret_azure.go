@@ -549,7 +549,7 @@ func resourceRotatedSecretAzureUpdate(d *schema.ResourceData, m interface{}) err
 	tags := common.ExpandStringList(tagsSet.List())
 	appId := d.Get("app_id").(string)
 	apiId := d.Get("api_id").(string)
-	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
+	apiKey, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "api_key", "api_key_wo", "password")
 	if err != nil {
 		return err
 	}

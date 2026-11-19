@@ -7,15 +7,17 @@ v6, so Terraform 0.15.4 or later is required for any configuration.
 Ephemeral values are available during a Terraform operation but are not stored
 in state.
 
-Supported ephemeral resources:
+See one page per resource in this directory (generated with `go generate`).
 
-- `akeyless_dynamic_secret`
-- `akeyless_static_secret`
-- `akeyless_rotated_secret`
-- `akeyless_certificate`
-- `akeyless_pki_certificate`
-- `akeyless_ssh_certificate`
-- `akeyless_target_details`
+`akeyless_dynamic_secret` creates new credentials every time it is opened.
+Terraform opens it on both plan and apply, so each run creates two
+credentials. Terraform does not revoke them; they expire with the dynamic
+secret TTL.
+
+`akeyless_pki_certificate` and `akeyless_ssh_certificate` issue a new
+certificate on every Open. Terraform calls Open on plan and again on apply, so
+each plan produces a certificate that apply does not use. Terraform does not
+revoke the plan-time certificate; manage lifetime through TTL where supported.
 
 Example:
 
@@ -28,8 +30,3 @@ ephemeral "akeyless_static_secret" "db_password" {
 Use an ephemeral value only with another ephemeral-compatible or write-only
 argument. Terraform does not allow it in outputs or normal state-persisted
 arguments.
-
-`akeyless_dynamic_secret` creates new credentials every time it is opened.
-Terraform opens it on both plan and apply, so each run creates two
-credentials. Terraform does not revoke them; they expire with the dynamic
-secret TTL.

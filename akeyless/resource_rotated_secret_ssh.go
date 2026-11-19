@@ -639,7 +639,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.SecretValueForUpdate(d, "rotated_password", "rotated_password_wo")
+	rotatedPassword, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "rotated_password", "rotated_password_wo", "password")
 	if err != nil {
 		return err
 	}
@@ -652,7 +652,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	for k, v := range itemCustomFieldsMap {
 		itemCustomFields[k] = v.(string)
 	}
-	keyDataBase64, err := common.SecretValueForUpdate(d, "key_data_base64", "key_data_base64_wo")
+	keyDataBase64, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "key_data_base64", "key_data_base64_wo", "password")
 	if err != nil {
 		return err
 	}

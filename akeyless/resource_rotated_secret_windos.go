@@ -507,7 +507,7 @@ func resourceRotatedSecretWindowsUpdate(d *schema.ResourceData, m interface{}) e
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	rotatedUsername := d.Get("rotated_username").(string)
-	rotatedPassword, err := common.SecretValueForUpdate(d, "rotated_password", "rotated_password_wo")
+	rotatedPassword, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "rotated_password", "rotated_password_wo", "password")
 	if err != nil {
 		return err
 	}

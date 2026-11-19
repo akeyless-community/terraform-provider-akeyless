@@ -9,7 +9,7 @@ import (
 )
 
 // Generate docs for website
-//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@v0.25.0
 
 func main() {
 	providerServer, err := fwprovider.NewMuxServer(context.Background())

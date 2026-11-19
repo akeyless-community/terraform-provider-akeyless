@@ -526,7 +526,7 @@ func resourceRotatedSecretAwsUpdate(d *schema.ResourceData, m interface{}) error
 	rotationHour := d.Get("rotation_hour").(int)
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	apiId := d.Get("api_id").(string)
-	apiKey, err := common.SecretValueForUpdate(d, "api_key", "api_key_wo")
+	apiKey, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "api_key", "api_key_wo", "password")
 	if err != nil {
 		return err
 	}

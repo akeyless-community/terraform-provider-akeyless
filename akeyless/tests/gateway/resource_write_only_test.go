@@ -172,6 +172,91 @@ func TestDynamicSecretMysqlWriteOnly(t *testing.T) {
 }
 
 // Verify rotated_password_wo writes the secret and version changes update it.
+// Metadata-only updates must re-send the stored password (gateway builds NewSecretValue).
+func TestRotatedSecretMysqlWriteOnlyPasswordRotator(t *testing.T) {
+	testutils.SkipIfNoGateway(t)
+
+	targetName := "test-target-rs-pw-wo"
+	targetPath := testPath(targetName)
+	testutils.CreateTargetByType(t, targetPath, "db_target_details", map[string]any{
+		"db_type":   "mysql",
+		"user_name": testutils.DockerMysqlUser,
+		"pwd":       testutils.DockerMysqlPassword,
+		"host":      testutils.DockerMysqlHost,
+		"port":      testutils.DockerMysqlPort,
+		"db_name":   testutils.DockerMysqlDB,
+	})
+	t.Cleanup(func() { testutils.DeleteTarget(t, targetPath) })
+
+	rsName := "rs_mysql_pw_wo"
+	rsPath := testPath(rsName)
+	addr := "akeyless_rotated_secret_mysql." + rsName
+
+	config := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mysql" "%v" {
+			name                        = "%v"
+			target_name                 = "%v"
+			rotator_type                = "password"
+			authentication_credentials  = "use-self-creds"
+			rotated_username            = "%v"
+			rotated_password_wo         = "%v"
+			rotated_password_wo_version = 1
+			password_length             = "16"
+			auto_rotate                 = "false"
+		}
+	`, rsName, rsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword)
+
+	configDescriptionOnly := fmt.Sprintf(`
+		resource "akeyless_rotated_secret_mysql" "%v" {
+			name                        = "%v"
+			target_name                 = "%v"
+			rotator_type                = "password"
+			authentication_credentials  = "use-self-creds"
+			rotated_username            = "%v"
+			rotated_password_wo         = "%v"
+			rotated_password_wo_version = 1
+			password_length             = "16"
+			auto_rotate                 = "false"
+			description                 = "metadata-only"
+		}
+	`, rsName, rsPath, targetPath, testutils.DockerMysqlUser, testutils.DockerMysqlPassword)
+
+	var passwordAfterCreate string
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testutils.CheckItemExistsRemotely(rsPath),
+					resource.TestCheckNoResourceAttr(addr, "rotated_password_wo"),
+					func(_ *terraform.State) error {
+						var err error
+						passwordAfterCreate, err = rotatedSecretPassword(rsPath)
+						return err
+					},
+				),
+			},
+			{
+				Config: configDescriptionOnly,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(addr, "description", "metadata-only"),
+					func(_ *terraform.State) error {
+						password, err := rotatedSecretPassword(rsPath)
+						if err != nil {
+							return err
+						}
+						if password != passwordAfterCreate {
+							return fmt.Errorf("rotated password changed on metadata-only update")
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
 func TestRotatedSecretMysqlWriteOnly(t *testing.T) {
 	testutils.SkipIfNoGateway(t)
 

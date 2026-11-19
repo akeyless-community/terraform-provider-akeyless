@@ -26,7 +26,7 @@ func (r *sshCertificateEphemeral) Metadata(_ context.Context, req ephemeral.Meta
 
 func (r *sshCertificateEphemeral) Schema(_ context.Context, _ ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Generates an SSH certificate without storing it in Terraform state.",
+		Description: "Generates an SSH certificate without storing it in Terraform state. Terraform opens ephemeral resources on plan and apply, so each plan issues a certificate that apply does not use. Terraform does not revoke plan-time certificates.",
 		Attributes: map[string]schema.Attribute{
 			"cert_issuer_name":        schema.StringAttribute{Required: true, Description: "The name of the SSH certificate issuer"},
 			"cert_username":           schema.StringAttribute{Required: true, Description: "The username to sign in the SSH certificate"},

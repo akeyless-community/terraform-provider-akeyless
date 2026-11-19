@@ -529,11 +529,11 @@ func resourceRotatedSecretSplunkUpdate(d *schema.ResourceData, m interface{}) er
 	authenticationCredentials := d.Get("authentication_credentials").(string)
 	// rotatedUsername := d.Get("rotated_username").(string)
 	// rotatedPassword := d.Get("rotated_password").(string)
-	hecToken, err := common.SecretValueForUpdate(d, "hec_token", "hec_token_wo")
+	hecToken, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "hec_token", "hec_token_wo", "hec_token")
 	if err != nil {
 		return err
 	}
-	splunkToken, err := common.SecretValueForUpdate(d, "splunk_token", "splunk_token_wo")
+	splunkToken, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "splunk_token", "splunk_token_wo", "splunk_token")
 	if err != nil {
 		return err
 	}

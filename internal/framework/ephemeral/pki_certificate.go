@@ -26,7 +26,7 @@ func (r *pkiCertificateEphemeral) Metadata(_ context.Context, req ephemeral.Meta
 
 func (r *pkiCertificateEphemeral) Schema(_ context.Context, _ ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Generates a PKI certificate without storing it in Terraform state.",
+		Description: "Generates a PKI certificate without storing it in Terraform state. Terraform opens ephemeral resources on plan and apply, so each plan issues a certificate that apply does not use. Terraform does not revoke plan-time certificates.",
 		Attributes: map[string]schema.Attribute{
 			"cert_issuer_name":   schema.StringAttribute{Required: true, Description: "The name of the PKI certificate issuer"},
 			"key_data_base64":    schema.StringAttribute{Optional: true, Sensitive: true, Description: "pki key file contents encoded using Base64"},
