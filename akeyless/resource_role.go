@@ -264,7 +264,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	_, resp, err := client.CreateRole(ctx).Body(body).Execute()
 	if err != nil {
-		return diag.FromErr(common.HandleError("can't create role", resp, err))
+		return common.DiagnosticsFromErr(common.HandleError("can't create role", resp, err))
 	}
 	defer func() {
 		if !ok {
@@ -279,21 +279,21 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	err = initRestrictedRules(d, name, m)
 	if err != nil {
 		ok = false
-		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
+		return common.DiagnosticsFromErr(err)
 	}
 
 	assocsSet := d.Get("assoc_auth_method").(*schema.Set)
 	assocAuthMethod := assocsSet.List()
 	err, ok = addRoleAssocs(ctx, name, assocAuthMethod, m)
 	if !ok {
-		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
+		return common.DiagnosticsFromErr(err)
 	}
 
 	rulesSet := d.Get("rules").(*schema.Set)
 	roleRules := rulesSet.List()
 	err, ok = addRoleRules(ctx, name, roleRules, m)
 	if !ok {
-		return diag.Diagnostics{common.ErrorDiagnostics(err.Error())}
+		return common.DiagnosticsFromErr(err)
 	}
 
 	d.SetId(name)
@@ -354,7 +354,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 	role, err := getRole(d, name, m)
 	if err != nil {
-		return diag.FromErr(err)
+		return common.DiagnosticsFromErr(err)
 	}
 
 	if role.RoleAuthMethodsAssoc != nil {
@@ -364,7 +364,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		if len(assocsSet.List()) > 0 {
 			err := readAuthMethodsAssoc(d, role.RoleAuthMethodsAssoc)
 			if err != nil {
-				return diag.FromErr(err)
+				return common.DiagnosticsFromErr(err)
 			}
 		}
 	}
@@ -380,7 +380,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 				err = readAdministrativeRules(d, role.Rules.PathRules)
 			}
 			if err != nil {
-				return diag.FromErr(err)
+				return common.DiagnosticsFromErr(err)
 			}
 		}
 	}
@@ -391,13 +391,13 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 	err = d.Set("delete_protection", deleteProtectionVal)
 	if err != nil {
-		return diag.FromErr(err)
+		return common.DiagnosticsFromErr(err)
 	}
 
 	if role.Comment != nil {
 		err = d.Set("description", *role.Comment)
 		if err != nil {
-			return diag.FromErr(err)
+			return common.DiagnosticsFromErr(err)
 		}
 	}
 
@@ -413,7 +413,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			case "reverse-rbac-rule":
 				// reverse-rbac-rule has special slash prefix handling
 				if err := d.Set("reverse_rbac_access", strings.TrimPrefix(*rule.Path, "/")); err != nil {
-					return diag.FromErr(err)
+					return common.DiagnosticsFromErr(err)
 				}
 			case "event-forwarder-rule":
 				// event-forwarder-rule has special handling for multiple event forwarder names
@@ -422,7 +422,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		}
 		if len(eventForwarderNames) > 0 {
 			if err := d.Set("event_forwarders_name", eventForwarderNames); err != nil {
-				return diag.FromErr(err)
+				return common.DiagnosticsFromErr(err)
 			}
 		}
 	}
@@ -440,7 +440,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 	role, err := getRole(d, name, m)
 	if err != nil {
-		return diag.FromErr(err)
+		return common.DiagnosticsFromErr(err)
 	}
 
 	assocsSet := d.Get("assoc_auth_method").(*schema.Set)
@@ -453,7 +453,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 		err, ok = assocRoleAuthMethod(ctx, name, assocsToDelete, assocsToAdd, assosToUpdateNew, m)
 		if !ok {
-			return diag.FromErr(err)
+			return common.DiagnosticsFromErr(err)
 		}
 		defer func() {
 			if !ok {
@@ -498,7 +498,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		}
 	}()
 	if !ok {
-		return diag.FromErr(err)
+		return common.DiagnosticsFromErr(err)
 	}
 
 	accessRulesNewValues := getNewAccessRules(d)
@@ -514,7 +514,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			err = fmt.Errorf("fatal error, can't restore role access rules after bad update: %v", errInner)
 		}
 
-		return diag.FromErr(fmt.Errorf("can't update role access rule: %v", err))
+		return common.DiagnosticsFromErr(fmt.Errorf("can't update role access rule: %w", err))
 	}
 
 	d.SetId(name)
@@ -547,7 +547,7 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface
 
 	_, res, err := client.DeleteRole(ctx).Body(deleteRole).Execute()
 	if err != nil {
-		return diag.FromErr(common.HandleError("can't delete role", res, err))
+		return common.DiagnosticsFromErr(common.HandleError("can't delete role", res, err))
 	}
 
 	return nil

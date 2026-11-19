@@ -42,6 +42,7 @@ RDP dynamic secret resource
 - `rdp_host_name` (String) Hostname
 - `rdp_host_port` (String) Port
 - `rdp_user_groups` (String) Groups
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `secure_access_allow_external_user` (Boolean) Allow providing external user for a domain users
 - `secure_access_certificate_issuer` (String) Path to the SSH Certificate Issuer for your Akeyless Secure Access
 - `secure_access_delay` (Number) The delay duration, in seconds, to wait after generating just-in-time credentials. Accepted range: 0-120 seconds
@@ -62,5 +63,16 @@ RDP dynamic secret resource
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 

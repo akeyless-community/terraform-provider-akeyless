@@ -2,7 +2,7 @@ module github.com/akeylesslabs/terraform-provider-akeyless
 
 godebug x509negativeserial=1
 
-go 1.26
+go 1.27.4
 
 require (
 	github.com/akeylesslabs/akeyless-go-cloud-id v0.3.5

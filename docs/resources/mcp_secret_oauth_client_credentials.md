@@ -36,11 +36,23 @@ MCP secret using OAuth 2.0 Client Credentials authentication
 - `oauth_token_url` (String) OAuth token URL
 - `output_rule` (List of String) Agentic output rule in name=...,rule=... format
 - `protection_key` (String) The name of a key that is used to encrypt the secret value (if empty, the account default protectionKey key will be used)
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `tags` (Set of String) List of the tags attached to this secret
 - `url` (String) URL of the MCP service
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 

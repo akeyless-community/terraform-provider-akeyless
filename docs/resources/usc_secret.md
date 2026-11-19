@@ -31,6 +31,7 @@ Universal Secrets Connector secret resource
 - `region` (String) Optional, create secret in a specific region (GCP only). If empty, a global secret will be created (provider default).
 - `remote_secret_activation_date` (String) Activation date for the secret on the remote endpoint, in UTC format: YYYY-MM-DDTHH:MM:SSZ
 - `remote_secret_expires` (String) Expiration time for the secret on the remote endpoint, in UTC format: YYYY-MM-DDTHH:MM:SSZ
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `tags` (Set of String) Tags for the universal secrets
 - `usc_encryption_key` (String) Optional, The name of the remote key that used to encrypt the secret value (if empty, the default key will be used)
 - `value` (String, Sensitive) Value of the universal secrets item, either text or base64 encoded binary
@@ -40,5 +41,16 @@ Universal Secrets Connector secret resource
 
 - `id` (String) The ID of this resource.
 - `secret_id` (String) The ID of the universal secrets item
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 
