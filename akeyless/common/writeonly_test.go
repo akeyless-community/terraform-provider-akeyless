@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -123,5 +124,22 @@ func TestEffectiveSecretValue_EmptyRawConfigFallsBack(t *testing.T) {
 	}
 	if got := EffectiveSecretValue(d, "tls_certificate", "tls_certificate_wo"); got != "legacy-cert" {
 		t.Fatalf("expected legacy fallback, got %q", got)
+	}
+}
+
+func TestValidateWriteOnlyAttribute_UnknownIsNotConflict(t *testing.T) {
+	validate := ValidateWriteOnlyAttribute(cty.GetAttrPath("mysql_password"), cty.GetAttrPath("mysql_password_wo"))
+	conflict := func(oldValue, woValue cty.Value) bool {
+		resp := &schema.ValidateResourceConfigFuncResponse{}
+		validate(context.Background(), schema.ValidateResourceConfigFuncRequest{RawConfig: cty.ObjectVal(map[string]cty.Value{
+			"mysql_password": oldValue, "mysql_password_wo": woValue,
+		})}, resp)
+		return resp.Diagnostics.HasError()
+	}
+	if !conflict(cty.StringVal("legacy"), cty.StringVal("wo")) {
+		t.Fatal("both set must conflict")
+	}
+	if conflict(cty.UnknownVal(cty.String), cty.UnknownVal(cty.String)) {
+		t.Fatal("unknown values (e.g. conditional null) must not conflict")
 	}
 }

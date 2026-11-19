@@ -32,7 +32,7 @@ func ValidateWriteOnlyAttribute(oldField, woField cty.Path) schema.ValidateRawRe
 	return func(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
 		oldValue, oldErr := oldField.Apply(req.RawConfig)
 		woValue, woErr := woField.Apply(req.RawConfig)
-		if oldErr == nil && woErr == nil && !oldValue.IsNull() && !woValue.IsNull() {
+		if oldErr == nil && woErr == nil && oldValue.IsKnown() && woValue.IsKnown() && !oldValue.IsNull() && !woValue.IsNull() {
 			resp.Diagnostics = diag.Diagnostics{{
 				Severity:      diag.Error,
 				Summary:       "Conflicting configuration arguments",
