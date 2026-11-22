@@ -652,7 +652,7 @@ func resourceRotatedSecretSshUpdate(d *schema.ResourceData, m interface{}) error
 	for k, v := range itemCustomFieldsMap {
 		itemCustomFields[k] = v.(string)
 	}
-	keyDataBase64, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "key_data_base64", "key_data_base64_wo", "password")
+	keyDataBase64, err := common.PrivateKeyForRotatedUpdate(ctx, client, token, name, d, "key_data_base64", "key_data_base64_wo")
 	if err != nil {
 		return err
 	}

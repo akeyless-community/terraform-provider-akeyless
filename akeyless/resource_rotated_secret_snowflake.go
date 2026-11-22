@@ -480,7 +480,7 @@ func resourceRotatedSecretSnowflakeUpdate(d *schema.ResourceData, m interface{})
 		itemCustomFields[k] = v.(string)
 	}
 	maxVersions := d.Get("max_versions").(string)
-	privateKey, err := common.SecretValueForRotatedUpdate(ctx, client, token, name, d, "private_key", "private_key_wo", "private_key")
+	privateKey, err := common.PrivateKeyForRotatedUpdate(ctx, client, token, name, d, "private_key", "private_key_wo")
 	if err != nil {
 		return err
 	}

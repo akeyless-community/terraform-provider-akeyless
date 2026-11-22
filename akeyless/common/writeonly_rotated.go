@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
@@ -18,6 +19,32 @@ func SecretValueForRotatedUpdate(
 	name string,
 	d *schema.ResourceData,
 	field, woField, valueKey string,
+) (*string, error) {
+	return secretValueForRotatedUpdate(ctx, client, token, name, d, field, woField, valueKey, false)
+}
+
+// PrivateKeyForRotatedUpdate is SecretValueForRotatedUpdate for base64 private
+// key fields (SSH key_data_base64, Snowflake private_key). The API returns the
+// stored key as PEM, so a reloaded key is base64-encoded before it is sent back.
+func PrivateKeyForRotatedUpdate(
+	ctx context.Context,
+	client akeyless_api.V2ApiService,
+	token string,
+	name string,
+	d *schema.ResourceData,
+	field, woField string,
+) (*string, error) {
+	return secretValueForRotatedUpdate(ctx, client, token, name, d, field, woField, "private_key", true)
+}
+
+func secretValueForRotatedUpdate(
+	ctx context.Context,
+	client akeyless_api.V2ApiService,
+	token string,
+	name string,
+	d *schema.ResourceData,
+	field, woField, valueKey string,
+	encodeBase64 bool,
 ) (*string, error) {
 	value, err := SecretValueForUpdate(d, field, woField)
 	if err != nil {
@@ -38,6 +65,9 @@ func SecretValueForRotatedUpdate(
 	}
 	if stored == "" {
 		return nil, nil
+	}
+	if encodeBase64 {
+		stored = base64.StdEncoding.EncodeToString([]byte(stored))
 	}
 	return &stored, nil
 }
