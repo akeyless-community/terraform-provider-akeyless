@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ provider.Provider = &Provider{}
@@ -117,6 +118,35 @@ func (p *Provider) Schema(_ context.Context, _ provider.SchemaRequest, resp *pro
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"token": schema.StringAttribute{Optional: true, Sensitive: true},
+					},
+				},
+			},
+			"retry": schema.ListNestedBlock{
+				Description: "Default retry for all resources when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. A resource retry block overrides it. See the Customized Retry guide.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"error_message_regex": schema.ListAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
+							Description: "Regular expressions matched against the error message. If any matches, the operation is retried.",
+						},
+						"retry_on_status_codes": schema.ListAttribute{
+							ElementType: types.Int64Type,
+							Optional:    true,
+							Description: "HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.",
+						},
+						"interval_seconds": schema.Int64Attribute{
+							Optional:    true,
+							Description: "Wait before the first retry, in seconds. The wait doubles on each retry.",
+						},
+						"max_interval_seconds": schema.Int64Attribute{
+							Optional:    true,
+							Description: "Maximum wait between retries, in seconds.",
+						},
+						"max_retries": schema.Int64Attribute{
+							Optional:    true,
+							Description: "Maximum number of retries after the first attempt.",
+						},
 					},
 				},
 			},

@@ -32,6 +32,7 @@ Create gateway allowed access
 - `id_int` (Number) Internal ID
 - `is_valid` (Boolean) Whether the allowed access is valid
 - `permissions` (String) Permissions Comma-seperated list of permissions for this allowed access. Available permissions: [defaults,targets,classic_keys,automatic_migration,ldap_auth,dynamic_secret,k8s_auth,log_forwarding,zero_knowledge_encryption,rotated_secret,caching,event_forwarding,admin,kmip,general,rotate_secret_value]
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `sub_claims` (Map of String) Sub claims key/val of sub claims, e.g group=admins,developers
 - `sub_claims_case_insensitive` (Boolean) Treat sub claims as case-insensitive
 - `updated_at` (String) Last update timestamp
@@ -39,5 +40,16 @@ Create gateway allowed access
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 

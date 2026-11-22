@@ -42,6 +42,7 @@ func Provider() *schema.Provider {
 			"uid_login":      uidLoginSchema,
 			"cert_login":     certLoginSchema,
 			"token_login":    tokenLoginSchema,
+			"retry":          retrySchema("Default retry for all resources when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. A resource retry block overrides it. See the Customized Retry guide."),
 		},
 		ConfigureContextFunc: func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 			return configureProvider(ctx, d, meta)
@@ -251,6 +252,10 @@ func Provider() *schema.Provider {
 			"akeyless_detokenize":               dataSourceDetokenize(),
 		},
 	}
+
+	for _, r := range provider.ResourcesMap {
+		EnableResourceRetry(r)
+	}
 	provider.SetMeta(meta)
 	return provider
 }
@@ -445,6 +450,7 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 type providerMeta struct {
 	client *akeyless_api.V2ApiService
 	token  *string
+	retry  *retryConfig
 }
 
 func (m *providerMeta) ApiClient() *ApiClient {
@@ -608,6 +614,11 @@ func isTransientConnError(err error) bool {
 func configureProvider(ctx context.Context, d *schema.ResourceData, meta *providerMeta) (interface{}, diag.Diagnostics) {
 	var diagnostic diag.Diagnostics
 
+	retry, err := retryConfigFromData(d)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+
 	client := getProviderClient(ctx, d)
 
 	token, err := getProviderToken(ctx, d, client)
@@ -616,5 +627,6 @@ func configureProvider(ctx context.Context, d *schema.ResourceData, meta *provid
 	}
 	meta.client = client
 	meta.token = &token
+	meta.retry = retry
 	return meta, diagnostic
 }

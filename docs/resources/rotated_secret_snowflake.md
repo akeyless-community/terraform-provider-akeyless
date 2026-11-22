@@ -41,6 +41,7 @@ Snowflake rotated secret resource
 - `private_key_file_name` (String) The path to the file containing the private key (relevant only for rotator-type=key)
 - `private_key_wo` (String, Sensitive) RSA Private key (base64 encoded) to rotate (write-only, not stored in state). Requires Terraform 1.11+. Bump private_key_wo_version to change it.
 - `private_key_wo_version` (Number) Version trigger for private_key_wo. Increment to update the value.
+- `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `rotated_password` (String) rotated-username password (relevant only for rotator-type=password)
 - `rotated_password_wo` (String, Sensitive) rotated_password (write-only, not stored in state). Requires Terraform 1.11+. Bump rotated_password_wo_version to change it.
 - `rotated_password_wo_version` (Number) Version trigger for rotated_password_wo. Increment to update the value.
@@ -55,5 +56,16 @@ Snowflake rotated secret resource
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--retry"></a>
+### Nested Schema for `retry`
+
+Optional:
+
+- `error_message_regex` (List of String) Regular expressions matched against the error message. If any matches, the operation is retried.
+- `interval_seconds` (Number) Wait before the first retry, in seconds. The wait doubles on each retry.
+- `max_interval_seconds` (Number) Maximum wait between retries, in seconds.
+- `max_retries` (Number) Maximum number of retries after the first attempt.
+- `retry_on_status_codes` (List of Number) HTTP status codes of the failed API call that trigger a retry, for example 429 or 503.
 
 
