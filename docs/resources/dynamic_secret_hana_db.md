@@ -30,6 +30,8 @@ HanaDb dynamic secret resource
 - `hanadb_create_statements` (String) HanaDb Creation statements
 - `hanadb_host` (String) HanaDb Host
 - `hanadb_password` (String, Sensitive) HanaDb Password
+- `hanadb_password_wo` (String, Sensitive) HanaDb Password (write-only, not stored in state). Requires Terraform 1.11+. Bump hanadb_password_wo_version to change it.
+- `hanadb_password_wo_version` (Number) Version trigger for hanadb_password_wo. Increment to update the password.
 - `hanadb_port` (String) HanaDb Port
 - `hanadb_revocation_statements` (String) HanaDb Revocation statements
 - `hanadb_username` (String) HanaDb Username

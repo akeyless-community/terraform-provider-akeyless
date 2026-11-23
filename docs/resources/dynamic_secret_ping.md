@@ -37,6 +37,8 @@ Ping dynamic secret resource
 - `ping_jwks` (String) Base64-encoded JSON Web Key Set (JWKS). If no explicit value is given, the producer will create JWKs and matched signed JWT (Sign Algo: RS256) and return it as value (relevant for PRIVATE_KEY_JWT authentication method)
 - `ping_jwks_url` (String) The URL of the JSON Web Key Set (JWKS). If no explicit value is given, the producer will create JWKs and matched signed JWT and return it as value (relevant for PRIVATE_KEY_JWT authentication method)
 - `ping_password` (String, Sensitive) Ping Federate privileged user password
+- `ping_password_wo` (String, Sensitive) ping_password (write-only, not stored in state). Requires Terraform 1.11+. Bump ping_password_wo_version to change it.
+- `ping_password_wo_version` (Number) Version trigger for ping_password_wo. Increment to update the value.
 - `ping_privileged_user` (String) Ping Federate privileged user
 - `ping_redirect_uris` (Set of String) List of URIs to which the OAuth authorization server may redirect the resource owner's user agent after authorization is obtained. At least one redirection URI is required for the AUTHORIZATION_CODE and IMPLICIT grant types.
 - `ping_restricted_scopes` (Set of String) Limit the OAuth client to specific scopes list

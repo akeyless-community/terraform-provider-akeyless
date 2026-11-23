@@ -6,6 +6,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,6 +19,9 @@ func resourceDynamicSecretPing() *schema.Resource {
 		Delete:      resourceDynamicSecretPingDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretPingImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("ping_password"), cty.GetAttrPath("ping_password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -98,6 +102,20 @@ func resourceDynamicSecretPing() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Ping Federate privileged user password",
+			},
+			"ping_password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"ping_password_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "ping_password (write-only, not stored in state). Requires Terraform 1.11+. Bump ping_password_wo_version to change it.",
+			},
+			"ping_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"ping_password_wo"},
+				Description:  "Version trigger for ping_password_wo. Increment to update the value.",
 			},
 			"ping_privileged_user": {
 				Type:        schema.TypeString,
@@ -186,7 +204,7 @@ func resourceDynamicSecretPingCreate(d *schema.ResourceData, m interface{}) erro
 	pingIssuerDn := d.Get("ping_issuer_dn").(string)
 	pingJwks := d.Get("ping_jwks").(string)
 	pingJwksUrl := d.Get("ping_jwks_url").(string)
-	pingPassword := d.Get("ping_password").(string)
+	pingPassword := common.EffectiveSecretValue(d, "ping_password", "ping_password_wo")
 	pingPrivilegedUser := d.Get("ping_privileged_user").(string)
 	pingRedirectUrisSet := d.Get("ping_redirect_uris").(*schema.Set)
 	pingRedirectUris := common.ExpandStringList(pingRedirectUrisSet.List())
@@ -357,7 +375,7 @@ func resourceDynamicSecretPingUpdate(d *schema.ResourceData, m interface{}) erro
 	pingIssuerDn := d.Get("ping_issuer_dn").(string)
 	pingJwks := d.Get("ping_jwks").(string)
 	pingJwksUrl := d.Get("ping_jwks_url").(string)
-	pingPassword := d.Get("ping_password").(string)
+	pingPassword := common.EffectiveSecretValue(d, "ping_password", "ping_password_wo")
 	pingPrivilegedUser := d.Get("ping_privileged_user").(string)
 	pingRedirectUrisSet := d.Get("ping_redirect_uris").(*schema.Set)
 	pingRedirectUris := common.ExpandStringList(pingRedirectUrisSet.List())

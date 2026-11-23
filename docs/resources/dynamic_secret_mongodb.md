@@ -31,6 +31,8 @@ Mongo DB dynamic secret resource
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `mongodb_atlas_api_private_key` (String, Sensitive) MongoDB Atlas private key
+- `mongodb_atlas_api_private_key_wo` (String, Sensitive) MongoDB Atlas private key (write-only, not stored in state). Requires Terraform 1.11+. Bump mongodb_atlas_api_private_key_wo_version to change it.
+- `mongodb_atlas_api_private_key_wo_version` (Number) Version trigger for mongodb_atlas_api_private_key_wo. Increment to update the password.
 - `mongodb_atlas_api_public_key` (String) MongoDB Atlas public key
 - `mongodb_atlas_project_id` (String) MongoDB Atlas project ID
 - `mongodb_custom_data` (String) MongoDB custom data
@@ -38,6 +40,8 @@ Mongo DB dynamic secret resource
 - `mongodb_host_port` (String) MongoDB server host and port
 - `mongodb_name` (String) MongoDB Name
 - `mongodb_password` (String, Sensitive) MongoDB server password. You will prompted to provide a password if it will not appear in CLI parameters
+- `mongodb_password_wo` (String, Sensitive) MongoDB server password (write-only, not stored in state). Requires Terraform 1.11+. Bump mongodb_password_wo_version to change it.
+- `mongodb_password_wo_version` (Number) Version trigger for mongodb_password_wo. Increment to update the password.
 - `mongodb_roles` (String) MongoDB Roles
 - `mongodb_scopes` (String) MongoDB Scopes (Atlas only)
 - `mongodb_server_uri` (String) MongoDB server URI

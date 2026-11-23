@@ -25,6 +25,8 @@ OpenAI rotated secret resource
 
 - `api_key` (String, Sensitive) Admin API key value to rotate (relevant only for rotator-type=api-key)
 - `api_key_id` (String) Admin API key ID to rotate (relevant only for rotator-type=api-key)
+- `api_key_wo` (String, Sensitive) Admin API key value to rotate (write-only, not stored in state). Requires Terraform 1.11+. Bump api_key_wo_version to change it.
+- `api_key_wo_version` (Number) Version trigger for api_key_wo. Increment to update the value.
 - `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `authentication_credentials` (String) The credentials to connect with use-user-creds/use-target-creds
 - `auto_rotate` (String) Whether to automatically rotate every --rotation-interval days, or disable existing automatic rotation [true/false]

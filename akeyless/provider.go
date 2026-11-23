@@ -25,12 +25,12 @@ const publicApi = "https://api.akeyless.io"
 
 // Provider returns Akeyless Terraform provider
 func Provider() *schema.Provider {
-	p := &schema.Provider{
+	meta := &providerMeta{}
+	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_gateway_address": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("AKEYLESS_GATEWAY", publicApi),
 				Description: "Origin URL of the API Gateway server. This is a URL with a scheme, a hostname and a port.",
 			},
 			"api_key_login":  apiKeyLoginSchema,
@@ -44,8 +44,9 @@ func Provider() *schema.Provider {
 			"token_login":    tokenLoginSchema,
 			"retry":          retrySchema("Default retry for all resources when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. A resource retry block overrides it. See the Customized Retry guide."),
 		},
-		//ConfigureFunc: configureProvider,
-		ConfigureContextFunc: configureProvider,
+		ConfigureContextFunc: func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+			return configureProvider(ctx, d, meta)
+		},
 		ResourcesMap: map[string]*schema.Resource{
 			"akeyless_account_custom_field":                                      resourceAccountCustomField(),
 			"akeyless_account_settings":                                          resourceAccountSettings(),
@@ -252,10 +253,11 @@ func Provider() *schema.Provider {
 		},
 	}
 
-	for _, r := range p.ResourcesMap {
+	for _, r := range provider.ResourcesMap {
 		EnableResourceRetry(r)
 	}
-	return p
+	provider.SetMeta(meta)
+	return provider
 }
 
 func getProviderToken(ctx context.Context, d *schema.ResourceData, client *akeyless_api.V2ApiService) (string, error) {
@@ -277,8 +279,23 @@ func extractTokenFromInput(tokenLogin []interface{}) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("wrong login detais")
 	}
-	token := login["token"].(string)
+	token := withEnvFallback(login["token"].(string), "AKEYLESS_AUTH_TOKEN")
+	if token == "" {
+		return "", fmt.Errorf("token is required (set it directly or via AKEYLESS_AUTH_TOKEN)")
+	}
 	return token, nil
+}
+
+// withEnvFallback returns val if non-empty, otherwise the value of the given
+// environment variable. Used to replicate, in Go code, the env var fallback
+// that used to live in schema.EnvDefaultFunc before those were removed from
+// the login schemas (required so the schema can be mirrored exactly by a
+// muxed terraform-plugin-framework provider).
+func withEnvFallback(val, envKey string) string {
+	if val != "" {
+		return val
+	}
+	return os.Getenv(envKey)
 }
 
 func getTokenByAuth(ctx context.Context, d *schema.ResourceData, client *akeyless_api.V2ApiService) (string, error) {
@@ -319,15 +336,21 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 
 	switch authType {
 	case ApiKeyLogin:
-		accessID := login["access_id"].(string)
-		accessKey := login["access_key"].(string)
+		accessID := withEnvFallback(login["access_id"].(string), "AKEYLESS_ACCESS_ID")
+		accessKey := withEnvFallback(login["access_key"].(string), "AKEYLESS_ACCESS_KEY")
+		if accessID == "" || accessKey == "" {
+			return fmt.Errorf("access_id and access_key are required (directly or via AKEYLESS_ACCESS_ID/AKEYLESS_ACCESS_KEY)")
+		}
 		authBody.AccessId = akeyless_api.PtrString(accessID)
 		authBody.AccessKey = akeyless_api.PtrString(accessKey)
 		authBody.AccessType = akeyless_api.PtrString(common.ApiKey)
 		return nil
 	case EmailLogin:
-		adminEmail := login["admin_email"].(string)
-		adminPassword := login["admin_password"].(string)
+		adminEmail := withEnvFallback(login["admin_email"].(string), "AKEYLESS_EMAIL")
+		adminPassword := withEnvFallback(login["admin_password"].(string), "AKEYLESS_PASSWORD")
+		if adminEmail == "" || adminPassword == "" {
+			return fmt.Errorf("admin_email and admin_password are required (directly or via AKEYLESS_EMAIL/AKEYLESS_PASSWORD)")
+		}
 		authBody.AdminEmail = akeyless_api.PtrString(adminEmail)
 		authBody.AdminPassword = akeyless_api.PtrString(adminPassword)
 		authBody.AccessType = akeyless_api.PtrString(common.Password)
@@ -366,14 +389,20 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 		return nil
 	case JwtLogin:
 		accessID := login["access_id"].(string)
-		jwt := login["jwt"].(string)
+		jwt := withEnvFallback(login["jwt"].(string), "AKEYLESS_AUTH_JWT")
+		if jwt == "" {
+			return fmt.Errorf("jwt is required (directly or via AKEYLESS_AUTH_JWT)")
+		}
 		authBody.AccessId = akeyless_api.PtrString(accessID)
 		authBody.Jwt = akeyless_api.PtrString(jwt)
 		authBody.AccessType = akeyless_api.PtrString(common.Jwt)
 		return nil
 	case UidLogin:
 		accessID := login["access_id"].(string)
-		uidToken := login["uid_token"].(string)
+		uidToken := withEnvFallback(login["uid_token"].(string), "AKEYLESS_AUTH_UID")
+		if uidToken == "" {
+			return fmt.Errorf("uid_token is required (directly or via AKEYLESS_AUTH_UID)")
+		}
 		authBody.AccessId = akeyless_api.PtrString(accessID)
 		authBody.UidToken = akeyless_api.PtrString(uidToken)
 		authBody.AccessType = akeyless_api.PtrString(common.Uid)
@@ -381,8 +410,8 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 	case CertLogin:
 		certFile := login["cert_file_name"].(string)
 		keyFile := login["key_file_name"].(string)
-		certData := login["cert_data"].(string)
-		keyData := login["key_data"].(string)
+		certData := withEnvFallback(login["cert_data"].(string), "AKEYLESS_AUTH_CERT")
+		keyData := withEnvFallback(login["key_data"].(string), "AKEYLESS_AUTH_KEY")
 
 		if certFile == "" && certData == "" {
 			return fmt.Errorf("must provide cert_file_name or cert_data")
@@ -422,6 +451,13 @@ type providerMeta struct {
 	client *akeyless_api.V2ApiService
 	token  *string
 	retry  *retryConfig
+}
+
+func (m *providerMeta) ApiClient() *ApiClient {
+	if m == nil || m.client == nil || m.token == nil || *m.token == "" {
+		return nil
+	}
+	return &ApiClient{Client: m.client, Token: *m.token}
 }
 
 func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, error) {
@@ -503,23 +539,30 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 }
 
 func getProviderClient(_ context.Context, d *schema.ResourceData) *akeyless_api.V2ApiService {
-	apiGwAddress := d.Get("api_gateway_address").(string)
-
 	httpClient := &http.Client{
 		Transport: &retryTransport{base: http.DefaultTransport, retries: 3},
 	}
 
-	client := akeyless_api.NewAPIClient(&akeyless_api.Configuration{
+	return akeyless_api.NewAPIClient(&akeyless_api.Configuration{
 		Servers: []akeyless_api.ServerConfiguration{
 			{
-				URL: apiGwAddress,
+				URL: resolveApiGatewayAddress(d),
 			},
 		},
 		DefaultHeader: map[string]string{common.ClientTypeHeader: common.TerraformClientType},
 		HTTPClient:    httpClient,
 	}).V2Api
+}
 
-	return client
+func resolveApiGatewayAddress(d *schema.ResourceData) string {
+	apiGwAddress := d.Get("api_gateway_address").(string)
+	if apiGwAddress == "" {
+		apiGwAddress = os.Getenv("AKEYLESS_GATEWAY")
+	}
+	if apiGwAddress == "" {
+		apiGwAddress = publicApi
+	}
+	return apiGwAddress
 }
 
 type retryTransport struct {
@@ -568,7 +611,7 @@ func isTransientConnError(err error) bool {
 		strings.Contains(msg, "connection refused")
 }
 
-func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func configureProvider(ctx context.Context, d *schema.ResourceData, meta *providerMeta) (interface{}, diag.Diagnostics) {
 	var diagnostic diag.Diagnostics
 
 	retry, err := retryConfigFromData(d)
@@ -582,5 +625,8 @@ func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}
 	if err != nil {
 		diagnostic = diag.Diagnostics{{Severity: diag.Warning, Summary: err.Error()}}
 	}
-	return &providerMeta{client: client, token: &token, retry: retry}, diagnostic
+	meta.client = client
+	meta.token = &token
+	meta.retry = retry
+	return meta, diagnostic
 }

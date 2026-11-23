@@ -131,7 +131,7 @@ output "auth_method" {
 <a id="nestedblock--api_key_login"></a>
 ### Nested Schema for `api_key_login`
 
-Required:
+Optional:
 
 - `access_id` (String)
 - `access_key` (String, Sensitive)
@@ -171,10 +171,10 @@ Optional:
 <a id="nestedblock--email_login"></a>
 ### Nested Schema for `email_login`
 
-Required:
+Optional:
 
 - `admin_email` (String)
-- `admin_password` (String)
+- `admin_password` (String, Sensitive)
 
 
 <a id="nestedblock--gcp_login"></a>
@@ -195,6 +195,9 @@ Optional:
 Required:
 
 - `access_id` (String)
+
+Optional:
+
 - `jwt` (String, Sensitive)
 
 
@@ -213,7 +216,7 @@ Optional:
 <a id="nestedblock--token_login"></a>
 ### Nested Schema for `token_login`
 
-Required:
+Optional:
 
 - `token` (String, Sensitive)
 
@@ -221,10 +224,7 @@ Required:
 <a id="nestedblock--uid_login"></a>
 ### Nested Schema for `uid_login`
 
-Required:
-
-- `uid_token` (String, Sensitive)
-
 Optional:
 
 - `access_id` (String)
+- `uid_token` (String, Sensitive)

@@ -31,9 +31,13 @@ Native Kubernetes Service dynamic secret resource
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `k8s_allowed_namespaces` (String) Comma-separated list of allowed K8S namespaces for the generated ServiceAccount (relevant only for k8s-service-account-type=dynamic).
 - `k8s_cluster_ca_cert` (String, Sensitive) K8S cluster CA certificate
+- `k8s_cluster_ca_cert_wo` (String, Sensitive) K8S cluster CA certificate (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_ca_cert_wo_version to change it.
+- `k8s_cluster_ca_cert_wo_version` (Number) Version trigger for k8s_cluster_ca_cert_wo. Increment to update the password.
 - `k8s_cluster_endpoint` (String) K8S cluster URL endpoint
 - `k8s_cluster_name` (String) K8S cluster name
 - `k8s_cluster_token` (String, Sensitive) K8S cluster Bearer token
+- `k8s_cluster_token_wo` (String, Sensitive) K8S cluster Bearer token (write-only, not stored in state). Requires Terraform 1.11+. Bump k8s_cluster_token_wo_version to change it.
+- `k8s_cluster_token_wo_version` (Number) Version trigger for k8s_cluster_token_wo. Increment to update the password.
 - `k8s_namespace` (String) K8S Namespace where the ServiceAccount exists.
 - `k8s_predefined_role_name` (String) The pre-existing Role or ClusterRole name to bind the generated ServiceAccount to (relevant only for k8s-service-account-type=dynamic).
 - `k8s_predefined_role_type` (String) Specifies the type of the pre-existing K8S role [Role, ClusterRole] (relevant only for k8s-service-account-type=dynamic).

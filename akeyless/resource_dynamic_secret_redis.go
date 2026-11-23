@@ -6,6 +6,7 @@ import (
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,6 +19,9 @@ func resourceDynamicSecretRedis() *schema.Resource {
 		Delete:      resourceDynamicSecretRedisDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDynamicSecretRedisImport,
+		},
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			common.ValidateWriteOnlyAttribute(cty.GetAttrPath("password"), cty.GetAttrPath("password_wo")),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -59,6 +63,20 @@ func resourceDynamicSecretRedis() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Redis Password",
+			},
+			"password_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"password_wo_version"},
+				Sensitive:    true,
+				WriteOnly:    true,
+				Description:  "Password (write-only, not stored in state). Requires Terraform 1.11+. Bump password_wo_version to change it.",
+			},
+			"password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
+				Description:  "Version trigger for password_wo. Increment to update the value.",
 			},
 			"password_length": {
 				Type:        schema.TypeString,
@@ -151,7 +169,7 @@ func resourceDynamicSecretRedisCreate(d *schema.ResourceData, m interface{}) err
 	aclRules := d.Get("acl_rules").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	host := d.Get("host").(string)
-	password := d.Get("password").(string)
+	password := common.EffectiveSecretValue(d, "password", "password_wo")
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))
@@ -315,7 +333,7 @@ func resourceDynamicSecretRedisUpdate(d *schema.ResourceData, m interface{}) err
 	aclRules := d.Get("acl_rules").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	host := d.Get("host").(string)
-	password := d.Get("password").(string)
+	password := common.EffectiveSecretValue(d, "password", "password_wo")
 	passwordLength := d.Get("password_length").(string)
 	inputRule := common.ExpandStringList(d.Get("input_rule").([]interface{}))
 	outputRule := common.ExpandStringList(d.Get("output_rule").([]interface{}))

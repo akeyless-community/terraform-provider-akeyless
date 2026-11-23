@@ -22,6 +22,8 @@ Certificate Resource
 ### Optional
 
 - `certificate_data` (String, Sensitive) Content of the certificate in a Base64 format.
+- `certificate_data_wo` (String, Sensitive) certificate_data (write-only, not stored in state). Requires Terraform 1.11+. Bump certificate_data_wo_version to change it.
+- `certificate_data_wo_version` (Number) Version trigger for certificate_data_wo. Increment to update the value.
 - `delete_protection` (String) Protection from accidental deletion of this object, [true/false]
 - `description` (String) Description of the object
 - `expiration_event_in` (Set of String) How many days before the expiration of the certificate would you like to be notified.
@@ -30,6 +32,8 @@ Certificate Resource
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
 - `key` (String) The name of a key to use to encrypt the certificate's key (if empty, the account default protectionKey key will be used)
 - `key_data` (String, Sensitive) Content of the certificate's private key in a Base64 format.
+- `key_data_wo` (String, Sensitive) key_data (write-only, not stored in state). Requires Terraform 1.11+. Bump key_data_wo_version to change it.
+- `key_data_wo_version` (Number) Version trigger for key_data_wo. Increment to update the value.
 - `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))
 - `tags` (Set of String) Add tags attached to this object
 

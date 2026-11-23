@@ -34,6 +34,8 @@ Splunk rotated secret resource
 - `expiration_date` (String) Token expiration date in YYYY-MM-DD format (relevant only for rotator-type=token when manual rotation is selected)
 - `hec_token` (String, Sensitive) Current Splunk HEC token value to store (relevant only for rotator-type=hec-token)
 - `hec_token_name` (String) Splunk HEC input name to manage (required for rotator-type=hec-token)
+- `hec_token_wo` (String, Sensitive) Current Splunk HEC token value to store (write-only, not stored in state). Requires Terraform 1.11+. Bump hec_token_wo_version to change it.
+- `hec_token_wo_version` (Number) Version trigger for hec_token_wo. Increment to update the value.
 - `input_rule` (List of String) Password input rule definitions
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
 - `keep_prev_version` (String) Whether to keep previous version [true/false]. If not set, use default according to account settings
@@ -49,6 +51,8 @@ Splunk rotated secret resource
 - `rotation_interval` (String) The number of days to wait between every automatic key rotation (1-365)
 - `skip_dry_run` (Boolean) Skip dry run
 - `splunk_token` (String, Sensitive) Current Splunk authentication token to store (relevant only for rotator-type=token)
+- `splunk_token_wo` (String, Sensitive) Current Splunk authentication token to store (write-only, not stored in state). Requires Terraform 1.11+. Bump splunk_token_wo_version to change it.
+- `splunk_token_wo_version` (Number) Version trigger for splunk_token_wo. Increment to update the value.
 - `tags` (Set of String) List of the tags attached to this secret. To specify multiple tags use argument multiple times: -t Tag1 -t Tag2
 - `token_owner` (String) Splunk token owner username (relevant only for rotator-type=token)
 

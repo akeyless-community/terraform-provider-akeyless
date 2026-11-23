@@ -24,6 +24,8 @@ LDAP dynamic secret resource
 - `ara_enabled` (Boolean) Enable Agentic Runtime Authority
 - `bind_dn` (String) Bind DN
 - `bind_dn_password` (String, Sensitive) Bind DN Password
+- `bind_dn_password_wo` (String, Sensitive) Bind DN Password (write-only, not stored in state). Requires Terraform 1.11+. Bump bind_dn_password_wo_version to change it.
+- `bind_dn_password_wo_version` (Number) Version trigger for bind_dn_password_wo. Increment to update the password.
 - `custom_username_template` (String) Customize how temporary usernames are generated using go template
 - `delete_protection` (String) Protection from accidental deletion of this object [true/false]
 - `enable_agentic_runtime_authority` (Boolean) Enable Agentic Runtime Authority

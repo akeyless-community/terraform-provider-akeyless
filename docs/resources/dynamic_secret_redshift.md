@@ -36,6 +36,8 @@ Redshift dynamic secret resource
 - `redshift_db_name` (String) Redshift DB Name
 - `redshift_host` (String) Redshift Host
 - `redshift_password` (String) Redshift Password
+- `redshift_password_wo` (String, Sensitive) redshift_password (write-only, not stored in state). Requires Terraform 1.11+. Bump redshift_password_wo_version to change it.
+- `redshift_password_wo_version` (Number) Version trigger for redshift_password_wo. Increment to update the value.
 - `redshift_port` (String) Redshift Port
 - `redshift_username` (String) Redshift Username
 - `retry` (Block List, Max: 1) Retry this resource's operations when the error matches error_message_regex or the HTTP status is in retry_on_status_codes. Overrides the provider retry block. See the Customized Retry guide. (see [below for nested schema](#nestedblock--retry))

@@ -36,6 +36,8 @@ MySQL dynamic secret resource
 - `mysql_dbname` (String) MySQL DB name
 - `mysql_host` (String) MySQL Host
 - `mysql_password` (String, Sensitive) MySQL password
+- `mysql_password_wo` (String, Sensitive) MySQL password (write-only, not stored in state). Requires Terraform 1.11+. Bump mysql_password_wo_version to change it.
+- `mysql_password_wo_version` (Number) Version trigger for mysql_password_wo. Increment to update the password.
 - `mysql_port` (String) MySQL port
 - `mysql_revocation_statements` (String) MySQL Revocation Statements
 - `mysql_username` (String) MySQL Username

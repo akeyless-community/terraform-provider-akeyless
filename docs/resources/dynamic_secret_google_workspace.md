@@ -30,6 +30,8 @@ Google Workspace dynamic secret resource
 - `enable_ai_quorum` (Boolean) Enable AI Quorum
 - `fixed_user_claim_keyname` (String) For externally provided users, denotes the key-name of IdP claim to extract the username from
 - `gcp_key` (String, Sensitive) Base64-encoded service account private key text
+- `gcp_key_wo` (String, Sensitive) Base64-encoded service account private key text (write-only, not stored in state). Requires Terraform 1.11+. Bump gcp_key_wo_version to change it.
+- `gcp_key_wo_version` (Number) Version trigger for gcp_key_wo. Increment to update the password.
 - `group_email` (String) A group email, relevant only for group access-mode
 - `group_role` (String) Group role [OWNER/MANAGER/MEMBER], relevant only for group access-mode
 - `item_custom_fields` (Map of String) Additional custom fields to associate with the item
