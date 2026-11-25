@@ -67,9 +67,10 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Description: "Service account key algorithm, e.g. KEY_ALG_RSA_1024 (Relevant only when --access-type=sa and --gcp-cred-type=key)",
 			},
 			"project_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "GCP Project ID override for dynamic secret operations",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "GCP Project ID override for dynamic secret operations. Same setting as gcp_project_id, which takes precedence if both are set",
+				DiffSuppressFunc: suppressGcpProjectIdAliasDiff("gcp_project_id"),
 			},
 			"service_account_type": {
 				Type:        schema.TypeString,
@@ -128,9 +129,10 @@ func resourceDynamicSecretGcp() *schema.Resource {
 				Description: "Description of the object",
 			},
 			"gcp_project_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "GCP Project ID override for dynamic secret operations",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "GCP Project ID override for dynamic secret operations. Same setting as project_id; takes precedence if both are set",
+				DiffSuppressFunc: suppressGcpProjectIdAliasDiff("project_id"),
 			},
 			"item_custom_fields": {
 				Type:        schema.TypeMap,
@@ -193,7 +195,6 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	gcpKey := d.Get("gcp_key").(string)
 	gcpTokenScopes := d.Get("gcp_token_scopes").(string)
 	gcpKeyAlgo := d.Get("gcp_key_algo").(string)
-	projectId := d.Get("project_id").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -205,7 +206,7 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	deleteProtection := d.Get("delete_protection").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	description := d.Get("description").(string)
-	gcpProjectId := d.Get("gcp_project_id").(string)
+	gcpProjectId := getGcpProjectIdOverride(d)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	secureAccessDelay := d.Get("secure_access_delay").(int)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -224,7 +225,6 @@ func resourceDynamicSecretGcpCreate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.GcpTokenScopes, gcpTokenScopes)
 	common.GetAkeylessPtr(&body.GcpKeyAlgo, gcpKeyAlgo)
-	common.GetAkeylessPtr(&body.GcpProjectId, projectId)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
@@ -307,11 +307,13 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.GcpProjectId != nil {
-		err = d.Set("project_id", *rOut.GcpProjectId)
-		if err != nil {
-			return err
-		}
+	err = d.Set("project_id", rOut.GetGcpProjectId())
+	if err != nil {
+		return err
+	}
+	err = d.Set("gcp_project_id", rOut.GetGcpProjectId())
+	if err != nil {
+		return err
 	}
 	if rOut.UserTtl != nil {
 		err = d.Set("user_ttl", *rOut.UserTtl)
@@ -432,12 +434,6 @@ func resourceDynamicSecretGcpRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	if rOut.GcpProjectId != nil {
-		err = d.Set("gcp_project_id", *rOut.GcpProjectId)
-		if err != nil {
-			return err
-		}
-	}
 	if len(rOut.ItemCustomFieldsDetails) > 0 {
 		customFieldsMap := make(map[string]string)
 		for _, field := range rOut.ItemCustomFieldsDetails {
@@ -480,6 +476,32 @@ func normalizeGcpServiceAccountType(apiValue string) string {
 	}
 }
 
+// project_id and gcp_project_id both map to the single gcp-project-id API field,
+// so an unset alias must not overwrite the one that is set.
+func getGcpProjectIdOverride(d *schema.ResourceData) string {
+	if gcpProjectId := d.Get("gcp_project_id").(string); gcpProjectId != "" {
+		return gcpProjectId
+	}
+	return d.Get("project_id").(string)
+}
+
+// Read fills both aliases from the one API field. Removing one of them from the
+// config is not a change while the other still configures the same value.
+// The raw config is used because d.Get falls back to state for unset attributes.
+func suppressGcpProjectIdAliasDiff(alias string) schema.SchemaDiffSuppressFunc {
+	return func(_, old, new string, d *schema.ResourceData) bool {
+		if new != "" || old == "" {
+			return false
+		}
+		rawConfig := d.GetRawConfig()
+		if !rawConfig.IsKnown() || rawConfig.IsNull() {
+			return false
+		}
+		aliasValue := rawConfig.GetAttr(alias)
+		return aliasValue.IsKnown() && !aliasValue.IsNull() && aliasValue.AsString() == old
+	}
+}
+
 func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error {
 	provider := m.(*providerMeta)
 	client := *provider.client
@@ -494,7 +516,6 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	gcpKey := d.Get("gcp_key").(string)
 	gcpTokenScopes := d.Get("gcp_token_scopes").(string)
 	gcpKeyAlgo := d.Get("gcp_key_algo").(string)
-	projectId := d.Get("project_id").(string)
 	userTtl := d.Get("user_ttl").(string)
 	tagsSet := d.Get("tags").(*schema.Set)
 	tags := common.ExpandStringList(tagsSet.List())
@@ -506,7 +527,7 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	deleteProtection := d.Get("delete_protection").(string)
 	customUsernameTemplate := d.Get("custom_username_template").(string)
 	description := d.Get("description").(string)
-	gcpProjectId := d.Get("gcp_project_id").(string)
+	gcpProjectId := getGcpProjectIdOverride(d)
 	itemCustomFields := d.Get("item_custom_fields").(map[string]interface{})
 	secureAccessDelay := d.Get("secure_access_delay").(int)
 	secureAccessEnable := d.Get("secure_access_enable").(string)
@@ -525,7 +546,6 @@ func resourceDynamicSecretGcpUpdate(d *schema.ResourceData, m interface{}) error
 	common.GetAkeylessPtr(&body.GcpKey, gcpKey)
 	common.GetAkeylessPtr(&body.GcpTokenScopes, gcpTokenScopes)
 	common.GetAkeylessPtr(&body.GcpKeyAlgo, gcpKeyAlgo)
-	common.GetAkeylessPtr(&body.GcpProjectId, projectId)
 	common.GetAkeylessPtr(&body.UserTtl, userTtl)
 	common.GetAkeylessPtr(&body.Tags, tags)
 	common.GetAkeylessPtr(&body.ProducerEncryptionKeyName, producerEncryptionKeyName)
