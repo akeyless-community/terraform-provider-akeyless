@@ -75,10 +75,10 @@ func (p *Provider) Schema(_ context.Context, _ provider.SchemaRequest, resp *pro
 				},
 			},
 			"jwt_login": schema.ListNestedBlock{
-				Description: "A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT.",
+				Description: "A configuration block, described below, that attempts to authenticate using JWT authentication.  The access ID and JWT can be provided as command line variables or they will be pulled out of environment variables named AKEYLESS_ACCESS_ID and AKEYLESS_AUTH_JWT.",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"access_id": schema.StringAttribute{Required: true},
+						"access_id": schema.StringAttribute{Optional: true},
 						"jwt":       schema.StringAttribute{Optional: true, Sensitive: true},
 					},
 				},

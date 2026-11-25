@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
+	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -64,6 +65,85 @@ func TestJwtLogin_FallsBackToEnvVar(t *testing.T) {
 	}
 	if authBody.GetJwt() != "jwt-env" {
 		t.Fatalf("got jwt=%q, want env fallback value", authBody.GetJwt())
+	}
+}
+
+func TestJwtLogin_AccessIdFallsBackToEnvVar(t *testing.T) {
+	t.Setenv("AKEYLESS_ACCESS_ID", "p-env")
+
+	d := newProviderResourceData(t, map[string]interface{}{
+		"jwt_login": []interface{}{map[string]interface{}{
+			"jwt": "jwt-1",
+		}},
+	})
+
+	authBody, err := getAuthInfo(d)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if authBody.GetAccessId() != "p-env" || authBody.GetJwt() != "jwt-1" {
+		t.Fatalf("got access_id=%q jwt=%q, want p-env and jwt-1", authBody.GetAccessId(), authBody.GetJwt())
+	}
+}
+
+func TestJwtLogin_BlockValueWinsOverEnvVar(t *testing.T) {
+	t.Setenv("AKEYLESS_ACCESS_ID", "p-env")
+	t.Setenv("AKEYLESS_AUTH_JWT", "jwt-env")
+
+	d := newProviderResourceData(t, map[string]interface{}{
+		"jwt_login": []interface{}{map[string]interface{}{
+			"access_id": "p-1",
+		}},
+	})
+
+	authBody, err := getAuthInfo(d)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if authBody.GetAccessId() != "p-1" {
+		t.Fatalf("got access_id=%q, want p-1", authBody.GetAccessId())
+	}
+}
+
+func TestNoLoginBlock_UsesJwtFromEnvVars(t *testing.T) {
+	t.Setenv("AKEYLESS_ACCESS_ID", "p-env")
+	t.Setenv("AKEYLESS_ACCESS_KEY", "")
+	t.Setenv("AKEYLESS_AUTH_JWT", "jwt-env")
+
+	authBody, err := getAuthInfo(newProviderResourceData(t, map[string]interface{}{}))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if authBody.GetAccessType() != common.Jwt || authBody.GetAccessId() != "p-env" || authBody.GetJwt() != "jwt-env" {
+		t.Fatalf("got access_type=%q access_id=%q jwt=%q, want jwt login from env", authBody.GetAccessType(), authBody.GetAccessId(), authBody.GetJwt())
+	}
+}
+
+func TestNoLoginBlock_ApiKeyWinsOverJwt(t *testing.T) {
+	t.Setenv("AKEYLESS_ACCESS_ID", "p-env")
+	t.Setenv("AKEYLESS_ACCESS_KEY", "key-env")
+	t.Setenv("AKEYLESS_AUTH_JWT", "jwt-env")
+
+	authBody, err := getAuthInfo(newProviderResourceData(t, map[string]interface{}{}))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if authBody.GetAccessType() != common.ApiKey {
+		t.Fatalf("got access_type=%q, want api key login", authBody.GetAccessType())
+	}
+}
+
+func TestJwtLogin_MissingAccessIdFails(t *testing.T) {
+	t.Setenv("AKEYLESS_ACCESS_ID", "")
+
+	d := newProviderResourceData(t, map[string]interface{}{
+		"jwt_login": []interface{}{map[string]interface{}{
+			"jwt": "jwt-1",
+		}},
+	})
+
+	if _, err := getAuthInfo(d); err == nil {
+		t.Fatal("want an error when access_id is missing")
 	}
 }
 

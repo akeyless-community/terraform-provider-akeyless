@@ -83,12 +83,12 @@ var azureAdLoginSchema = &schema.Schema{
 var jwtLoginSchema = &schema.Schema{
 	Type:        schema.TypeList,
 	Optional:    true,
-	Description: "A configuration block, described below, that attempts to authenticate using JWT authentication.  The JWT can be provided as a command line variable or it will be pulled out of an environment variable named AKEYLESS_AUTH_JWT.",
+	Description: "A configuration block, described below, that attempts to authenticate using JWT authentication.  The access ID and JWT can be provided as command line variables or they will be pulled out of environment variables named AKEYLESS_ACCESS_ID and AKEYLESS_AUTH_JWT.",
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"access_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"jwt": {
 				Type:      schema.TypeString,
