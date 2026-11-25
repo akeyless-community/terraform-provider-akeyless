@@ -482,7 +482,7 @@ func TestRetryIntervalValidation(t *testing.T) {
 	}
 }
 
-func TestReadNotFoundRemovesFromState(t *testing.T) {
+func TestRetryReadNotFoundRemovesFromState(t *testing.T) {
 	captureWaits(t)
 
 	t.Run("404 removes the item from state", func(t *testing.T) {
