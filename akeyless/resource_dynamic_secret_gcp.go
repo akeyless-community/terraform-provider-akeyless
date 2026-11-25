@@ -69,7 +69,8 @@ func resourceDynamicSecretGcp() *schema.Resource {
 			"project_id": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Description:      "GCP Project ID override for dynamic secret operations. Same setting as gcp_project_id, which takes precedence if both are set",
+				Description:      "GCP Project ID override for dynamic secret operations. Used only when gcp_project_id is not set",
+				Deprecated:       "use gcp_project_id instead",
 				DiffSuppressFunc: suppressGcpProjectIdAliasDiff("gcp_project_id"),
 			},
 			"service_account_type": {
@@ -131,7 +132,7 @@ func resourceDynamicSecretGcp() *schema.Resource {
 			"gcp_project_id": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Description:      "GCP Project ID override for dynamic secret operations. Same setting as project_id; takes precedence if both are set",
+				Description:      "GCP Project ID override for dynamic secret operations",
 				DiffSuppressFunc: suppressGcpProjectIdAliasDiff("project_id"),
 			},
 			"item_custom_fields": {
@@ -476,8 +477,8 @@ func normalizeGcpServiceAccountType(apiValue string) string {
 	}
 }
 
-// project_id and gcp_project_id both map to the single gcp-project-id API field,
-// so an unset alias must not overwrite the one that is set.
+// project_id is a deprecated alias of gcp_project_id; both map to the single
+// gcp-project-id API field, so an unset alias must not overwrite the one that is set.
 func getGcpProjectIdOverride(d *schema.ResourceData) string {
 	if gcpProjectId := d.Get("gcp_project_id").(string); gcpProjectId != "" {
 		return gcpProjectId

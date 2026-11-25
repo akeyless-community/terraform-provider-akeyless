@@ -96,6 +96,19 @@ func TestDynamicSecretGcpProjectIdAliasDiff(t *testing.T) {
 	}
 }
 
+func TestDynamicSecretGcpProjectIdDeprecated(t *testing.T) {
+	r := resourceDynamicSecretGcp()
+	for attr, wantWarning := range map[string]bool{"project_id": true, "gcp_project_id": false} {
+		diags := r.Validate(terraform.NewResourceConfigRaw(map[string]interface{}{"name": "/ds-gcp", attr: "p1"}))
+		if diags.HasError() {
+			t.Fatalf("%s: unexpected error: %v", attr, diags)
+		}
+		if gotWarning := len(diags) > 0; gotWarning != wantWarning {
+			t.Errorf("%s: deprecation warning = %v, want %v (%v)", attr, gotWarning, wantWarning, diags)
+		}
+	}
+}
+
 func TestGetGcpProjectIdOverride(t *testing.T) {
 	cases := []struct {
 		name   string
