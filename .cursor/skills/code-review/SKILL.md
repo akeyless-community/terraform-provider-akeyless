@@ -71,21 +71,13 @@ Never remove an existing schema field without explicit backward-compatibility ap
 - Do not expose computed-only or debug-only API values as configurable Terraform fields without a user-facing need.
 - Mark passwords, keys, tokens, and credentials `Sensitive: true`. Use `WriteOnly` only when Terraform must not retain the value.
 
-## SDK-sync lessons from past reviews
+## Provider coding rules
 
-Mistakes found in earlier SDK-sync PRs (for example #157):
+Check the diff against the repository coding rules. Report each rule the diff breaks as a finding:
 
-- **Schema follows the CLI command:** `Required`/`Optional` and `Default` match the command. `Default` has the same type as the field (no string default on an int). Secrets are `Sensitive`. Values the SaaS sets when omitted (for example a protection key) are `Computed`. The item name is `ForceNew`.
-- **A field added to Create is also handled in Update and Read**, unless the API cannot update or return it.
-- **Tags:** Update adds and removes tags with `common.GetTagsForUpdate`, not only adds them.
-- **Use current APIs, not deprecated ones** (for example `AuthMethodGet`, not `GetAuthMethod`), once the new API is released in the SDK and Gateway. Do not add resources for deprecated APIs.
-- **A field deprecated in the CLI is not removed from Terraform.** Keep it and mark it `Deprecated: "use <new_field> instead"`.
-- **Do not name a field `id`.** Terraform reserves it.
-- **Do not expose internal fields** (for example `creds`, used between client and server) only because they exist in the SDK.
-- **Descriptions match real API behavior** (formats, separators, allowed values) and use the same terms as the default value. Check the format against the API when unsure.
-- **Keep the scope:** do not rewrite unrelated descriptions in an SDK-sync PR.
-- **Naming:** new resources follow the current pattern (for example `resource_target_*`). Renaming part of a resource family is not enough; renamed resources need the old ones deprecated.
-- **Look for slips in Read and Update:** the same field set twice, a value overwritten in a `switch` branch (for example with an empty map), and typos in file or field names.
+- `.cursor/rules/general.mdc`: schema conventions, sensitive fields, SDK fields to ignore, deprecated APIs and resources, naming, SDK import convention.
+- `.cursor/skills/add-new-command/SKILL.md`: new resources and data sources.
+- `.cursor/skills/update-existing-command/SKILL.md`: changes to existing resources.
 
 ## Test rules
 
