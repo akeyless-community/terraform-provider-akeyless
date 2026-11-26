@@ -36,6 +36,7 @@ Before adding or reviewing fields, inspect the closest existing resource and fol
 - Preserve existing conditional behavior. If surrounding fields are set only when the API returns their map keys, new fields should do the same.
 - Prefer simple explicit field mappings when that is the pattern in the resource. Do not introduce templates, reflection, or generic maps only to reduce repeated lines.
 - Use `common.HandleReadError` and existing read-error conventions. Do not call a Terraform Read handler from Create or Update.
+- A 404 on Read (item deleted outside Terraform) is handled once for all resources in `wrapRead` (`akeyless/retry.go`). Do not add per-resource 404 or `d.SetId("")` handling in Read.
 - When a field belongs to a resource family, check every equivalent resource type for consistent support or an explicit reason to differ.
 
 ## Field lifecycle checklist
@@ -77,7 +78,7 @@ Never remove an existing schema field without explicit backward-compatibility ap
 - Use different values in create and update configurations whenever the API can change them.
 - A final `PlanOnly` step is valid only when an earlier step already applied the change and the plan proves there is no drift.
 - Add behavior to an existing resource test when it covers the same flow. Do not create an isolated test only for one field without a reason.
-- Put new resource and data source tests under `akeyless/tests/`, in the established test package for the required Gateway dependency. Do not add standalone `*_test.go` files beside provider source files.
+- Put new resource and data source acceptance tests under `akeyless/tests/`, in the established test package for the required Gateway dependency. Do not add standalone acceptance tests beside provider source files. Unit tests of unexported functions stay beside the source (for example `akeyless/retry_test.go`).
 - A skipped integration test needs: a clear external dependency, evidence it passed at least once, and a tracked condition for re-enabling it.
 
 ## Validation
