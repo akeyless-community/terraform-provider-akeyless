@@ -33,5 +33,6 @@ provider "akeyless" {
   //    access_id = ""
   //    jwt = var.jwt
   //    // OR provide your JWT by storing it in an environment variable called AKEYLESS_AUTH_JWT
+  //    // and your access ID in AKEYLESS_ACCESS_ID. With both set, the login block can be omitted.
   // }
 }

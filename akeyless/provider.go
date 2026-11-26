@@ -388,10 +388,10 @@ func setAuthBody(authBody *akeyless_api.Auth, loginObj interface{}, authType log
 		authBody.AccessType = akeyless_api.PtrString(common.AzureAD)
 		return nil
 	case JwtLogin:
-		accessID := login["access_id"].(string)
+		accessID := withEnvFallback(login["access_id"].(string), "AKEYLESS_ACCESS_ID")
 		jwt := withEnvFallback(login["jwt"].(string), "AKEYLESS_AUTH_JWT")
-		if jwt == "" {
-			return fmt.Errorf("jwt is required (directly or via AKEYLESS_AUTH_JWT)")
+		if accessID == "" || jwt == "" {
+			return fmt.Errorf("access_id and jwt are required (directly or via AKEYLESS_ACCESS_ID/AKEYLESS_AUTH_JWT)")
 		}
 		authBody.AccessId = akeyless_api.PtrString(accessID)
 		authBody.Jwt = akeyless_api.PtrString(jwt)
@@ -533,6 +533,15 @@ func getLoginWithValidation(d *schema.ResourceData) (interface{}, loginType, err
 		login["access_key"] = os.Getenv("AKEYLESS_ACCESS_KEY")
 
 		return login, ApiKeyLogin, nil
+	}
+
+	// otherwise, use jwt authentication with id+jwt from env vars
+	if os.Getenv("AKEYLESS_ACCESS_ID") != "" && os.Getenv("AKEYLESS_AUTH_JWT") != "" {
+		login := make(map[string]interface{})
+		login["access_id"] = os.Getenv("AKEYLESS_ACCESS_ID")
+		login["jwt"] = os.Getenv("AKEYLESS_AUTH_JWT")
+
+		return login, JwtLogin, nil
 	}
 
 	return nil, "", fmt.Errorf("please choose supported login method: api_key_login/password_login/aws_iam_login/gcp_login/azure_ad_login/jwt_login/uid_login/cert_login/token_login")

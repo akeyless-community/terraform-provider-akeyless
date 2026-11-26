@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	akeyless_api "github.com/akeylesslabs/akeyless-go/v5"
 	"github.com/akeylesslabs/terraform-provider-akeyless/akeyless/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -315,7 +317,7 @@ func EnableResourceRetry(r *schema.Resource) {
 
 	// Plain CRUD functions become context functions, so Ctrl+C and timeouts stop the retry wait.
 	r.CreateContext, r.Create = wrapCRUD(r.Create, r.CreateContext), nil
-	r.ReadContext, r.Read = wrapCRUD(r.Read, r.ReadContext), nil
+	r.ReadContext, r.Read = wrapRead(r.Read, r.ReadContext), nil
 	r.UpdateContext, r.Update = skipRetryOnlyUpdate(wrapCRUD(r.Update, r.UpdateContext)), nil
 	r.DeleteContext, r.Delete = wrapCRUD(r.Delete, r.DeleteContext), nil
 }
@@ -325,6 +327,49 @@ func wrapCRUD(plain func(*schema.ResourceData, interface{}) error, withCtx func(
 		return wrapResourceFunc(plain)
 	}
 	return wrapResourceContextFunc(withCtx)
+}
+
+// wrapRead is wrapCRUD for Read. When the item is still not found (404) after any retries,
+// it was deleted outside Terraform: remove it from state so the plan recreates it.
+func wrapRead(plain func(*schema.ResourceData, interface{}) error, withCtx func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+	if plain == nil && withCtx == nil {
+		return nil
+	}
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		// lastErr is the error of the last attempt, before it becomes diagnostics.
+		var lastErr error
+		var diags diag.Diagnostics
+		if plain != nil {
+			diags = wrapResourceFunc(func(d *schema.ResourceData, m interface{}) error {
+				lastErr = plain(d, m)
+				return lastErr
+			})(ctx, d, m)
+		} else {
+			diags = wrapResourceContextFunc(func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+				readDiags := withCtx(ctx, d, m)
+				lastErr = diagsError(readDiags)
+				return readDiags
+			})(ctx, d, m)
+		}
+
+		if isNotFound(lastErr) {
+			log.Printf("[WARN] akeyless: %s not found, removing it from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return diags
+	}
+}
+
+// isNotFound reports whether err is an HTTP 404 from the Akeyless API.
+func isNotFound(err error) bool {
+	var apiErr *common.APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.StatusCode == http.StatusNotFound
+	}
+	// Some reads return the SDK error as is. Its message is the HTTP status, for example "404 Not Found".
+	var sdkErr *akeyless_api.GenericOpenAPIError
+	return errors.As(err, &sdkErr) && strings.HasPrefix(sdkErr.Error(), "404 ")
 }
 
 // skipRetryOnlyUpdate stores a change of only the retry block without calling the update API.

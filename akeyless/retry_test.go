@@ -482,6 +482,59 @@ func TestRetryIntervalValidation(t *testing.T) {
 	}
 }
 
+func TestRetryReadNotFoundRemovesFromState(t *testing.T) {
+	captureWaits(t)
+
+	t.Run("404 removes the item from state", func(t *testing.T) {
+		diags, id := runRead(t, nil, func() error { return apiError(http.StatusNotFound, "") })
+		if diags.HasError() || id != "" {
+			t.Errorf("diags=%v id=%q want no error and empty id", diags, id)
+		}
+	})
+
+	t.Run("404 from a context read removes the item from state", func(t *testing.T) {
+		r := &schema.Resource{
+			Schema: map[string]*schema.Schema{},
+			ReadContext: func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+				return common.DiagnosticsFromErr(apiError(http.StatusNotFound, ""))
+			},
+		}
+		EnableResourceRetry(r)
+		d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{})
+		d.SetId("item")
+		if diags := r.ReadContext(context.Background(), d, nil); diags.HasError() || d.Id() != "" {
+			t.Errorf("diags=%v id=%q want no error and empty id", diags, d.Id())
+		}
+	})
+
+	t.Run("other errors are kept", func(t *testing.T) {
+		diags, id := runRead(t, nil, func() error { return apiError(http.StatusInternalServerError, "") })
+		if !diags.HasError() || id != "item" {
+			t.Errorf("diags=%v id=%q want an error and id kept", diags, id)
+		}
+	})
+
+	t.Run("404 is retried first when the retry block lists it", func(t *testing.T) {
+		retry := map[string]interface{}{
+			"retry_on_status_codes": []interface{}{http.StatusNotFound},
+			"interval_seconds":      1,
+			"max_interval_seconds":  1,
+			"max_retries":           1,
+		}
+		calls := 0
+		diags, id := runRead(t, retry, func() error {
+			calls++
+			if calls == 1 {
+				return apiError(http.StatusNotFound, "")
+			}
+			return nil
+		})
+		if diags.HasError() || id != "item" || calls != 2 {
+			t.Errorf("diags=%v id=%q calls=%d want success on retry and id kept", diags, id, calls)
+		}
+	})
+}
+
 func TestRetryAllResourcesValid(t *testing.T) {
 	if err := Provider().InternalValidate(); err != nil {
 		t.Fatal(err)
@@ -518,6 +571,25 @@ func providerRetryConfig(t *testing.T) *retryConfig {
 func runResourceOp(t *testing.T, providerCfg *retryConfig, retry map[string]interface{}, failCount int, errMsg string) (int, error) {
 	t.Helper()
 	return runResourceOpErr(t, providerCfg, retry, failCount, func() error { return errors.New(errMsg) })
+}
+
+// runRead wraps a Read that returns read() for the item "item", and returns the diagnostics and the id after it.
+func runRead(t *testing.T, retry map[string]interface{}, read func() error) (diag.Diagnostics, string) {
+	t.Helper()
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+		Read:   func(*schema.ResourceData, interface{}) error { return read() },
+	}
+	EnableResourceRetry(r)
+
+	raw := map[string]interface{}{}
+	if retry != nil {
+		raw["retry"] = []interface{}{retry}
+	}
+	d := schema.TestResourceDataRaw(t, r.Schema, raw)
+	d.SetId("item")
+	diags := r.ReadContext(context.Background(), d, &providerMeta{})
+	return diags, d.Id()
 }
 
 // apiError builds the error resources return for a failed API call.
